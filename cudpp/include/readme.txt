@@ -1,0 +1,1 @@
+This folder contains public header files for cuDPP.  Internal-only header files should be stored in the src directory.  
