@@ -375,13 +375,13 @@ enum CUDPPOperator
 */
 enum CUDPPAlgorithm
 {
-    CUDPP_SCAN,
-    CUDPP_SEGMENTED_SCAN,
-    CUDPP_COMPACT,
-    CUDPP_REDUCE,
-    CUDPP_SORT_RADIX,        
+    CUDPP_SCAN,              /**< Scan or prefix-sum */
+    CUDPP_SEGMENTED_SCAN,    /**< Segmented scan */
+    CUDPP_COMPACT,           /**< Stream compact */
+    CUDPP_REDUCE,            /**< Parallel reduction (NOTE: currently unimplemented) */
+    CUDPP_SORT_RADIX,        /**< Radix sort */
     CUDPP_SPMVMULT,          /**< Sparse matrix-dense vector multiplication */
-    CUDPP_RAND_MD5,          /**< Pseudo Random Number Generator using MD5 hash algorithm*/
+    CUDPP_RAND_MD5,          /**< PseudoRandom Number Generator using MD5 hash algorithm*/
     CUDPP_ALGORITHM_INVALID, /**< Placeholder at end of enum */
 };
 
