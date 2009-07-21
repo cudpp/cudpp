@@ -82,9 +82,17 @@
  }</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Operators supported by CUDPP algorithms (currently scan and segmented scan).  <a href="cudpp_8h.html#fbc449e0243beebf799175ba0633a386">More...</a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">enum &nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="cudpp_8h.html#6499e5c26f56db82f520367ae853462f">CUDPPAlgorithm</a> { , <a class="el" href="cudpp_8h.html#6499e5c26f56db82f520367ae853462fc187df604b1942f1406e4fabd563985a">CUDPP_SPMVMULT</a>, 
+<tr><td class="memItemLeft" nowrap align="right" valign="top">enum &nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="cudpp_8h.html#6499e5c26f56db82f520367ae853462f">CUDPPAlgorithm</a> { <br>
+&nbsp;&nbsp;<a class="el" href="cudpp_8h.html#6499e5c26f56db82f520367ae853462f82cf703e248569c24544c3792048e06f">CUDPP_SCAN</a>, 
+<a class="el" href="cudpp_8h.html#6499e5c26f56db82f520367ae853462f1a53919c245c4f4f29711c39e510bf49">CUDPP_SEGMENTED_SCAN</a>, 
+<a class="el" href="cudpp_8h.html#6499e5c26f56db82f520367ae853462fa4d8e485eac9f83ace5e7fdd3c059e8f">CUDPP_COMPACT</a>, 
+<a class="el" href="cudpp_8h.html#6499e5c26f56db82f520367ae853462f5b473bede212c7e863d2b682d72a3ea0">CUDPP_REDUCE</a>, 
+<br>
+&nbsp;&nbsp;<a class="el" href="cudpp_8h.html#6499e5c26f56db82f520367ae853462f24e588c95a4e957137f5b2a0600019c3">CUDPP_SORT_RADIX</a>, 
+<a class="el" href="cudpp_8h.html#6499e5c26f56db82f520367ae853462fc187df604b1942f1406e4fabd563985a">CUDPP_SPMVMULT</a>, 
 <a class="el" href="cudpp_8h.html#6499e5c26f56db82f520367ae853462f223458cbd6681433df11e569dbe2deaf">CUDPP_RAND_MD5</a>, 
 <a class="el" href="cudpp_8h.html#6499e5c26f56db82f520367ae853462f07b612137fce2b8a000a703209e8073d">CUDPP_ALGORITHM_INVALID</a>
+<br>
  }</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Algorithms supported by CUDPP. Used to create appropriate plans using cudppPlan.  <a href="cudpp_8h.html#6499e5c26f56db82f520367ae853462f">More...</a><br></td></tr>
@@ -277,19 +285,29 @@ Algorithms supported by CUDPP. Used to create appropriate plans using cudppPlan.
 <dl class="see" compact><dt><b>See also:</b></dt><dd><a class="el" href="struct_c_u_d_p_p_configuration.html" title="Configuration struct used to specify algorithm, datatype, operator, and options when...">CUDPPConfiguration</a>, <a class="el" href="group__public_interface.html#g0d39e7c3e14963c7cc3df3b879362c25" title="Create a CUDPP plan.">cudppPlan</a> </dd></dl>
 <dl compact><dt><b>Enumerator: </b></dt><dd>
 <table border="0" cellspacing="2" cellpadding="0">
+<tr><td valign="top"><em><a class="anchor" name="6499e5c26f56db82f520367ae853462f82cf703e248569c24544c3792048e06f"></a><!-- doxytag: member="CUDPP_SCAN" ref="6499e5c26f56db82f520367ae853462f82cf703e248569c24544c3792048e06f" args="" -->CUDPP_SCAN</em>&nbsp;</td><td>
+Scan or prefix-sum. </td></tr>
+<tr><td valign="top"><em><a class="anchor" name="6499e5c26f56db82f520367ae853462f1a53919c245c4f4f29711c39e510bf49"></a><!-- doxytag: member="CUDPP_SEGMENTED_SCAN" ref="6499e5c26f56db82f520367ae853462f1a53919c245c4f4f29711c39e510bf49" args="" -->CUDPP_SEGMENTED_SCAN</em>&nbsp;</td><td>
+Segmented scan. </td></tr>
+<tr><td valign="top"><em><a class="anchor" name="6499e5c26f56db82f520367ae853462fa4d8e485eac9f83ace5e7fdd3c059e8f"></a><!-- doxytag: member="CUDPP_COMPACT" ref="6499e5c26f56db82f520367ae853462fa4d8e485eac9f83ace5e7fdd3c059e8f" args="" -->CUDPP_COMPACT</em>&nbsp;</td><td>
+Stream compact. </td></tr>
+<tr><td valign="top"><em><a class="anchor" name="6499e5c26f56db82f520367ae853462f5b473bede212c7e863d2b682d72a3ea0"></a><!-- doxytag: member="CUDPP_REDUCE" ref="6499e5c26f56db82f520367ae853462f5b473bede212c7e863d2b682d72a3ea0" args="" -->CUDPP_REDUCE</em>&nbsp;</td><td>
+Parallel reduction (NOTE: currently unimplemented). </td></tr>
+<tr><td valign="top"><em><a class="anchor" name="6499e5c26f56db82f520367ae853462f24e588c95a4e957137f5b2a0600019c3"></a><!-- doxytag: member="CUDPP_SORT_RADIX" ref="6499e5c26f56db82f520367ae853462f24e588c95a4e957137f5b2a0600019c3" args="" -->CUDPP_SORT_RADIX</em>&nbsp;</td><td>
+Radix sort. </td></tr>
 <tr><td valign="top"><em><a class="anchor" name="6499e5c26f56db82f520367ae853462fc187df604b1942f1406e4fabd563985a"></a><!-- doxytag: member="CUDPP_SPMVMULT" ref="6499e5c26f56db82f520367ae853462fc187df604b1942f1406e4fabd563985a" args="" -->CUDPP_SPMVMULT</em>&nbsp;</td><td>
-Sparse matrix-dense vector multiplication </td></tr>
+Sparse matrix-dense vector multiplication. </td></tr>
 <tr><td valign="top"><em><a class="anchor" name="6499e5c26f56db82f520367ae853462f223458cbd6681433df11e569dbe2deaf"></a><!-- doxytag: member="CUDPP_RAND_MD5" ref="6499e5c26f56db82f520367ae853462f223458cbd6681433df11e569dbe2deaf" args="" -->CUDPP_RAND_MD5</em>&nbsp;</td><td>
-Pseudo Random Number Generator using MD5 hash algorithm </td></tr>
+PseudoRandom Number Generator using MD5 hash algorithm. </td></tr>
 <tr><td valign="top"><em><a class="anchor" name="6499e5c26f56db82f520367ae853462f07b612137fce2b8a000a703209e8073d"></a><!-- doxytag: member="CUDPP_ALGORITHM_INVALID" ref="6499e5c26f56db82f520367ae853462f07b612137fce2b8a000a703209e8073d" args="" -->CUDPP_ALGORITHM_INVALID</em>&nbsp;</td><td>
-Placeholder at end of enum </td></tr>
+Placeholder at end of enum. </td></tr>
 </table>
 </dl>
 
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Fri Jul 3 16:52:27 2009 for CUDPP by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Tue Jul 21 15:35:55 2009 for CUDPP by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.9 </small></address>
 </body>
