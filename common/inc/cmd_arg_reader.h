@@ -37,6 +37,7 @@
 #include <iostream>
 #include <sstream>
 #include <algorithm>
+#include <typeinfo>
 
 // includes, project
 #include <exception.h>
