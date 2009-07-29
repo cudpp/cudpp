@@ -174,12 +174,12 @@ int radixSortTest(CUDPPHandle plan, CUDPPConfiguration config, size_t *tests,
 
         for (int i = 0; i < testOptions.numIterations; i++)
         {
-            CUDA_SAFE_CALL(cudaMemcpy(d_keys, h_keys, numElements * sizeof(T), cudaMemcpyHostToDevice));
+            CUDA_SAFE_CALL(cudaMemcpy(d_keys, h_keys, tests[k] * sizeof(T), cudaMemcpyHostToDevice));
             if(config.options & CUDPP_OPTION_KEY_VALUE_PAIRS)
             {
                 CUDA_SAFE_CALL( cudaMemcpy((void*)d_values, 
                                            (void*)h_values, 
-                                           numElements * sizeof(unsigned int), 
+                                           tests[k] * sizeof(unsigned int), 
                                            cudaMemcpyHostToDevice) );
             }
 
@@ -227,7 +227,10 @@ int radixSortTest(CUDPPHandle plan, CUDPPConfiguration config, size_t *tests,
     CUT_CHECK_ERROR("after radixsort");
 
     cudaFree(d_keys);
-    cudaFree((void*)d_values);
+
+    if (config.options & CUDPP_OPTION_KEY_VALUE_PAIRS)
+        cudaFree((void*)d_values);
+
     free(h_keys);
     free(h_values);	
 
