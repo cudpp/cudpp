@@ -299,7 +299,7 @@ public:
         case CUDPP_MULTIPLY:
             return 1;
         case CUDPP_MIN:
-            return INT_MAX;
+            return UINT_MAX;
         case CUDPP_MAX:
             return 0;
         }

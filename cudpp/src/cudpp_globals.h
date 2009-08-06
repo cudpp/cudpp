@@ -36,6 +36,16 @@ const int maxSharedMemoryPerBlock = 16384; /**< Number of bytes of shared
 const int maxThreadsPerBlock = CTA_SIZE;   /**< Maximum number of
                                              * threads in a CTA */
 
+/**
+* @brief Macro to insert necessary __syncthreads() in device emulation mode
+*/
+#ifdef __DEVICE_EMULATION__
+#define __EMUSYNC __syncthreads()
+#else
+#define __EMUSYNC
+#endif
+
+
 #define AVOID_BANK_CONFLICTS /**< Set if by default, we want our
                               * shared memory allocation to perform
                               * additional computation to avoid bank
