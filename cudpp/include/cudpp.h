@@ -33,7 +33,13 @@
  * variety of data-parallel algorithms, including sorting, stream 
  * compaction, and building data structures such as trees and 
  * summed-area tables.
+ *
+ * \section overview Overview Presentation
  * 
+ * A brief set of slides that describe the features, design principles,
+ * and impact of CUDPP is available here:
+ * <a href="http://cudpp.googlecode.com/svn/trunk/cudpp/doc/CUDPP_slides.pdf">CUDPP Presentation</a>.
+ *
  * \section homepage Homepage
  * Homepage for CUDPP: http://www.gpgpu.org/developer/cudpp/
  * 
