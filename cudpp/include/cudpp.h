@@ -37,7 +37,7 @@
  * \section overview Overview Presentation
  * 
  * A brief set of slides that describe the features, design principles,
- * and impact of CUDPP is available here:
+ * applications and impact of CUDPP is available here:
  * <a href="http://cudpp.googlecode.com/svn/trunk/cudpp/doc/CUDPP_slides.pdf">CUDPP Presentation</a>.
  *
  * \section homepage Homepage
