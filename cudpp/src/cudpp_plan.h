@@ -115,17 +115,17 @@ public:
 class CUDPPRadixSortPlan : public CUDPPPlan
 {
 public:
-	CUDPPRadixSortPlan(CUDPPConfiguration config, size_t numElements);
-	virtual ~CUDPPRadixSortPlan();
-	
-	bool           m_bKeysOnly;
+        CUDPPRadixSortPlan(CUDPPConfiguration config, size_t numElements);
+        virtual ~CUDPPRadixSortPlan();
+        
+        bool           m_bKeysOnly;
     bool           m_bManualCoalesce;
 
     unsigned int   m_persistentCTAThreshold[2];
     unsigned int   m_persistentCTAThresholdFullBlocks[2];
 
-	CUDPPScanPlan *m_scanPlan;        //!< @internal Sort performs a scan of type unsigned int using this plan
-	unsigned int   m_keyBits;
+        CUDPPScanPlan *m_scanPlan;        //!< @internal Sort performs a scan of type unsigned int using this plan
+        unsigned int   m_keyBits;
     mutable void  *m_tempKeys;        //!< @internal Intermediate storage for keys
     mutable void  *m_tempValues;      //!< @internal Intermediate storage for values
     unsigned int  *m_counters;        //!< @internal Counter for each radix
@@ -162,6 +162,92 @@ public:
                                        //!            which is the last element of that row. Resides in CPU memory.
     size_t           m_numRows; //!< Number of rows
     size_t           m_numNonZeroElements; //!<Number of non-zero elements
+};
+
+/** @brief Plan class for v-graph data structures
+*/
+
+class CUDPPVGraphPlan : public CUDPPPlan
+{
+public:
+    CUDPPVGraphPlan(    CUDPPConfiguration config, 
+                        size_t             num_nodes, 
+                        size_t             num_edges, 
+                        const unsigned int * h_segment_descriptor, // size: num_nodes
+                        const unsigned int * h_cross_pointers,     // size: 2 * num_edges
+                        const unsigned int * h_head_flags,         // size: 2 * num_edges
+                        const float * h_weights);         // size: 2 * num_edges
+    virtual ~CUDPPVGraphPlan();
+
+    size_t m_num_nodes; //!< Number of nodes in the graph
+    size_t m_num_edges; //!< Number of edges in the graph
+    unsigned int * m_d_segment_descriptor; //!< @internal Pointer to device memory containing segment descriptor of size num_nodes
+    unsigned int * m_d_cross_pointers; //!< @internal Pointer to device memory containing cross pointers of size 2 * num_edges
+    unsigned int * m_d_head_flags; //!< @internal Pointer to device memory containing head flags of size 2 * num_edges
+    void * m_d_weights; //!< @internal Pointer to device memory containing weights of edges of size 2 * num_edges
+    mutable void * m_d_temp; //!< @internal Pointer to device memory containing temporary buffer of size 2 * num_edges
+    mutable void * m_d_temp2; //!< @internal Pointer to device memory containing 2nd temporary buffer of size 2 * num_edges
+};
+
+/** @brief Plan class for v-graph neighbor-reduce algorithm
+*
+*/
+class CUDPPVGraphNRPlan : public CUDPPPlan
+{
+public:
+    CUDPPVGraphNRPlan(    CUDPPConfiguration config, 
+                          size_t             num_nodes, 
+                          size_t             num_edges);
+    virtual ~CUDPPVGraphNRPlan();
+
+    CUDPPScanPlan *m_scanPlan; //!< @internal Performs a scan of type T using this plan
+    CUDPPSegmentedScanPlan *m_segmentedScanPlan; //!< @internal Performs a segmented scan of type T using this plan
+    size_t m_num_nodes; //!< Number of nodes in the graph
+    size_t m_num_edges; //!< Number of edges in the graph
+};
+
+/** @brief Plan class for v-graph distribute-excess algorithm
+*
+*/
+class CUDPPVGraphDEPlan : public CUDPPPlan
+{
+public:
+    CUDPPVGraphDEPlan(    CUDPPConfiguration config, 
+                          size_t             num_nodes, 
+                          size_t             num_edges);
+    virtual ~CUDPPVGraphDEPlan();
+
+    CUDPPScanPlan *m_scanPlan; //!< @internal Performs a scan of type T using this plan
+    CUDPPSegmentedScanPlan *m_segmentedScanPlan; //!< @internal Performs a segmented scan of type T using this plan
+    size_t m_num_nodes; //!< Number of nodes in the graph
+    size_t m_num_edges; //!< Number of edges in the graph
+};
+
+/** @brief Plan class for v-graph minimum-spanning-tree algorithm
+*
+*/
+class CUDPPVGraphMSTPlan : public CUDPPPlan
+{
+public:
+    CUDPPVGraphMSTPlan(   CUDPPConfiguration config, 
+                          size_t             num_nodes, 
+                          size_t             num_edges);
+    virtual ~CUDPPVGraphMSTPlan();
+
+    CUDPPScanPlan *m_scanPlan; //!< @internal Performs a scan of type T using this plan
+    CUDPPSegmentedScanPlan *m_segmentedScanPlan; //!< @internal Performs a segmented scan of type T using this plan
+    size_t m_num_nodes; //!< Number of nodes in the graph
+    size_t m_num_edges; //!< Number of edges in the graph
+    mutable unsigned int * m_d_isParent; //!< @internal Pointer to device memory containing true/false if I'm a parent of size 2 * num_edges
+    mutable unsigned int * m_d_myHead; //!< @internal Pointer to device memory containing pointers to my head element of size 2 * num_edges
+    mutable unsigned int * m_d_neededSpace; //!< @internal Pointer to device memory containing pointers to child's neededspace in parent of size 2 * num_edges
+    mutable unsigned int * m_d_isStarEdge; //!< @internal Pointer to device memory containing bool that's set if this is a star edge of size 2 * num_edges
+    mutable unsigned int * m_d_isEndOfSegment; //!< @internal Pointer to device memory containing bool that's set if this is the last element in its segment; size 2 * num_edges
+    mutable int * m_d_myVertexID; //!< @internal Pointer to device memory containing my vertex id; size 2 * num_edges
+    mutable unsigned int * m_d_survivingEdges; //!< @internal Pointer to device memory containing bool that's set if this edge survives the Great Edge Purge; size 2 * num_edges
+    mutable int * m_d_starParent; //!< @internal Pointer to device memory containing index of target of this vertex's star edge's parent; size num_nodes
+    mutable void * m_d_temp; //!< @internal Pointer to device memory containing temporary buffer of size 2 * num_edges
+    mutable void * m_d_temp2; //!< @internal Pointer to device memory containing temporary buffer of size 2 * num_edges
 };
 
 /** @brief Plan class for random number generator

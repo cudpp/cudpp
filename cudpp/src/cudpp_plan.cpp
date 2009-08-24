@@ -14,6 +14,7 @@
 #include "cudpp_segscan.h"
 #include "cudpp_compact.h"
 #include "cudpp_spmvmult.h"
+#include "cudpp_vgraph.h"
 #include "cudpp_radixsort.h"
 
 #include <assert.h>
@@ -207,6 +208,179 @@ CUDPPResult cudppDestroySparseMatrix(CUDPPHandle sparseMatrixHandle)
 {
     return cudppDestroyPlan(sparseMatrixHandle);
 }
+
+/** @brief Initialize plan for v-graph data structure handle */
+CUDPP_DLL
+CUDPPResult cudppVGraph(CUDPPHandle        *vGraphHandle, 
+                        CUDPPConfiguration config, 
+                        size_t             num_nodes, 
+                        size_t             num_edges, 
+                        const unsigned int * segment_descriptor, // size: num_nodes
+                        const unsigned int * cross_pointers,     // size: 2 * num_edges
+                        const unsigned int * head_flags,         // size: 2 * num_edges
+                        const float * weights)                   // size: 2 * num_edges
+{
+    CUDPPResult result = CUDPP_SUCCESS;
+
+    CUDPPVGraphPlan *vGraph;
+
+    if (result != CUDPP_SUCCESS)
+    {
+        *vGraphHandle = CUDPP_INVALID_HANDLE;
+        return result;
+    }
+
+    vGraph = 
+        new CUDPPVGraphPlan(config, num_nodes, num_edges, segment_descriptor, 
+                            cross_pointers, head_flags, weights);
+
+    *vGraphHandle = CUDPPPlanManager::AddPlan(vGraph);
+    if (CUDPP_INVALID_HANDLE == *vGraphHandle)
+        return CUDPP_ERROR_UNKNOWN;
+    else
+        return CUDPP_SUCCESS;
+}
+
+/** @brief Initialize plan for v-graph neighbor-reduce algorithm handle */
+CUDPP_DLL
+CUDPPResult cudppVGraphNRPlan(CUDPPHandle        *vGraphNRHandle, 
+                              CUDPPConfiguration config, 
+                              size_t             num_nodes, 
+                              size_t             num_edges)
+{
+    CUDPPResult result = CUDPP_SUCCESS;
+
+    CUDPPVGraphNRPlan *vGraphNR;
+
+//     if ((config.algorithm != CUDPP_SPMVMULT) || 
+//         (numNonZeroElements <= 0) || (numRows <= 0))
+//     {
+//         result = CUDPP_ERROR_ILLEGAL_CONFIGURATION;
+//     }
+
+    if (result != CUDPP_SUCCESS)
+    {
+        *vGraphNRHandle = CUDPP_INVALID_HANDLE;
+        return result;
+    }
+
+    vGraphNR = new CUDPPVGraphNRPlan(config, num_nodes, num_edges);
+
+    *vGraphNRHandle = CUDPPPlanManager::AddPlan(vGraphNR);
+    if (CUDPP_INVALID_HANDLE == *vGraphNRHandle)
+        return CUDPP_ERROR_UNKNOWN;
+    else
+        return CUDPP_SUCCESS;
+}
+
+/** @brief Initialize plan for v-graph distribute-excess algorithm handle */
+CUDPP_DLL
+CUDPPResult cudppVGraphDEPlan(CUDPPHandle        *vGraphDEHandle, 
+                              CUDPPConfiguration config, 
+                              size_t             num_nodes, 
+                              size_t             num_edges)
+{
+    CUDPPResult result = CUDPP_SUCCESS;
+
+    CUDPPVGraphDEPlan *vGraphDE;
+
+    if (result != CUDPP_SUCCESS)
+    {
+        *vGraphDEHandle = CUDPP_INVALID_HANDLE;
+        return result;
+    }
+
+    vGraphDE = new CUDPPVGraphDEPlan(config, num_nodes, num_edges);
+
+    *vGraphDEHandle = CUDPPPlanManager::AddPlan(vGraphDE);
+    if (CUDPP_INVALID_HANDLE == *vGraphDEHandle)
+        return CUDPP_ERROR_UNKNOWN;
+    else
+        return CUDPP_SUCCESS;
+}
+
+/** @brief Initialize plan for v-graph minimum-spanning-tree algorithm handle */
+CUDPP_DLL
+CUDPPResult cudppVGraphMSTPlan(CUDPPHandle        *vGraphMSTHandle, 
+                               CUDPPConfiguration config, 
+                               size_t             num_nodes, 
+                               size_t             num_edges)
+{
+    CUDPPResult result = CUDPP_SUCCESS;
+
+    CUDPPVGraphMSTPlan *vGraphMST;
+
+    if (result != CUDPP_SUCCESS)
+    {
+        *vGraphMSTHandle = CUDPP_INVALID_HANDLE;
+        return result;
+    }
+
+    vGraphMST = new CUDPPVGraphMSTPlan(config, num_nodes, num_edges);
+
+    *vGraphMSTHandle = CUDPPPlanManager::AddPlan(vGraphMST);
+    if (CUDPP_INVALID_HANDLE == *vGraphMSTHandle)
+        return CUDPP_ERROR_UNKNOWN;
+    else
+        return CUDPP_SUCCESS;
+}
+
+CUDPP_DLL
+CUDPPResult cudppSetVGTemps(CUDPPHandle vGraphHandle,
+                            unsigned int * temp,
+                            unsigned int * temp2)
+{
+    CUDPPResult result = CUDPP_SUCCESS;
+
+    CUDPPVGraphPlan *vGraph = 
+        (CUDPPVGraphPlan*) CUDPPPlanManager::GetPlan(vGraphHandle);
+
+    vGraph->m_d_temp = temp;
+    vGraph->m_d_temp2 = temp2;
+    
+    return result;
+}
+
+CUDPP_DLL
+CUDPPResult cudppSetVGMSTTemps(CUDPPHandle vGraphHandle,
+                               unsigned int * temp,
+                               unsigned int * temp2)
+{
+    CUDPPResult result = CUDPP_SUCCESS;
+
+    CUDPPVGraphMSTPlan *vGraphMST = 
+        (CUDPPVGraphMSTPlan*) CUDPPPlanManager::GetPlan(vGraphHandle);
+
+    vGraphMST->m_d_temp = temp;
+    vGraphMST->m_d_temp2 = temp2;
+    
+    return result;
+}
+
+CUDPP_DLL
+CUDPPResult cudppDestroyVGraph(CUDPPHandle vGraphHandle)
+{
+    return cudppDestroyPlan(vGraphHandle);
+}
+
+CUDPP_DLL
+CUDPPResult cudppDestroyVGraphNRPlan(CUDPPHandle vGraphNRHandle)
+{
+    return cudppDestroyPlan(vGraphNRHandle);
+}
+
+CUDPP_DLL
+CUDPPResult cudppDestroyVGraphDEPlan(CUDPPHandle vGraphDEHandle)
+{
+    return cudppDestroyPlan(vGraphDEHandle);
+}
+
+CUDPP_DLL
+CUDPPResult cudppDestroyVGraphMSTPlan(CUDPPHandle vGraphMSTHandle)
+{
+    return cudppDestroyPlan(vGraphMSTHandle);
+}
+
 
 /** @} */ // end Plan Interface
 /** @} */ // end publicInterface
@@ -443,6 +617,159 @@ CUDPPSparseMatrixVectorMultiplyPlan::~CUDPPSparseMatrixVectorMultiplyPlan()
     freeSparseMatrixVectorMultiplyStorage(this);
     delete m_segmentedScanPlan;
     delete [] m_rowFinalIndex;
+}
+
+/** @brief v-graph Plan constructor
+* 
+* @param[in]  config The configuration struct specifying options
+* @param[in]  num_nodes The number of nodes (vertices) in the graph
+* @param[in]  num_edges The number of edges the graph
+* @param[in]  h_segment_descriptor host-side segment descriptor (number of edges per node/vertex)
+* @param[in]  h_cross_pointers host-side pointers per edge pointing to the edge's other side
+* @param[in]  h_head_flags host-side array per edge noting whether it's the first edge of the vertex (1) or not (0)
+* @param[in]  h_weights host-side array per edge noting weight of that edge
+*/
+
+CUDPPVGraphPlan::
+CUDPPVGraphPlan(CUDPPConfiguration config, 
+                size_t             num_nodes, 
+                size_t             num_edges, 
+                const unsigned int * h_segment_descriptor, // size: num_nodes
+                const unsigned int * h_cross_pointers,     // size: 2*num_edges
+                const unsigned int * h_head_flags,         // size: 2*num_edges
+                const float *        h_weights)            // size: 2*num_edges
+    : CUDPPPlan(config, 2 * num_edges, 1, 0),
+      m_num_nodes(num_nodes),
+      m_num_edges(num_edges),
+      m_d_segment_descriptor(NULL),
+      m_d_cross_pointers(NULL),
+      m_d_head_flags(NULL),
+      m_d_weights(NULL),
+      m_d_temp((void *) NULL),
+      m_d_temp2((void *) NULL)
+{
+    initializeVGraphStorage(this, h_segment_descriptor, h_cross_pointers, 
+                            h_head_flags, h_weights);
+}
+
+/* @brief Constructor for the neighbor-reduce plan data structure */
+CUDPPVGraphNRPlan::
+CUDPPVGraphNRPlan(CUDPPConfiguration config, 
+                  size_t             num_nodes, 
+                  size_t             num_edges)
+    : CUDPPPlan(config, 2 * num_edges, 1, 0),
+      m_num_nodes(num_nodes),
+      m_num_edges(num_edges)
+{
+    CUDPPConfiguration scanConfig = 
+        { 
+            CUDPP_SCAN, 
+            CUDPP_ADD, 
+            CUDPP_INT,
+            (CUDPP_OPTION_FORWARD | CUDPP_OPTION_INCLUSIVE) 
+        };
+    m_scanPlan = new CUDPPScanPlan(scanConfig, 2 * m_num_edges, 1, 0);
+
+    CUDPPConfiguration segScanConfig = 
+        { 
+            CUDPP_SEGMENTED_SCAN, 
+            CUDPP_ADD, 
+            config.datatype, 
+            (CUDPP_OPTION_FORWARD | CUDPP_OPTION_INCLUSIVE) 
+        };
+    m_segmentedScanPlan = 
+        new CUDPPSegmentedScanPlan(segScanConfig, 2 * m_num_edges);
+}
+
+/* @brief Constructor for the v-graph distribute-excess plan data structure */
+CUDPPVGraphDEPlan::
+CUDPPVGraphDEPlan(CUDPPConfiguration config, 
+                  size_t             num_nodes, 
+                  size_t             num_edges)
+    : CUDPPPlan(config, 2 * num_edges, 1, 0),
+      m_num_nodes(num_nodes),
+      m_num_edges(num_edges)
+{
+    CUDPPConfiguration scanConfig = 
+        { 
+            CUDPP_SCAN, 
+            CUDPP_ADD, 
+            CUDPP_INT,
+            (CUDPP_OPTION_FORWARD | CUDPP_OPTION_INCLUSIVE) 
+        };
+    m_scanPlan = new CUDPPScanPlan(scanConfig, 2 * m_num_edges, 1, 0);
+
+    CUDPPConfiguration segScanConfig = 
+        { 
+            CUDPP_SEGMENTED_SCAN, 
+            CUDPP_ADD, 
+            config.datatype, 
+            (CUDPP_OPTION_FORWARD | CUDPP_OPTION_INCLUSIVE) 
+        };
+    m_segmentedScanPlan = 
+        new CUDPPSegmentedScanPlan(segScanConfig, 2 * m_num_edges);
+}
+
+/* @brief Constructor for the minimum-spanning-tree plan data structure */
+CUDPPVGraphMSTPlan::
+CUDPPVGraphMSTPlan(CUDPPConfiguration config, 
+                   size_t             num_nodes, 
+                   size_t             num_edges)
+    : CUDPPPlan(config, 2 * num_edges, 1, 0),
+      m_num_nodes(num_nodes),
+      m_num_edges(num_edges)
+{
+    CUDPPConfiguration scanConfig = 
+        { 
+            CUDPP_SCAN, 
+            CUDPP_ADD, 
+            CUDPP_INT,
+            (CUDPP_OPTION_FORWARD | CUDPP_OPTION_INCLUSIVE) 
+        };
+    m_scanPlan = new CUDPPScanPlan(scanConfig, 2 * m_num_edges, 1, 0);
+
+    CUDPPConfiguration segScanConfig = 
+        { 
+            CUDPP_SEGMENTED_SCAN, 
+            CUDPP_ADD, 
+            config.datatype, 
+            (CUDPP_OPTION_FORWARD | CUDPP_OPTION_INCLUSIVE) 
+        };
+    m_segmentedScanPlan = 
+        new CUDPPSegmentedScanPlan(segScanConfig, 2 * m_num_edges);
+
+    initializeVGraphMSTStorage(this);
+}
+
+/** @brief v-graph data structure plan destructor */
+CUDPPVGraphPlan::~CUDPPVGraphPlan()
+{
+    freeVGraphStorage(this);
+}
+
+
+/** @brief v-graph neighbor-reduce algorithm plan destructor */
+CUDPPVGraphNRPlan::~CUDPPVGraphNRPlan()
+{
+    freeVGraphNRStorage(this);
+    delete m_scanPlan;
+    delete m_segmentedScanPlan;
+}
+
+/** @brief v-graph distribute-excess algorithm plan destructor */
+CUDPPVGraphDEPlan::~CUDPPVGraphDEPlan()
+{
+    freeVGraphDEStorage(this);
+    delete m_scanPlan;
+    delete m_segmentedScanPlan;
+}
+
+/** @brief v-graph minimum-spanning-tree algorithm plan destructor */
+CUDPPVGraphMSTPlan::~CUDPPVGraphMSTPlan()
+{
+    freeVGraphMSTStorage(this);
+    delete m_scanPlan;
+    delete m_segmentedScanPlan;
 }
 
 /** @brief CUDPP Rand Plan Constructor

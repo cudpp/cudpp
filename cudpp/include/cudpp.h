@@ -497,6 +497,77 @@ CUDPPResult cudppSparseMatrixVectorMultiply(CUDPPHandle sparseMatrixHandle,
                                             void        *d_y,
                                             const void  *d_x);
 
+// v-graph allocation
+
+CUDPP_DLL
+CUDPPResult cudppVGraph(CUDPPHandle        *vGraphHandle, 
+                        CUDPPConfiguration config, 
+                        size_t             num_nodes, 
+                        size_t             num_edges, 
+                        const unsigned int * segment_descriptor, // size: num_nodes
+                        const unsigned int * cross_pointers,     // size: 2 * num_edges
+                        const unsigned int * head_flags,         // size: 2 * num_edges
+                        const float * weights);        // size: 2 * num_edges
+
+CUDPP_DLL
+CUDPPResult cudppVGraphNRPlan(CUDPPHandle        *vGraphNRHandle, 
+                              CUDPPConfiguration config, 
+                              size_t             num_nodes, 
+                              size_t             num_edges);
+
+CUDPP_DLL
+CUDPPResult cudppVGraphDEPlan(CUDPPHandle        *vGraphDEHandle, 
+                              CUDPPConfiguration config, 
+                              size_t             num_nodes, 
+                              size_t             num_edges);
+
+CUDPP_DLL
+CUDPPResult cudppVGraphMSTPlan(CUDPPHandle        *vGraphMSTHandle, 
+                               CUDPPConfiguration config, 
+                               size_t             num_nodes, 
+                               size_t             num_edges);
+
+CUDPP_DLL
+CUDPPResult cudppSetVGTemps(CUDPPHandle vGraphHandle,
+                            unsigned int * temp,
+                            unsigned int * temp2);
+
+CUDPP_DLL
+CUDPPResult cudppDestroyVGraph(CUDPPHandle vGraphHandle);
+
+CUDPP_DLL
+CUDPPResult cudppDestroyVGraphNRPlan(CUDPPHandle vGraphNRHandle);
+
+CUDPP_DLL
+CUDPPResult cudppDestroyVGraphDEPlan(CUDPPHandle vGraphDEHandle);
+
+CUDPP_DLL
+CUDPPResult cudppSetVGMSTTemps(CUDPPHandle vGraphMSTHandle,
+                               unsigned int * temp,
+                               unsigned int * temp2);
+
+CUDPP_DLL
+CUDPPResult cudppDestroyVGraphMSTPlan(CUDPPHandle vGraphMSTHandle);
+
+// v-graph algorithms
+
+CUDPP_DLL
+CUDPPResult cudppVGNeighborReduce(CUDPPHandle vGraphHandle,
+                                  CUDPPHandle vGraphNRHandle,
+                                  void        *d_out,
+                                  const void  *d_idata);
+
+CUDPP_DLL
+CUDPPResult cudppVGDistributeExcess(CUDPPHandle vGraphHandle,
+                                    CUDPPHandle vGraphDEHandle,
+                                    void * d_out, const void * d_capacity,
+                                    const void * d_excess);
+
+CUDPP_DLL
+CUDPPResult cudppVGMinimumSpanningTree(CUDPPHandle vGraphHandle,
+                                       CUDPPHandle vGraphMSTHandle,
+                                       void        *d_out);
+
 // random number generation algorithms
 CUDPP_DLL
 CUDPPResult cudppRand(CUDPPHandle planHandle,void * d_out, size_t numElements);

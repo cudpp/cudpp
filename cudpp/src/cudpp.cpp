@@ -46,6 +46,7 @@
 #include "cudpp_segscan.h"
 #include "cudpp_compact.h"
 #include "cudpp_spmvmult.h"
+#include "cudpp_vgraph.h"
 #include "cudpp_radixsort.h"
 #include "cudpp_rand.h"
 
@@ -339,6 +340,120 @@ CUDPPResult cudppSparseMatrixVectorMultiply(CUDPPHandle        sparseMatrixHandl
     else
     {
         return CUDPP_ERROR_UNKNOWN; //! @todo Return more specific errors.
+    }
+}
+
+/** @brief Perform neighbor reduction over vertices of v-graph
+  *
+  * The v-graph neighbor-reduce algorithm plan is contained in \a
+  * vGraphNRPlanHandle; the v-graph data structure is contained in the
+  * \a vGraphHandle. Per-vertex input values are in \a d_idata in
+  * device memory, and per-vertex output values will be in \a d_out in
+  * device memory.
+  *
+  * @param[in] vGraphHandle Handle to a v-graph object created with
+  * cudppVGraph()
+  * @param[in] vGraphNRHandle Handle to a v-graph neighbor-reduce
+  * algorithm object created with cudppVGraphNR()
+  * @param[in] d_idata Per-vertex inputs
+  * @param[out] d_out Per-vertex outputs
+  * 
+  * @see cudppVGraph, cudppDestroyVGraph, vgNeighborReduce,
+  * cudppVGNeighborReduceDispatch
+  */
+CUDPP_DLL
+CUDPPResult cudppVGNeighborReduce(CUDPPHandle vGraphHandle,
+                                  CUDPPHandle vGraphNRHandle,
+                                  void * d_out, 
+                                  const void * d_idata)
+{
+    CUDPPVGraphPlan *vgplan = 
+        (CUDPPVGraphPlan*) CUDPPPlanManager::GetPlan(vGraphHandle);
+    CUDPPVGraphNRPlan *vgnrplan = 
+        (CUDPPVGraphNRPlan*) CUDPPPlanManager::GetPlan(vGraphNRHandle);
+    
+    if ((vgplan != NULL) && (vgnrplan != NULL))
+    {
+        /* now, if the vgplan doesn't have two temps allocated, better allocate
+         * them */
+        /* @todo Would be nice to automatically do this */
+
+
+        cudppVGNeighborReduceDispatch(vgplan, vgnrplan, d_out, d_idata);
+        return CUDPP_SUCCESS;
+    }
+    else
+    {    
+        return CUDPP_ERROR_UNKNOWN; //! @todo Return more specific errors
+    }
+}
+
+
+/** @brief Distribute excess over vertices of v-graph
+  *
+  * The v-graph distribute-excess algorithm plan is contained in \a
+  * vGraphDEPlanHandle; the v-graph data structure is contained in the
+  * \a vGraphHandle. Per-edge input capacity values are in \a
+  * d_capacity in device memory, per-vertex input excess values are in
+  * \a d_excess in device memory, and per-edge output values will be
+  * in \a d_out in device memory.
+  *
+  * @param[in] vGraphHandle Handle to a v-graph object created with
+  * cudppVGraph()
+  * @param[in] vGraphDEHandle Handle to a v-graph disribute-excess
+  * algorithm object created with cudppVGraphDE()
+  * @param[in] d_capacity Per-edge capacity inputs
+  * @param[in] d_excess Per-vertex excess inputs
+  * @param[out] d_out Per-edge outputs
+  * 
+  * @see cudppVGraph, cudppDestroyVGraph, vgDistributeExcess,
+  * cudppVGDisributeExcessDispatch
+  */
+CUDPP_DLL
+CUDPPResult cudppVGDistributeExcess(CUDPPHandle vGraphHandle,
+                                    CUDPPHandle vGraphDEHandle,
+                                    void * d_out, const void * d_capacity,
+                                    const void * d_excess)
+{
+    CUDPPVGraphPlan *vgplan = 
+        (CUDPPVGraphPlan*) CUDPPPlanManager::GetPlan(vGraphHandle);
+    CUDPPVGraphDEPlan *vgdeplan = 
+        (CUDPPVGraphDEPlan*) CUDPPPlanManager::GetPlan(vGraphDEHandle);
+    
+    if ((vgplan != NULL) && (vgdeplan != NULL))
+    {
+        /* now, if the vgplan doesn't have two temps allocated, better allocate
+         * them */
+        /* @todo Would be nice to automatically do this */
+
+        cudppVGDistributeExcessDispatch(vgplan, vgdeplan, d_out, d_capacity, 
+                                        d_excess);
+        return CUDPP_SUCCESS;
+    }
+    else
+    {    
+        return CUDPP_ERROR_UNKNOWN; //! @todo Return more specific errors
+    }
+}
+
+CUDPP_DLL
+CUDPPResult cudppVGMinimumSpanningTree(CUDPPHandle vGraphHandle,
+                                       CUDPPHandle vGraphMSTHandle,
+                                       void        *d_out)
+{
+    CUDPPVGraphPlan *vgplan = 
+        (CUDPPVGraphPlan*) CUDPPPlanManager::GetPlan(vGraphHandle);
+    CUDPPVGraphMSTPlan *vgmstplan = 
+        (CUDPPVGraphMSTPlan*) CUDPPPlanManager::GetPlan(vGraphMSTHandle);
+    
+    if ((vgplan != NULL) && (vgmstplan != NULL))
+    {
+        cudppVGMinimumSpanningTreeDispatch(vgplan, vgmstplan, d_out);
+        return CUDPP_SUCCESS;
+    }
+    else
+    {    
+        return CUDPP_ERROR_UNKNOWN; //! @todo Return more specific errors
     }
 }
 

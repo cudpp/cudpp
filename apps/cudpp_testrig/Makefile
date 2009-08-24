@@ -9,7 +9,7 @@
 EXECUTABLE	:= cudpp_testrig
 
 CCFILES :=	scan_gold.cpp compact_gold.cpp spmvmult_gold.cpp \
-		cudpp_testrig_options.cpp
+		vgraph_gold.cpp cudpp_testrig_options.cpp
 CUFILES :=	cudpp_testrig.cu
 
 INCLUDES := -I../../cudpp/include -I../../common/inc

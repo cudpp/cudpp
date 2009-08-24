@@ -49,6 +49,7 @@ extern "C"
 #include "test_spmvmult.cu"
 #include "test_radixsort.cu"
 #include "test_rand.cu"
+#include "test_vgraph.cu"
 
 /**
  * main in cudpp_testrig is a dispatch routine to exercise cudpp functionality. 
@@ -312,6 +313,13 @@ int main(int argc, const char** argv)
     {
         retval += testSparseMatrixVectorMultiply(argc, argv);
     }    
+
+    if (testAll || (CUTTrue == cutCheckCmdLineFlag(argc, argv, "vgraph")))
+    {
+        retval += testVGraphNR(argc, argv); // works, comment back in when done with mst
+        // retval += testVGraphDE(argc, argv); // doesn't work yet
+        // retval += testVGraphMST(argc, argv); // being developed now
+    }   
 
     if (testAll ||(CUTTrue == cutCheckCmdLineFlag(argc, argv, "rand")))
     {

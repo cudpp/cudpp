@@ -15,7 +15,8 @@ CUFILES :=	src/app/compact_app.cu \
 		src/app/segmented_scan_app.cu \
 		src/app/spmvmult_app.cu \
 		src/app/radixsort_app.cu \
-		src/app/rand_app.cu 
+		src/app/rand_app.cu \
+                src/app/vgraph_app.cu
 
 SRCDIR := ./src/
 CUSRCDIR := ./src/app/

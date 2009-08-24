@@ -30,6 +30,9 @@ const int LOG_WARP_SIZE = 5;                     /**< log_2(WARP_SIZE) */
 const int LOG_SIZEOF_FLOAT = 2;                  /**< log_2(sizeof(float)) */
 const int SCAN_ELTS_PER_THREAD = 8;              /**< Number of elements per scan thread */
 const int SEGSCAN_ELTS_PER_THREAD = 8;     /**< Number of elements per segmented scan thread */
+const int VGNEIGHBORREDUCE_ELTS_PER_THREAD = 1;     /**< Number of elements per vgraph neighbor reduce thread */
+const int VGDISTRIBUTEEXCESS_ELTS_PER_THREAD = 1;     /**< Number of elements per vgraph distribute excess thread */
+const int VGMST_ELTS_PER_THREAD = 1;     /**< Number of elements per vgraph minimum spanning tree thread */
 
 const int maxSharedMemoryPerBlock = 16384; /**< Number of bytes of shared 
                                               memory in each block */
