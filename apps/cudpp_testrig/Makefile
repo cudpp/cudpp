@@ -12,7 +12,7 @@ CCFILES :=	scan_gold.cpp compact_gold.cpp spmvmult_gold.cpp \
 		vgraph_gold.cpp cudpp_testrig_options.cpp
 CUFILES :=	cudpp_testrig.cu
 
-INCLUDES := -I../../cudpp/include -I../../common/inc
+INCLUDES := -I../../cudpp/include -I../../common/inc -D_USE_BOOST_
 
 USECUDPP := 1
 

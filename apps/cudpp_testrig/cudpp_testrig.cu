@@ -316,8 +316,8 @@ int main(int argc, const char** argv)
 
     if (testAll || (CUTTrue == cutCheckCmdLineFlag(argc, argv, "vgraph")))
     {
-        retval += testVGraphNR(argc, argv); // works, comment back in when done with mst
-        // retval += testVGraphDE(argc, argv); // doesn't work yet
+        retval += testVGraphNR(argc, argv); // works on all tests so far
+        retval += testVGraphDE(argc, argv); // works on mini test
         // retval += testVGraphMST(argc, argv); // being developed now
     }   
 

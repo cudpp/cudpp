@@ -150,7 +150,8 @@ int testVGraphNR(int argc, const char** argv)
         }
     }
 
-    printf("v-graph neighbor-reduce test %s\n", 
+    printf("v-graph neighbor-reduce test (%d nodes, %d edges) %s\n", 
+           num_nodes, num_edges,
            (CUTTrue == vg_result) ? "PASSED" : "FAILED");
     printf("Average execution time: %f ms\n", 
            cutGetTimerValue(timer) / testOptions.numIterations);
@@ -248,6 +249,11 @@ int testVGraphDE(int argc, const char** argv)
                               num_edges * sizeof(unsigned int)));
     CUDA_SAFE_CALL(cudaMalloc((void**) &d_capacity, num_edges * sizeof(int))); 
     CUDA_SAFE_CALL(cudaMalloc((void**) &d_excess, num_nodes * sizeof(int))); 
+
+    CUDA_SAFE_CALL(cudaMemcpy(d_capacity, h_capacity, num_edges * sizeof(int),
+                              cudaMemcpyHostToDevice));
+    CUDA_SAFE_CALL(cudaMemcpy(d_excess, h_excess, num_nodes * sizeof(int),
+                              cudaMemcpyHostToDevice));
 
     CUDPPConfiguration config;
     config.datatype = CUDPP_INT;
@@ -422,7 +428,7 @@ int testVGraphMST(int argc, const char** argv)
 
     if (result != CUDPP_SUCCESS)
     {
-        fprintf(stderr, "Error creating v-graph minimum-spannig-tree plan\n");
+        fprintf(stderr, "Error creating v-graph minimum-spanning-tree plan\n");
         return 1;
     }
 

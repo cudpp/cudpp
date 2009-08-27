@@ -237,10 +237,9 @@ void vgDistributeExcess(const CUDPPVGraphPlan *plan,
 
     dim3  threads(CTA_SIZE, 1, 1);
 
-    vGraphCopyDebug<<<gridEdges, threads>>>(d_out, d_capacity, plan->m_num_edges);
-
-    // XXX I am still debugging - obviously this code doesn't work yet
-    return;
+    // vGraphCopyDebug<<<gridEdges, threads>>>(d_out, d_capacity, plan->m_num_edges);
+    // printDebugI("capacity", d_capacity, plan->m_num_edges);
+    // printDebugI("excess", d_excess, plan->m_num_nodes);
 
     /* Step 1: segmented copy of vertex indices to each edge incident
      * to that vertex. This is a segmented distribute operation, using
@@ -258,13 +257,15 @@ void vgDistributeExcess(const CUDPPVGraphPlan *plan,
     cudppScanDispatch((unsigned int *) plan->m_d_temp, plan->m_d_head_flags,
                       plan->m_num_edges, 1, deplan->m_scanPlan);
     /* in output of this call, temp is 1 too big */
+    // printDebugI("d_temp", (unsigned int *) plan->m_d_temp, plan->m_num_edges);
 
     /* the -1 in the template corrects for the 1-too-big in previous call */
-    vGraphGatherAndZero<T, -1>
+    vGraphGatherAndZero<T, -1, false>
         <<<gridEdges, threads>>>((T *) plan->m_d_temp, d_excess, 
                                  (unsigned int *) plan->m_d_temp, 
                                  plan->m_d_head_flags, 
                                  plan->m_num_edges);
+    // printDebugI("d_temp", (T *) plan->m_d_temp, plan->m_num_edges);
 
     /* step 2: distribute capacity into temp2 */
     cudppSegmentedScanDispatch((T *) plan->m_d_temp2,
@@ -272,6 +273,7 @@ void vgDistributeExcess(const CUDPPVGraphPlan *plan,
                                plan->m_d_head_flags,
                                plan->m_num_edges,
                                deplan->m_segmentedScanPlan);
+    // printDebugI("d_temp2", (T *) plan->m_d_temp2, plan->m_num_edges);
 
     /* step 3: calculate excess distribution into d_out:
        min(capacity, max(temp-temp2,0) ) */
@@ -279,6 +281,7 @@ void vgDistributeExcess(const CUDPPVGraphPlan *plan,
                                                          (T *) plan->m_d_temp,
                                                          (T *) plan->m_d_temp2,
                                                          plan->m_num_edges);
+    // printDebugI("d_out", d_out, plan->m_num_edges);
 
 }
 
@@ -741,8 +744,8 @@ void cudppVGDistributeExcessDispatch(const CUDPPVGraphPlan *vgplan,
 {    
     // needs to dispatch based on vgplan's datatype
     vgDistributeExcess<int>(vgplan, vgdeplan,
-                            (int *) d_out, (const int *) d_excess,
-                            (const int *) d_capacity);
+                            (int *) d_out, (const int *) d_capacity,
+                            (const int *) d_excess);
 }
 
 void cudppVGMinimumSpanningTreeDispatch(CUDPPVGraphPlan * vGraphHandle,

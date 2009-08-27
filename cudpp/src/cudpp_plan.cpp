@@ -704,7 +704,7 @@ CUDPPVGraphDEPlan(CUDPPConfiguration config,
             CUDPP_SEGMENTED_SCAN, 
             CUDPP_ADD, 
             config.datatype, 
-            (CUDPP_OPTION_FORWARD | CUDPP_OPTION_INCLUSIVE) 
+            (CUDPP_OPTION_FORWARD | CUDPP_OPTION_EXCLUSIVE) 
         };
     m_segmentedScanPlan = 
         new CUDPPSegmentedScanPlan(segScanConfig, 2 * m_num_edges);

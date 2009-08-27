@@ -97,7 +97,7 @@ void gatherAndPermuteMinus1(T * dest,
  *
  * @see vgNeighborReduce
  */
-template<class T, int shift>
+template<class T, int shift, bool zero_non_head_flags>
 __global__
 void vGraphGatherAndZero(T * dest, const T * src, const unsigned int * addr, 
                          const unsigned int * head_flags, size_t num_elements)
@@ -107,7 +107,6 @@ void vGraphGatherAndZero(T * dest, const T * src, const unsigned int * addr,
     const int thid   = threadIdx.x;
     const int offset = __mul24(bid, n) + thid;
 
-    const T * idata = src + offset;
     const unsigned int * hf = head_flags + offset;
     const unsigned int * a = addr + offset;
     T * odata       = dest + offset;
@@ -115,7 +114,14 @@ void vGraphGatherAndZero(T * dest, const T * src, const unsigned int * addr,
     if (offset < num_elements)
     {
         int idx = int(*a) + shift;
-        *odata = *hf ? idata[idx] : 0;
+        if (zero_non_head_flags)
+        {
+            *odata = *hf ? src[idx] : 0;
+        }
+        else
+        {
+            *odata = src[idx];
+        }
     }
 }
 

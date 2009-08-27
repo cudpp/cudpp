@@ -319,7 +319,7 @@ void generateMSTGraph(const int num_nodes, const int num_edges,
     size_t nodes_T_bytes = sizeof(T) * num_nodes;
     // size_t edges_T_bytes = sizeof(T) * 2 * num_edges;
     size_t edges_WeightsT_bytes = sizeof(WeightsT) * 2 * num_edges;
-    
+
     *idata = (T *) malloc(nodes_T_bytes);
     memset((void *) *idata, 0, nodes_T_bytes);
     *odata = (T *) malloc(nodes_T_bytes);
@@ -376,6 +376,11 @@ void generateMSTGraph(const int num_nodes, const int num_edges,
                       << " with weight of " << weight[*ei]
                       << std::endl;
         }
+    }
+#else
+    if (testOptions.debug)
+    { 
+        std::cout << "MST not currently supported without Boost" << std::endl;
     }
 #endif // _USE_BOOST_
 }
