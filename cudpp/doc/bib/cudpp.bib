@@ -1,5 +1,5 @@
 % I am including only papers that USE cudpp as opposed to those that
-% COMPARE AGAINST cudpp. 
+% COMPARE AGAINST cudpp.
 
 @incollection{Allusse:2008:GAG,
   author =	 "Yannick Allusse and Patrick Horain and Ankit Agarwal
@@ -31,6 +31,17 @@
   doi =		 {10.1007/978-3-642-01970-8_88},
 }
 
+@inproceedings{Billeter:2009:ESC,
+  author =	 {Markus Billeter and Ola Olsson and Ulf Assarsson},
+  title =	 {Efficient Stream Compaction on Wide {SIMD} Many-Core
+                  Architectures},
+  booktitle =	 {Proceedings of High Performance Graphics 2009},
+  year =	 2009,
+  month =        aug,
+  pages =	 {159--166},
+  doi =		 {10.1145/1572769.1572795},
+}
+
 @inproceedings{Chong:2008:DLV,
   author =	 {Jike Chong and Youngmin Yi and Arlo Faria and
                   Nadathur Satish and Kurt Keutzer},
@@ -44,6 +55,16 @@
   url =		 {http://www.gigascale.org/pubs/1499.html},
 }
 
+@MastersThesis{Dukehart:2009:GRW,
+  author =	 {Sean Peter Dukehart},
+  title =	 {{GPU} Random Walkers for Iterative Image
+                  Segmentation},
+  school =	 {Department of Computer Science, University of
+                  Maryland Baltimore County},
+  year =	 2009,
+  month =	 feb
+}
+
 @InProceedings{   Eisenacher:2009:RTV,
   author =	 {Christian Eisenacher and Quirin Meyer and Charles
                   Loop},
@@ -51,7 +72,7 @@
                   Surfaces},
   booktitle =	 {I3D '09: Proceedings of the 2009 Symposium on
                   Interactive 3D Graphics and Games},
-  month         = feb # "\slash "  # mar,
+  month =	 feb # "\slash " # mar,
   year =	 2009,
   pages =	 {137--143},
   doi =		 {10.1145/1507149.1507172}
@@ -70,6 +91,17 @@
   month =	 sep,
   year =	 2009,
   doi =		 "10.1007/978-3-642-00219-9",
+}
+
+@inproceedings{Hoberock:2009:SCF,
+  author =	 {Jared Hoberock and Victor Lu and Yuntao Jia and John
+                  C. Hart},
+  title =	 {Stream Compaction for Deferred Shading},
+  booktitle =	 {Proceedings of High Performance Graphics 2009},
+  year =	 2009,
+  month =	 aug,
+  pages =	 {173--180},
+  doi =		 {10.1145/1572769.1572797},
 }
 
 @article{Hou:2008:BBG,
@@ -111,7 +143,7 @@
   pages =	 "143:1--143:8",
 }
 
-@InProceedings{   Patney:2009:PVT,
+@InProceedings{Patney:2009:PVT,
   author =	 {Anjul Patney and Mohamed S. Ebeida and John D.
                   Owens},
   title =	 {Parallel View-Dependent Tessellation of
@@ -119,8 +151,40 @@
   booktitle =	 {Proceedings of High Performance Graphics 2009},
   year =	 2009,
   month =	 aug,
+  pages =        {99--108},
   url =
-                  "http://graphics.idav.ucdavis.edu/publications/print_pub?pub_id=964"
+                  "http://graphics.idav.ucdavis.edu/publications/print_pub?pub_id=964",
+  doi =          {10.1145/1572769.1572785},
+}
+
+@InProceedings{Peters:2009:FCI,
+  author =	 {Hagen Peters and Ole Schulz-Hildebrandt and Norbert
+                  Luttenberger},
+  title =	 {Fast comparison-based in-place sorting with {CUDA}},
+  booktitle =	 {Eighth International Conference on Parallel
+                  Processing and Applied Mathematics},
+  year =	 2009,
+  month =	 sep
+}
+
+@MastersThesis{Ponce:2009:TAT,
+  author =	 {Sean P. Ponce},
+  title =	 {Towards Algorithm Transformation for Temporal Data
+                  Mining on {GPU}},
+  school =	 {Department of Computer Science, Virginia Polytechnic
+                  Institute and State University},
+  year =	 2009,
+  month =	 "7~" # jul,
+}
+
+@InProceedings{Qiu:2009:GNN,
+  author =	 {Deyuan Qiu and Stefan May and Andreas N{\"{u}}chter},
+  title =	 {{GPU}-accelerated Nearest Neighbor Search for 3{D}
+                  Registration},
+  booktitle =	 {ICVS \textln{2009}: Proceedings of the 7th
+                  International Conference on Computer Vision Systems},
+  year =	 2009,
+  month =	 oct
 }
 
 @InProceedings{   Satish:2009:DES,
@@ -147,13 +211,13 @@
 
 @techreport{Sengupta:2008:SPF,
   title =	 "Efficient Parallel Scan Algorithms for {GPUs}",
-  author =	 "Shubhabrata Sengupta and Mark Harris and Michael Garland",
-  number =       "NVR-2008-003",
+  author =	 "Shubhabrata Sengupta and Mark Harris and Michael
+                  Garland",
+  number =	 "NVR-2008-003",
   institution =	 "NVIDIA Corporation",
   year =	 2008,
   month =	 dec,
-  url =
-                  {http://mgarland.org/papers.html#segscan-tr},
+  url =		 {http://mgarland.org/papers.html#segscan-tr},
 }
 
 @article{Stantchev:2008:FPP,
@@ -166,15 +230,27 @@
   number =	 10,
   pages =	 "1339--1349",
   year =	 2008,
-  month =        oct,
+  month =	 oct,
   doi =		 "10.1016/j.jpdc.2008.05.009",
   url =
                   "http://www.sciencedirect.com/science/article/B6WKJ-4SW144M-1/2/914e9b94290a555f36b8238a9781aa1d",
 }
 
+@inproceedings{Vineet:2009:FMS,
+  author =	 {Vibhav Vineet and Pawan Harish and Suryakant Patidar
+                  and P. J. Narayanan},
+  title =	 {Fast Minimum Spanning Tree for Large Graphs on the
+                  {GPU}},
+  booktitle =	 {Proceedings of High Performance Graphics 2009},
+  year =	 2009,
+  month =        aug,
+  pages =	 {167--171},
+  doi =		 {10.1145/1572769.1572796},
+}
+
 @TechReport{Zhou:2008:HPS,
-  author =	 {Kun Zhou and Minmin Gong and Xin Huang and
-                  Baining Guo},
+  author =	 {Kun Zhou and Minmin Gong and Xin Huang and Baining
+                  Guo},
   title =	 {Highly Parallel Surface Reconstruction},
   institution =	 {Microsoft Research},
   year =	 2008,
@@ -182,7 +258,7 @@
   month =	 "1~" # apr
 }
 
-@Article{         Zhou:2008:RKC,
+@Article{Zhou:2008:RKC,
   title =	 "Real-time {KD}-tree Construction on Graphics
                   Hardware",
   author =	 "Kun Zhou and Qiming Hou and Rui Wang and Baining
@@ -194,3 +270,4 @@
   year =	 2008,
   pages =	 "126:1--126:11"
 }
+
