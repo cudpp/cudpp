@@ -33,9 +33,8 @@ unsigned int compactGold(float* reference, const float* idata,
 /**
  * testCompact exercises cudpp's compact functionality.
  * Possible command line arguments:
- * - --forward, --backward: sets direction of scan
- * - --exclusive, --inclusive: sets exclusivity of scan
- * - --n=#: number of elements in scan
+ * - --forward, --backward: sets direction of compact
+ * - --n=#: number of elements in input
  * - --prob=#: fraction (0.0-1.0) of elements that are valid (default: 0.3)
  * - Also "global" options (see setOptions)
  * @param argc Number of arguments on the command line, passed

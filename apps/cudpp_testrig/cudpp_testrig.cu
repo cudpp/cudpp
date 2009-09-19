@@ -100,14 +100,21 @@ int main(int argc, const char** argv)
         printf("iterations=<N>: Number of times to run each test\n");
         printf("n=<N>: Number of values to use in a single test\n");
         printf("r=<N>: Number of rows to scan (--multiscan only)\n\n");
-        printf("--- Scan Options ---\n");               
+        printf("--- Scan (Segmented and Unsegmented) Options ---\n");
         printf("backward: Run backward scans\n");
         printf("forward: Run backward scans (default)\n");
-        printf("op=<OP>: Set scan operation to OP (OP=\"sum\" or \"max\" currently)\n");
+        printf("op=<OP>: Set scan operation to OP "
+               "(OP=\"sum\", \"max\" \"min\" and \"multiply\"  currently. "
+               "Default is sum)\n");
         printf("inclusive: Run inclusive scan (default)\n");
-        printf("exclusive: Run exclusive scan (currently unsupported by CUDPP)\n\n");
-        printf("--- Sort Options ---\n");               
-        printf("radix: Run radix sort only (default)\n");
+        printf("Exclusive: Run exclusive scan \n\n");
+        printf("--- Radix Sort Options ---\n");
+        printf("uint: Run radix sort on unsigned int keys (default)\n");
+        printf("float: Run radix sort on float keys\n");
+        printf("keyval: Run radix sort on key/value pairs (default)\n");
+        printf("keysonly: Run radix sort on keys only\n");
+        printf("keybits=<# bits>: Run radix sort on specified number "
+               "of bits in the key (default is 32)\n");
         printf("--- Sparse Matrix-Vector Multiply Options ---\n");
         printf("mat=<File Name>: File containing sparse matrix in Matrix Market format\n");
         printf("--- Rand Options ---\n");
@@ -305,7 +312,7 @@ int main(int argc, const char** argv)
             retval += testRadixSort(argc, argv, &config);
         }  
         else
-          retval += testRadixSort(argc, argv, NULL);
+            retval += testRadixSort(argc, argv, NULL);
     }    
 
     if ((CUTTrue == cutCheckCmdLineFlag(argc, argv, "spmvmult")))
