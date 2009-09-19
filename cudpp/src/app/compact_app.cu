@@ -57,9 +57,9 @@
   *
   */
 void calculatCompactLaunchParams(const unsigned int numElements,
-								 unsigned int       &numThreads, 
-								 unsigned int       &numBlocks,
-								 unsigned int       &numEltsPerBlock)
+                 unsigned int       &numThreads, 
+                 unsigned int       &numBlocks,
+                 unsigned int       &numEltsPerBlock)
 {
     numBlocks = 
         max(1, (int)ceil((float)numElements / 

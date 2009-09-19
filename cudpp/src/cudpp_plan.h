@@ -94,38 +94,18 @@ public:
     
 };
 
-/** @brief Plan class for sort algorithm
-*
-*/
-/*class CUDPPSortPlan : public CUDPPPlan
-{
-public:
-    CUDPPSortPlan(CUDPPConfiguration config, size_t numElements);
-    virtual ~CUDPPSortPlan();
-
-    CUDPPScanPlan *m_scanPlan;   //!< @internal Sort performs a scan of type unsigned int using this plan
-    unsigned int  *m_d_temp;     //!< @internal temporary storage
-    unsigned int  *m_d_tempAddress; //!< @internal temporary address storage
-
-    unsigned int  m_chunks;      //!< Number of full-sized sort chunks
-    unsigned int  m_chunkSize;   //!< Size of each full-sized chunk
-    unsigned int  m_leftovers;   //!< Number of leftovers not in full-sized 
-};*/
-
 class CUDPPRadixSortPlan : public CUDPPPlan
 {
 public:
-	CUDPPRadixSortPlan(CUDPPConfiguration config, size_t numElements);
-	virtual ~CUDPPRadixSortPlan();
+    CUDPPRadixSortPlan(CUDPPConfiguration config, size_t numElements);
+    virtual ~CUDPPRadixSortPlan();
 	
-	bool           m_bKeysOnly;
+    bool           m_bKeysOnly;
     bool           m_bManualCoalesce;
-
     unsigned int   m_persistentCTAThreshold[2];
     unsigned int   m_persistentCTAThresholdFullBlocks[2];
-
-	CUDPPScanPlan *m_scanPlan;        //!< @internal Sort performs a scan of type unsigned int using this plan
-	unsigned int   m_keyBits;
+    CUDPPScanPlan *m_scanPlan;        //!< @internal Sort performs a scan of type unsigned int using this plan
+    unsigned int   m_keyBits;
     mutable void  *m_tempKeys;        //!< @internal Intermediate storage for keys
     mutable void  *m_tempValues;      //!< @internal Intermediate storage for values
     unsigned int  *m_counters;        //!< @internal Counter for each radix
