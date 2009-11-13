@@ -97,7 +97,7 @@ __device__ uint floatUnflip(uint f)
  * @param[in,out] sData
 **/
 template<class T, int maxlevel>
-__device__ T scanwarp(T val, T* sData)
+__device__ T scanwarp(T val, volatile T* sData)
 {
     // The following is the same as 2 * WARP_SIZE * warpId + threadInWarp = 
     // 64*(threadIdx.x >> 5) + (threadIdx.x & (WARP_SIZE - 1))
