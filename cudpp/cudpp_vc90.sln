@@ -1,0 +1,62 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cudpp_vc90", "cudpp_vc90.vcproj", "{94BAC654-4582-4107-86FE-D9B347AFA5AA}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Debug|x64 = Debug|x64
+		EmuDebug|Win32 = EmuDebug|Win32
+		EmuDebug|x64 = EmuDebug|x64
+		EmuRelease|Win32 = EmuRelease|Win32
+		EmuRelease|x64 = EmuRelease|x64
+		Release|Win32 = Release|Win32
+		Release|x64 = Release|x64
+		StaticLib_Debug|Win32 = StaticLib_Debug|Win32
+		StaticLib_Debug|x64 = StaticLib_Debug|x64
+		StaticLib_EmuDebug|Win32 = StaticLib_EmuDebug|Win32
+		StaticLib_EmuDebug|x64 = StaticLib_EmuDebug|x64
+		StaticLib_EmuRelease|Win32 = StaticLib_EmuRelease|Win32
+		StaticLib_EmuRelease|x64 = StaticLib_EmuRelease|x64
+		StaticLib_Release|Win32 = StaticLib_Release|Win32
+		StaticLib_Release|x64 = StaticLib_Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{94BAC654-4582-4107-86FE-D9B347AFA5AA}.Debug|Win32.ActiveCfg = Debug|Win32
+		{94BAC654-4582-4107-86FE-D9B347AFA5AA}.Debug|Win32.Build.0 = Debug|Win32
+		{94BAC654-4582-4107-86FE-D9B347AFA5AA}.Debug|x64.ActiveCfg = Debug|x64
+		{94BAC654-4582-4107-86FE-D9B347AFA5AA}.Debug|x64.Build.0 = Debug|x64
+		{94BAC654-4582-4107-86FE-D9B347AFA5AA}.EmuDebug|Win32.ActiveCfg = EmuDebug|Win32
+		{94BAC654-4582-4107-86FE-D9B347AFA5AA}.EmuDebug|Win32.Build.0 = EmuDebug|Win32
+		{94BAC654-4582-4107-86FE-D9B347AFA5AA}.EmuDebug|x64.ActiveCfg = EmuDebug|x64
+		{94BAC654-4582-4107-86FE-D9B347AFA5AA}.EmuDebug|x64.Build.0 = EmuDebug|x64
+		{94BAC654-4582-4107-86FE-D9B347AFA5AA}.EmuRelease|Win32.ActiveCfg = EmuRelease|Win32
+		{94BAC654-4582-4107-86FE-D9B347AFA5AA}.EmuRelease|Win32.Build.0 = EmuRelease|Win32
+		{94BAC654-4582-4107-86FE-D9B347AFA5AA}.EmuRelease|x64.ActiveCfg = EmuRelease|x64
+		{94BAC654-4582-4107-86FE-D9B347AFA5AA}.EmuRelease|x64.Build.0 = EmuRelease|x64
+		{94BAC654-4582-4107-86FE-D9B347AFA5AA}.Release|Win32.ActiveCfg = Release|Win32
+		{94BAC654-4582-4107-86FE-D9B347AFA5AA}.Release|Win32.Build.0 = Release|Win32
+		{94BAC654-4582-4107-86FE-D9B347AFA5AA}.Release|x64.ActiveCfg = Release|x64
+		{94BAC654-4582-4107-86FE-D9B347AFA5AA}.Release|x64.Build.0 = Release|x64
+		{94BAC654-4582-4107-86FE-D9B347AFA5AA}.StaticLib_Debug|Win32.ActiveCfg = StaticLib_Debug|Win32
+		{94BAC654-4582-4107-86FE-D9B347AFA5AA}.StaticLib_Debug|Win32.Build.0 = StaticLib_Debug|Win32
+		{94BAC654-4582-4107-86FE-D9B347AFA5AA}.StaticLib_Debug|x64.ActiveCfg = StaticLib_Debug|x64
+		{94BAC654-4582-4107-86FE-D9B347AFA5AA}.StaticLib_Debug|x64.Build.0 = StaticLib_Debug|x64
+		{94BAC654-4582-4107-86FE-D9B347AFA5AA}.StaticLib_EmuDebug|Win32.ActiveCfg = StaticLib_EmuDebug|Win32
+		{94BAC654-4582-4107-86FE-D9B347AFA5AA}.StaticLib_EmuDebug|Win32.Build.0 = StaticLib_EmuDebug|Win32
+		{94BAC654-4582-4107-86FE-D9B347AFA5AA}.StaticLib_EmuDebug|x64.ActiveCfg = StaticLib_EmuDebug|x64
+		{94BAC654-4582-4107-86FE-D9B347AFA5AA}.StaticLib_EmuDebug|x64.Build.0 = StaticLib_EmuDebug|x64
+		{94BAC654-4582-4107-86FE-D9B347AFA5AA}.StaticLib_EmuRelease|Win32.ActiveCfg = StaticLib_EmuRelease|Win32
+		{94BAC654-4582-4107-86FE-D9B347AFA5AA}.StaticLib_EmuRelease|Win32.Build.0 = StaticLib_EmuRelease|Win32
+		{94BAC654-4582-4107-86FE-D9B347AFA5AA}.StaticLib_EmuRelease|x64.ActiveCfg = StaticLib_EmuRelease|x64
+		{94BAC654-4582-4107-86FE-D9B347AFA5AA}.StaticLib_EmuRelease|x64.Build.0 = StaticLib_EmuRelease|x64
+		{94BAC654-4582-4107-86FE-D9B347AFA5AA}.StaticLib_Release|Win32.ActiveCfg = StaticLib_Release|Win32
+		{94BAC654-4582-4107-86FE-D9B347AFA5AA}.StaticLib_Release|Win32.Build.0 = StaticLib_Release|Win32
+		{94BAC654-4582-4107-86FE-D9B347AFA5AA}.StaticLib_Release|x64.ActiveCfg = StaticLib_Release|x64
+		{94BAC654-4582-4107-86FE-D9B347AFA5AA}.StaticLib_Release|x64.Build.0 = StaticLib_Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
