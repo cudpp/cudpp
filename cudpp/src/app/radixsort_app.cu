@@ -84,7 +84,7 @@ void radixSortStep(uint *keys,
         // on GT200, resulting in better scheduling and lower run times
         if (startbit > 0)
         {
-            emptyKernel<<<numCTAs(emptyKernel), SORT_CTA_SIZE>>>();
+            emptyKernel<<<numCTAs(plan, emptyKernel), SORT_CTA_SIZE>>>();
         }
     }
 
@@ -94,8 +94,8 @@ void radixSortStep(uint *keys,
         {
             if (numElements >= threshold) 
             {
-                blocks = flip? numCTAs(radixSortBlocks<4, 0, true, true, true>) : 
-                               numCTAs(radixSortBlocks<4, 0, true, false, true>);
+                blocks = flip? numCTAs(plan, radixSortBlocks<4, 0, true, true, true>) : 
+                               numCTAs(plan, radixSortBlocks<4, 0, true, false, true>);
             }
 
             radixSortBlocks<nbits, startbit, true, flip, true>
@@ -115,8 +115,8 @@ void radixSortStep(uint *keys,
         {
             if (numElements >= threshold) 
             {
-                blocks = flip ? numCTAs(radixSortBlocks<4, 0, false, true, true>) : 
-                                numCTAs(radixSortBlocks<4, 0, false, false, true>);
+                blocks = flip ? numCTAs(plan, radixSortBlocks<4, 0, false, true, true>) : 
+                                numCTAs(plan, radixSortBlocks<4, 0, false, false, true>);
             }
 
             radixSortBlocks<nbits, startbit, false, flip, true>
@@ -139,7 +139,7 @@ void radixSortStep(uint *keys,
         {
             if (numElements >= threshold) 
             {
-                blocksFind = numCTAs(findRadixOffsets<0, true, true>);
+                blocksFind = numCTAs(plan, findRadixOffsets<0, true, true>);
             }
             findRadixOffsets<startbit, true, true>
                 <<<blocksFind, SORT_CTA_SIZE, 3 * SORT_CTA_SIZE * sizeof(uint)>>>
@@ -158,7 +158,7 @@ void radixSortStep(uint *keys,
         {
             if (numElements >= threshold) 
             {
-                blocksFind = numCTAs(findRadixOffsets<0, false, true>);
+                blocksFind = numCTAs(plan, findRadixOffsets<0, false, true>);
             }
             findRadixOffsets<startbit, false, true>
                 <<<blocksFind, SORT_CTA_SIZE, 3 * SORT_CTA_SIZE * sizeof(uint)>>>
@@ -184,8 +184,8 @@ void radixSortStep(uint *keys,
             {
                 if (numElements >= threshold) 
                 {
-                    blocksReorder = unflip ? numCTAs(reorderData<0, true, true, true, true>) :
-                                             numCTAs(reorderData<0, true, true, false, true>);
+                    blocksReorder = unflip ? numCTAs(plan, reorderData<0, true, true, true, true>) :
+                                             numCTAs(plan, reorderData<0, true, true, false, true>);
                 }
                 reorderData<startbit, true, true, unflip, true>
                     <<<blocksReorder, SORT_CTA_SIZE>>>
@@ -206,8 +206,8 @@ void radixSortStep(uint *keys,
             {
                 if (numElements >= threshold) 
                 {
-                    blocksReorder = unflip ? numCTAs(reorderData<0, true, false, true, true>) :
-                                             numCTAs(reorderData<0, true, false, false, true>);
+                    blocksReorder = unflip ? numCTAs(plan, reorderData<0, true, false, true, true>) :
+                                             numCTAs(plan, reorderData<0, true, false, false, true>);
                 }
                 reorderData<startbit, true, false, unflip, true>
                     <<<blocksReorder, SORT_CTA_SIZE>>>
@@ -232,8 +232,8 @@ void radixSortStep(uint *keys,
                 if (numElements >= threshold) 
                 {
                     blocksReorder = unflip ? 
-                        numCTAs(reorderData<0, false, true, true, true>) :
-                        numCTAs(reorderData<0, false, true, false, true>);
+                        numCTAs(plan, reorderData<0, false, true, true, true>) :
+                        numCTAs(plan, reorderData<0, false, true, false, true>);
                 }
                 reorderData<startbit, false, true, unflip, true>
                     <<<blocksReorder, SORT_CTA_SIZE>>>
@@ -255,8 +255,8 @@ void radixSortStep(uint *keys,
                 if (numElements >= threshold) 
                 {
                     blocksReorder = unflip ?
-                        numCTAs(reorderData<0, false, false, true, true>) :
-                        numCTAs(reorderData<0, false, false, false, true>);
+                        numCTAs(plan, reorderData<0, false, false, true, true>) :
+                        numCTAs(plan, reorderData<0, false, false, false, true>);
                 }
                 reorderData<startbit, false, false, unflip, true>
                     <<<blocksReorder, SORT_CTA_SIZE>>>
@@ -487,8 +487,8 @@ void radixSortStepKeysOnly(uint *keys,
         {
             if (numElements >= threshold) 
             {
-                blocks = flip ? numCTAs(radixSortBlocksKeysOnly<4, 0, true, true, true>) : 
-                                numCTAs(radixSortBlocksKeysOnly<4, 0, true, false, true>);
+                blocks = flip ? numCTAs(plan, radixSortBlocksKeysOnly<4, 0, true, true, true>) : 
+                                numCTAs(plan, radixSortBlocksKeysOnly<4, 0, true, false, true>);
             }
 
             radixSortBlocksKeysOnly<nbits, startbit, true, flip, true>
@@ -506,8 +506,8 @@ void radixSortStepKeysOnly(uint *keys,
         {
             if (numElements >= threshold) 
             {
-                blocks = flip ? numCTAs(radixSortBlocksKeysOnly<4, 0, false, true, true>) : 
-                                numCTAs(radixSortBlocksKeysOnly<4, 0, false, false, true>);
+                blocks = flip ? numCTAs(plan, radixSortBlocksKeysOnly<4, 0, false, true, true>) : 
+                                numCTAs(plan, radixSortBlocksKeysOnly<4, 0, false, false, true>);
             }
 
             radixSortBlocksKeysOnly<nbits, startbit, false, flip, true>
@@ -527,7 +527,7 @@ void radixSortStepKeysOnly(uint *keys,
         {
             if (numElements >= threshold) 
             {
-                blocksFind = numCTAs(findRadixOffsets<0, true, true>);
+                blocksFind = numCTAs(plan, findRadixOffsets<0, true, true>);
             }
             findRadixOffsets<startbit, true, true>
                 <<<blocksFind, SORT_CTA_SIZE, 3 * SORT_CTA_SIZE * sizeof(uint)>>>
@@ -544,7 +544,7 @@ void radixSortStepKeysOnly(uint *keys,
         {
             if (numElements >= threshold) 
             {
-                blocksFind = numCTAs(findRadixOffsets<0, false, true>);
+                blocksFind = numCTAs(plan, findRadixOffsets<0, false, true>);
             }
             findRadixOffsets<startbit, false, true>
                 <<<blocksFind, SORT_CTA_SIZE, 3 * SORT_CTA_SIZE * sizeof(uint)>>>
@@ -568,8 +568,8 @@ void radixSortStepKeysOnly(uint *keys,
                 if (numElements >= threshold) 
                 {
                     blocksReorder = unflip ? 
-                        numCTAs(reorderDataKeysOnly<0, true, true, true, true>) : 
-                        numCTAs(reorderDataKeysOnly<0, true, true, false, true>);
+                        numCTAs(plan, reorderDataKeysOnly<0, true, true, true, true>) : 
+                        numCTAs(plan, reorderDataKeysOnly<0, true, true, false, true>);
                 }
                 reorderDataKeysOnly<startbit, true, true, unflip, true>
                     <<<blocksReorder, SORT_CTA_SIZE>>>
@@ -589,8 +589,8 @@ void radixSortStepKeysOnly(uint *keys,
                 if (numElements >= threshold) 
                 {
                     blocksReorder = unflip ?
-                        numCTAs(reorderDataKeysOnly<0, true, false, true, true>) :
-                        numCTAs(reorderDataKeysOnly<0, true, false, false, true>);
+                        numCTAs(plan, reorderDataKeysOnly<0, true, false, true, true>) :
+                        numCTAs(plan, reorderDataKeysOnly<0, true, false, false, true>);
                 }
                 reorderDataKeysOnly<startbit, true, false, unflip, true>
                     <<<blocksReorder, SORT_CTA_SIZE>>>
@@ -613,8 +613,8 @@ void radixSortStepKeysOnly(uint *keys,
                 if (numElements >= threshold) 
                 {
                     blocksReorder = unflip ? 
-                        numCTAs(reorderDataKeysOnly<0, false, true, true, true>) :
-                        numCTAs(reorderDataKeysOnly<0, false, true, false, true>);
+                        numCTAs(plan, reorderDataKeysOnly<0, false, true, true, true>) :
+                        numCTAs(plan, reorderDataKeysOnly<0, false, true, false, true>);
                 }
                 reorderDataKeysOnly<startbit, false, true, unflip, true>
                     <<<blocksReorder, SORT_CTA_SIZE>>>
@@ -634,8 +634,8 @@ void radixSortStepKeysOnly(uint *keys,
                 if (numElements >= threshold) 
                 {
                     blocksReorder = unflip ?
-                        numCTAs(reorderDataKeysOnly<0, false, false, true, true>) :
-                        numCTAs(reorderDataKeysOnly<0, false, false, false, true>);
+                        numCTAs(plan, reorderDataKeysOnly<0, false, false, true, true>) :
+                        numCTAs(plan, reorderDataKeysOnly<0, false, false, false, true>);
                 }
                 reorderDataKeysOnly<startbit, false, false, unflip, true>
                     <<<blocksReorder, SORT_CTA_SIZE>>>
@@ -821,38 +821,38 @@ void initDeviceParameters(CUDPPRadixSortPlan *plan)
         // Must pass in the dynamic shared memory used by each kernel, since the runtime doesn't know it
         // Note we only insert the "loop" version of the kernels (the one with the last template param = true)
         // Because those are the only ones that require persistent CTAs that maximally fill the device.
-        computeNumCTAs(radixSortBlocks<4, 0, false, false, true>,         4 * SORT_CTA_SIZE * sizeof(uint), SORT_CTA_SIZE);
-        computeNumCTAs(radixSortBlocks<4, 0, false, true,  true>,         4 * SORT_CTA_SIZE * sizeof(uint), SORT_CTA_SIZE);
-        computeNumCTAs(radixSortBlocks<4, 0, true, false,  true>,         4 * SORT_CTA_SIZE * sizeof(uint), SORT_CTA_SIZE);
-        computeNumCTAs(radixSortBlocks<4, 0, true, true,  true>,          4 * SORT_CTA_SIZE * sizeof(uint), SORT_CTA_SIZE);
+        computeNumCTAs(plan, radixSortBlocks<4, 0, false, false, true>,         4 * SORT_CTA_SIZE * sizeof(uint), SORT_CTA_SIZE);
+        computeNumCTAs(plan, radixSortBlocks<4, 0, false, true,  true>,         4 * SORT_CTA_SIZE * sizeof(uint), SORT_CTA_SIZE);
+        computeNumCTAs(plan, radixSortBlocks<4, 0, true, false,  true>,         4 * SORT_CTA_SIZE * sizeof(uint), SORT_CTA_SIZE);
+        computeNumCTAs(plan, radixSortBlocks<4, 0, true, true,  true>,          4 * SORT_CTA_SIZE * sizeof(uint), SORT_CTA_SIZE);
         
-        computeNumCTAs(radixSortBlocksKeysOnly<4, 0, false, false, true>, 4 * SORT_CTA_SIZE * sizeof(uint), SORT_CTA_SIZE);
-        computeNumCTAs(radixSortBlocksKeysOnly<4, 0, false, true, true>,  4 * SORT_CTA_SIZE * sizeof(uint), SORT_CTA_SIZE);
-        computeNumCTAs(radixSortBlocksKeysOnly<4, 0, true, false, true>,  4 * SORT_CTA_SIZE * sizeof(uint), SORT_CTA_SIZE);
-        computeNumCTAs(radixSortBlocksKeysOnly<4, 0, true, true, true>,   4 * SORT_CTA_SIZE * sizeof(uint), SORT_CTA_SIZE);
+        computeNumCTAs(plan, radixSortBlocksKeysOnly<4, 0, false, false, true>, 4 * SORT_CTA_SIZE * sizeof(uint), SORT_CTA_SIZE);
+        computeNumCTAs(plan, radixSortBlocksKeysOnly<4, 0, false, true, true>,  4 * SORT_CTA_SIZE * sizeof(uint), SORT_CTA_SIZE);
+        computeNumCTAs(plan, radixSortBlocksKeysOnly<4, 0, true, false, true>,  4 * SORT_CTA_SIZE * sizeof(uint), SORT_CTA_SIZE);
+        computeNumCTAs(plan, radixSortBlocksKeysOnly<4, 0, true, true, true>,   4 * SORT_CTA_SIZE * sizeof(uint), SORT_CTA_SIZE);
 
-        computeNumCTAs(findRadixOffsets<0, false, true>,                  3 * SORT_CTA_SIZE * sizeof(uint), SORT_CTA_SIZE);
-        computeNumCTAs(findRadixOffsets<0, true, true>,                   3 * SORT_CTA_SIZE * sizeof(uint), SORT_CTA_SIZE);
+        computeNumCTAs(plan, findRadixOffsets<0, false, true>,                  3 * SORT_CTA_SIZE * sizeof(uint), SORT_CTA_SIZE);
+        computeNumCTAs(plan, findRadixOffsets<0, true, true>,                   3 * SORT_CTA_SIZE * sizeof(uint), SORT_CTA_SIZE);
 
-        computeNumCTAs(reorderData<0, false, false, false, true>,         0,                                SORT_CTA_SIZE);
-        computeNumCTAs(reorderData<0, false, false, true, true>,          0,                                SORT_CTA_SIZE);
-        computeNumCTAs(reorderData<0, false, true, false, true>,          0,                                SORT_CTA_SIZE);
-        computeNumCTAs(reorderData<0, false, true, true, true>,           0,                                SORT_CTA_SIZE);
-        computeNumCTAs(reorderData<0, true, false, false, true>,          0,                                SORT_CTA_SIZE);
-        computeNumCTAs(reorderData<0, true, false, true, true>,           0,                                SORT_CTA_SIZE);
-        computeNumCTAs(reorderData<0, true, true, false, true>,           0,                                SORT_CTA_SIZE);
-        computeNumCTAs(reorderData<0, true, true, true, true>,            0,                                SORT_CTA_SIZE);
+        computeNumCTAs(plan, reorderData<0, false, false, false, true>,         0,                                SORT_CTA_SIZE);
+        computeNumCTAs(plan, reorderData<0, false, false, true, true>,          0,                                SORT_CTA_SIZE);
+        computeNumCTAs(plan, reorderData<0, false, true, false, true>,          0,                                SORT_CTA_SIZE);
+        computeNumCTAs(plan, reorderData<0, false, true, true, true>,           0,                                SORT_CTA_SIZE);
+        computeNumCTAs(plan, reorderData<0, true, false, false, true>,          0,                                SORT_CTA_SIZE);
+        computeNumCTAs(plan, reorderData<0, true, false, true, true>,           0,                                SORT_CTA_SIZE);
+        computeNumCTAs(plan, reorderData<0, true, true, false, true>,           0,                                SORT_CTA_SIZE);
+        computeNumCTAs(plan, reorderData<0, true, true, true, true>,            0,                                SORT_CTA_SIZE);
 
-        computeNumCTAs(reorderDataKeysOnly<0, false, false, false, true>, 0,                                SORT_CTA_SIZE);
-        computeNumCTAs(reorderDataKeysOnly<0, false, false, true, true>,  0,                                SORT_CTA_SIZE);
-        computeNumCTAs(reorderDataKeysOnly<0, false, true, false, true>,  0,                                SORT_CTA_SIZE);
-        computeNumCTAs(reorderDataKeysOnly<0, false, true, true, true>,   0,                                SORT_CTA_SIZE);
-        computeNumCTAs(reorderDataKeysOnly<0, true, false, false, true>,  0,                                SORT_CTA_SIZE);
-        computeNumCTAs(reorderDataKeysOnly<0, true, false, true, true>,   0,                                SORT_CTA_SIZE);
-        computeNumCTAs(reorderDataKeysOnly<0, true, true, false, true>,   0,                                SORT_CTA_SIZE);
-        computeNumCTAs(reorderDataKeysOnly<0, true, true, true, true>,    0,                                SORT_CTA_SIZE);
+        computeNumCTAs(plan, reorderDataKeysOnly<0, false, false, false, true>, 0,                                SORT_CTA_SIZE);
+        computeNumCTAs(plan, reorderDataKeysOnly<0, false, false, true, true>,  0,                                SORT_CTA_SIZE);
+        computeNumCTAs(plan, reorderDataKeysOnly<0, false, true, false, true>,  0,                                SORT_CTA_SIZE);
+        computeNumCTAs(plan, reorderDataKeysOnly<0, false, true, true, true>,   0,                                SORT_CTA_SIZE);
+        computeNumCTAs(plan, reorderDataKeysOnly<0, true, false, false, true>,  0,                                SORT_CTA_SIZE);
+        computeNumCTAs(plan, reorderDataKeysOnly<0, true, false, true, true>,   0,                                SORT_CTA_SIZE);
+        computeNumCTAs(plan, reorderDataKeysOnly<0, true, true, false, true>,   0,                                SORT_CTA_SIZE);
+        computeNumCTAs(plan, reorderDataKeysOnly<0, true, true, true, true>,    0,                                SORT_CTA_SIZE);
                
-        computeNumCTAs(emptyKernel,                                       0,                                SORT_CTA_SIZE);
+        computeNumCTAs(plan, emptyKernel,                                       0,                                SORT_CTA_SIZE);
     }
 }
 

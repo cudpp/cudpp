@@ -118,7 +118,7 @@ int SortSupport<float>::verifySort(float *keysSorted, unsigned int *valuesSorted
 }
 
 template <typename T>
-int radixSortTest(CUDPPHandle plan, CUDPPConfiguration config, size_t *tests, 
+int radixSortTest(CUDPPHandle theCudpp, CUDPPHandle plan, CUDPPConfiguration config, size_t *tests, 
                   unsigned int numTests, unsigned int numElements, unsigned int keybits,
                   testrigOptions testOptions, bool quiet)
 {
@@ -326,11 +326,18 @@ int testRadixSort(int argc, const char **argv, CUDPPConfiguration *configPtr)
     sprintf(out, "%s %s", config.datatype == CUDPP_FLOAT ? "float" : "unsigned int",
                           config.options == CUDPP_OPTION_KEYS_ONLY ? "keys" : "key-value pairs");
     
-    CUDPPHandle plan;
     CUDPPResult result = CUDPP_SUCCESS;  
+    CUDPPHandle theCudpp;
+    result = cudppCreate(&theCudpp);
+    if(result != CUDPP_SUCCESS)
+    {
+        printf("Error initializing CUDPP Library.\n");
+        retval = numTests;
+        return retval;
+    }
 
-    result = cudppPlan(&plan, config, numElements, 1, 0);	
-
+    CUDPPHandle plan;   
+    result = cudppPlan(theCudpp, &plan, config, numElements, 1, 0);	
 
     if(result != CUDPP_SUCCESS)
     {
@@ -343,10 +350,10 @@ int testRadixSort(int argc, const char **argv, CUDPPConfiguration *configPtr)
     switch(config.datatype)
     {        
     case CUDPP_UINT:
-        retval = radixSortTest<unsigned int>(plan, config, test, numTests, numElements, keybits, testOptions, quiet);
+        retval = radixSortTest<unsigned int>(theCudpp, plan, config, test, numTests, numElements, keybits, testOptions, quiet);
         break;
     case CUDPP_FLOAT:	
-        retval = radixSortTest<float>(plan, config, test, numTests, numElements, keybits, testOptions, quiet);
+        retval = radixSortTest<float>(theCudpp, plan, config, test, numTests, numElements, keybits, testOptions, quiet);
         break;
     }
 
@@ -355,6 +362,14 @@ int testRadixSort(int argc, const char **argv, CUDPPConfiguration *configPtr)
     if (result != CUDPP_SUCCESS)
     {	
         printf("Error destroying CUDPPPlan for Scan\n");
+        retval = numTests;
+    }
+
+    result = cudppDestroy(theCudpp);
+
+    if (result != CUDPP_SUCCESS)
+    {	
+        printf("Error shutting down CUDPP Library.\n");
         retval = numTests;
     }
         	          

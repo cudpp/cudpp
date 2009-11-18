@@ -147,9 +147,19 @@ testSparseMatrixVectorMultiply(int argc, const char** argv)
     config.options = (CUDPPOption)0;
     config.algorithm = CUDPP_SPMVMULT;
 
-    CUDPPHandle sparseMatrixHandle;
     CUDPPResult result = CUDPP_SUCCESS;
-    result = cudppSparseMatrix(&sparseMatrixHandle, config, entries, 
+    CUDPPHandle theCudpp;
+    result = cudppCreate(&theCudpp);
+    
+    if (result != CUDPP_SUCCESS)
+    {
+        fprintf(stderr, "Error initializing CUDPP Library.\n");
+        return 1;
+    }
+
+    CUDPPHandle sparseMatrixHandle;
+    
+    result = cudppSparseMatrix(theCudpp, &sparseMatrixHandle, config, entries, 
                                rows, (void *)A, m.getRowPtrs(), indx);
 
     if (result != CUDPP_SUCCESS)
@@ -210,6 +220,13 @@ testSparseMatrixVectorMultiply(int argc, const char** argv)
     if (result != CUDPP_SUCCESS)
     {
         printf("Error destroying Sparse Matrix\n");
+    }
+
+    result = cudppDestroy(theCudpp);
+
+    if (result != CUDPP_SUCCESS)
+    {
+        printf("Error shutting down CUDPP Library.\n");
     }
 
     cutDeleteTimer(timer);

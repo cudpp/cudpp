@@ -17,40 +17,38 @@ typedef void* KernelPointer;
 
 /** @brief Singleton manager class for CUDPPPlan objects
   * 
-  * This class manages all active plans in CUDPP.  It is a singleton class,
-  * meaning that only one instance can exist.  It is created automatically the
-  * first time AddPlan() is called, and destroyed when the last plan is removed
-  * using RemovePlan().
+  * This class manages resources used by CUDPP plans.  
+  *
+  * Currently it only manages a table containing maximal CTA
+  * counts for certain kernels that perform maximal launches.
   */
 class CUDPPPlanManager
 {
 public:
-    static CUDPPHandle AddPlan(CUDPPPlan* plan);
-    static bool        RemovePlan(CUDPPHandle handle);
-    static CUDPPPlan*  GetPlan(CUDPPHandle handle);
-    
-    static size_t      numCTAs(KernelPointer kernel);
-    static void        computeNumCTAs(KernelPointer kernel, 
-                                      size_t bytesDynamicSharedMem, 
-                                      size_t threadsPerBlock);
+
+    CUDPPPlanManager();
+    ~CUDPPPlanManager();
+   
+    size_t      numCTAs(KernelPointer kernel);
+    void        computeNumCTAs(KernelPointer kernel, 
+                               size_t bytesDynamicSharedMem, 
+                               size_t threadsPerBlock);
+
+    //! @internal Convert an opaque handle to a pointer to a plan manager
+    //! @param [in] cudppHandle Handle to the Plan Manager object
+    static CUDPPPlanManager* getManagerFromHandle(CUDPPHandle cudppHandle)
+    {
+        return reinterpret_cast<CUDPPPlanManager*>(cudppHandle);
+    }
+
+    //! @internal Convert an opaque handle to a pointer to a plan manager
+    CUDPPHandle getHandle()
+    {
+        return reinterpret_cast<CUDPPHandle>(this);
+    }
     
 protected:
-    static CUDPPPlanManager* m_instance;
-    std::map<CUDPPHandle, CUDPPPlan*> plans;
     std::map<void*, size_t> numCTAsTable;
-
-private:
-    
-
-    //! @internal Instantiate the plan manager singleton object
-    static void Instantiate();
-    //! @internal Destroy the plan manager singleton object
-    static void Destroy();
-
-private:
-    CUDPPPlanManager() {}
-    CUDPPPlanManager(const CUDPPPlanManager&) {}
-    ~CUDPPPlanManager();
 };
 
 #endif // __CUDPP_PLAN_MANAGER_H__

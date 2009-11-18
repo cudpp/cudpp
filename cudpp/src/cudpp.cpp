@@ -89,12 +89,14 @@
  * @see cudppPlan, cudppDestroyPlan
  */
 CUDPP_DLL
-CUDPPResult cudppScan(CUDPPHandle planHandle,
-                      void        *d_out, 
-                      const void  *d_in, 
-                      size_t      numElements)
+CUDPPResult cudppScan(const CUDPPHandle planHandle,
+                      void              *d_out, 
+                      const void        *d_in, 
+                      size_t            numElements)
 {
-    CUDPPScanPlan *plan = (CUDPPScanPlan*)CUDPPPlanManager::GetPlan(planHandle);
+    CUDPPScanPlan *plan = 
+        (CUDPPScanPlan*)getPlanPtrFromHandle<CUDPPScanPlan>(planHandle);
+
     if (plan != NULL)
     {
         cudppScanDispatch(d_out, d_in, numElements, 1, plan);
@@ -151,14 +153,15 @@ CUDPPResult cudppScan(CUDPPHandle planHandle,
  * @see cudppPlan, cudppDestroyPlan
  */
 CUDPP_DLL
-CUDPPResult cudppSegmentedScan(CUDPPHandle        planHandle,
+CUDPPResult cudppSegmentedScan(const CUDPPHandle  planHandle,
                                void               *d_out, 
                                const void         *d_idata,
                                const unsigned int *d_iflags,
                                size_t             numElements)
 {
     CUDPPSegmentedScanPlan *plan = 
-        (CUDPPSegmentedScanPlan*)CUDPPPlanManager::GetPlan(planHandle);
+        (CUDPPSegmentedScanPlan*)getPlanPtrFromHandle<CUDPPSegmentedScanPlan>(planHandle);
+
     if (plan != NULL)
     {
         cudppSegmentedScanDispatch(d_out, d_idata, d_iflags, numElements, plan);
@@ -193,13 +196,14 @@ CUDPPResult cudppSegmentedScan(CUDPPHandle        planHandle,
  * @see cudppScan, cudppPlan
  */
 CUDPP_DLL
-CUDPPResult cudppMultiScan(CUDPPHandle planHandle,
-                            void       *d_out, 
-                            const void *d_in, 
-                            size_t     numElements,
-                            size_t     numRows)
+CUDPPResult cudppMultiScan(const CUDPPHandle planHandle,
+                           void              *d_out, 
+                           const void        *d_in, 
+                           size_t            numElements,
+                           size_t            numRows)
 {
-    CUDPPScanPlan *plan = (CUDPPScanPlan*)CUDPPPlanManager::GetPlan(planHandle);
+    CUDPPScanPlan *plan = 
+        (CUDPPScanPlan*)getPlanPtrFromHandle<CUDPPScanPlan>(planHandle);
     if (plan != NULL)
     {
         cudppScanDispatch(d_out, d_in, numElements, numRows, plan);
@@ -247,14 +251,16 @@ CUDPPResult cudppMultiScan(CUDPPHandle planHandle,
  * @param[in] numElements number of elements in d_in
  */
 CUDPP_DLL
-CUDPPResult cudppCompact(CUDPPHandle        planHandle,
+CUDPPResult cudppCompact(const CUDPPHandle  planHandle,
                          void               *d_out, 
                          size_t             *d_numValidElements,
                          const void         *d_in, 
                          const unsigned int *d_isValid,
                          size_t             numElements)
 {
-    CUDPPCompactPlan *plan = (CUDPPCompactPlan*)CUDPPPlanManager::GetPlan(planHandle);
+    CUDPPCompactPlan *plan = 
+        (CUDPPCompactPlan*)getPlanPtrFromHandle<CUDPPCompactPlan>(planHandle);
+
     if (plan != NULL)
     {
         cudppCompactDispatch(d_out, d_numValidElements, d_in, d_isValid, 
@@ -293,13 +299,15 @@ CUDPPResult cudppCompact(CUDPPHandle        planHandle,
  * @see cudppPlan, CUDPPConfiguration, CUDPPAlgorithm
  */
 CUDPP_DLL
-CUDPPResult cudppSort(CUDPPHandle planHandle,
-                      void        *d_keys,
-                      void        *d_values,                      
-                      int         keyBits,
-                      size_t      numElements)
+CUDPPResult cudppSort(const CUDPPHandle planHandle,
+                      void              *d_keys,
+                      void              *d_values,                      
+                      int               keyBits,
+                      size_t            numElements)
 {
-    CUDPPRadixSortPlan *plan = (CUDPPRadixSortPlan*)CUDPPPlanManager::GetPlan(planHandle);
+    CUDPPRadixSortPlan *plan = 
+        (CUDPPRadixSortPlan*)getPlanPtrFromHandle<CUDPPRadixSortPlan>(planHandle);
+
     if (plan != NULL)
     {
         cudppRadixSortDispatch(d_keys, d_values, numElements, keyBits, plan);
@@ -324,12 +332,13 @@ CUDPPResult cudppSort(CUDPPHandle planHandle,
   * @see cudppSparseMatrix, cudppDestroySparseMatrix
   */
 CUDPP_DLL
-CUDPPResult cudppSparseMatrixVectorMultiply(CUDPPHandle        sparseMatrixHandle,
+CUDPPResult cudppSparseMatrixVectorMultiply(const CUDPPHandle  sparseMatrixHandle,
                                             void               *d_y,
                                             const void         *d_x)
 {
     CUDPPSparseMatrixVectorMultiplyPlan *plan = 
-        (CUDPPSparseMatrixVectorMultiplyPlan*)CUDPPPlanManager::GetPlan(sparseMatrixHandle);
+        (CUDPPSparseMatrixVectorMultiplyPlan*)
+        getPlanPtrFromHandle<CUDPPSparseMatrixVectorMultiplyPlan>(sparseMatrixHandle);
     
     if (plan != NULL)
     {
@@ -363,9 +372,13 @@ CUDPPResult cudppSparseMatrixVectorMultiply(CUDPPHandle        sparseMatrixHandl
  * @see cudppPlan, CUDPPConfiguration, CUDPPAlgorithm
  */
 CUDPP_DLL
-CUDPPResult cudppRand(CUDPPHandle planHandle,void * d_out, size_t numElements)
+CUDPPResult cudppRand(const CUDPPHandle planHandle,
+                      void *            d_out, 
+                      size_t            numElements)
 {
-    CUDPPRandPlan * plan = (CUDPPRandPlan *) CUDPPPlanManager::GetPlan(planHandle);
+    CUDPPRandPlan * plan = 
+        (CUDPPRandPlan *) getPlanPtrFromHandle<CUDPPRandPlan>(planHandle);
+
     if(plan != NULL)
     {
         //dispatch the rand algorithm here
@@ -390,9 +403,12 @@ CUDPPResult cudppRand(CUDPPHandle planHandle,void * d_out, size_t numElements)
  * @param[in] seed the value which the internal cudpp seed will be set to
  */
 CUDPP_DLL
-CUDPPResult cudppRandSeed(const CUDPPHandle planHandle, unsigned int seed)
+CUDPPResult cudppRandSeed(const CUDPPHandle planHandle, 
+                          unsigned int      seed)
 {
-    CUDPPRandPlan * plan = (CUDPPRandPlan *) CUDPPPlanManager::GetPlan(planHandle);
+    CUDPPRandPlan * plan = 
+        (CUDPPRandPlan *) getPlanPtrFromHandle<CUDPPRandPlan>(planHandle);
+
     //switch on the plan to figure out which seed to update
     switch(plan->m_config.algorithm)
     {

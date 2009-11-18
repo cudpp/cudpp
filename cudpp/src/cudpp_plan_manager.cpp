@@ -14,30 +14,41 @@
 
 typedef void* KernelPointer;
 
-extern "C" size_t getNumCTAs(KernelPointer kernel)
+extern "C" size_t getNumCTAs(const CUDPPPlan* plan, KernelPointer kernel)
 {
-    return CUDPPPlanManager::numCTAs(kernel);    
+    return plan->m_planManager->numCTAs(kernel);    
 }
-extern "C" void compNumCTAs(KernelPointer kernel, size_t bytesDynamicSharedMem, size_t threadsPerBlock)
+extern "C" void compNumCTAs(const CUDPPPlan* plan, KernelPointer kernel, size_t bytesDynamicSharedMem, size_t threadsPerBlock)
 {
-    CUDPPPlanManager::computeNumCTAs(kernel, bytesDynamicSharedMem, threadsPerBlock);
+    plan->m_planManager->computeNumCTAs(kernel, bytesDynamicSharedMem, threadsPerBlock);
 }
 
-//! @internal Instantiate the plan manager singleton object
-void CUDPPPlanManager::Instantiate() 
-{ 
-    if (NULL == m_instance) 
-        m_instance = new CUDPPPlanManager; 
+/**
+ * @brief Creates an instance of the CUDPP library, and returns a handle.
+ */
+CUDPP_DLL
+CUDPPResult cudppCreate(CUDPPHandle* theCudpp)
+{
+    CUDPPPlanManager *mgr = new CUDPPPlanManager();
+    *theCudpp = mgr->getHandle();
+    return CUDPP_SUCCESS;
 }
 
-//! @internal Destroy the plan manager singleton object
-void CUDPPPlanManager::Destroy()     
-{ 
-    if (NULL != m_instance) 
-    { 
-        delete m_instance; 
-        m_instance = NULL; 
-    } 
+/**
+ * @brief Destroys an instance of the CUDPP library given its handle.
+ */
+CUDPP_DLL
+CUDPPResult cudppDestroy(CUDPPHandle theCudpp)
+{
+    CUDPPPlanManager *mgr = CUDPPPlanManager::getManagerFromHandle(theCudpp);
+    delete mgr;
+    mgr = 0;
+    return CUDPP_SUCCESS;
+}
+
+//! @brief Plan Manager constructor
+CUDPPPlanManager::CUDPPPlanManager()
+{
 }
 
 /** @brief Plan Manager destructor 
@@ -45,111 +56,23 @@ void CUDPPPlanManager::Destroy()
 */
 CUDPPPlanManager::~CUDPPPlanManager()
 {
-    std::map<CUDPPHandle,CUDPPPlan*>::iterator it;
-
-    for (it = m_instance->plans.begin(); it != m_instance->plans.end(); it++)
-    {
-        CUDPPPlan* plan = it->second;
-        delete plan;
-        plan = NULL;
-    }
-    m_instance->plans.clear();
-
-    m_instance->numCTAsTable.clear();
+    numCTAsTable.clear();
 }
 
-/** @brief Add a plan to the plan manager
-* 
-* @returns a valid CUDPPHandle if the plan was successfully added, or 
-* CUDPP_INVALID_HANDLE otherwise
-* @param[in] plan The plan to add
-*/
-CUDPPHandle CUDPPPlanManager::AddPlan(CUDPPPlan* plan)
-{
-    Instantiate();
-
-    std::pair<std::map<CUDPPHandle, CUDPPPlan*>::iterator, bool> ret;
-
-    CUDPPHandle handle = (CUDPPHandle)m_instance->plans.size();
-    ret = m_instance->plans.insert(std::pair<CUDPPHandle,CUDPPPlan*>(handle, plan));
-    if (ret.second == true)
-        return handle;
-    else
-        return CUDPP_INVALID_HANDLE;   
-}
-
-/** @brief Remove a plan from the plan manager
-* 
-* @returns true if the plan was successfully removed, false otherwise
-* @param[in] handle The handle to the plan to remove
-*/
-bool CUDPPPlanManager::RemovePlan(CUDPPHandle handle)
-{
-    if (m_instance == NULL)
-    {
-        return false;
-    }
-
-    std::map<CUDPPHandle,CUDPPPlan*>::iterator it;
-    it = m_instance->plans.find(handle);
-
-    if (it != m_instance->plans.end())
-    {
-        CUDPPPlan* plan = it->second;
-        delete plan;
-        plan = NULL;
-        m_instance->plans.erase(it);
-
-        if (0 == m_instance->plans.size())
-        {
-            Destroy();
-        }
-
-        return true;
-    }   
-    else
-    {
-        return false;
-    }   
-}
-
-/** @brief Get a plan from the plan manager by handle
-* 
-* @returns A pointer to the plan if found, or NULL otherwise
-* @param handle The handle to the requested plan
-*/
-CUDPPPlan* CUDPPPlanManager::GetPlan(CUDPPHandle handle)
-{
-    if (m_instance == NULL)
-    {
-        return NULL;
-    }
-
-    std::map<CUDPPHandle, CUDPPPlan*>::iterator it;
-    it = m_instance->plans.find(handle);
-    if (it != m_instance->plans.end())
-    {
-        return it->second;
-    }
-    else
-    {
-        return NULL;
-    }
-}
-
+/** @brief Retrieve the calculated maximal CTA launch size for the given kernel
+  * This is used by CUDPP routines such as radix sort which perform a "maximal"
+  * launch -- just enough CTAs to fill the device.
+  */
 size_t CUDPPPlanManager::numCTAs(KernelPointer kernel)
 {
-    if (m_instance == NULL)
-    {
-        return 0;
-    }
-
-    return m_instance->numCTAsTable[kernel];
+    return numCTAsTable[kernel];
 }
 
+/** @brief Calculate the maximal CTA launch size for the given kernel and resource usage.
+  * This is used by CUDPP routines such as radix sort which perform a "maximal"
+  * launch -- just enough CTAs to fill the device.
+  */
 void CUDPPPlanManager::computeNumCTAs(KernelPointer kernel, size_t bytesDynamicSharedMem, size_t threadsPerBlock)
 {
-    Instantiate();
-
-    m_instance->numCTAsTable[kernel] = maxBlocks(kernel, bytesDynamicSharedMem, threadsPerBlock);
+    numCTAsTable[kernel] = maxBlocks(kernel, bytesDynamicSharedMem, threadsPerBlock);
 }

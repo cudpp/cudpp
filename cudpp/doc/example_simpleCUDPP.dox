@@ -32,6 +32,15 @@
   \until d_odata
   \skipline d_odata
   
+  \subsection initialization CUDPP Initialization
+  
+  Before we use the CUDPP library, we must initialize it.  We do this by calling
+  cudppCreate(), which returns a handle to the CUDPP library object.  This 
+  handle must be used when creating CUDPP plans (described next), so it must be 
+  held by the calling thread until it is ready to shut down CUDPP.
+  
+  \until cudppCreate(&theCudpp);
+  
   \subsection plans CUDPP Plans
   
   Next comes the real CUDPP stuff.  First we have to configure CUDPP to scan 
@@ -54,7 +63,7 @@
   want to scan a one-dimensional array.  See the documentation for cudppPlan() 
   for more details on these parameters.
   
-  \until CUDPPResult result = cudppPlan(&scanplan, config, numElements, 1, 0);
+  \until CUDPPResult result = cudppPlan(theCudpp, &scanplan, config, numElements, 1, 0);
   \until }
   
   We now have a handle to our plan object in \a scanplan. Next, after making 
@@ -71,9 +80,11 @@
   \until printf
   
   Finally, we tell CUDPP to clean up the memory used for our plan object, using 
-  cudppDestroyPlan().  Then we free the host and device arrays using \c free() 
-  and \c cudaFree, respectively.  After that we're finished.
+  cudppDestroyPlan().  Then we shut down the CUDPP library using cudppDestroy(),
+  passing it the handle we received from cudppCreate().  Finally we free the host and 
+  device arrays using \c free() and \c cudaFree, respectively.
   
+  \until }
   \until }
   
   Using CUDPP for parallel prefix sums is easy!

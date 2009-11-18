@@ -30,6 +30,7 @@ CUDPPConfiguration config = { CUDPP_SCAN,
                               CUDPP_ADD, 
                               CUDPP_FLOAT, 
                               CUDPP_OPTION_FORWARD | CUDPP_OPTION_EXCLUSIVE };
+CUDPPHandle theCudpp;
 CUDPPHandle scanPlan;
 
 float *SATs[2][3];
@@ -48,8 +49,11 @@ __host__ void initialize(int width, int height)
     CUDA_SAFE_CALL( cudaMallocPitch( (void**) &SATs[1][2], &d_satPitch, dpitch, height));
 
     d_satPitchInElements = d_satPitch / sizeof(float);
+
+    // Initialize CUDPP
+    cudppCreate(&theCudpp);
     
-    if (CUDPP_SUCCESS != cudppPlan(&scanPlan, config, width, height, d_satPitchInElements))
+    if (CUDPP_SUCCESS != cudppPlan(theCudpp, &scanPlan, config, width, height, d_satPitchInElements))
     {
         printf("Error creating CUDPPPlan.\n");
     }
@@ -64,7 +68,13 @@ __host__ void finalize()
 {
     if (CUDPP_SUCCESS != cudppDestroyPlan(scanPlan))
     {
-        printf("Error creating CUDPPPlan.\n");
+        printf("Error destroying CUDPPPlan.\n");
+    }
+
+    // shut down CUDPP
+    if (CUDPP_SUCCESS != cudppDestroy(theCudpp))
+    {
+        printf("Error destroying CUDPP.\n");
     }
 }
 

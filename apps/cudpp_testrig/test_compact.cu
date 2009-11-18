@@ -98,9 +98,19 @@ int testCompact(int argc, const char **argv, const CUDPPConfiguration *configPtr
 
     cutGetCmdLineArgumentf(argc, (const char**) argv, "prob", &probValid);
 
-    CUDPPHandle plan;
     CUDPPResult result = CUDPP_SUCCESS;
-    result = cudppPlan(&plan, config, numElements, 1, 0);
+    CUDPPHandle theCudpp;
+    result = cudppCreate(&theCudpp);
+    if (result != CUDPP_SUCCESS)
+    {
+        if (!quiet)
+            fprintf(stderr, "Error initializing CUDPP Library.\n");
+        retval = (oneTest) ? 1 : numTests;
+        return retval;
+    }
+
+    CUDPPHandle plan;
+    result = cudppPlan(theCudpp, &plan, config, numElements, 1, 0);
 
     if (result != CUDPP_SUCCESS)
     {
@@ -233,6 +243,13 @@ int testCompact(int argc, const char **argv, const CUDPPConfiguration *configPtr
     {
         if (!quiet)
             printf("Error destroying CUDPPPlan for Scan\n");
+    }
+
+    result = cudppDestroy(theCudpp);
+    if (result != CUDPP_SUCCESS)
+    {
+        if (!quiet)
+            printf("Error shutting down CUDPP Library.\n");
     }
 
     // cleanup memory

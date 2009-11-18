@@ -173,9 +173,20 @@ int testScan(int argc, const char **argv, CUDPPConfiguration *configPtr)
         numTests = 1;
     }
 
-    CUDPPHandle scanPlan;
+    // Initialize CUDPP
     CUDPPResult result = CUDPP_SUCCESS;
-    result = cudppPlan(&scanPlan, config, numElements, 1, 0);
+    CUDPPHandle theCudpp;
+    result = cudppCreate(&theCudpp);    
+    if (result != CUDPP_SUCCESS)
+    {
+        fprintf(stderr, "Error initializing CUDPP Library\n");
+        retval = (oneTest) ? 1 : numTests;
+        return retval;
+    }
+
+    CUDPPHandle scanPlan;
+    
+    result = cudppPlan(theCudpp, &scanPlan, config, numElements, 1, 0);
 
     if (result != CUDPP_SUCCESS)
     {
@@ -316,6 +327,13 @@ int testScan(int argc, const char **argv, CUDPPConfiguration *configPtr)
     {
         printf("Error destroying CUDPPPlan for Scan\n");
     }
+
+    result = cudppDestroy(theCudpp);
+
+    if (result != CUDPP_SUCCESS)
+    {
+        printf("Error shutting down CUDPP Library\n");
+    }
  
     // cleanup memory
     cutDeleteTimer(timer);
@@ -426,9 +444,19 @@ int testSegmentedScan(int argc, const char **argv, CUDPPConfiguration *configPtr
         numTests = 1;
     }
 
-    CUDPPHandle segmentedScanPlan;
+    // Initialize CUDPP
     CUDPPResult result = CUDPP_SUCCESS;
-    result = cudppPlan(&segmentedScanPlan, config, numElements, 1, 0);
+    CUDPPHandle theCudpp;
+    result = cudppCreate(&theCudpp);
+    if (result != CUDPP_SUCCESS)
+    {
+        fprintf(stderr, "Error initializing CUDPP Library.\n");
+        retval = (oneTest) ? 1 : numTests;
+        return retval;
+    }
+
+    CUDPPHandle segmentedScanPlan;
+    result = cudppPlan(theCudpp, &segmentedScanPlan, config, numElements, 1, 0);
 
     if (result != CUDPP_SUCCESS)
     {
@@ -614,6 +642,13 @@ int testSegmentedScan(int argc, const char **argv, CUDPPConfiguration *configPtr
     {
         printf("Error destroying CUDPPPlan for Scan\n");
     }
+
+    result = cudppDestroy(theCudpp);
+
+    if (result != CUDPP_SUCCESS)
+    {
+        printf("Error shutting down CUDPP Library.\n");
+    }
  
     // cleanup memory
     cutDeleteTimer(timer);
@@ -714,9 +749,20 @@ int testMultiSumScan(int argc, const char **argv)
 
     size_t rowPitch = d_ipitch / sizeof(float);
 
+       
+    CUDPPResult ret;
+    CUDPPHandle theCudpp;
+    ret = cudppCreate(&theCudpp);
+
+    if (ret != CUDPP_SUCCESS)
+    {
+        fprintf(stderr, "Error Initializing CUDPP Library.\n");
+        retval = 1;
+        return retval;
+    }
+
     CUDPPHandle multiscanPlan = 0;
-        
-    CUDPPResult ret = cudppPlan(&multiscanPlan, config, numElements, numRows, rowPitch);
+    ret = cudppPlan(theCudpp, &multiscanPlan, config, numElements, numRows, rowPitch);
 
     if (ret != CUDPP_SUCCESS)
     {
@@ -758,7 +804,19 @@ int testMultiSumScan(int argc, const char **argv)
            cutGetTimerValue(timer) / testOptions.numIterations);
     printf("\n");
 
-    cudppDestroyPlan(multiscanPlan);
+    ret = cudppDestroyPlan(multiscanPlan);
+
+    if (ret != CUDPP_SUCCESS)
+    {
+        printf("Error destroying CUDPPPlan for Multiscan\n");
+    }
+
+    ret = cudppDestroy(theCudpp);
+
+    if (ret != CUDPP_SUCCESS)
+    {
+        printf("Error shutting down CUDPP Library.\n");
+    }
 
     // cleanup memory
     cutDeleteTimer(timer);

@@ -427,10 +427,18 @@ typedef size_t CUDPPHandle;
     #endif
 #endif
 
-// Plan allocation (for scan, sort, and compact)
-
+// CUDPP Initialization
 CUDPP_DLL
-CUDPPResult cudppPlan(CUDPPHandle        *planHandle, 
+CUDPPResult cudppCreate(CUDPPHandle* theCudpp);
+
+// CUDPP Destruction
+CUDPP_DLL
+CUDPPResult cudppDestroy(CUDPPHandle theCudpp);
+
+// Plan allocation (for scan, sort, and compact)
+CUDPP_DLL
+CUDPPResult cudppPlan(const CUDPPHandle  cudppHandle,
+                      CUDPPHandle        *planHandle, 
                       CUDPPConfiguration config, 
                       size_t             n, 
                       size_t             rows, 
@@ -442,27 +450,27 @@ CUDPPResult cudppDestroyPlan(CUDPPHandle plan);
 // Scan and sort algorithms
 
 CUDPP_DLL
-CUDPPResult cudppScan(CUDPPHandle planHandle,
+CUDPPResult cudppScan(const CUDPPHandle planHandle,
                       void        *d_out, 
                       const void  *d_in, 
                       size_t      numElements);
 
 CUDPP_DLL
-CUDPPResult cudppMultiScan(CUDPPHandle planHandle,
+CUDPPResult cudppMultiScan(const CUDPPHandle planHandle,
                            void        *d_out, 
                            const void  *d_in, 
                            size_t      numElements,
                            size_t      numRows);
 
 CUDPP_DLL
-CUDPPResult cudppSegmentedScan(CUDPPHandle        planHandle,
+CUDPPResult cudppSegmentedScan(const CUDPPHandle  planHandle,
                                void               *d_out, 
                                const void         *d_idata,
                                const unsigned int *d_iflags,
                                size_t             numElements);
 
 CUDPP_DLL
-CUDPPResult cudppCompact(CUDPPHandle        planHandle,
+CUDPPResult cudppCompact(const CUDPPHandle  planHandle,
                          void               *d_out, 
                          size_t             *d_numValidElements,
                          const void         *d_in, 
@@ -470,16 +478,17 @@ CUDPPResult cudppCompact(CUDPPHandle        planHandle,
                          size_t             numElements);
 
 CUDPP_DLL
-CUDPPResult cudppSort(CUDPPHandle planHandle,
-                      void        *d_keys,                                          
-                      void        *d_values,                                                                       
-                      int         keybits,
-                      size_t      numElements);
+CUDPPResult cudppSort(const CUDPPHandle planHandle,
+                      void              *d_keys,                                          
+                      void              *d_values,                                                                       
+                      int               keybits,
+                      size_t            numElements);
 
 // Sparse matrix allocation
 
 CUDPP_DLL
-CUDPPResult cudppSparseMatrix(CUDPPHandle        *sparseMatrixHandle, 
+CUDPPResult cudppSparseMatrix(const CUDPPHandle  cudppHandle,
+                              CUDPPHandle        *sparseMatrixHandle, 
                               CUDPPConfiguration config, 
                               size_t             n, 
                               size_t             rows, 
@@ -493,16 +502,19 @@ CUDPPResult cudppDestroySparseMatrix(CUDPPHandle sparseMatrixHandle);
 // Sparse matrix-vector algorithms
 
 CUDPP_DLL
-CUDPPResult cudppSparseMatrixVectorMultiply(CUDPPHandle sparseMatrixHandle,
+CUDPPResult cudppSparseMatrixVectorMultiply(const CUDPPHandle sparseMatrixHandle,
                                             void        *d_y,
                                             const void  *d_x);
 
 // random number generation algorithms
 CUDPP_DLL
-CUDPPResult cudppRand(CUDPPHandle planHandle,void * d_out, size_t numElements);
+CUDPPResult cudppRand(const CUDPPHandle planHandle,
+                      void *      d_out, 
+                      size_t      numElements);
 
 CUDPP_DLL
-CUDPPResult cudppRandSeed(const CUDPPHandle planHandle, unsigned int seed);
+CUDPPResult cudppRandSeed(const CUDPPHandle planHandle, 
+                          unsigned int      seed);
 
 #ifdef __cplusplus
 }

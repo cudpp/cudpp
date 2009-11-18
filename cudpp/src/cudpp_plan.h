@@ -11,21 +11,31 @@
 #define __CUDPP_PLAN_H__
 
 typedef void* KernelPointer;
+class CUDPPPlan;
+class CUDPPPlanManager;
 
-extern "C" size_t getNumCTAs(KernelPointer kernel);
-extern "C" void   compNumCTAs(KernelPointer kernel, size_t bytesDynamicSharedMem, size_t threadsPerBlock);
+extern "C" size_t getNumCTAs(const CUDPPPlan* plan, KernelPointer kernel);
+extern "C" void   compNumCTAs(const CUDPPPlan* plan, KernelPointer kernel, size_t bytesDynamicSharedMem, size_t threadsPerBlock);
 
 template <typename T>
-size_t numCTAs(T kernel)
+size_t numCTAs(const CUDPPPlan* plan, T kernel)
 {
-    return getNumCTAs((KernelPointer)kernel);
+    return getNumCTAs(plan, (KernelPointer)kernel);
 }
 
 template <typename T>
-void computeNumCTAs(T kernel, unsigned int bytesDynamicSharedMem, size_t threadsPerBlock)
+void computeNumCTAs(const CUDPPPlan* plan, T kernel, unsigned int bytesDynamicSharedMem, size_t threadsPerBlock)
 {
-    compNumCTAs((KernelPointer)kernel, bytesDynamicSharedMem, threadsPerBlock);
+    compNumCTAs(plan, (KernelPointer)kernel, bytesDynamicSharedMem, threadsPerBlock);
 }
+
+//! @internal Convert an opaque handle to a pointer to a plan
+template <typename T>
+T* getPlanPtrFromHandle(CUDPPHandle handle)
+{
+    return reinterpret_cast<T*>(handle);
+}
+
 
 /** @brief Base class for CUDPP Plan data structures
   *
@@ -38,7 +48,8 @@ void computeNumCTAs(T kernel, unsigned int bytesDynamicSharedMem, size_t threads
 class CUDPPPlan
 {
 public:
-    CUDPPPlan(CUDPPConfiguration config, size_t numElements, size_t numRows, size_t rowPitch);
+    CUDPPPlan(CUDPPPlanManager *mgr, CUDPPConfiguration config, 
+              size_t numElements, size_t numRows, size_t rowPitch);
     virtual ~CUDPPPlan() {}
 
     // Note anything passed to functions compiled by NVCC must be public
@@ -46,6 +57,13 @@ public:
     size_t             m_numElements;   //!< @internal Maximum number of input elements
     size_t             m_numRows;       //!< @internal Maximum number of input rows
     size_t             m_rowPitch;      //!< @internal Pitch of input rows in elements
+    CUDPPPlanManager   *m_planManager;  //!< @internal pointer to the manager of this plan
+   
+    //! @internal Convert this pointer to an opaque handle
+    CUDPPHandle getHandle()
+    {
+        return reinterpret_cast<CUDPPHandle>(this);
+    }
 };
 
 /** @brief Plan class for scan algorithm
@@ -54,7 +72,7 @@ public:
 class CUDPPScanPlan : public CUDPPPlan
 {
 public:
-    CUDPPScanPlan(CUDPPConfiguration config, size_t numElements, size_t numRows, size_t rowPitch);
+    CUDPPScanPlan(CUDPPPlanManager *mgr, CUDPPConfiguration config, size_t numElements, size_t numRows, size_t rowPitch);
     virtual ~CUDPPScanPlan();
 
     void  **m_blockSums;          //!< @internal Intermediate block sums array
@@ -70,7 +88,7 @@ public:
 class CUDPPSegmentedScanPlan : public CUDPPPlan
 {
 public:
-    CUDPPSegmentedScanPlan(CUDPPConfiguration config, size_t numElements);
+    CUDPPSegmentedScanPlan(CUDPPPlanManager *mgr, CUDPPConfiguration config, size_t numElements);
     virtual ~CUDPPSegmentedScanPlan();
 
     void          **m_blockSums;          //!< @internal Intermediate block sums array
@@ -86,7 +104,7 @@ public:
 class CUDPPCompactPlan : public CUDPPPlan
 {
 public:
-    CUDPPCompactPlan(CUDPPConfiguration config, size_t numElements, size_t numRows, size_t rowPitch);
+    CUDPPCompactPlan(CUDPPPlanManager *mgr, CUDPPConfiguration config, size_t numElements, size_t numRows, size_t rowPitch);
     virtual ~CUDPPCompactPlan();
 
     CUDPPScanPlan *m_scanPlan;         //!< @internal Compact performs a scan of type unsigned int using this plan
@@ -97,7 +115,7 @@ public:
 class CUDPPRadixSortPlan : public CUDPPPlan
 {
 public:
-    CUDPPRadixSortPlan(CUDPPConfiguration config, size_t numElements);
+    CUDPPRadixSortPlan(CUDPPPlanManager *mgr, CUDPPConfiguration config, size_t numElements);
     virtual ~CUDPPRadixSortPlan();
 	
     bool           m_bKeysOnly;
@@ -120,7 +138,8 @@ public:
 class CUDPPSparseMatrixVectorMultiplyPlan : public CUDPPPlan
 {
 public:
-    CUDPPSparseMatrixVectorMultiplyPlan(CUDPPConfiguration config, size_t numNZElts,
+    CUDPPSparseMatrixVectorMultiplyPlan(CUDPPPlanManager *mgr, 
+                                        CUDPPConfiguration config, size_t numNZElts,
                                         const void         *A,
                                         const unsigned int *rowindx, 
                                         const unsigned int *indx, size_t numRows);
@@ -150,7 +169,7 @@ public:
 class CUDPPRandPlan : public CUDPPPlan
 {
 public:
-    CUDPPRandPlan(CUDPPConfiguration config, size_t num_elements);
+    CUDPPRandPlan(CUDPPPlanManager *mgr, CUDPPConfiguration config, size_t num_elements);
 
     unsigned int m_seed; //!< @internal the seed for the random number generator
 };

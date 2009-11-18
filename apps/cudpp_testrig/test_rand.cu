@@ -161,6 +161,15 @@ testRandMD5(int argc, const char** argv)
     CUDPPHandle randPlan = 0;
     CUDPPResult result;
 
+    CUDPPHandle theCudpp;
+    result = cudppCreate(&theCudpp);
+    if(result != CUDPP_SUCCESS)
+    {
+        printf("Error initializing CUDPP Library.\n");
+        retval = numTests;
+        return retval;
+    }
+
     if(!quiet && testOptions.dir == NULL)
     {
 #if defined (__linux__) || defined (__APPLE__) || defined (MACOSX)
@@ -211,7 +220,7 @@ testRandMD5(int argc, const char** argv)
 
         for(unsigned int j=0; j<test[i]; j++)
             md5FromFile[j] = 0;
-        result = cudppPlan(&randPlan, config, test[i], 1,0);
+        result = cudppPlan(theCudpp, &randPlan, config, test[i], 1,0);
 
         if (CUDPP_SUCCESS != result)
         {
@@ -330,6 +339,14 @@ testRandMD5(int argc, const char** argv)
             exit(-1);
         }
     }
+
+    result = cudppDestroy(theCudpp);
+    if (CUDPP_SUCCESS != result)
+    {
+        printf("Error shutting down CUDPP Library.\n");
+        exit(-1);
+    }
+
     if(!quiet)
         printf("%u total tests failed in rand regression test.\n", retval);
 
