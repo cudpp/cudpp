@@ -1354,7 +1354,7 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\src\cudpp_plan_manager.cpp"
+				RelativePath=".\src\cudpp_manager.cpp"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
@@ -1392,7 +1392,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\cudpp_plan_manager.h"
+				RelativePath=".\src\cudpp_manager.h"
 				>
 			</File>
 			<File

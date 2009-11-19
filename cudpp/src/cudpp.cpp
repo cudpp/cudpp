@@ -41,7 +41,7 @@
  */
 
 #include "cudpp.h"
-#include "cudpp_plan_manager.h"
+#include "cudpp_manager.h"
 #include "cudpp_scan.h"
 #include "cudpp_segscan.h"
 #include "cudpp_compact.h"

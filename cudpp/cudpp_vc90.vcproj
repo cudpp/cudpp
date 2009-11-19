@@ -63,7 +63,7 @@
 				RuntimeLibrary="1"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
-				Detect64BitPortabilityProblems="true"
+				Detect64BitPortabilityProblems="false"
 				DebugInformationFormat="4"
 			/>
 			<Tool
@@ -1302,6 +1302,18 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\src\cudpp_manager.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						GeneratePreprocessedFile="0"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
 				RelativePath=".\src\cudpp_maximal_launch.cpp"
 				>
 				<FileConfiguration
@@ -1342,18 +1354,6 @@
 					/>
 				</FileConfiguration>
 			</File>
-			<File
-				RelativePath=".\src\cudpp_plan_manager.cpp"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						GeneratePreprocessedFile="0"
-					/>
-				</FileConfiguration>
-			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -1373,15 +1373,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\cudpp_manager.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\cudpp_maximal_launch.h"
 				>
 			</File>
 			<File
 				RelativePath=".\src\cudpp_plan.h"
-				>
-			</File>
-			<File
-				RelativePath=".\src\cudpp_plan_manager.h"
 				>
 			</File>
 			<File

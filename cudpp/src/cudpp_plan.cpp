@@ -9,7 +9,7 @@
 // ------------------------------------------------------------- 
 
 #include "cudpp.h"
-#include "cudpp_plan_manager.h"
+#include "cudpp_manager.h"
 #include "cudpp_scan.h"
 #include "cudpp_segscan.h"
 #include "cudpp_compact.h"
@@ -74,7 +74,7 @@ CUDPPResult cudppPlan(const CUDPPHandle  cudppHandle,
     CUDPPResult result = CUDPP_SUCCESS;
 
     CUDPPPlan *plan;
-    CUDPPPlanManager *mgr = CUDPPPlanManager::getManagerFromHandle(cudppHandle);
+    CUDPPManager *mgr = CUDPPManager::getManagerFromHandle(cudppHandle);
 
     result = validateOptions(config, numElements, numRows, rowPitch);
     if (result != CUDPP_SUCCESS)
@@ -212,7 +212,7 @@ CUDPPResult cudppSparseMatrix(const CUDPPHandle  cudppHandle,
     CUDPPResult result = CUDPP_SUCCESS;
 
     CUDPPPlan *sparseMatrix;
-    CUDPPPlanManager *mgr = CUDPPPlanManager::getManagerFromHandle(cudppHandle);
+    CUDPPManager *mgr = CUDPPManager::getManagerFromHandle(cudppHandle);
 
     if ((config.algorithm != CUDPP_SPMVMULT) || 
         (numNonZeroElements <= 0) || (numRows <= 0))
@@ -268,13 +268,13 @@ CUDPPResult cudppDestroySparseMatrix(CUDPPHandle sparseMatrixHandle)
 
 /** @brief Plan base class constructor
   * 
-  * @param[in]  mgr pointer to the CUDPPPlanManager
+  * @param[in]  mgr pointer to the CUDPPManager
   * @param[in]  config The configuration struct specifying algorithm and options
   * @param[in]  numElements The maximum number of elements to be processed
   * @param[in]  numRows The number of rows (for 2D operations) to be processed
   * @param[in]  rowPitch The pitch of the rows of input data, in elements
   */
-CUDPPPlan::CUDPPPlan(CUDPPPlanManager *mgr,
+CUDPPPlan::CUDPPPlan(CUDPPManager *mgr,
                      CUDPPConfiguration config, 
                      size_t numElements, 
                      size_t numRows, 
@@ -289,13 +289,13 @@ CUDPPPlan::CUDPPPlan(CUDPPPlanManager *mgr,
 
 /** @brief Scan Plan constructor
 * 
-* @param[in]  mgr pointer to the CUDPPPlanManager
+* @param[in]  mgr pointer to the CUDPPManager
 * @param[in]  config The configuration struct specifying algorithm and options
 * @param[in]  numElements The maximum number of elements to be scanned
 * @param[in]  numRows The maximum number of rows (for 2D operations) to be scanned
 * @param[in]  rowPitch The pitch of the rows of input data, in elements
 */
-CUDPPScanPlan::CUDPPScanPlan(CUDPPPlanManager *mgr,
+CUDPPScanPlan::CUDPPScanPlan(CUDPPManager *mgr,
                              CUDPPConfiguration config, 
                              size_t numElements, 
                              size_t numRows, 
@@ -318,11 +318,11 @@ CUDPPScanPlan::~CUDPPScanPlan()
 
 /** @brief SegmentedScan Plan constructor
 * 
-* @param[in]  mgr pointer to the CUDPPPlanManager
+* @param[in]  mgr pointer to the CUDPPManager
 * @param[in]  config The configuration struct specifying options
 * @param[in]  numElements The maximum number of elements to be scanned
 */
-CUDPPSegmentedScanPlan::CUDPPSegmentedScanPlan(CUDPPPlanManager *mgr,
+CUDPPSegmentedScanPlan::CUDPPSegmentedScanPlan(CUDPPManager *mgr,
                                                CUDPPConfiguration config, 
                                                size_t numElements)
 : CUDPPPlan(mgr, config, numElements, 1, 0),
@@ -343,13 +343,13 @@ CUDPPSegmentedScanPlan::~CUDPPSegmentedScanPlan()
 
 /** @brief Compact Plan constructor
 * 
-* @param[in]  mgr pointer to the CUDPPPlanManager
+* @param[in]  mgr pointer to the CUDPPManager
 * @param[in]  config The configuration struct specifying options
 * @param[in]  numElements The maximum number of elements to be compacted
 * @param[in]  numRows The number of rows (for 2D operations) to be compacted
 * @param[in]  rowPitch The pitch of the rows of input data, in elements
 */
-CUDPPCompactPlan::CUDPPCompactPlan(CUDPPPlanManager *mgr,
+CUDPPCompactPlan::CUDPPCompactPlan(CUDPPManager *mgr,
                                    CUDPPConfiguration config, 
                                    size_t numElements, 
                                    size_t numRows, 
@@ -382,12 +382,12 @@ CUDPPCompactPlan::~CUDPPCompactPlan()
 
 /** @brief Radix Sort Plan constructor
 * 
-* @param[in]  mgr pointer to the CUDPPPlanManager
+* @param[in]  mgr pointer to the CUDPPManager
 * @param[in]  config The configuration struct specifying options
 * @param[in]  numElements The maximum number of elements to be sorted
 
 */
-CUDPPRadixSortPlan::CUDPPRadixSortPlan(CUDPPPlanManager *mgr, 
+CUDPPRadixSortPlan::CUDPPRadixSortPlan(CUDPPManager *mgr, 
                                        CUDPPConfiguration config, 
                                        size_t numElements)
 : CUDPPPlan(mgr, config, numElements, 1, 0),
@@ -428,7 +428,7 @@ CUDPPRadixSortPlan::~CUDPPRadixSortPlan()
 
 /** @brief SparseMatrixVectorMultiply Plan constructor
 * 
-* @param[in]  mgr pointer to the CUDPPPlanManager
+* @param[in]  mgr pointer to the CUDPPManager
 * @param[in]  config The configuration struct specifying options
 * @param[in]  numNonZeroElements The number of non-zero elements in sparse matrix
 * @param[in]  A Array of non-zero matrix elements
@@ -437,7 +437,7 @@ CUDPPRadixSortPlan::~CUDPPRadixSortPlan()
 * @param[in]  index Array of indices of non-zero elements in the matrix
 * @param[in]  numRows The number of rows in the sparse matrix
 */
-CUDPPSparseMatrixVectorMultiplyPlan::CUDPPSparseMatrixVectorMultiplyPlan(CUDPPPlanManager   *mgr,
+CUDPPSparseMatrixVectorMultiplyPlan::CUDPPSparseMatrixVectorMultiplyPlan(CUDPPManager   *mgr,
                                                                          CUDPPConfiguration config,
                                                                          size_t             numNonZeroElements,
                                                                          const void         *A,
@@ -487,11 +487,11 @@ CUDPPSparseMatrixVectorMultiplyPlan::~CUDPPSparseMatrixVectorMultiplyPlan()
 
 /** @brief CUDPP Rand Plan Constructor
   *
-  * @param[in]  mgr pointer to the CUDPPPlanManager
+  * @param[in]  mgr pointer to the CUDPPManager
   * @param[in] config The configuration struct specifying options
   * @param[in] num_elements The number of elements to generate random bits for
   */
-CUDPPRandPlan::CUDPPRandPlan(CUDPPPlanManager *mgr, CUDPPConfiguration config, size_t num_elements) 
+CUDPPRandPlan::CUDPPRandPlan(CUDPPManager *mgr, CUDPPConfiguration config, size_t num_elements) 
  : CUDPPPlan(mgr, config, num_elements, 1, 0),
    m_seed(0)
 {

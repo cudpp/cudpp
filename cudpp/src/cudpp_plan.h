@@ -12,9 +12,9 @@
 
 typedef void* KernelPointer;
 class CUDPPPlan;
-class CUDPPPlanManager;
+class CUDPPManager;
 
-extern "C" size_t getNumCTAs(const CUDPPPlan* plan, KernelPointer kernel);
+/*extern "C" size_t getNumCTAs(const CUDPPPlan* plan, KernelPointer kernel);
 extern "C" void   compNumCTAs(const CUDPPPlan* plan, KernelPointer kernel, size_t bytesDynamicSharedMem, size_t threadsPerBlock);
 
 template <typename T>
@@ -27,7 +27,7 @@ template <typename T>
 void computeNumCTAs(const CUDPPPlan* plan, T kernel, unsigned int bytesDynamicSharedMem, size_t threadsPerBlock)
 {
     compNumCTAs(plan, (KernelPointer)kernel, bytesDynamicSharedMem, threadsPerBlock);
-}
+}*/
 
 //! @internal Convert an opaque handle to a pointer to a plan
 template <typename T>
@@ -48,7 +48,7 @@ T* getPlanPtrFromHandle(CUDPPHandle handle)
 class CUDPPPlan
 {
 public:
-    CUDPPPlan(CUDPPPlanManager *mgr, CUDPPConfiguration config, 
+    CUDPPPlan(CUDPPManager *mgr, CUDPPConfiguration config, 
               size_t numElements, size_t numRows, size_t rowPitch);
     virtual ~CUDPPPlan() {}
 
@@ -57,7 +57,7 @@ public:
     size_t             m_numElements;   //!< @internal Maximum number of input elements
     size_t             m_numRows;       //!< @internal Maximum number of input rows
     size_t             m_rowPitch;      //!< @internal Pitch of input rows in elements
-    CUDPPPlanManager   *m_planManager;  //!< @internal pointer to the manager of this plan
+    CUDPPManager   *m_planManager;  //!< @internal pointer to the manager of this plan
    
     //! @internal Convert this pointer to an opaque handle
     CUDPPHandle getHandle()
@@ -72,7 +72,7 @@ public:
 class CUDPPScanPlan : public CUDPPPlan
 {
 public:
-    CUDPPScanPlan(CUDPPPlanManager *mgr, CUDPPConfiguration config, size_t numElements, size_t numRows, size_t rowPitch);
+    CUDPPScanPlan(CUDPPManager *mgr, CUDPPConfiguration config, size_t numElements, size_t numRows, size_t rowPitch);
     virtual ~CUDPPScanPlan();
 
     void  **m_blockSums;          //!< @internal Intermediate block sums array
@@ -88,7 +88,7 @@ public:
 class CUDPPSegmentedScanPlan : public CUDPPPlan
 {
 public:
-    CUDPPSegmentedScanPlan(CUDPPPlanManager *mgr, CUDPPConfiguration config, size_t numElements);
+    CUDPPSegmentedScanPlan(CUDPPManager *mgr, CUDPPConfiguration config, size_t numElements);
     virtual ~CUDPPSegmentedScanPlan();
 
     void          **m_blockSums;          //!< @internal Intermediate block sums array
@@ -104,7 +104,7 @@ public:
 class CUDPPCompactPlan : public CUDPPPlan
 {
 public:
-    CUDPPCompactPlan(CUDPPPlanManager *mgr, CUDPPConfiguration config, size_t numElements, size_t numRows, size_t rowPitch);
+    CUDPPCompactPlan(CUDPPManager *mgr, CUDPPConfiguration config, size_t numElements, size_t numRows, size_t rowPitch);
     virtual ~CUDPPCompactPlan();
 
     CUDPPScanPlan *m_scanPlan;         //!< @internal Compact performs a scan of type unsigned int using this plan
@@ -115,7 +115,7 @@ public:
 class CUDPPRadixSortPlan : public CUDPPPlan
 {
 public:
-    CUDPPRadixSortPlan(CUDPPPlanManager *mgr, CUDPPConfiguration config, size_t numElements);
+    CUDPPRadixSortPlan(CUDPPManager *mgr, CUDPPConfiguration config, size_t numElements);
     virtual ~CUDPPRadixSortPlan();
 	
     bool           m_bKeysOnly;
@@ -130,6 +130,39 @@ public:
     unsigned int  *m_countersSum;     //!< @internal Prefix sum of radix counters
     unsigned int  *m_blockOffsets;    //!< @internal Global offsets of each radix in each block
 
+    enum RadixSortKernels
+    {
+        KERNEL_RSB_4_0_F_F_T,
+        KERNEL_RSB_4_0_F_T_T,
+        KERNEL_RSB_4_0_T_F_T,
+        KERNEL_RSB_4_0_T_T_T,
+        KERNEL_RSBKO_4_0_F_F_T,
+        KERNEL_RSBKO_4_0_F_T_T,
+        KERNEL_RSBKO_4_0_T_F_T,
+        KERNEL_RSBKO_4_0_T_T_T,
+        KERNEL_FRO_0_F_T,
+        KERNEL_FRO_0_T_T,
+        KERNEL_RD_0_F_F_F_T,
+        KERNEL_RD_0_F_F_T_T,
+        KERNEL_RD_0_F_T_F_T,
+        KERNEL_RD_0_F_T_T_T,
+        KERNEL_RD_0_T_F_F_T,
+        KERNEL_RD_0_T_F_T_T,
+        KERNEL_RD_0_T_T_F_T,
+        KERNEL_RD_0_T_T_T_T,
+        KERNEL_RDKO_0_F_F_F_T,
+        KERNEL_RDKO_0_F_F_T_T,
+        KERNEL_RDKO_0_F_T_F_T,
+        KERNEL_RDKO_0_F_T_T_T,
+        KERNEL_RDKO_0_T_F_F_T,
+        KERNEL_RDKO_0_T_F_T_T,
+        KERNEL_RDKO_0_T_T_F_T,
+        KERNEL_RDKO_0_T_T_T_T,
+        KERNEL_EK,
+        NUM_KERNELS
+    };
+    unsigned int m_numCTAs[NUM_KERNELS];
+
 };
 
 /** @brief Plan class for sparse-matrix dense-vector multiply
@@ -138,7 +171,7 @@ public:
 class CUDPPSparseMatrixVectorMultiplyPlan : public CUDPPPlan
 {
 public:
-    CUDPPSparseMatrixVectorMultiplyPlan(CUDPPPlanManager *mgr, 
+    CUDPPSparseMatrixVectorMultiplyPlan(CUDPPManager *mgr, 
                                         CUDPPConfiguration config, size_t numNZElts,
                                         const void         *A,
                                         const unsigned int *rowindx, 
@@ -169,7 +202,7 @@ public:
 class CUDPPRandPlan : public CUDPPPlan
 {
 public:
-    CUDPPRandPlan(CUDPPPlanManager *mgr, CUDPPConfiguration config, size_t num_elements);
+    CUDPPRandPlan(CUDPPManager *mgr, CUDPPConfiguration config, size_t num_elements);
 
     unsigned int m_seed; //!< @internal the seed for the random number generator
 };
