@@ -93,7 +93,7 @@ computeMinSegmentedScanGold(float* reference, const float* idata,
  * @return Number of tests that failed regression (0 for all pass)
  * @see CUDPPConfiguration, setOptions, cudppScan
  */
-int testScan(int argc, const char **argv, CUDPPConfiguration *configPtr)
+int testScan(int argc, const char **argv, const CUDPPConfiguration *configPtr)
 {
     int retval = 0;
 
@@ -362,7 +362,7 @@ int testScan(int argc, const char **argv, CUDPPConfiguration *configPtr)
  * @return Number of tests that failed regression (0 for all pass)
  * @see CUDPPConfiguration, setOptions, cudppSegmentedScan
  */
-int testSegmentedScan(int argc, const char **argv, CUDPPConfiguration *configPtr)
+int testSegmentedScan(int argc, const char **argv, const CUDPPConfiguration *configPtr)
 {
     int retval = 0;
 

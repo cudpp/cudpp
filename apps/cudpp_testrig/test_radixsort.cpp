@@ -14,108 +14,7 @@
 
 #include "cudpp.h"
 #include "cudpp_testrig_options.h"
-
-template <typename T>
-class SortSupport
-{
-public:
-    static void fillVector(T *a, size_t numElements, unsigned int keybits) {}
-    static int  verifySort(T *keysSorted, unsigned int *valuesSorted, T *keysUnsorted, size_t len) { return 0; }
-};
-
-template<>
-void SortSupport<unsigned int>::fillVector(unsigned int *a, size_t numElements, unsigned int keybits)
-{
-    // Fill up with some random data
-    int keyshiftmask = 0;
-    if (keybits > 16) keyshiftmask = (1 << (keybits - 16)) - 1;
-    int keymask = 0xffff;
-    if (keybits < 16) keymask = (1 << keybits) - 1;            
-
-    srand(95123);
-    for(unsigned int i=0; i < numElements; ++i)   
-    { 
-        a[i] = ((rand() & keyshiftmask)<<16) | (rand() & keymask); 
-    }
-}
-
-template<>
-void SortSupport<float>::fillVector(float *a, size_t numElements, unsigned int keybits)
-{
-    srand(95123);
-    for(unsigned int j = 0; j < numElements; j++)
-    {
-        a[j] = pow(-1,(float)j)*(float)((rand()<<16) | rand());          
-    }
-}
-
-// assumes the values were initially indices into the array, for simplicity of 
-// checking correct order of values
-template<>
-int SortSupport<unsigned int>::verifySort(unsigned int *keysSorted, unsigned int *valuesSorted, 
-                                          unsigned int *keysUnsorted, size_t len)
-{
-    int retval = 0;
-
-    for(unsigned int i=0; i<len-1; ++i)
-    {	   
-        if( (keysSorted[i])>(keysSorted[i+1]) )
-        {
-            printf("Unordered key[%u]:%u > key[%u]:%u\n", i, keysSorted[i], i+1, keysSorted[i+1]);
-            retval = 1;
-            break;
-        }		
-    }
-
-    if (valuesSorted)
-    {
-        for(unsigned int i=0; i<len; ++i)
-        {
-            if( keysUnsorted[(valuesSorted[i])] != keysSorted[i] )
-            {
-                printf("Incorrectly sorted value[%u] (%u) %u != %u\n", 
-                       i, valuesSorted[i], keysUnsorted[valuesSorted[i]], keysSorted[i]);
-                retval = 1;
-                break;
-            }
-        }
-    }
-
-    return retval;
-}
-
-template<>
-int SortSupport<float>::verifySort(float *keysSorted, unsigned int *valuesSorted, 
-                                   float *keysUnsorted, size_t len)
-{
-    int retval = 0;
-
-    for(unsigned int i=0; i<len-1; ++i)
-    {	   
-        if( (keysSorted[i])>(keysSorted[i+1]) )
-        {
-            printf("Unordered key[%u]:%f > key[%u]:%f\n", i, keysSorted[i], i+1, keysSorted[i+1]);
-            retval = 1;
-            break;
-        }		
-    }
-
-    if (valuesSorted)
-    {
-        for(unsigned int i=0; i<len; ++i)
-        {
-            if( keysUnsorted[(valuesSorted[i])] != keysSorted[i] )
-            {
-                printf("Incorrectly sorted value[%u] (%u) %f != %f\n", 
-                    i, valuesSorted[i], keysUnsorted[valuesSorted[i]], keysSorted[i]);
-                retval = 1;
-                break;
-            }
-        }
-    }
-
-    return retval;
-}
+#include "cudpp_testrig_utils.h"
 
 template <typename T>
 int radixSortTest(CUDPPHandle theCudpp, CUDPPHandle plan, CUDPPConfiguration config, size_t *tests, 
@@ -147,7 +46,7 @@ int radixSortTest(CUDPPHandle theCudpp, CUDPPHandle plan, CUDPPConfiguration con
     }																	
 
     // Fill up with some random data   
-    SortSupport<T>::fillVector(h_keys, numElements, keybits);		
+    VectorSupport<T>::fillVector(h_keys, numElements, keybits, (T)(1 << keybits));		
 
     CUDA_SAFE_CALL(cudaMalloc((void **)&d_keys, numElements*sizeof(T)));
     if (config.options & CUDPP_OPTION_KEY_VALUE_PAIRS)
@@ -207,7 +106,7 @@ int radixSortTest(CUDPPHandle theCudpp, CUDPPHandle plan, CUDPPConfiguration con
         else
             h_values = 0;	        
 
-        retval += SortSupport<T>::verifySort(h_keysSorted, h_valuesSorted, h_keys, tests[k]);
+        retval += VectorSupport<T>::verifySort(h_keysSorted, h_valuesSorted, h_keys, tests[k]);
 
         if(!quiet)
         {			  
@@ -247,7 +146,7 @@ int radixSortTest(CUDPPHandle theCudpp, CUDPPHandle plan, CUDPPConfiguration con
  * @return Number of tests that failed regression (0 for all pass)
  * @see cudppSort
 */
-int testRadixSort(int argc, const char **argv, CUDPPConfiguration *configPtr)
+int testRadixSort(int argc, const char **argv, const CUDPPConfiguration *configPtr)
 {
 
     int cmdVal;
@@ -344,6 +243,7 @@ int testRadixSort(int argc, const char **argv, CUDPPConfiguration *configPtr)
         printf("Error in plan creation\n");
         retval = numTests;
         cudppDestroyPlan(plan);
+        cudppDestroy(theCudpp);
         return retval;
     }
         

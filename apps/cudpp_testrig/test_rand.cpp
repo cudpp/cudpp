@@ -15,6 +15,9 @@
  * @brief Host testrig routines to exercise cudpp's rand functionality.
  */
 
+#include <cstdio>
+#include "cudpp_testrig_options.h"
+
 //windows uses \ as the path, so we must adjust our original path for this
 //also if you're using Visual Studio, the path is only two directories up rather than three
 #if defined (__linux__) || defined (__APPLE__) || defined (MACOSX)
