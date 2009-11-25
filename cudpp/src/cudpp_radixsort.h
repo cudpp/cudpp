@@ -10,8 +10,6 @@
 #ifndef   __RADIXSORT_H__
 #define   __RADIXSORT_H__
 
-#define SORT_CTA_SIZE 256 //This CTA_SIZE must equal 16 * number of radices 
-
 #include "cudpp_globals.h"
 #include "cudpp.h"
 #include "cudpp_plan.h"

@@ -1102,7 +1102,7 @@ __device__ void segmentedScanWarps(T val1,
     //    if ( warpid==0 )   
     //#endif
     {
-        warpSegScan<T, traits, false, (LOG_CTA_SIZE-LOG_WARP_SIZE+1)>
+        warpSegScan<T, traits, false, (LOG_SCAN_CTA_SIZE-LOG_WARP_SIZE+1)>
             (tdata, tflag, s_data, s_flags, oVal3, oFlag3);
     }
     __syncthreads(); // This looks unnecessary but won't work without it
@@ -1194,7 +1194,7 @@ void segmentedScanCTA(T            *s_data,
         if (traits::writeSums() && (threadIdx.x == blockDim.x - 1))
         {
             d_blockSums[blockIdx.x] = s_data[threadIdx.x + blockDim.x];
-            d_blockFlags[blockIdx.x] = cta_is_closed || (s_flags[(1 << (LOG_CTA_SIZE-LOG_WARP_SIZE+1))-1] != 0);
+            d_blockFlags[blockIdx.x] = cta_is_closed || (s_flags[(1 << (LOG_SCAN_CTA_SIZE-LOG_WARP_SIZE+1))-1] != 0);
         }
     }
 
@@ -1206,13 +1206,13 @@ void segmentedScanCTA(T            *s_data,
         {
             mIndex = 
                 reduceCTA<unsigned int, ScanTraits<unsigned int, CUDPP_MAX, false, false, false, false, true>,
-                      (2 * CTA_SIZE)>(s_indices);
+                      (2 * SCAN_CTA_SIZE)>(s_indices);
         }
         else
         {
             mIndex =
                 reduceCTA<unsigned int, ScanTraits<unsigned int, CUDPP_MIN, false, false, false, false, true>,
-                      (2 * CTA_SIZE)>(s_indices);
+                      (2 * SCAN_CTA_SIZE)>(s_indices);
         }
     }
 

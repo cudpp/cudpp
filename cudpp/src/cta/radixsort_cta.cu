@@ -17,13 +17,6 @@
 #include <math.h>
 #include "sharedmem.h"
 
-
-#ifdef __DEVICE_EMULATION__
-#define __EMUSYNC __syncthreads()
-#else
-#define __EMUSYNC
-#endif
-
 /**
  * @file
  * sort_cta.cu
@@ -38,7 +31,6 @@
 /** @name Radix Sort Functions
 * @{
 */
-
 
 typedef unsigned int uint;
 

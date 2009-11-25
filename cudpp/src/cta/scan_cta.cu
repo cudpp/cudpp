@@ -193,10 +193,10 @@ __device__ void loadSharedChunkFromMem4(T        *s_out,
         __syncthreads();
 
         // reverse s_data in shared memory
-        if (ai < CTA_SIZE)
+        if (ai < SCAN_CTA_SIZE)
         {       
             unsigned int leftIdx = ai;
-            unsigned int rightIdx = (2 * CTA_SIZE - 1) - ai;
+            unsigned int rightIdx = (2 * SCAN_CTA_SIZE - 1) - ai;
                 
             if (leftIdx < rightIdx) 
             {
@@ -303,11 +303,11 @@ __device__ void storeSharedChunkToMem4(T   *d_out,
     // write results to global memory
     if (traits::isBackward())
     {   
-        if (ai < CTA_SIZE)
+        if (ai < SCAN_CTA_SIZE)
         {
 
             unsigned int leftIdx = ai;
-            unsigned int rightIdx = (2 * CTA_SIZE - 1) - ai;
+            unsigned int rightIdx = (2 * SCAN_CTA_SIZE - 1) - ai;
             
             if (leftIdx < rightIdx) 
             {
@@ -561,7 +561,7 @@ __device__ void scanWarps(T x, T y,
     if (idx < 32)
 #endif
     {
-        s_data[idx] = warpscan<T,traits,(LOG_CTA_SIZE-LOG_WARP_SIZE+1)>(s_data[idx], s_data);
+        s_data[idx] = warpscan<T,traits,(LOG_SCAN_CTA_SIZE-LOG_WARP_SIZE+1)>(s_data[idx], s_data);
     }
     __syncthreads();
 

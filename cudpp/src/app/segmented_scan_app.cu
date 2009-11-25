@@ -15,15 +15,9 @@
 * @brief CUDPP application-level scan routines
 */
 
-/** \defgroup cudpp_app CUDPP Application-Level API
-* The CUDPP Application-Level API contains functions
-* that run on the host CPU and invoke GPU routines in 
-* the CUDPP \link cudpp_kernel Kernel-Level API\endlink. 
-* Application-Level API functions are used by
-* CUDPP \link publicInterface Public Interface\endlink
-* functions to implement CUDPP's core functionality.
-* @{
-*/
+/** \addtogroup cudpp_app
+  *
+  */
 
 /** @name Segmented Scan Functions
 * @{
@@ -98,11 +92,11 @@ void segmentedScanArrayRecursive(T                  *d_out,
 {
     unsigned int numBlocks = 
         max(1, (int)ceil((double)numElements / 
-        ((double)SEGSCAN_ELTS_PER_THREAD * CTA_SIZE)));
+        ((double)SEGSCAN_ELTS_PER_THREAD * SCAN_CTA_SIZE)));
 
     // This is the number of elements per block that the 
     // CTA level API is aware of
-    unsigned int numEltsPerBlock = CTA_SIZE * 2;
+    unsigned int numEltsPerBlock = SCAN_CTA_SIZE * 2;
 
     // Space to store flags - we need two sets. One gets modified and the
     // other doesn't
@@ -117,13 +111,13 @@ void segmentedScanArrayRecursive(T                  *d_out,
 
     // setup execution parameters
     dim3  grid(max(1, numBlocks), 1, 1);
-    dim3  threads(CTA_SIZE, 1, 1);
+    dim3  threads(SCAN_CTA_SIZE, 1, 1);
 
     // make sure there are no CUDA errors before we start
     CUT_CHECK_ERROR("segmentedScanArrayRecursive before kernels");
 
     bool fullBlock = (numElements == 
-        (numBlocks * SEGSCAN_ELTS_PER_THREAD * CTA_SIZE));    
+        (numBlocks * SEGSCAN_ELTS_PER_THREAD * SCAN_CTA_SIZE));    
 
     bool sm12OrBetterHw;
     cudaDeviceProp deviceProp;
@@ -278,7 +272,7 @@ extern "C"
             size_t numBlocks = 
                 max(1, (unsigned int)ceil
                 ((double)numElts / 
-                ((double)SEGSCAN_ELTS_PER_THREAD * CTA_SIZE)));
+                ((double)SEGSCAN_ELTS_PER_THREAD * SCAN_CTA_SIZE)));
             if (numBlocks > 1)
             {
                 level++;
@@ -321,7 +315,7 @@ extern "C"
             size_t numBlocks = 
                 max(1, 
                 (unsigned int)ceil((double)numElts / 
-                ((double)SEGSCAN_ELTS_PER_THREAD * CTA_SIZE)));
+                ((double)SEGSCAN_ELTS_PER_THREAD * SCAN_CTA_SIZE)));
             if (numBlocks > 1) 
             {
                 CUDA_SAFE_CALL(cudaMalloc((void**) &(plan->m_blockSums[level]),

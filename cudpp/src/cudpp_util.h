@@ -50,36 +50,30 @@ isMultiple(int n, int f)
         return (n%f==0);
 }
 
-/** @brief Compute the smallest power of two larger than \a n.
-  * @param n Input value
-  * @returns The smallest power f two larger than \a n
+/** @brief Compute the smallest power of two larger than \a x.
+  * @param x Input value
+  * @returns The smallest power f two larger than \a x
   */
-inline int 
-ceilPow2(int n) 
+inline unsigned int 
+ceilPow2( unsigned int x ) 
 {
-        double log2n = log2((double)n);
-        if (isPowerOfTwo(n))
-                return n;
-        else
-                return 1 << (int)ceil(log2n);
+    --x;
+    x |= x >> 1;
+    x |= x >> 2;
+    x |= x >> 4;
+    x |= x >> 8;
+    x |= x >> 16;
+    return ++x;
 }
 
-/** @brief Compute the largest power of two smaller than \a n.
-  * @param n Input value
-  * @returns The largest power of two smaller than \a n.
+/** @brief Compute the largest power of two smaller than or equal to \a x.
+  * @param x Input value
+  * @returns The largest power of two smaller than or equal to \a x.
   */
-inline int 
-floorPow2(int n)
+inline unsigned int 
+floorPow2(unsigned int x)
 {
-#ifdef WIN32
-    // method 2
-    return 1 << (int)_logb((float)n);
-#else
-    // method 3
-    int exp;
-    frexp((float)n, &exp);
-    return 1 << (exp - 1);
-#endif
+    return ceilPow2(x) >> 1;
 }
 
 /** @brief Returns the maximum value for type \a T.
@@ -190,6 +184,57 @@ struct typeToVector<float, 2>
 {
     typedef float2 Result;
 };
+
+template <typename T>
+class OperatorAdd
+{
+public:
+    __device__ T operator()(const T& a, const T& b) { return a + b; }
+    __device__ T identity() { return (T)0; }
+};
+
+template <typename T>
+class OperatorMultiply
+{
+public:
+    __device__ T operator()(const T& a, const T& b) { return a * b; }
+    __device__ T identity() { return (T)1; }
+};
+
+template <typename T>
+class OperatorMax
+{
+public:
+    __device__ T operator() (const T& a, const T& b) const { return max(a, b); }
+    __device__ T identity() const { return (T)0; }
+};
+
+template <>
+__device__ int OperatorMax<int>::identity() const { return INT_MIN; }
+template <>
+__device__ unsigned int OperatorMax<unsigned int>::identity() const { return 0; }
+template <>
+__device__ float OperatorMax<float>::identity() const { return -FLT_MAX; }
+template <>
+__device__ double OperatorMax<double>::identity() const { return -DBL_MAX; }
+
+template <typename T>
+class OperatorMin
+{
+public:
+    __device__ T operator() (const T& a, const T& b) const { return min(a, b); }
+    __device__ T identity() const { return (T)0; }
+};
+
+template <>
+__device__ int OperatorMin<int>::identity() const { return INT_MAX; }
+template <>
+__device__ unsigned int OperatorMin<unsigned int>::identity() const { return UINT_MAX; }
+template <>
+__device__ float OperatorMin<float>::identity() const { return FLT_MAX; }
+template <>
+__device__ double OperatorMin<double>::identity() const { return DBL_MAX; }
+
 
 /** @brief Templatized operator class used by scan and segmented scan
   * 

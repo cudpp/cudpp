@@ -78,9 +78,9 @@ void scanArrayRecursive(T                   *d_out,
                         int                 level)
 {
     unsigned int numBlocks = 
-        max(1, (unsigned int)ceil((double)numElements / ((double)SCAN_ELTS_PER_THREAD * CTA_SIZE)));
+        max(1, (unsigned int)ceil((double)numElements / ((double)SCAN_ELTS_PER_THREAD * SCAN_CTA_SIZE)));
 
-    unsigned int sharedEltsPerBlock = CTA_SIZE * 2;
+    unsigned int sharedEltsPerBlock = SCAN_CTA_SIZE * 2;
       
     unsigned int sharedMemSize = sizeof(T) * sharedEltsPerBlock;
 
@@ -94,11 +94,11 @@ void scanArrayRecursive(T                   *d_out,
         blockSumRowPitch = (numBlocks > 1) ? rowPitches[level+1] / 4 : 0;
     }
 
-    bool fullBlock = (numElements == numBlocks * SCAN_ELTS_PER_THREAD * CTA_SIZE);
+    bool fullBlock = (numElements == numBlocks * SCAN_ELTS_PER_THREAD * SCAN_CTA_SIZE);
 
     // setup execution parameters
     dim3  grid(numBlocks, numRows, 1); 
-    dim3  threads(CTA_SIZE, 1, 1);
+    dim3  threads(SCAN_CTA_SIZE, 1, 1);
 
     // make sure there are no CUDA errors before we start
     CUT_CHECK_ERROR("scanArray before kernels");
@@ -208,7 +208,7 @@ void allocScanStorage(CUDPPScanPlan *plan)
     do
     {       
         size_t numBlocks = 
-            max(1, (unsigned int)ceil((double)numElts / ((double)SCAN_ELTS_PER_THREAD * CTA_SIZE)));
+            max(1, (unsigned int)ceil((double)numElts / ((double)SCAN_ELTS_PER_THREAD * SCAN_CTA_SIZE)));
         if (numBlocks > 1)
         {
             level++;
@@ -253,7 +253,7 @@ void allocScanStorage(CUDPPScanPlan *plan)
     do
     {       
         size_t numBlocks = 
-            max(1, (unsigned int)ceil((double)numElts / ((double)SCAN_ELTS_PER_THREAD * CTA_SIZE)));
+            max(1, (unsigned int)ceil((double)numElts / ((double)SCAN_ELTS_PER_THREAD * SCAN_CTA_SIZE)));
         if (numBlocks > 1) 
         {
             // Use cudaMallocPitch for multi-row block sums to ensure alignment

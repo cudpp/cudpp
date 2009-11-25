@@ -21,7 +21,7 @@
 
 /**
  * @file
- * radixsort_app.cu
+ * radixsort_kernel.cu
  *   
  * @brief CUDPP kernel-level radix sorting routines
  */

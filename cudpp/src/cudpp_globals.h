@@ -21,20 +21,19 @@
 #ifndef __CUDPP_GLOBALS_H__
 #define __CUDPP_GLOBALS_H__
 
-const int NUM_BANKS = 16;                        /**< Number of shared memory banks */
-const int LOG_NUM_BANKS = 4;                     /**< log_2(NUM_BANKS) */
-const int CTA_SIZE = 128;                        /**< Number of threads in a CTA */
+const int SORT_CTA_SIZE = 256;                   /**< Number of threads per CTA for radix sort. Must equal 16 * number of radices */
+const int SCAN_CTA_SIZE = 128;                   /**< Number of threads in a CTA */
+const int REDUCE_CTA_SIZE = 256;                 /**< Number of threads in a CTA */
+
+const int LOG_SCAN_CTA_SIZE = 7;                 /**< log_2(CTA_SIZE) */
+
 const int WARP_SIZE = 32;                        /**< Number of threads in a warp */
-const int LOG_CTA_SIZE = 7;                      /**< log_2(CTA_SIZE) */
+
 const int LOG_WARP_SIZE = 5;                     /**< log_2(WARP_SIZE) */
 const int LOG_SIZEOF_FLOAT = 2;                  /**< log_2(sizeof(float)) */
-const int SCAN_ELTS_PER_THREAD = 8;              /**< Number of elements per scan thread */
-const int SEGSCAN_ELTS_PER_THREAD = 8;     /**< Number of elements per segmented scan thread */
 
-const int maxSharedMemoryPerBlock = 16384; /**< Number of bytes of shared 
-                                              memory in each block */
-const int maxThreadsPerBlock = CTA_SIZE;   /**< Maximum number of
-                                             * threads in a CTA */
+const int SCAN_ELTS_PER_THREAD = 8;              /**< Number of elements per scan thread */
+const int SEGSCAN_ELTS_PER_THREAD = 8;           /**< Number of elements per segmented scan thread */
 
 /**
 * @brief Macro to insert necessary __syncthreads() in device emulation mode
@@ -43,18 +42,6 @@ const int maxThreadsPerBlock = CTA_SIZE;   /**< Maximum number of
 #define __EMUSYNC __syncthreads()
 #else
 #define __EMUSYNC
-#endif
-
-
-#define AVOID_BANK_CONFLICTS /**< Set if by default, we want our
-                              * shared memory allocation to perform
-                              * additional computation to avoid bank
-                              * conflicts */
-
-#ifdef AVOID_BANK_CONFLICTS
-#define CONFLICT_FREE_OFFSET(index) ((index) >> LOG_NUM_BANKS)
-#else
-#define CONFLICT_FREE_OFFSET(index) (0)
 #endif
 
 #endif // __CUDPP_GLOBALS_H__
