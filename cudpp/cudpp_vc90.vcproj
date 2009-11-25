@@ -1393,6 +1393,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\cudpp_reduce.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\cudpp_scan.h"
 				>
 			</File>
@@ -2076,6 +2080,88 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\src\app\reduce_app.cu"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+						PtxAsOptionV="true"
+						ExtraNvccOptions="-m32 -gencode=arch=compute_10,code=sm_10 -gencode=arch=compute_13,code=sm_13"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\src\kernel\reduce_kernel.cu"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+						ExtraNvccOptions="-m32 -gencode=arch=compute_10,code=sm_10 -gencode=arch=compute_13,code=sm_13"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="EmuDebug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="EmuRelease|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="StaticLib_Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="StaticLib_Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="StaticLib_EmuDebug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="StaticLib_EmuRelease|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
 					/>
 				</FileConfiguration>
 			</File>

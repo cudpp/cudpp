@@ -14,8 +14,20 @@
 
 typedef void* KernelPointer;
 
+
+/** @addtogroup publicInterface
+  * @{
+  */
+
 /**
  * @brief Creates an instance of the CUDPP library, and returns a handle.
+ *
+ * cudppCreate() must be called before any other CUDPP function.  In a 
+ * multi-GPU application that uses multiple CUDA context, cudppCreate() must
+ * be called once for each CUDA context.  Each call returns a different handle,
+ * because each CUDA context (and the host thread that owns it) must use a 
+ * separate instance of the CUDPP library.  
+ *
  */
 CUDPP_DLL
 CUDPPResult cudppCreate(CUDPPHandle* theCudpp)
@@ -27,6 +39,9 @@ CUDPPResult cudppCreate(CUDPPHandle* theCudpp)
 
 /**
  * @brief Destroys an instance of the CUDPP library given its handle.
+ *
+ * cudppDestroy() should be called once for each handle created using cudppCreate(),
+ * to ensure proper resource cleanup of all library instances.
  */
 CUDPP_DLL
 CUDPPResult cudppDestroy(CUDPPHandle theCudpp)
@@ -36,6 +51,8 @@ CUDPPResult cudppDestroy(CUDPPHandle theCudpp)
     mgr = 0;
     return CUDPP_SUCCESS;
 }
+
+/** @} */ // end publicInterface
 
 //! @brief CUDPP Manager constructor
 CUDPPManager::CUDPPManager()

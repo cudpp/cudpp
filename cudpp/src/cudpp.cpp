@@ -48,6 +48,7 @@
 #include "cudpp_spmvmult.h"
 #include "cudpp_radixsort.h"
 #include "cudpp_rand.h"
+#include "cudpp_reduce.h"
 
 /**
  * @brief Performs a scan operation of numElements on its input in
@@ -265,6 +266,48 @@ CUDPPResult cudppCompact(const CUDPPHandle  planHandle,
     {
         cudppCompactDispatch(d_out, d_numValidElements, d_in, d_isValid, 
             numElements, plan);
+        return CUDPP_SUCCESS;
+    }
+    else
+    {
+        return CUDPP_ERROR_UNKNOWN; //! @todo Return more specific errors.
+    }
+}
+
+/**
+ * @brief Reduces an array to a single element using a binary associative operator
+ * 
+ * For example, if the operator is CUDPP_ADD, then:
+ * \code
+ * d_in    = [ 3 2 0 1 -4 5 0 -1 ]
+ * d_out   = [ 6 ]
+ * \endcode
+ *
+ * If the operator is CUDPP_MIN, then:
+ * \code
+ * d_in    = [ 3 2 0 1 -4 5 0 -1 ]
+ * d_out   = [ -4 ]
+ * \endcode
+ *
+ * @param[in] planHandle handle to CUDPPReducePlan
+ * @param[out] d_out output of reduce (a single element) in GPU memory
+ * @param[in] d_in input to reduce in GPU memory
+ * @param[in] numElements number of elements to reduce
+ * 
+ * @see cudppPlan
+ */
+CUDPP_DLL
+CUDPPResult cudppReduce(const CUDPPHandle planHandle,
+                        void              *d_out,
+                        const void        *d_in,
+                        size_t            numElements)
+{
+    CUDPPReducePlan *plan = 
+        (CUDPPReducePlan*)getPlanPtrFromHandle<CUDPPReducePlan>(planHandle);
+
+    if (plan != NULL)
+    {
+        cudppReduceDispatch(d_out, d_in, numElements, plan);
         return CUDPP_SUCCESS;
     }
     else

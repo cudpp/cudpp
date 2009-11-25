@@ -354,7 +354,8 @@ enum CUDPPDatatype
     CUDPP_UCHAR,    //!< Unsigned character (byte) type (C unsigned char)
     CUDPP_INT,      //!< Integer type (C int)
     CUDPP_UINT,     //!< Unsigned integer type (C unsigned int)
-    CUDPP_FLOAT     //!< Float type (C float)
+    CUDPP_FLOAT,     //!< Float type (C float)
+    CUDPP_DOUBLE    //!< Double type (C double)
 };
 
 /** 
@@ -476,6 +477,12 @@ CUDPPResult cudppCompact(const CUDPPHandle  planHandle,
                          const void         *d_in, 
                          const unsigned int *d_isValid,
                          size_t             numElements);
+
+CUDPP_DLL
+CUDPPResult cudppReduce(const CUDPPHandle planHandle,
+                        void              *d_out,
+                        const void        *d_in,
+                        size_t            numElements);
 
 CUDPP_DLL
 CUDPPResult cudppSort(const CUDPPHandle planHandle,

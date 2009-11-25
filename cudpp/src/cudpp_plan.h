@@ -57,7 +57,7 @@ public:
     size_t             m_numElements;   //!< @internal Maximum number of input elements
     size_t             m_numRows;       //!< @internal Maximum number of input rows
     size_t             m_rowPitch;      //!< @internal Pitch of input rows in elements
-    CUDPPManager   *m_planManager;  //!< @internal pointer to the manager of this plan
+    CUDPPManager      *m_planManager;  //!< @internal pointer to the manager of this plan
    
     //! @internal Convert this pointer to an opaque handle
     CUDPPHandle getHandle()
@@ -111,6 +111,20 @@ public:
     unsigned int* m_d_outputIndices; //!< @internal Output address of compacted elements; this is the result of scan
     
 };
+
+/** @brief Plan class for reduce algorithm
+*
+*/
+class CUDPPReducePlan : public CUDPPPlan
+{
+public:
+    CUDPPReducePlan(CUDPPManager *mgr, CUDPPConfiguration config, size_t numElements);
+    virtual ~CUDPPReducePlan();
+
+    unsigned int m_threadsPerBlock;     //!< @internal number of threads to launch per block
+    unsigned int m_maxBlocks;           //!< @internal maximum number of blocks to launch
+    void         *m_blockSums;          //!< @internal Intermediate block sums array
+};  
 
 class CUDPPRadixSortPlan : public CUDPPPlan
 {

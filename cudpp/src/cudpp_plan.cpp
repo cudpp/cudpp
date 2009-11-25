@@ -15,6 +15,7 @@
 #include "cudpp_compact.h"
 #include "cudpp_spmvmult.h"
 #include "cudpp_radixsort.h"
+#include "cudpp_reduce.h"
 
 #include <assert.h>
 
@@ -111,6 +112,10 @@ CUDPPResult cudppPlan(const CUDPPHandle  cudppHandle,
             break;
         }
     case CUDPP_REDUCE:
+        {
+            plan = new CUDPPReducePlan(mgr, config, numElements);
+            break;
+        }
     default:
         //! @todo: implement cudppReduce()
         return CUDPP_ERROR_ILLEGAL_CONFIGURATION; 
@@ -170,6 +175,10 @@ CUDPPResult cudppDestroyPlan(CUDPPHandle planHandle)
             break;
         }
     case CUDPP_REDUCE:
+        {
+            delete static_cast<CUDPPReducePlan*>(plan);
+            break;
+        }
     default:
         //! @todo: implement cudppReduce()
         return CUDPP_ERROR_ILLEGAL_CONFIGURATION; 
@@ -378,6 +387,28 @@ CUDPPCompactPlan::~CUDPPCompactPlan()
 {
     delete m_scanPlan;
     freeCompactStorage(this);
+}
+
+/** @brief Reduce Plan constructor
+* 
+* @param[in]  mgr pointer to the CUDPPManager
+* @param[in]  config The configuration struct specifying options
+* @param[in]  numElements The maximum number of elements to be compacted
+*/
+CUDPPReducePlan::CUDPPReducePlan(CUDPPManager *mgr,
+                                 CUDPPConfiguration config, 
+                                 size_t numElements)
+: CUDPPPlan(mgr, config, numElements, 1, 0),
+  m_threadsPerBlock(REDUCE_CTA_SIZE),
+  m_maxBlocks(64)
+{
+    allocReduceStorage(this);
+}
+
+/** @brief Reduce plan destructor */
+CUDPPReducePlan::~CUDPPReducePlan()
+{
+    freeReduceStorage(this);
 }
 
 /** @brief Radix Sort Plan constructor
