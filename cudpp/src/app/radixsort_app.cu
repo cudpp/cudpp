@@ -703,8 +703,8 @@ void radixSortSingleBlockKeysOnly(uint *keys,
 extern "C"
 void radixSortKeysOnly(uint *keys,
                        const CUDPPRadixSortPlan *plan, 
-                       bool flipBits, 
                        size_t numElements,
+                       bool flipBits, 
                        int keyBits)
 {
 
@@ -787,8 +787,8 @@ void radixSortKeysOnly(uint *keys,
 extern "C"
 void radixSortFloatKeysOnly(float *keys, 
                             const CUDPPRadixSortPlan *plan,                        
-                            bool  negativeKeys,
                             size_t numElements,
+                            bool  negativeKeys,
                             int keyBits)
 {
     radixSortKeysOnly((uint*)keys, plan, negativeKeys, numElements, keyBits);
@@ -956,12 +956,12 @@ void cudppRadixSortDispatch(void  *keys,
         switch(plan->m_config.datatype)
         {
         case CUDPP_UINT:
-            radixSortKeysOnly((uint*)keys, plan, false, 
-                              numElements, keyBits);
+            radixSortKeysOnly((uint*)keys, plan, 
+                              numElements, false, keyBits);
             break;
         case CUDPP_FLOAT:
-            radixSortFloatKeysOnly((float*)keys, plan, true,
-                                    numElements, keyBits);
+            radixSortFloatKeysOnly((float*)keys, plan, 
+                                    numElements, true, keyBits);
         }
     }
     else
