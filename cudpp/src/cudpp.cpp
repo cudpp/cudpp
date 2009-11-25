@@ -289,10 +289,16 @@ CUDPPResult cudppCompact(const CUDPPHandle  planHandle,
  * d_out   = [ -4 ]
  * \endcode
  *
+ * Limits:
+ * \a numElements must be at least 1, and is currently limited only by the addressable memory
+ * in CUDA (and the output accuracy is limited by numerical precision).
+ *
  * @param[in] planHandle handle to CUDPPReducePlan
- * @param[out] d_out output of reduce (a single element) in GPU memory
- * @param[in] d_in input to reduce in GPU memory
- * @param[in] numElements number of elements to reduce
+ * @param[out] d_out Output of reduce (a single element) in GPU memory. 
+ *                   Must be a pointer to an array of at least a single element.
+ * @param[in] d_in Input array to reduce in GPU memory.  
+ *                 Must be a pointer to an array of at least \a numElements elements.
+ * @param[in] numElements the number of elements to reduce.  
  * 
  * @see cudppPlan
  */

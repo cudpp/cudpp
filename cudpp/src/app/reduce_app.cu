@@ -33,10 +33,10 @@
   *
   * This function dispatches the appropriate reduction kernel given the size of the blocks.
   *
-  * @param d_odata The output data pointer.  Each block writes a single output element.
-  * @param d_idata The input data pointer.  
-  * @param numElements The number of elements to be reduced.
-  * @param plan A pointer to the plan structure for the reduction.
+  * @param[out] d_odata The output data pointer.  Each block writes a single output element.
+  * @param[in]  d_idata The input data pointer.  
+  * @param[in]  numElements The number of elements to be reduced.
+  * @param[in]  plan A pointer to the plan structure for the reduction.
 */
 template <class T, class Oper>
 void reduceBlocks(T *d_odata, const T *d_idata, size_t numElements, CUDPPReducePlan *plan)
@@ -110,10 +110,10 @@ void reduceBlocks(T *d_odata, const T *d_idata, size_t numElements, CUDPPReduceP
   *
   * Performs multi-level reduction on large arrays using reduceBlocks().  
   *
-  * @param d_odata The output data pointer.  This is a pointer to a single element.
-  * @param d_idata The input data pointer.  
-  * @param numElements The number of elements to be reduced.
-  * @param plan A pointer to the plan structure for the reduction.
+  * @param [out] d_odata The output data pointer.  This is a pointer to a single element.
+  * @param [in]  d_idata The input data pointer.  
+  * @param [in]  numElements The number of elements to be reduced.
+  * @param [in]  plan A pointer to the plan structure for the reduction.
 */
 template <class Oper, class T>
 void reduceArray(T *d_odata, const T *d_idata, size_t numElements, CUDPPReducePlan *plan)
@@ -139,9 +139,9 @@ void reduceArray(T *d_odata, const T *d_idata, size_t numElements, CUDPPReducePl
   * Each block writes its partial sum to global memory where it is reduced
   * to a single element in a second pass.
   *
-  * @param plan Pointer to CUDPPReducePlan object containing options and number 
-  *             of elements, which is used to compute storage requirements, and
-  *             within which intermediate storage is allocated.
+  * @param [in,out] plan Pointer to CUDPPReducePlan object containing options and number 
+  *                      of elements, which is used to compute storage requirements, and
+  *                      within which intermediate storage is allocated.
   */
 void allocReduceStorage(CUDPPReducePlan *plan)
 {
@@ -174,7 +174,7 @@ void allocReduceStorage(CUDPPReducePlan *plan)
   * These arrays must have been allocated by allocScanStorage(), which is called
   * by the constructor of cudppReducePlan().  
   *
-  * @param plan Pointer to CUDPPReducePlan object initialized by allocScanStorage().
+  * @param[in,out] plan Pointer to CUDPPReducePlan object initialized by allocScanStorage().
   */
 void freeReduceStorage(CUDPPReducePlan *plan)
 {

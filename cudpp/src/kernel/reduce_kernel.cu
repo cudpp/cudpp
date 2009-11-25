@@ -43,9 +43,9 @@
   * overall cost of the algorithm while keeping the work complexity O(n) and the step complexity 
   * O(log n). (Brent's Theorem optimization)
   *
-  * @param odata The output data pointer.  Each block writes a single output element.
-  * @param idata The input data pointer.  
-  * @param n     The number of elements to be reduced.
+  * @param[out] odata The output data pointer.  Each block writes a single output element.
+  * @param[in]  idata The input data pointer.  
+  * @param[in]  n     The number of elements to be reduced.
 */
 template <typename T, class Oper, unsigned int blockSize, bool nIsPow2>
 __global__ void reduce(T *odata, const T *idata, unsigned int n)

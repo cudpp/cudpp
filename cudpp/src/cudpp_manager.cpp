@@ -28,6 +28,7 @@ typedef void* KernelPointer;
  * because each CUDA context (and the host thread that owns it) must use a 
  * separate instance of the CUDPP library.  
  *
+ * @param[in,out] theCudpp a pointer to the CUDPPHandle for the created CUDPP instance.
  */
 CUDPP_DLL
 CUDPPResult cudppCreate(CUDPPHandle* theCudpp)
@@ -42,6 +43,8 @@ CUDPPResult cudppCreate(CUDPPHandle* theCudpp)
  *
  * cudppDestroy() should be called once for each handle created using cudppCreate(),
  * to ensure proper resource cleanup of all library instances.
+ *
+ * @param[in] theCudpp the handle to the CUDPP instance to destroy.
  */
 CUDPP_DLL
 CUDPPResult cudppDestroy(CUDPPHandle theCudpp)
