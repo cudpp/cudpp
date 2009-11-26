@@ -62,7 +62,7 @@
   * @param fullBlock True if all blocks in this scan are full (CTA_SIZE * SCAN_ELEMENTS_PER_THREAD elements)
   * @param exclusive True for exclusive scans, false for inclusive scans
   */
-template <class T, CUDPPOperator oper, bool backward, bool exclusive,
+template <typename T, class Oper, bool backward, bool exclusive,
           bool multiRow, bool sums, bool fullBlock>
 class ScanTraits
 {
@@ -79,15 +79,7 @@ public:
     //! Returns true if this is a full scan -- all blocks process CTA_SIZE * SCAN_ELEMENTS_PER_THREAD elements
     static __device__ bool isFullBlock()   { return fullBlock; };
     
-        
-    //! The operator function used for the scan
-    static __device__ T op(const T &a, const T &b)
-    {
-        return Operator<T, oper>::op(a, b);
-    }  
-
-    //! The identity value used by the scan
-    static __device__ T identity() { return Operator<T, oper>::identity(); }
+    typedef Oper Op; //!< The operator functor used for the scan
 };
 
 //! This is used to insert syncthreads to avoid perf loss caused by 128-bit 
@@ -146,6 +138,9 @@ __device__ void loadSharedChunkFromMem4(T        *s_out,
     ai = thid;
     bi = thid + blockDim.x;
 
+    // create the operator functor
+    typename traits::Op op;
+
     // read into tempData;
     if (traits::isBackward())
     {
@@ -154,18 +149,18 @@ __device__ void loadSharedChunkFromMem4(T        *s_out,
         {
             tempData       = inData[aiDev];
             threadScan0[3] = tempData.w;               
-            threadScan0[2] = traits::op(tempData.z, threadScan0[3]);
-            threadScan0[1] = traits::op(tempData.y, threadScan0[2]);
+            threadScan0[2] = op(tempData.z, threadScan0[3]);
+            threadScan0[1] = op(tempData.y, threadScan0[2]);
             threadScan0[0] = s_out[ai] 
-                           = traits::op(tempData.x, threadScan0[1]);
+                           = op(tempData.x, threadScan0[1]);
         }
         else
         {
-            threadScan0[3] = traits::identity();
-            threadScan0[2] = traits::op(((i+2) < numElements) ? d_in[i+2] : traits::identity(), threadScan0[3]);
-            threadScan0[1] = traits::op(((i+1) < numElements) ? d_in[i+1] : traits::identity(), threadScan0[2]);
+            threadScan0[3] = op.identity();
+            threadScan0[2] = op(((i+2) < numElements) ? d_in[i+2] : op.identity(), threadScan0[3]);
+            threadScan0[1] = op(((i+1) < numElements) ? d_in[i+1] : op.identity(), threadScan0[2]);
             threadScan0[0] = s_out[ai] 
-                           = traits::op((i     < numElements) ? d_in[i]   : traits::identity(), threadScan0[1]);
+                           = op((i     < numElements) ? d_in[i]   : op.identity(), threadScan0[1]);
         }
 
 #ifdef DISALLOW_LOADSTORE_OVERLAP
@@ -177,18 +172,18 @@ __device__ void loadSharedChunkFromMem4(T        *s_out,
         {
             tempData       = inData[biDev];
             threadScan1[3] = tempData.w;
-            threadScan1[2] = traits::op(tempData.z, threadScan1[3]);
-            threadScan1[1] = traits::op(tempData.y, threadScan1[2]);
+            threadScan1[2] = op(tempData.z, threadScan1[3]);
+            threadScan1[1] = op(tempData.y, threadScan1[2]);
             threadScan1[0] = s_out[bi] 
-                           = traits::op(tempData.x, threadScan1[1]);
+                           = op(tempData.x, threadScan1[1]);
         }
         else
         {
-            threadScan1[3] = traits::identity();
-            threadScan1[2] = traits::op(((i+2) < numElements) ? d_in[i+2] : traits::identity(), threadScan1[3]);
-            threadScan1[1] = traits::op(((i+1) < numElements) ? d_in[i+1] : traits::identity(), threadScan1[2]);
+            threadScan1[3] = op.identity();
+            threadScan1[2] = op(((i+2) < numElements) ? d_in[i+2] : op.identity(), threadScan1[3]);
+            threadScan1[1] = op(((i+1) < numElements) ? d_in[i+1] : op.identity(), threadScan1[2]);
             threadScan1[0] = s_out[bi] 
-                           = traits::op((i     < numElements) ? d_in[i]   : traits::identity(), threadScan1[1]);
+                           = op((i     < numElements) ? d_in[i]   : op.identity(), threadScan1[1]);
         }
         __syncthreads();
 
@@ -214,18 +209,18 @@ __device__ void loadSharedChunkFromMem4(T        *s_out,
         {
             tempData       = inData[aiDev];
             threadScan0[0] = tempData.x;           
-            threadScan0[1] = traits::op(tempData.y, threadScan0[0]);
-            threadScan0[2] = traits::op(tempData.z, threadScan0[1]);
+            threadScan0[1] = op(tempData.y, threadScan0[0]);
+            threadScan0[2] = op(tempData.z, threadScan0[1]);
             threadScan0[3] = s_out[ai] 
-                           = traits::op(tempData.w, threadScan0[2]);
+                           = op(tempData.w, threadScan0[2]);
         }
         else
         {
-            threadScan0[0] = (i < numElements) ? d_in[i] : traits::identity();
-            threadScan0[1] = traits::op(((i+1) < numElements) ? d_in[i+1] : traits::identity(), threadScan0[0]);
-            threadScan0[2] = traits::op(((i+2) < numElements) ? d_in[i+2] : traits::identity(), threadScan0[1]);
+            threadScan0[0] = (i < numElements) ? d_in[i] : op.identity();
+            threadScan0[1] = op(((i+1) < numElements) ? d_in[i+1] : op.identity(), threadScan0[0]);
+            threadScan0[2] = op(((i+2) < numElements) ? d_in[i+2] : op.identity(), threadScan0[1]);
             threadScan0[3] = s_out[ai] 
-                           = traits::op(((i+3) < numElements) ? d_in[i+3] : traits::identity(), threadScan0[2]);
+                           = op(((i+3) < numElements) ? d_in[i+3] : op.identity(), threadScan0[2]);
         }
 
         
@@ -238,18 +233,18 @@ __device__ void loadSharedChunkFromMem4(T        *s_out,
         {
             tempData       = inData[biDev];
             threadScan1[0] = tempData.x;           
-            threadScan1[1] = traits::op(tempData.y, threadScan1[0]);
-            threadScan1[2] = traits::op(tempData.z, threadScan1[1]);
+            threadScan1[1] = op(tempData.y, threadScan1[0]);
+            threadScan1[2] = op(tempData.z, threadScan1[1]);
             threadScan1[3] = s_out[bi] 
-                           = traits::op(tempData.w, threadScan1[2]);
+                           = op(tempData.w, threadScan1[2]);
         }
         else
         {
-            threadScan1[0] = (i < numElements) ? d_in[i] : traits::identity();
-            threadScan1[1] = traits::op(((i+1) < numElements) ? d_in[i+1] : traits::identity(), threadScan1[0]);
-            threadScan1[2] = traits::op(((i+2) < numElements) ? d_in[i+2] : traits::identity(), threadScan1[1]);
+            threadScan1[0] = (i < numElements) ? d_in[i] : op.identity();
+            threadScan1[1] = op(((i+1) < numElements) ? d_in[i+1] : op.identity(), threadScan1[0]);
+            threadScan1[2] = op(((i+2) < numElements) ? d_in[i+2] : op.identity(), threadScan1[1]);
             threadScan1[3] = s_out[bi] 
-                           = traits::op(((i+3) < numElements) ? d_in[i+3] : traits::identity(), threadScan1[2]);
+                           = op(((i+3) < numElements) ? d_in[i+3] : op.identity(), threadScan1[2]);
         }  
         __syncthreads();
     }
@@ -296,6 +291,9 @@ __device__ void storeSharedChunkToMem4(T   *d_out,
                                        int aiDev, 
                                        int biDev)
 {
+    // create the operator functor
+    typename traits::Op op;
+
     // Convert to 4-vector
     typename typeToVector<T,4>::Result tempData;
     typename typeToVector<T,4>::Result* outData = (typename typeToVector<T,4>::Result*)d_out;
@@ -323,16 +321,16 @@ __device__ void storeSharedChunkToMem4(T   *d_out,
         if (traits::isExclusive())
         {
             tempData.w = temp;
-            tempData.z = traits::op(temp, threadScan0[3]);
-            tempData.y = traits::op(temp, threadScan0[2]);
-            tempData.x = traits::op(temp, threadScan0[1]);
+            tempData.z = op(temp, threadScan0[3]);
+            tempData.y = op(temp, threadScan0[2]);
+            tempData.x = op(temp, threadScan0[1]);
         }
         else
         {
-            tempData.w = traits::op(temp, threadScan0[3]);
-            tempData.z = traits::op(temp, threadScan0[2]);
-            tempData.y = traits::op(temp, threadScan0[1]);
-            tempData.x = traits::op(temp, threadScan0[0]);
+            tempData.w = op(temp, threadScan0[3]);
+            tempData.z = op(temp, threadScan0[2]);
+            tempData.y = op(temp, threadScan0[1]);
+            tempData.x = op(temp, threadScan0[0]);
         }
 
         int i = aiDev * 4;
@@ -356,16 +354,16 @@ __device__ void storeSharedChunkToMem4(T   *d_out,
         if (traits::isExclusive())
         {
             tempData.w = temp;
-            tempData.z = traits::op(temp, threadScan1[3]);
-            tempData.y = traits::op(temp, threadScan1[2]);
-            tempData.x = traits::op(temp, threadScan1[1]);
+            tempData.z = op(temp, threadScan1[3]);
+            tempData.y = op(temp, threadScan1[2]);
+            tempData.x = op(temp, threadScan1[1]);
         }
         else
         {
-            tempData.w = traits::op(temp, threadScan1[3]);
-            tempData.z = traits::op(temp, threadScan1[2]);
-            tempData.y = traits::op(temp, threadScan1[1]);
-            tempData.x = traits::op(temp, threadScan1[0]);
+            tempData.w = op(temp, threadScan1[3]);
+            tempData.z = op(temp, threadScan1[2]);
+            tempData.y = op(temp, threadScan1[1]);
+            tempData.x = op(temp, threadScan1[0]);
         }
 
         i = biDev * 4;
@@ -388,16 +386,16 @@ __device__ void storeSharedChunkToMem4(T   *d_out,
         if (traits::isExclusive())
         {
             tempData.x = temp;
-            tempData.y = traits::op(temp, threadScan0[0]);
-            tempData.z = traits::op(temp, threadScan0[1]);
-            tempData.w = traits::op(temp, threadScan0[2]);
+            tempData.y = op(temp, threadScan0[0]);
+            tempData.z = op(temp, threadScan0[1]);
+            tempData.w = op(temp, threadScan0[2]);
         }
         else
         {
-            tempData.x = traits::op(temp, threadScan0[0]);
-            tempData.y = traits::op(temp, threadScan0[1]);
-            tempData.z = traits::op(temp, threadScan0[2]);
-            tempData.w = traits::op(temp, threadScan0[3]);
+            tempData.x = op(temp, threadScan0[0]);
+            tempData.y = op(temp, threadScan0[1]);
+            tempData.z = op(temp, threadScan0[2]);
+            tempData.w = op(temp, threadScan0[3]);
         }
 
         int i = aiDev * 4;
@@ -423,16 +421,16 @@ __device__ void storeSharedChunkToMem4(T   *d_out,
         if (traits::isExclusive())
         {
             tempData.x = temp;
-            tempData.y = traits::op(temp, threadScan1[0]);
-            tempData.z = traits::op(temp, threadScan1[1]);
-            tempData.w = traits::op(temp, threadScan1[2]);
+            tempData.y = op(temp, threadScan1[0]);
+            tempData.z = op(temp, threadScan1[1]);
+            tempData.w = op(temp, threadScan1[2]);
         }
         else
         {
-            tempData.x = traits::op(temp, threadScan1[0]);
-            tempData.y = traits::op(temp, threadScan1[1]);
-            tempData.z = traits::op(temp, threadScan1[2]);
-            tempData.w = traits::op(temp, threadScan1[3]);
+            tempData.x = op(temp, threadScan1[0]);
+            tempData.y = op(temp, threadScan1[1]);
+            tempData.z = op(temp, threadScan1[2]);
+            tempData.w = op(temp, threadScan1[3]);
         }
 
         i = biDev * 4;
@@ -490,10 +488,13 @@ __device__ void storeSharedChunkToMem4(T   *d_out,
 template<class T, class traits,int maxlevel>
 __device__ T warpscan(T val, volatile T* s_data)
 {
+    // create the operator functor
+    typename traits::Op op;
+
     // The following is the same as 2 * 32 * warpId + threadInWarp = 
     // 64*(threadIdx.x >> 5) + (threadIdx.x & (WARP_SIZE-1))
     int idx = 2 * threadIdx.x - (threadIdx.x & (WARP_SIZE-1));
-    s_data[idx] = traits::identity();
+    s_data[idx] = op.identity();
     idx += WARP_SIZE;
     s_data[idx] = val;                                 __EMUSYNC;
 
@@ -502,21 +503,21 @@ __device__ T warpscan(T val, volatile T* s_data)
         // work.
 #ifdef __DEVICE_EMULATION__
     T t = s_data[idx -  1]; __EMUSYNC; 
-    s_data[idx] = traits::op((const T&)s_data[idx],t); __EMUSYNC;
+    s_data[idx] = op((const T&)s_data[idx],t); __EMUSYNC;
     t = s_data[idx -  2]; __EMUSYNC; 
-    s_data[idx] = traits::op((const T&)s_data[idx],t); __EMUSYNC;
+    s_data[idx] = op((const T&)s_data[idx],t); __EMUSYNC;
     t = s_data[idx -  4]; __EMUSYNC; 
-    s_data[idx] = traits::op((const T&)s_data[idx],t); __EMUSYNC;
+    s_data[idx] = op((const T&)s_data[idx],t); __EMUSYNC;
     t = s_data[idx -  8]; __EMUSYNC; 
-    s_data[idx] = traits::op((const T&)s_data[idx],t); __EMUSYNC;
+    s_data[idx] = op((const T&)s_data[idx],t); __EMUSYNC;
     t = s_data[idx - 16]; __EMUSYNC; 
-    s_data[idx] = traits::op((const T&)s_data[idx],t); __EMUSYNC;
+    s_data[idx] = op((const T&)s_data[idx],t); __EMUSYNC;
 #else
-    if (0 <= maxlevel) { s_data[idx] = traits::op((const T&)s_data[idx], (const T&)s_data[idx - 1]); }
-    if (1 <= maxlevel) { s_data[idx] = traits::op((const T&)s_data[idx], (const T&)s_data[idx - 2]); }
-    if (2 <= maxlevel) { s_data[idx] = traits::op((const T&)s_data[idx], (const T&)s_data[idx - 4]); }
-    if (3 <= maxlevel) { s_data[idx] = traits::op((const T&)s_data[idx], (const T&)s_data[idx - 8]); }
-    if (4 <= maxlevel) { s_data[idx] = traits::op((const T&)s_data[idx], (const T&)s_data[idx -16]); }
+    if (0 <= maxlevel) { s_data[idx] = op((const T&)s_data[idx], (const T&)s_data[idx - 1]); }
+    if (1 <= maxlevel) { s_data[idx] = op((const T&)s_data[idx], (const T&)s_data[idx - 2]); }
+    if (2 <= maxlevel) { s_data[idx] = op((const T&)s_data[idx], (const T&)s_data[idx - 4]); }
+    if (3 <= maxlevel) { s_data[idx] = op((const T&)s_data[idx], (const T&)s_data[idx - 8]); }
+    if (4 <= maxlevel) { s_data[idx] = op((const T&)s_data[idx], (const T&)s_data[idx -16]); }
 #endif
 
     return s_data[idx-1];      // convert inclusive -> exclusive
@@ -544,6 +545,9 @@ template <class T, class traits>
 __device__ void scanWarps(T x, T y, 
                           T *s_data)
 {       
+    // create the operator functor
+    typename traits::Op op;
+
     T val  = warpscan<T, traits, 4>(x, s_data);
     __syncthreads(); 
     T val2 = warpscan<T, traits, 4>(y, s_data);
@@ -552,8 +556,8 @@ __device__ void scanWarps(T x, T y,
 
     if ((idx & 31)==31)
     {
-        s_data[idx >> 5]                = traits::op(val, x);
-        s_data[(idx + blockDim.x) >> 5] = traits::op(val2, y);
+        s_data[idx >> 5]                = op(val, x);
+        s_data[(idx + blockDim.x) >> 5] = op(val2, y);
     }
     __syncthreads();
 
@@ -565,9 +569,9 @@ __device__ void scanWarps(T x, T y,
     }
     __syncthreads();
 
-    val  = traits::op(val, s_data[idx >> 5]);
+    val  = op(val, s_data[idx >> 5]);
 
-    val2 = traits::op(val2, s_data[(idx + blockDim.x) >> 5]);
+    val2 = op(val2, s_data[(idx + blockDim.x) >> 5]);
 
     __syncthreads();
 
@@ -593,6 +597,9 @@ __device__ void scanCTA(T            *s_data,
                         T            *d_blockSums, 
                         unsigned int blockSumIndex)
 {
+    // create the operator functor
+    typename traits::Op op;
+
     T val  = s_data[threadIdx.x];
     T val2 = s_data[threadIdx.x + blockDim.x];
     __syncthreads();     
@@ -602,7 +609,7 @@ __device__ void scanCTA(T            *s_data,
 
     if (traits::writeSums() && threadIdx.x == blockDim.x - 1)
     {
-        d_blockSums[blockSumIndex] = traits::op(val2, s_data[threadIdx.x + blockDim.x]);
+        d_blockSums[blockSumIndex] = op(val2, s_data[threadIdx.x + blockDim.x]);
     }
     
     

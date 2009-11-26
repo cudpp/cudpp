@@ -49,8 +49,6 @@ int testCompact(int argc, const char ** argv, const CUDPPConfiguration *config);
 int testRadixSort(int argc, const char ** argv, const CUDPPConfiguration *config);
 int testSparseMatrixVectorMultiply(int argc, const char ** argv);
 int testRandMD5(int argc, const char ** argv);
-
-template <typename T>
 int testReduce(int argc, const char ** argv, const CUDPPConfiguration *config);
 
 /**
@@ -301,16 +299,50 @@ int main(int argc, const char** argv)
         if (testAll)
         {
             CUDPPConfiguration config;
+            config.options = 0;
             config.algorithm = CUDPP_REDUCE;
+            config.op = CUDPP_ADD;
             config.datatype = CUDPP_FLOAT;
-            retval += testReduce<float>(argc, argv, &config);
+            retval += testReduce(argc, argv, &config);
             config.datatype = CUDPP_INT;
-            retval += testReduce<int>(argc, argv, &config);
+            retval += testReduce(argc, argv, &config);
             config.datatype = CUDPP_UINT;
-            retval += testReduce<unsigned int>(argc, argv, &config);
+            retval += testReduce(argc, argv, &config);
+            config.datatype = CUDPP_DOUBLE;
+            retval += testReduce(argc, argv, &config);
+
+            config.op = CUDPP_MULTIPLY;
+            config.datatype = CUDPP_FLOAT;
+            retval += testReduce(argc, argv, &config);
+            config.datatype = CUDPP_INT;
+            retval += testReduce(argc, argv, &config);
+            config.datatype = CUDPP_UINT;
+            retval += testReduce(argc, argv, &config);
+            config.datatype = CUDPP_DOUBLE;
+            retval += testReduce(argc, argv, &config);
+
+            config.op = CUDPP_MIN;
+            config.datatype = CUDPP_FLOAT;
+            retval += testReduce(argc, argv, &config);
+            config.datatype = CUDPP_INT;
+            retval += testReduce(argc, argv, &config);
+            config.datatype = CUDPP_UINT;
+            retval += testReduce(argc, argv, &config);
+            config.datatype = CUDPP_DOUBLE;
+            retval += testReduce(argc, argv, &config);
+
+            config.op = CUDPP_MAX;
+            config.datatype = CUDPP_FLOAT;
+            retval += testReduce(argc, argv, &config);
+            config.datatype = CUDPP_INT;
+            retval += testReduce(argc, argv, &config);
+            config.datatype = CUDPP_UINT;
+            retval += testReduce(argc, argv, &config);
+            config.datatype = CUDPP_DOUBLE;
+            retval += testReduce(argc, argv, &config);
         }
         else
-            retval += testReduce<float>(argc, argv, NULL);
+            retval += testReduce(argc, argv, NULL);
     }
 
     if (testAll || (CUTTrue == cutCheckCmdLineFlag(argc, argv, "sort")))
@@ -344,7 +376,7 @@ int main(int argc, const char** argv)
     {
         //in the future we need to add so that it tests other random numbers as well
         retval += testRandMD5(argc, argv);
-    }   
+    }
 
     if (retval)
     {

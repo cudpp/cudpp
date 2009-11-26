@@ -80,7 +80,7 @@
 * @param[in] numElements The number of elements in the array to scan
 * @param[in] level The current recursive level of the scan
 */
-template <class T, CUDPPOperator op, bool isBackward, bool isExclusive, bool doShiftFlagsLeft>
+template <typename T, class Op, bool isBackward, bool isExclusive, bool doShiftFlagsLeft>
 void segmentedScanArrayRecursive(T                  *d_out, 
                                  const T            *d_idata, 
                                  const unsigned int *d_iflags,
@@ -137,13 +137,13 @@ void segmentedScanArrayRecursive(T                  *d_out,
     switch(traitsCode)
     {
     case 0: // single block, single row, non-full last block
-        segmentedScan4<T, SegmentedScanTraits<T, op, isBackward, isExclusive, doShiftFlagsLeft, false, false,
+        segmentedScan4<T, SegmentedScanTraits<T, Op, isBackward, isExclusive, doShiftFlagsLeft, false, false,
                        false> >
             <<< grid, threads, sharedMemSize >>>
             (d_out, d_idata, d_iflags, numElements, 0, 0, 0);
         break;
     case 1: // multi block, single row, non-full last block
-        segmentedScan4<T, SegmentedScanTraits<T, op, isBackward, isExclusive, doShiftFlagsLeft, false, true,
+        segmentedScan4<T, SegmentedScanTraits<T, Op, isBackward, isExclusive, doShiftFlagsLeft, false, true,
                        false> >
             <<< grid, threads, sharedMemSize >>>
             (d_out, d_idata, d_iflags, numElements,
@@ -151,13 +151,13 @@ void segmentedScanArrayRecursive(T                  *d_out,
             d_blockIndices[level]);
         break;
     case 2: // single block, single row, full last block
-        segmentedScan4<T, SegmentedScanTraits<T, op, isBackward, isExclusive, doShiftFlagsLeft, true, false,
+        segmentedScan4<T, SegmentedScanTraits<T, Op, isBackward, isExclusive, doShiftFlagsLeft, true, false,
                        false> >
             <<< grid, threads, sharedMemSize >>>
             (d_out, d_idata, d_iflags, numElements, 0, 0, 0);
         break;
     case 3: // multi block, single row, full last block
-        segmentedScan4<T, SegmentedScanTraits<T, op, isBackward, isExclusive, doShiftFlagsLeft, true, true,
+        segmentedScan4<T, SegmentedScanTraits<T, Op, isBackward, isExclusive, doShiftFlagsLeft, true, true,
                        false> >
             <<< grid, threads, sharedMemSize >>>
             (d_out, d_idata, d_iflags, numElements,
@@ -165,13 +165,13 @@ void segmentedScanArrayRecursive(T                  *d_out,
             d_blockIndices[level]);
         break;
     case 4: // single block, single row, non-full last block
-        segmentedScan4<T, SegmentedScanTraits<T, op, isBackward, isExclusive, doShiftFlagsLeft, false, false,
+        segmentedScan4<T, SegmentedScanTraits<T, Op, isBackward, isExclusive, doShiftFlagsLeft, false, false,
                        true> >
             <<< grid, threads, sharedMemSize >>>
             (d_out, d_idata, d_iflags, numElements, 0, 0, 0);
         break;
     case 5: // multi block, single row, non-full last block
-        segmentedScan4<T, SegmentedScanTraits<T, op, isBackward, isExclusive, doShiftFlagsLeft, false, true,
+        segmentedScan4<T, SegmentedScanTraits<T, Op, isBackward, isExclusive, doShiftFlagsLeft, false, true,
                        true> >
             <<< grid, threads, sharedMemSize >>>
             (d_out, d_idata, d_iflags, numElements,
@@ -179,13 +179,13 @@ void segmentedScanArrayRecursive(T                  *d_out,
             d_blockIndices[level]);
         break;
     case 6: // single block, single row, full last block
-        segmentedScan4<T, SegmentedScanTraits<T, op, isBackward, isExclusive, doShiftFlagsLeft, true, false,
+        segmentedScan4<T, SegmentedScanTraits<T, Op, isBackward, isExclusive, doShiftFlagsLeft, true, false,
                        true> >
             <<< grid, threads, sharedMemSize >>>
             (d_out, d_idata, d_iflags, numElements, 0, 0, 0);
         break;
     case 7: // multi block, single row, full last block
-        segmentedScan4<T, SegmentedScanTraits<T, op, isBackward, isExclusive, doShiftFlagsLeft, true, true,
+        segmentedScan4<T, SegmentedScanTraits<T, Op, isBackward, isExclusive, doShiftFlagsLeft, true, true,
                        true> >
             <<< grid, threads, sharedMemSize >>>
             (d_out, d_idata, d_iflags, numElements,
@@ -203,7 +203,7 @@ void segmentedScanArrayRecursive(T                  *d_out,
         // sub-blocks and segment scan those. This will give us a new value
         // that must be sdded to the first segment of each block to get 
         // the final results.
-        segmentedScanArrayRecursive<T, op, isBackward, false, false>
+        segmentedScanArrayRecursive<T, Op, isBackward, false, false>
             ((T*)d_blockSums[level], (const T*)d_blockSums[level], 
             d_blockFlags[level], (T **)d_blockSums,
             d_blockFlags, d_blockIndices,
@@ -212,22 +212,22 @@ void segmentedScanArrayRecursive(T                  *d_out,
         if (isBackward)
         {
             if (fullBlock)
-                vectorSegmentedAddUniformToRight4<T, op, true><<<grid, threads>>>
+                vectorSegmentedAddUniformToRight4<T, Op, true><<<grid, threads>>>
                 (d_out, d_blockSums[level], d_blockIndices[level], 
                 numElements, 0, 0);
             else
-                vectorSegmentedAddUniformToRight4<T, op, false><<<grid, threads>>>
+                vectorSegmentedAddUniformToRight4<T, Op, false><<<grid, threads>>>
                 (d_out, d_blockSums[level], d_blockIndices[level], 
                 numElements, 0, 0);
         }
         else
         {
             if (fullBlock)
-                vectorSegmentedAddUniform4<T, op, true><<<grid, threads>>>
+                vectorSegmentedAddUniform4<T, Op, true><<<grid, threads>>>
                 (d_out, d_blockSums[level], d_blockIndices[level], 
                 numElements, 0, 0);
             else
-                vectorSegmentedAddUniform4<T, op, false><<<grid, threads>>>
+                vectorSegmentedAddUniform4<T, Op, false><<<grid, threads>>>
                 (d_out, d_blockSums[level], d_blockIndices[level], 
                 numElements, 0, 0);
         }
@@ -362,6 +362,77 @@ extern "C"
         plan->m_numLevelsAllocated = 0;
     }
 
+#ifdef __cplusplus
+}
+#endif
+
+template <typename T, bool isBackward, bool isExclusive>
+void cudppSegmentedScanDispatchOperator(void                         *d_out, 
+                                        const void                   *d_in,
+                                        const unsigned int           *d_iflags,
+                                        int                          numElements,
+                                        const CUDPPSegmentedScanPlan *plan
+                                        )
+{
+    switch(plan->m_config.op)
+    {
+    case CUDPP_MAX:
+        segmentedScanArrayRecursive<T, OperatorMax<T>, isBackward, isExclusive, isBackward>
+            ((T *)d_out, (const T *)d_in, d_iflags, (T **)plan->m_blockSums, plan->m_blockFlags,
+            plan->m_blockIndices, numElements, 0);
+        break;
+    case CUDPP_ADD:
+        segmentedScanArrayRecursive<T, OperatorAdd<T>, isBackward, isExclusive, isBackward>
+            ((T *)d_out, (const T *)d_in, d_iflags, (T **)plan->m_blockSums, plan->m_blockFlags,
+            plan->m_blockIndices, numElements, 0);
+        break;
+    case CUDPP_MULTIPLY:
+        segmentedScanArrayRecursive<T, OperatorMultiply<T>, isBackward, isExclusive, isBackward>
+            ((T *)d_out, (const T *)d_in, d_iflags, (T **)plan->m_blockSums, plan->m_blockFlags,
+            plan->m_blockIndices, numElements, 0);
+        break;
+    case CUDPP_MIN:
+        segmentedScanArrayRecursive<T, OperatorMin<T>, isBackward, isExclusive, isBackward>
+            ((T *)d_out, (const T *)d_in, d_iflags, (T **)plan->m_blockSums, plan->m_blockFlags,
+            plan->m_blockIndices, numElements, 0);
+        break;
+    default:
+        break;
+    }
+}
+
+template <bool isBackward, bool isExclusive>
+void cudppSegmentedScanDispatchType(void                         *d_out, 
+                                    const void                   *d_in,
+                                    const unsigned int           *d_iflags,
+                                    int                          numElements,
+                                    const CUDPPSegmentedScanPlan *plan
+                                    )
+{
+    switch(plan->m_config.datatype)
+    {
+    case CUDPP_INT:
+        cudppSegmentedScanDispatchOperator<int, isBackward, isExclusive>
+            (d_out, d_in, d_iflags, numElements, plan);
+        break;
+    case CUDPP_UINT:
+        cudppSegmentedScanDispatchOperator<unsigned int, isBackward, isExclusive>
+            (d_out, d_in, d_iflags, numElements, plan);
+        break;
+    case CUDPP_FLOAT:
+        cudppSegmentedScanDispatchOperator<float, isBackward, isExclusive>
+            (d_out, d_in, d_iflags, numElements, plan);
+        break;
+    default:
+        break;
+    }
+}
+
+#ifdef __cplusplus
+    extern "C" 
+    {
+#endif
+
     /** @brief Dispatch function to perform a scan (prefix sum) on an
     * array with the specified configuration.
     *
@@ -372,427 +443,39 @@ extern "C"
     * @param[in]  numElements The number of elements to scan
     * @param[in]  plan        Segmented Scan configuration (plan), initialized 
     *                         by CUDPPSegmentedScanPlan constructor
-    * @param[in]  d_idata     The input array
+    * @param[in]  d_in     The input array
     * @param[in]  d_iflags    The input flags array
 
     * @param[out] d_out    The output array of segmented scan results
     */
     void cudppSegmentedScanDispatch (void                         *d_out, 
-        const void                   *d_idata,
-        const unsigned int           *d_iflags,
-        int                          numElements,
-        const CUDPPSegmentedScanPlan *plan
-        )
+                                     const void                   *d_in,
+                                     const unsigned int           *d_iflags,
+                                     int                          numElements,
+                                     const CUDPPSegmentedScanPlan *plan
+                                     )
     {    
         if (CUDPP_OPTION_EXCLUSIVE & plan->m_config.options)
         {
             if (CUDPP_OPTION_BACKWARD & plan->m_config.options)
             {
-                switch(plan->m_config.datatype)
-                {
-                case CUDPP_INT:
-                    switch(plan->m_config.op)
-                    {
-                    case CUDPP_MAX:
-                        segmentedScanArrayRecursive<int, CUDPP_MAX, true, true, true>
-                            ((int *)d_out, (int *)d_idata, d_iflags, 
-                            (int **)plan->m_blockSums, plan->m_blockFlags,
-                            plan->m_blockIndices, numElements, 0);
-                        break;
-                    case CUDPP_ADD:
-                        segmentedScanArrayRecursive<int, CUDPP_ADD, true, true, true>
-                            ((int *)d_out, (int *)d_idata, d_iflags, 
-                            (int **)plan->m_blockSums, plan->m_blockFlags,
-                            plan->m_blockIndices, numElements, 0);
-                        break;
-                    case CUDPP_MULTIPLY:
-                        segmentedScanArrayRecursive<int, CUDPP_MULTIPLY, true, true, true>
-                            ((int *)d_out, (int *)d_idata, d_iflags, 
-                            (int **)plan->m_blockSums, plan->m_blockFlags,
-                            plan->m_blockIndices, numElements, 0);
-                        break;
-                    case CUDPP_MIN:
-                        segmentedScanArrayRecursive<int, CUDPP_MIN, true, true, true>
-                            ((int *)d_out, (int *)d_idata, d_iflags, 
-                            (int **)plan->m_blockSums, plan->m_blockFlags,
-                            plan->m_blockIndices, numElements, 0);
-                        break;
-                    default:
-                        break;
-                    }
-                    break;
-                case CUDPP_UINT:
-                    switch(plan->m_config.op)
-                    {
-                    case CUDPP_MAX:
-                        segmentedScanArrayRecursive<unsigned int, CUDPP_MAX, true, true, true>
-                            ((unsigned int *)d_out, (unsigned int *)d_idata, d_iflags, 
-                            (unsigned int **)plan->m_blockSums, plan->m_blockFlags,
-                            plan->m_blockIndices, numElements, 0);
-                        break;
-                    case CUDPP_ADD:
-                        segmentedScanArrayRecursive<unsigned int, CUDPP_ADD, true, true, true>
-                            ((unsigned int *)d_out, (unsigned int *)d_idata, d_iflags, 
-                            (unsigned int **)plan->m_blockSums, plan->m_blockFlags,
-                            plan->m_blockIndices, numElements, 0);
-                        break;
-                    case CUDPP_MULTIPLY:
-                        segmentedScanArrayRecursive<unsigned int, CUDPP_MULTIPLY, true, true, true>
-                            ((unsigned int *)d_out, (unsigned int *)d_idata, d_iflags, 
-                            (unsigned int **)plan->m_blockSums, plan->m_blockFlags,
-                            plan->m_blockIndices, numElements, 0);
-                        break;
-                    case CUDPP_MIN:
-                        segmentedScanArrayRecursive<unsigned int, CUDPP_MIN, true, true, true>
-                            ((unsigned int *)d_out, (unsigned int *)d_idata, d_iflags, 
-                        (unsigned int **)plan->m_blockSums, plan->m_blockFlags,
-                        plan->m_blockIndices, numElements, 0);
-                        break;
-                    default:
-                        break;
-                    }
-                    break;
-                case CUDPP_FLOAT:
-                    switch(plan->m_config.op)
-                    {
-                    case CUDPP_MAX:
-                        segmentedScanArrayRecursive<float, CUDPP_MAX, true, true, true>
-                            ((float *)d_out, (float *)d_idata, d_iflags, 
-                            (float **)plan->m_blockSums, plan->m_blockFlags,
-                            plan->m_blockIndices, numElements, 0);
-                        break;
-                    case CUDPP_ADD:
-                        segmentedScanArrayRecursive<float, CUDPP_ADD, true, true, true>
-                            ((float *)d_out, (float *)d_idata, d_iflags, 
-                            (float **)plan->m_blockSums, plan->m_blockFlags,
-                            plan->m_blockIndices, numElements, 0);
-                        break;
-                    case CUDPP_MULTIPLY:
-                        segmentedScanArrayRecursive<float, CUDPP_MULTIPLY, true, true, true>
-                            ((float *)d_out, (float *)d_idata, d_iflags, 
-                            (float **)plan->m_blockSums, plan->m_blockFlags,
-                            plan->m_blockIndices, numElements, 0);
-                        break;
-                    case CUDPP_MIN:
-                        segmentedScanArrayRecursive<float, CUDPP_MIN, true, true, true>
-                            ((float *)d_out, (float *)d_idata, d_iflags, 
-                            (float **)plan->m_blockSums, plan->m_blockFlags,
-                            plan->m_blockIndices, numElements, 0);
-                        break;
-                    default:
-                        break;
-                    }
-                    break;
-                default:
-                    break;
-                }
+                cudppSegmentedScanDispatchType<true, true>(d_out, d_in, d_iflags, numElements, plan);
             }
             else
             {
-                switch(plan->m_config.datatype)
-                {
-                case CUDPP_INT:
-                    switch(plan->m_config.op)
-                    {
-                    case CUDPP_MAX:
-                        segmentedScanArrayRecursive<int, CUDPP_MAX, false, true, false>
-                            ((int *)d_out, (int *)d_idata, d_iflags, 
-                            (int **)plan->m_blockSums, plan->m_blockFlags,
-                            plan->m_blockIndices, numElements, 0);
-                        break;
-                    case CUDPP_ADD:
-                        segmentedScanArrayRecursive<int, CUDPP_ADD, false, true, false>
-                            ((int *)d_out, (int *)d_idata, d_iflags, 
-                            (int **)plan->m_blockSums, plan->m_blockFlags,
-                            plan->m_blockIndices, numElements, 0);
-                        break;
-                    case CUDPP_MULTIPLY:
-                        segmentedScanArrayRecursive<int, CUDPP_MULTIPLY, false, true, false>
-                            ((int *)d_out, (int *)d_idata, d_iflags, 
-                            (int **)plan->m_blockSums, plan->m_blockFlags,
-                            plan->m_blockIndices, numElements, 0);
-                        break;
-                    case CUDPP_MIN:
-                        segmentedScanArrayRecursive<int, CUDPP_MIN, false, true, false>
-                            ((int *)d_out, (int *)d_idata, d_iflags, 
-                            (int **)plan->m_blockSums, plan->m_blockFlags,
-                            plan->m_blockIndices, numElements, 0);
-                        break;
-                    default:
-                        break;
-                    }
-                    break;
-                case CUDPP_UINT:
-                    switch(plan->m_config.op)
-                    {
-                    case CUDPP_MAX:
-                        segmentedScanArrayRecursive<unsigned int, CUDPP_MAX, false, true, false>
-                            ((unsigned int *)d_out, (unsigned int *)d_idata, d_iflags, 
-                            (unsigned int **)plan->m_blockSums, plan->m_blockFlags,
-                            plan->m_blockIndices, numElements, 0);
-                        break;
-                    case CUDPP_ADD:
-                        segmentedScanArrayRecursive<unsigned int, CUDPP_ADD, false, true, false>
-                            ((unsigned int *)d_out, (unsigned int *)d_idata, d_iflags, 
-                            (unsigned int **)plan->m_blockSums, plan->m_blockFlags,
-                            plan->m_blockIndices, numElements, 0);
-                        break;
-                    case CUDPP_MULTIPLY:
-                        segmentedScanArrayRecursive<unsigned int, CUDPP_MULTIPLY, false, true, false>
-                            ((unsigned int *)d_out, (unsigned int *)d_idata, d_iflags, 
-                            (unsigned int **)plan->m_blockSums, plan->m_blockFlags,
-                            plan->m_blockIndices, numElements, 0);
-                        break;
-                    case CUDPP_MIN:
-                        segmentedScanArrayRecursive<unsigned int, CUDPP_MIN, false, true, false>
-                            ((unsigned int *)d_out, (unsigned int *)d_idata, d_iflags, 
-                        (unsigned int **)plan->m_blockSums, plan->m_blockFlags,
-                        plan->m_blockIndices, numElements, 0);
-                        break;
-                    default:
-                        break;
-                    }
-                    break;
-                case CUDPP_FLOAT:
-                    switch(plan->m_config.op)
-                    {
-                    case CUDPP_MAX:
-                        segmentedScanArrayRecursive<float, CUDPP_MAX, false, true, false>
-                            ((float *)d_out, (float *)d_idata, d_iflags, 
-                            (float **)plan->m_blockSums, plan->m_blockFlags,
-                            plan->m_blockIndices, numElements, 0);
-                        break;
-                    case CUDPP_ADD:
-                        segmentedScanArrayRecursive<float, CUDPP_ADD, false, true, false>
-                            ((float *)d_out, (float *)d_idata, d_iflags, 
-                            (float **)plan->m_blockSums, plan->m_blockFlags,
-                            plan->m_blockIndices, numElements, 0);
-                        break;
-                    case CUDPP_MULTIPLY:
-                        segmentedScanArrayRecursive<float, CUDPP_MULTIPLY, false, true, false>
-                            ((float *)d_out, (float *)d_idata, d_iflags, 
-                            (float **)plan->m_blockSums, plan->m_blockFlags,
-                            plan->m_blockIndices, numElements, 0);
-                        break;
-                    case CUDPP_MIN:
-                        segmentedScanArrayRecursive<float, CUDPP_MIN, false, true, false>
-                            ((float *)d_out, (float *)d_idata, d_iflags, 
-                            (float **)plan->m_blockSums, plan->m_blockFlags,
-                            plan->m_blockIndices, numElements, 0);
-                        break;
-                    default:
-                        break;
-                    }
-                    break;
-                default:
-                    break;
-                }
+                cudppSegmentedScanDispatchType<false, true>(d_out, d_in, d_iflags, numElements, plan);
             }
         }
         else
         {
             if (CUDPP_OPTION_BACKWARD & plan->m_config.options)
             {
-                switch(plan->m_config.datatype)
-                {
-                case CUDPP_INT:
-                    switch(plan->m_config.op)
-                    {
-                    case CUDPP_MAX:
-                        segmentedScanArrayRecursive<int, CUDPP_MAX, true, false, true>
-                            ((int *)d_out, (int *)d_idata, d_iflags,
-                            (int **)plan->m_blockSums, plan->m_blockFlags,
-                            plan->m_blockIndices, numElements, 0);
-                        break;
-                    case CUDPP_ADD:
-                        segmentedScanArrayRecursive<int, CUDPP_ADD, true, false, true>
-                            ((int *)d_out, (int *)d_idata, d_iflags,
-                            (int **)plan->m_blockSums, plan->m_blockFlags,
-                            plan->m_blockIndices, numElements, 0);
-                        break;
-                    case CUDPP_MULTIPLY:
-                        segmentedScanArrayRecursive<int, CUDPP_MULTIPLY, true, false, true>
-                            ((int *)d_out, (int *)d_idata, d_iflags,
-                            (int **)plan->m_blockSums, plan->m_blockFlags,
-                            plan->m_blockIndices, numElements, 0);
-                        break;
-                    case CUDPP_MIN:
-                        segmentedScanArrayRecursive<int, CUDPP_MIN, true, false, true>
-                            ((int *)d_out, (int *)d_idata, d_iflags,
-                            (int **)plan->m_blockSums, plan->m_blockFlags,
-                            plan->m_blockIndices, numElements, 0);
-                        break;
-                    default:
-                        break;
-                    }
-                break;
-                case CUDPP_UINT:
-                    switch(plan->m_config.op)
-                    {
-                    case CUDPP_MAX:
-                        segmentedScanArrayRecursive<unsigned int, CUDPP_MAX, true, false, true>
-                            ((unsigned int *)d_out, (unsigned int *)d_idata, d_iflags,
-                            (unsigned int **)plan->m_blockSums, plan->m_blockFlags,
-                            plan->m_blockIndices, numElements, 0);
-                        break;
-                    case CUDPP_ADD:
-                        segmentedScanArrayRecursive<unsigned int, CUDPP_ADD, true, false, true>
-                            ((unsigned int *)d_out, (unsigned int *)d_idata, d_iflags,
-                            (unsigned int **)plan->m_blockSums, plan->m_blockFlags,
-                            plan->m_blockIndices, numElements, 0);
-                        break;
-                    case CUDPP_MULTIPLY:
-                        segmentedScanArrayRecursive<unsigned int, CUDPP_MULTIPLY, true, false, true>
-                            ((unsigned int *)d_out, (unsigned int *)d_idata, d_iflags,
-                            (unsigned int **)plan->m_blockSums, plan->m_blockFlags,
-                            plan->m_blockIndices, numElements, 0);
-                        break;
-                    case CUDPP_MIN:
-                        segmentedScanArrayRecursive<unsigned int, CUDPP_MIN, true, false, true>
-                            ((unsigned int *)d_out, (unsigned int *)d_idata, d_iflags,
-                            (unsigned int **)plan->m_blockSums, plan->m_blockFlags,
-                            plan->m_blockIndices, numElements, 0);
-                        break;
-                    default:
-                        break;
-                    }
-                    break;
-                case CUDPP_FLOAT:
-                    switch(plan->m_config.op)
-                    {
-                    case CUDPP_MAX:
-                        segmentedScanArrayRecursive<float, CUDPP_MAX, true, false, true>
-                            ((float *)d_out, (float *)d_idata, d_iflags,
-                            (float **)plan->m_blockSums, plan->m_blockFlags,
-                            plan->m_blockIndices, numElements, 0);
-                        break;
-                    case CUDPP_ADD:
-                        segmentedScanArrayRecursive<float, CUDPP_ADD, true, false, true>
-                            ((float *)d_out, (float *)d_idata, d_iflags,
-                            (float **)plan->m_blockSums, plan->m_blockFlags,
-                            plan->m_blockIndices, numElements, 0);
-                        break;
-                    case CUDPP_MULTIPLY:
-                        segmentedScanArrayRecursive<float, CUDPP_MULTIPLY, true, false, true>
-                            ((float *)d_out, (float *)d_idata, d_iflags,
-                            (float **)plan->m_blockSums, plan->m_blockFlags,
-                            plan->m_blockIndices, numElements, 0);
-                        break;
-                    case CUDPP_MIN:
-                        segmentedScanArrayRecursive<float, CUDPP_MIN, true, false, true>
-                            ((float *)d_out, (float *)d_idata, d_iflags,
-                            (float **)plan->m_blockSums, plan->m_blockFlags,
-                            plan->m_blockIndices, numElements, 0);
-                        break;
-                    default:
-                        break;
-                    }
-                    break;
-                default:
-                    break;
-                }
+                cudppSegmentedScanDispatchType<true, false>(d_out, d_in, d_iflags, numElements, plan);
             }
             else
             {
-                switch(plan->m_config.datatype)
-                {
-                case CUDPP_INT:
-                    switch(plan->m_config.op)
-                    {
-                    case CUDPP_MAX:
-                        segmentedScanArrayRecursive<int, CUDPP_MAX, false, false, false>
-                            ((int *)d_out, (int *)d_idata, d_iflags,
-                            (int **)plan->m_blockSums, plan->m_blockFlags,
-                            plan->m_blockIndices, numElements, 0);
-                        break;
-                    case CUDPP_ADD:
-                        segmentedScanArrayRecursive<int, CUDPP_ADD, false, false, false>
-                            ((int *)d_out, (int *)d_idata, d_iflags,
-                            (int **)plan->m_blockSums, plan->m_blockFlags,
-                            plan->m_blockIndices, numElements, 0);
-                        break;
-                    case CUDPP_MULTIPLY:
-                        segmentedScanArrayRecursive<int, CUDPP_MULTIPLY, false, false, false>
-                            ((int *)d_out, (int *)d_idata, d_iflags,
-                            (int **)plan->m_blockSums, plan->m_blockFlags,
-                            plan->m_blockIndices, numElements, 0);
-                        break;
-                    case CUDPP_MIN:
-                        segmentedScanArrayRecursive<int, CUDPP_MIN, false, false, false>
-                            ((int *)d_out, (int *)d_idata, d_iflags,
-                            (int **)plan->m_blockSums, plan->m_blockFlags,
-                            plan->m_blockIndices, numElements, 0);
-                        break;
-                    default:
-                        break;
-                    }
-                break;
-                case CUDPP_UINT:
-                    switch(plan->m_config.op)
-                    {
-                    case CUDPP_MAX:
-                        segmentedScanArrayRecursive<unsigned int, CUDPP_MAX, false, false, false>
-                            ((unsigned int *)d_out, (unsigned int *)d_idata, d_iflags,
-                            (unsigned int **)plan->m_blockSums, plan->m_blockFlags,
-                            plan->m_blockIndices, numElements, 0);
-                        break;
-                    case CUDPP_ADD:
-                        segmentedScanArrayRecursive<unsigned int, CUDPP_ADD, false, false, false>
-                            ((unsigned int *)d_out, (unsigned int *)d_idata, d_iflags,
-                            (unsigned int **)plan->m_blockSums, plan->m_blockFlags,
-                            plan->m_blockIndices, numElements, 0);
-                        break;
-                    case CUDPP_MULTIPLY:
-                        segmentedScanArrayRecursive<unsigned int, CUDPP_MULTIPLY, false, false, false>
-                            ((unsigned int *)d_out, (unsigned int *)d_idata, d_iflags,
-                            (unsigned int **)plan->m_blockSums, plan->m_blockFlags,
-                            plan->m_blockIndices, numElements, 0);
-                        break;
-                    case CUDPP_MIN:
-                        segmentedScanArrayRecursive<unsigned int, CUDPP_MIN, false, false, false>
-                            ((unsigned int *)d_out, (unsigned int *)d_idata, d_iflags,
-                            (unsigned int **)plan->m_blockSums, plan->m_blockFlags,
-                            plan->m_blockIndices, numElements, 0);
-                        break;
-                    default:
-                        break;
-                    }
-                    break;
-                case CUDPP_FLOAT:
-                    switch(plan->m_config.op)
-                    {
-                    case CUDPP_MAX:
-                        segmentedScanArrayRecursive<float, CUDPP_MAX, false, false, false>
-                            ((float *)d_out, (float *)d_idata, d_iflags,
-                            (float **)plan->m_blockSums, plan->m_blockFlags,
-                            plan->m_blockIndices, numElements, 0);
-                        break;
-                    case CUDPP_ADD:
-                        segmentedScanArrayRecursive<float, CUDPP_ADD, false, false, false>
-                            ((float *)d_out, (float *)d_idata, d_iflags,
-                            (float **)plan->m_blockSums, plan->m_blockFlags,
-                            plan->m_blockIndices, numElements, 0);
-                        break;
-                    case CUDPP_MULTIPLY:
-                        segmentedScanArrayRecursive<float, CUDPP_MULTIPLY, false, false, false>
-                            ((float *)d_out, (float *)d_idata, d_iflags,
-                            (float **)plan->m_blockSums, plan->m_blockFlags,
-                            plan->m_blockIndices, numElements, 0);
-                        break;
-                    case CUDPP_MIN:
-                        segmentedScanArrayRecursive<float, CUDPP_MIN, false, false, false>
-                            ((float *)d_out, (float *)d_idata, d_iflags,
-                            (float **)plan->m_blockSums, plan->m_blockFlags,
-                            plan->m_blockIndices, numElements, 0);
-                        break;
-                    default:
-                        break;
-                    }
-                    break;
-                default:
-                    break;
-                }
-            }
+                cudppSegmentedScanDispatchType<false, false>(d_out, d_in, d_iflags, numElements, plan);
+            }            
         }
     }
 

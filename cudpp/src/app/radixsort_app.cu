@@ -791,7 +791,7 @@ void radixSortFloatKeysOnly(float *keys,
                             bool  negativeKeys,
                             int keyBits)
 {
-    radixSortKeysOnly((uint*)keys, plan, negativeKeys, numElements, keyBits);
+    radixSortKeysOnly((uint*)keys, plan, numElements, negativeKeys, keyBits);
 }
 
 extern "C"

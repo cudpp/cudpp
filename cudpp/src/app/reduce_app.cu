@@ -45,10 +45,10 @@ void reduceBlocks(T *d_odata, const T *d_idata, size_t numElements, CUDPPReduceP
         plan->m_threadsPerBlock : ceilPow2((numElements + 1) / 2);
     dim3 dimBlock(numThreads, 1, 1);
     unsigned int numBlocks = min(plan->m_maxBlocks, 
-        (numElements + plan->m_threadsPerBlock - 1) / plan->m_threadsPerBlock);
+        (numElements + (2*plan->m_threadsPerBlock - 1)) / (2*plan->m_threadsPerBlock));
 
     dim3 dimGrid(numBlocks, 1, 1);
-    int smemSize = REDUCE_CTA_SIZE * sizeof(T);
+    int smemSize = numThreads * sizeof(T);
 
     // choose which of the optimized versions of reduction to launch
     
@@ -104,6 +104,8 @@ void reduceBlocks(T *d_odata, const T *d_idata, size_t numElements, CUDPPReduceP
             reduce<T, Oper,   1, false><<< dimGrid, dimBlock, smemSize >>>(d_odata, d_idata, numElements); break;
         }
     }
+
+     CUT_CHECK_ERROR("Reduce");
 }
 /**
   * @brief Array reduction function.
@@ -119,7 +121,7 @@ template <class Oper, class T>
 void reduceArray(T *d_odata, const T *d_idata, size_t numElements, CUDPPReducePlan *plan)
 {
     unsigned int numBlocks = min(plan->m_maxBlocks, 
-        (numElements + plan->m_threadsPerBlock - 1) / plan->m_threadsPerBlock);
+        (numElements + (2*plan->m_threadsPerBlock - 1)) / (2*plan->m_threadsPerBlock));
 
     if (numBlocks > 1)
     {

@@ -68,7 +68,7 @@
   *                         allocScanStorage())
   * @param[in]  level       The current recursive level of the scan
   */
-template <class T, bool isBackward, bool isExclusive, CUDPPOperator op>
+template <class T, bool isBackward, bool isExclusive, class Op>
 void scanArrayRecursive(T                   *d_out, 
                         const T             *d_in, 
                         T                   **d_blockSums,
@@ -111,42 +111,42 @@ void scanArrayRecursive(T                   *d_out,
     switch (traitsCode)
     {
     case 0: // single block, single row, non-full block
-        scan4<T, ScanTraits<T, op, isBackward, isExclusive, false, false, false> >
+        scan4<T, ScanTraits<T, Op, isBackward, isExclusive, false, false, false> >
                <<< grid, threads, sharedMemSize >>>
                (d_out, d_in, 0, numElements, rowPitch, blockSumRowPitch);
         break;
     case 1: // multiblock, single row, non-full block
-        scan4< T, ScanTraits<T, op, isBackward, isExclusive, false, true, false> >
+        scan4< T, ScanTraits<T, Op, isBackward, isExclusive, false, true, false> >
                <<< grid, threads, sharedMemSize >>>
                (d_out, d_in, d_blockSums[level], numElements, rowPitch, blockSumRowPitch);
         break;
     case 2: // single block, multirow, non-full block
-        scan4<T, ScanTraits<T, op, isBackward, isExclusive, true, false, false> >
+        scan4<T, ScanTraits<T, Op, isBackward, isExclusive, true, false, false> >
                 <<< grid, threads, sharedMemSize >>>
                 (d_out, d_in, 0, numElements, rowPitch, blockSumRowPitch);
         break;
     case 3: // multiblock, multirow, non-full block
-        scan4<T, ScanTraits<T, op, isBackward, isExclusive, true, true, false> >
+        scan4<T, ScanTraits<T, Op, isBackward, isExclusive, true, true, false> >
                 <<< grid, threads, sharedMemSize >>>
                 (d_out, d_in, d_blockSums[level], numElements, rowPitch, blockSumRowPitch);
         break;
     case 4: // single block, single row, full block
-        scan4<T, ScanTraits<T, op, isBackward, isExclusive, false, false, true> >
+        scan4<T, ScanTraits<T, Op, isBackward, isExclusive, false, false, true> >
                <<< grid, threads, sharedMemSize >>>
                (d_out, d_in, 0, numElements, rowPitch, blockSumRowPitch);
         break;
     case 5: // multiblock, single row, full block
-        scan4< T, ScanTraits<T, op, isBackward, isExclusive, false, true, true> >
+        scan4< T, ScanTraits<T, Op, isBackward, isExclusive, false, true, true> >
                <<< grid, threads, sharedMemSize >>>
                (d_out, d_in, d_blockSums[level], numElements, rowPitch, blockSumRowPitch);
         break;
     case 6: // single block, multirow, full block
-        scan4<T, ScanTraits<T, op, isBackward, isExclusive, true, false, true> >
+        scan4<T, ScanTraits<T, Op, isBackward, isExclusive, true, false, true> >
                 <<< grid, threads, sharedMemSize >>>
                 (d_out, d_in, 0, numElements, rowPitch, blockSumRowPitch);
         break;
     case 7: // multiblock, multirow, full block
-        scan4<T, ScanTraits<T, op, isBackward, isExclusive, true, true, true> >
+        scan4<T, ScanTraits<T, Op, isBackward, isExclusive, true, true, true> >
                 <<< grid, threads, sharedMemSize >>>
                 (d_out, d_in, d_blockSums[level], numElements, rowPitch, blockSumRowPitch);
         break;
@@ -161,11 +161,11 @@ void scanArrayRecursive(T                   *d_out,
         // sub-blocks and scan those. This will give us a new value
         // that must be sdded to each block to get the final results.
 
-        scanArrayRecursive<T, isBackward, true, op>
+        scanArrayRecursive<T, isBackward, true, Op>
             ((T*)d_blockSums[level], (const T*)d_blockSums[level],
              (T**)d_blockSums, numBlocks, numRows, rowPitches, level + 1); // recursive (CPU) call
         
-        vectorAddUniform4<T, op, SCAN_ELTS_PER_THREAD>
+        vectorAddUniform4<T, Op, SCAN_ELTS_PER_THREAD>
             <<< grid, threads >>>(d_out, 
                                   (T*)d_blockSums[level], 
                                   numElements,
@@ -304,6 +304,81 @@ void freeScanStorage(CUDPPScanPlan *plan)
     plan->m_numLevelsAllocated = 0;
 }
 
+#ifdef __cplusplus
+}
+#endif
+
+template <typename T, bool isBackward, bool isExclusive>
+void cudppScanDispatchOperator(void                *d_out, 
+                               const void          *d_in, 
+                               size_t              numElements,
+                               size_t              numRows,
+                               const CUDPPScanPlan *plan)
+{    
+    switch(plan->m_config.op)
+    {
+    case CUDPP_ADD:
+        scanArrayRecursive<T, isExclusive, isBackward, OperatorAdd<T>>
+            ((T*)d_out, (const T*)d_in, 
+            (T**)plan->m_blockSums, 
+            numElements, numRows, plan->m_rowPitches, 0);
+        break;
+    case CUDPP_MULTIPLY:
+        scanArrayRecursive<T, isExclusive, isBackward, OperatorMultiply<T>>
+            ((T*)d_out, (const T*)d_in, 
+            (T**)plan->m_blockSums, 
+            numElements, numRows, plan->m_rowPitches, 0);
+        break;
+    case CUDPP_MAX:
+        scanArrayRecursive<T, isExclusive, isBackward, OperatorMax<T>>
+            ((T*)d_out, (const T*)d_in, 
+            (T**)plan->m_blockSums, 
+            numElements, numRows, plan->m_rowPitches, 0);
+        break;
+    case CUDPP_MIN:
+        scanArrayRecursive<T, isExclusive, isBackward, OperatorMin<T>>
+            ((T*)d_out, (const T*)d_in, 
+            (T**)plan->m_blockSums, 
+            numElements, numRows, plan->m_rowPitches, 0);
+        break;
+    default:
+        break;
+    }
+}
+
+template <bool isBackward, bool isExclusive>
+void cudppScanDispatchType(void                *d_out, 
+                           const void          *d_in, 
+                           size_t              numElements,
+                           size_t              numRows,
+                           const CUDPPScanPlan *plan)
+{    
+    switch(plan->m_config.datatype)
+    {
+    case CUDPP_INT:
+        cudppScanDispatchOperator<int, isExclusive, isBackward>(d_out, d_in, 
+                                                                numElements, 
+                                                                numRows, plan);
+        break;
+    case CUDPP_UINT:
+        cudppScanDispatchOperator<unsigned int, isExclusive, isBackward>(d_out, d_in, 
+                                                                         numElements, 
+                                                                         numRows, plan);
+        break;
+    case CUDPP_FLOAT:
+        cudppScanDispatchOperator<float, isExclusive, isBackward>(d_out, d_in, 
+                                                                  numElements, 
+                                                                  numRows, plan);
+        break;
+    default:
+        break;
+    }
+}
+
+#ifdef __cplusplus
+extern "C" 
+{
+#endif
 
 /** @brief Dispatch function to perform a scan (prefix sum) on an
   * array with the specified configuration.
@@ -329,437 +404,23 @@ void cudppScanDispatch(void                *d_out,
     {
         if (CUDPP_OPTION_BACKWARD & plan->m_config.options)
         {
-            switch (plan->m_config.datatype)
-            {
-            case CUDPP_INT:
-
-                switch(plan->m_config.op)
-                {
-                case CUDPP_ADD:
-                    scanArrayRecursive<int, true, true, CUDPP_ADD>
-                        ((int*)d_out, (const int*)d_in, 
-                         (int**)plan->m_blockSums, 
-                         numElements, numRows, plan->m_rowPitches, 0);
-                    break;
-                case CUDPP_MULTIPLY:
-                    scanArrayRecursive<int, true, true, CUDPP_MULTIPLY>
-                        ((int*)d_out, (const int*)d_in, 
-                        (int**)plan->m_blockSums, 
-                        numElements, numRows, plan->m_rowPitches, 0);
-                    break;
-                case CUDPP_MAX:
-                    scanArrayRecursive<int, true, true, CUDPP_MAX>
-                        ((int*)d_out, (const int*)d_in, 
-                         (int**)plan->m_blockSums, 
-                         numElements, numRows, plan->m_rowPitches, 0);
-                    break;
-                case CUDPP_MIN:
-                    scanArrayRecursive<int, true, true, CUDPP_MIN>
-                        ((int*)d_out, (const int*)d_in, 
-                        (int**)plan->m_blockSums, 
-                        numElements, numRows, plan->m_rowPitches, 0);
-                    break;
-                default:
-                    break;
-                }
-              
-                break;
-
-            case CUDPP_UINT:
-                switch(plan->m_config.op)
-                {
-                case CUDPP_ADD:                 
-                    scanArrayRecursive<unsigned int, true, true, CUDPP_ADD>
-                        ((unsigned int*)d_out, (const unsigned int*)d_in, 
-                         (unsigned int**)plan->m_blockSums, 
-                         numElements, numRows, plan->m_rowPitches, 0);
-                    break;
-                case CUDPP_MULTIPLY:                 
-                    scanArrayRecursive<unsigned int, true, true, CUDPP_MULTIPLY>
-                        ((unsigned int*)d_out, (const unsigned int*)d_in, 
-                        (unsigned int**)plan->m_blockSums, 
-                        numElements, numRows, plan->m_rowPitches, 0);
-                    break;
-                case CUDPP_MAX:
-                    scanArrayRecursive<unsigned int, true, true, CUDPP_MAX>
-                        ((unsigned int*)d_out, (const unsigned int*)d_in, 
-                         (unsigned int**)plan->m_blockSums, 
-                         numElements, numRows, plan->m_rowPitches, 0);
-                    break;
-                case CUDPP_MIN:
-                    scanArrayRecursive<unsigned int, true, true, CUDPP_MIN>
-                        ((unsigned int*)d_out, (const unsigned int*)d_in, 
-                        (unsigned int**)plan->m_blockSums, 
-                        numElements, numRows, plan->m_rowPitches, 0);
-                    break;
-                default:
-                    break;
-                }
-
-                break;
-
-            case CUDPP_FLOAT:
-                switch(plan->m_config.op)
-                {
-                case CUDPP_ADD:
-                    scanArrayRecursive<float, true, true,  CUDPP_ADD>
-                        ((float*)d_out, (const float*)d_in, 
-                         (float**)plan->m_blockSums, 
-                         numElements, numRows, plan->m_rowPitches, 0);
-                    break;
-                case CUDPP_MULTIPLY:
-                    scanArrayRecursive<float, true, true,  CUDPP_MULTIPLY>
-                        ((float*)d_out, (const float*)d_in, 
-                        (float**)plan->m_blockSums, 
-                        numElements, numRows, plan->m_rowPitches, 0);
-                    break;
-                case CUDPP_MAX:
-                    scanArrayRecursive<float, true, true, CUDPP_MAX>
-                        ((float*)d_out, (const float*)d_in, 
-                         (float**)plan->m_blockSums, 
-                         numElements, numRows, plan->m_rowPitches, 0);
-                    break;
-                case CUDPP_MIN:
-                    scanArrayRecursive<float, true, true, CUDPP_MIN>
-                        ((float*)d_out, (const float*)d_in, 
-                        (float**)plan->m_blockSums, 
-                        numElements, numRows, plan->m_rowPitches, 0);
-                    break;
-                default:
-                    break;
-                }
-                break; 
-
-            default:
-                break; 
-            }
+            cudppScanDispatchType<true, true>(d_out, d_in, numElements, numRows, plan);
         }
         else
         {
-            switch (plan->m_config.datatype)
-            {
-            case CUDPP_INT:
-
-                switch(plan->m_config.op)
-                {
-                case CUDPP_ADD:
-                    scanArrayRecursive<int, false, true, CUDPP_ADD>
-                        ((int*)d_out, (const int*)d_in, 
-                         (int**)plan->m_blockSums, 
-                         numElements, numRows, plan->m_rowPitches, 0);
-                    break;
-                case CUDPP_MULTIPLY:
-                    scanArrayRecursive<int, false, true, CUDPP_MULTIPLY>
-                        ((int*)d_out, (const int*)d_in, 
-                        (int**)plan->m_blockSums, 
-                        numElements, numRows, plan->m_rowPitches, 0);
-                    break;
-                case CUDPP_MAX:
-                    scanArrayRecursive<int, false, true, CUDPP_MAX>
-                        ((int*)d_out, (const int*)d_in, 
-                         (int**)plan->m_blockSums, 
-                         numElements, numRows, plan->m_rowPitches, 0);
-                    break;
-                case CUDPP_MIN:
-                    scanArrayRecursive<int, false, true, CUDPP_MIN>
-                        ((int*)d_out, (const int*)d_in, 
-                        (int**)plan->m_blockSums, 
-                        numElements, numRows, plan->m_rowPitches, 0);
-                    break;
-                default:
-                    break;
-                }
-
-                break;
-                    
-            case CUDPP_UINT:
-                switch(plan->m_config.op)
-                {
-                case CUDPP_ADD:                 
-                    scanArrayRecursive<unsigned int, false, true, CUDPP_ADD>
-                        ((unsigned int*)d_out, (const unsigned int*)d_in, 
-                         (unsigned int**)plan->m_blockSums, 
-                         numElements, numRows, plan->m_rowPitches, 0);
-                    break;
-                case CUDPP_MULTIPLY:                 
-                    scanArrayRecursive<unsigned int, false, true, CUDPP_MULTIPLY>
-                        ((unsigned int*)d_out, (const unsigned int*)d_in, 
-                        (unsigned int**)plan->m_blockSums, 
-                        numElements, numRows, plan->m_rowPitches, 0);
-                    break;
-                case CUDPP_MAX:
-                    scanArrayRecursive<unsigned int, false, true, CUDPP_MAX>
-                        ((unsigned int*)d_out, (const unsigned int*)d_in, 
-                         (unsigned int**)plan->m_blockSums, 
-                         numElements, numRows, plan->m_rowPitches, 0);
-                    break;
-                case CUDPP_MIN:
-                    scanArrayRecursive<unsigned int, false, true, CUDPP_MIN>
-                        ((unsigned int*)d_out, (const unsigned int*)d_in, 
-                        (unsigned int**)plan->m_blockSums, 
-                        numElements, numRows, plan->m_rowPitches, 0);
-                    break;
-                default:
-                    break;
-                            
-                }
-        
-                break;       
-            
-            case CUDPP_FLOAT:
-                switch(plan->m_config.op)
-                {
-                case CUDPP_ADD:
-                    scanArrayRecursive<float, false, true, CUDPP_ADD>
-                        ((float*)d_out, (const float*)d_in, 
-                         (float**)plan->m_blockSums, 
-                         numElements, numRows, plan->m_rowPitches, 0);
-                    break;
-                case CUDPP_MULTIPLY:
-                    scanArrayRecursive<float, false, true, CUDPP_MULTIPLY>
-                        ((float*)d_out, (const float*)d_in, 
-                        (float**)plan->m_blockSums, 
-                        numElements, numRows, plan->m_rowPitches, 0);
-                    break;
-                case CUDPP_MAX:
-                    scanArrayRecursive<float, false, true, CUDPP_MAX>
-                        ((float*)d_out, (const float*)d_in, 
-                         (float**)plan->m_blockSums, 
-                         numElements, numRows, plan->m_rowPitches, 0);
-                    break;
-                case CUDPP_MIN:
-                    scanArrayRecursive<float, false, true, CUDPP_MIN>
-                        ((float*)d_out, (const float*)d_in, 
-                        (float**)plan->m_blockSums, 
-                        numElements, numRows, plan->m_rowPitches, 0);
-                    break;
-                default:
-                    break;
-                }            
-                break;
-
-            default:
-                break; 
-            }
+            cudppScanDispatchType<false, true>(d_out, d_in, numElements, numRows, plan);
         }
     }
     else
     {
         if (CUDPP_OPTION_BACKWARD & plan->m_config.options)
         {
-            switch (plan->m_config.datatype)
-            {
-            case CUDPP_INT:
-
-                switch(plan->m_config.op)
-                {
-                case CUDPP_ADD:
-                    scanArrayRecursive<int, true, false, CUDPP_ADD>
-                        ((int*)d_out, (const int*)d_in, 
-                         (int**)plan->m_blockSums, 
-                         numElements, numRows, plan->m_rowPitches, 0);
-                    break;
-                case CUDPP_MULTIPLY:
-                    scanArrayRecursive<int, true, false, CUDPP_MULTIPLY>
-                        ((int*)d_out, (const int*)d_in, 
-                        (int**)plan->m_blockSums, 
-                        numElements, numRows, plan->m_rowPitches, 0);
-                    break;
-                case CUDPP_MAX:
-                    scanArrayRecursive<int, true, false, CUDPP_MAX>
-                        ((int*)d_out, (const int*)d_in, 
-                         (int**)plan->m_blockSums, 
-                         numElements, numRows, plan->m_rowPitches, 0);
-                    break;
-                case CUDPP_MIN:
-                    scanArrayRecursive<int, true, false, CUDPP_MIN>
-                        ((int*)d_out, (const int*)d_in, 
-                        (int**)plan->m_blockSums, 
-                        numElements, numRows, plan->m_rowPitches, 0);
-                    break;
-                default:
-                    break;
-                }
-              
-                break;
-
-            case CUDPP_UINT:
-                switch(plan->m_config.op)
-                {
-                case CUDPP_ADD:                 
-                    scanArrayRecursive<unsigned int, true, false, CUDPP_ADD>
-                        ((unsigned int*)d_out, (const unsigned int*)d_in, 
-                         (unsigned int**)plan->m_blockSums, 
-                         numElements, numRows, plan->m_rowPitches, 0);
-                    break;
-                case CUDPP_MULTIPLY:                 
-                    scanArrayRecursive<unsigned int, true, false, CUDPP_MULTIPLY>
-                        ((unsigned int*)d_out, (const unsigned int*)d_in, 
-                        (unsigned int**)plan->m_blockSums, 
-                        numElements, numRows, plan->m_rowPitches, 0);
-                    break;
-                case CUDPP_MAX:
-                    scanArrayRecursive<unsigned int, true, false, CUDPP_MAX>
-                        ((unsigned int*)d_out, (const unsigned int*)d_in, 
-                         (unsigned int**)plan->m_blockSums, 
-                         numElements, numRows, plan->m_rowPitches, 0);
-                    break;
-                case CUDPP_MIN:
-                    scanArrayRecursive<unsigned int, true, false, CUDPP_MIN>
-                        ((unsigned int*)d_out, (const unsigned int*)d_in, 
-                        (unsigned int**)plan->m_blockSums, 
-                        numElements, numRows, plan->m_rowPitches, 0);
-                    break;
-                default:
-                    break;
-                }
-
-                break;
-
-            case CUDPP_FLOAT:
-                switch(plan->m_config.op)
-                {
-                case CUDPP_ADD:
-                    scanArrayRecursive<float, true, false, CUDPP_ADD>
-                        ((float*)d_out, (const float*)d_in, 
-                         (float**)plan->m_blockSums, 
-                         numElements, numRows, plan->m_rowPitches, 0);
-                    break;
-                case CUDPP_MULTIPLY:
-                    scanArrayRecursive<float, true, false, CUDPP_MULTIPLY>
-                        ((float*)d_out, (const float*)d_in, 
-                        (float**)plan->m_blockSums, 
-                        numElements, numRows, plan->m_rowPitches, 0);
-                    break;
-                case CUDPP_MAX:
-                    scanArrayRecursive<float, true, false, CUDPP_MAX>
-                        ((float*)d_out, (const float*)d_in, 
-                         (float**)plan->m_blockSums, 
-                         numElements, numRows, plan->m_rowPitches, 0);
-                    break;
-                case CUDPP_MIN:
-                    scanArrayRecursive<float, true, false, CUDPP_MIN>
-                        ((float*)d_out, (const float*)d_in, 
-                        (float**)plan->m_blockSums, 
-                        numElements, numRows, plan->m_rowPitches, 0);
-                    break;
-                default:
-                    break;
-                }
-                break; 
-
-            default:
-                break; 
-            }
+            cudppScanDispatchType<true, false>(d_out, d_in, numElements, numRows, plan);
         }
         else
         {
-            switch (plan->m_config.datatype)
-            {
-            case CUDPP_INT:
-
-                switch(plan->m_config.op)
-                {
-                case CUDPP_ADD:
-                    scanArrayRecursive<int, false, false, CUDPP_ADD>
-                        ((int*)d_out, (const int*)d_in, 
-                         (int**)plan->m_blockSums, 
-                         numElements, numRows, plan->m_rowPitches, 0);
-                    break;
-                case CUDPP_MULTIPLY:
-                    scanArrayRecursive<int, false, false, CUDPP_MULTIPLY>
-                        ((int*)d_out, (const int*)d_in, 
-                        (int**)plan->m_blockSums, 
-                        numElements, numRows, plan->m_rowPitches, 0);
-                    break;
-                case CUDPP_MAX:
-                    scanArrayRecursive<int, false, false, CUDPP_MAX>
-                        ((int*)d_out, (const int*)d_in, 
-                         (int**)plan->m_blockSums, 
-                         numElements, numRows, plan->m_rowPitches, 0);
-                    break;
-                case CUDPP_MIN:
-                    scanArrayRecursive<int, false, false, CUDPP_MIN>
-                        ((int*)d_out, (const int*)d_in, 
-                        (int**)plan->m_blockSums, 
-                        numElements, numRows, plan->m_rowPitches, 0);
-                    break;
-                default:
-                    break;
-                }
-
-                break;
-                    
-            case CUDPP_UINT:
-                switch(plan->m_config.op)
-                {
-                case CUDPP_ADD:                 
-                    scanArrayRecursive<unsigned int, false, false, CUDPP_ADD>
-                        ((unsigned int*)d_out, (const unsigned int*)d_in, 
-                         (unsigned int**)plan->m_blockSums, 
-                         numElements, numRows, plan->m_rowPitches, 0);
-                    break;
-                case CUDPP_MULTIPLY:                 
-                    scanArrayRecursive<unsigned int, false, false, CUDPP_MULTIPLY>
-                        ((unsigned int*)d_out, (const unsigned int*)d_in, 
-                        (unsigned int**)plan->m_blockSums, 
-                        numElements, numRows, plan->m_rowPitches, 0);
-                    break;
-                case CUDPP_MAX:
-                    scanArrayRecursive<unsigned int, false, false, CUDPP_MAX>
-                        ((unsigned int*)d_out, (const unsigned int*)d_in, 
-                         (unsigned int**)plan->m_blockSums, 
-                         numElements, numRows, plan->m_rowPitches, 0);
-                    break;
-                case CUDPP_MIN:
-                    scanArrayRecursive<unsigned int, false, false, CUDPP_MIN>
-                        ((unsigned int*)d_out, (const unsigned int*)d_in, 
-                        (unsigned int**)plan->m_blockSums, 
-                        numElements, numRows, plan->m_rowPitches, 0);
-                    break;
-                default:
-                    break;
-                            
-                }
-        
-                break;       
-            
-            case CUDPP_FLOAT:
-                switch(plan->m_config.op)
-                {
-                case CUDPP_ADD:
-                    scanArrayRecursive<float, false, false, CUDPP_ADD>
-                        ((float*)d_out, (const float*)d_in, 
-                         (float**)plan->m_blockSums, 
-                         numElements, numRows, plan->m_rowPitches, 0);
-                    break;
-                case CUDPP_MULTIPLY:
-                    scanArrayRecursive<float, false, false, CUDPP_MULTIPLY>
-                        ((float*)d_out, (const float*)d_in, 
-                        (float**)plan->m_blockSums, 
-                        numElements, numRows, plan->m_rowPitches, 0);
-                    break;
-                case CUDPP_MAX:
-                    scanArrayRecursive<float, false, false, CUDPP_MAX>
-                        ((float*)d_out, (const float*)d_in, 
-                         (float**)plan->m_blockSums, 
-                         numElements, numRows, plan->m_rowPitches, 0);
-                    break;
-                case CUDPP_MIN:
-                    scanArrayRecursive<float, false, false, CUDPP_MIN>
-                        ((float*)d_out, (const float*)d_in, 
-                        (float**)plan->m_blockSums, 
-                        numElements, numRows, plan->m_rowPitches, 0);
-                    break;
-                default:
-                    break;
-                }            
-                break;
-
-            default:
-                break; 
-            }
-        }  
+            cudppScanDispatchType<false, false>(d_out, d_in, numElements, numRows, plan);
+        }
     }
 }
 
