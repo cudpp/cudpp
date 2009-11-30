@@ -100,8 +100,7 @@ public:
 * the other partial sums by all threads in the CTA.
 *
 * @param[out] s_out The output (shared) memory array
-* @param[out] threadScan0 Intermediate per-thread partial sums array 1
-* @param[out] threadScan1 Intermediate per-thread partial sums array 2
+* @param[out] threadScan Intermediate per-thread partial sums array (x2)
 * @param[in] d_in The input (device) memory array
 * @param[in] numElements The number of elements in the array being scanned
 * @param[in] iDataOffset the offset of the input array in global memory for this 
@@ -117,8 +116,7 @@ public:
 */
 template <class T, class traits> 
 __device__ void loadSharedChunkFromMem4(T        *s_out,
-                                        T        threadScan0[4],
-                                        T        threadScan1[4],
+                                        T        threadScan[2][4],
                                         const T  *d_in,
                                         int      numElements, 
                                         int      iDataOffset,
@@ -148,19 +146,19 @@ __device__ void loadSharedChunkFromMem4(T        *s_out,
         if (traits::isFullBlock() || i + 3 < numElements) 
         {
             tempData       = inData[aiDev];
-            threadScan0[3] = tempData.w;               
-            threadScan0[2] = op(tempData.z, threadScan0[3]);
-            threadScan0[1] = op(tempData.y, threadScan0[2]);
-            threadScan0[0] = s_out[ai] 
-                           = op(tempData.x, threadScan0[1]);
+            threadScan[0][3] = tempData.w;               
+            threadScan[0][2] = op(tempData.z, threadScan[0][3]);
+            threadScan[0][1] = op(tempData.y, threadScan[0][2]);
+            threadScan[0][0] = s_out[ai] 
+                           = op(tempData.x, threadScan[0][1]);
         }
         else
         {
-            threadScan0[3] = op.identity();
-            threadScan0[2] = op(((i+2) < numElements) ? d_in[i+2] : op.identity(), threadScan0[3]);
-            threadScan0[1] = op(((i+1) < numElements) ? d_in[i+1] : op.identity(), threadScan0[2]);
-            threadScan0[0] = s_out[ai] 
-                           = op((i     < numElements) ? d_in[i]   : op.identity(), threadScan0[1]);
+            threadScan[0][3] = op.identity();
+            threadScan[0][2] = op(((i+2) < numElements) ? d_in[i+2] : op.identity(), threadScan[0][3]);
+            threadScan[0][1] = op(((i+1) < numElements) ? d_in[i+1] : op.identity(), threadScan[0][2]);
+            threadScan[0][0] = s_out[ai] 
+                           = op((i     < numElements) ? d_in[i]   : op.identity(), threadScan[0][1]);
         }
 
 #ifdef DISALLOW_LOADSTORE_OVERLAP
@@ -171,19 +169,19 @@ __device__ void loadSharedChunkFromMem4(T        *s_out,
         if (traits::isFullBlock() || i + 3 < numElements)
         {
             tempData       = inData[biDev];
-            threadScan1[3] = tempData.w;
-            threadScan1[2] = op(tempData.z, threadScan1[3]);
-            threadScan1[1] = op(tempData.y, threadScan1[2]);
-            threadScan1[0] = s_out[bi] 
-                           = op(tempData.x, threadScan1[1]);
+            threadScan[1][3] = tempData.w;
+            threadScan[1][2] = op(tempData.z, threadScan[1][3]);
+            threadScan[1][1] = op(tempData.y, threadScan[1][2]);
+            threadScan[1][0] = s_out[bi] 
+                           = op(tempData.x, threadScan[1][1]);
         }
         else
         {
-            threadScan1[3] = op.identity();
-            threadScan1[2] = op(((i+2) < numElements) ? d_in[i+2] : op.identity(), threadScan1[3]);
-            threadScan1[1] = op(((i+1) < numElements) ? d_in[i+1] : op.identity(), threadScan1[2]);
-            threadScan1[0] = s_out[bi] 
-                           = op((i     < numElements) ? d_in[i]   : op.identity(), threadScan1[1]);
+            threadScan[1][3] = op.identity();
+            threadScan[1][2] = op(((i+2) < numElements) ? d_in[i+2] : op.identity(), threadScan[1][3]);
+            threadScan[1][1] = op(((i+1) < numElements) ? d_in[i+1] : op.identity(), threadScan[1][2]);
+            threadScan[1][0] = s_out[bi] 
+                           = op((i     < numElements) ? d_in[i]   : op.identity(), threadScan[1][1]);
         }
         __syncthreads();
 
@@ -208,19 +206,19 @@ __device__ void loadSharedChunkFromMem4(T        *s_out,
         if (traits::isFullBlock() || i + 3 < numElements)
         {
             tempData       = inData[aiDev];
-            threadScan0[0] = tempData.x;           
-            threadScan0[1] = op(tempData.y, threadScan0[0]);
-            threadScan0[2] = op(tempData.z, threadScan0[1]);
-            threadScan0[3] = s_out[ai] 
-                           = op(tempData.w, threadScan0[2]);
+            threadScan[0][0] = tempData.x;           
+            threadScan[0][1] = op(tempData.y, threadScan[0][0]);
+            threadScan[0][2] = op(tempData.z, threadScan[0][1]);
+            threadScan[0][3] = s_out[ai] 
+                           = op(tempData.w, threadScan[0][2]);
         }
         else
         {
-            threadScan0[0] = (i < numElements) ? d_in[i] : op.identity();
-            threadScan0[1] = op(((i+1) < numElements) ? d_in[i+1] : op.identity(), threadScan0[0]);
-            threadScan0[2] = op(((i+2) < numElements) ? d_in[i+2] : op.identity(), threadScan0[1]);
-            threadScan0[3] = s_out[ai] 
-                           = op(((i+3) < numElements) ? d_in[i+3] : op.identity(), threadScan0[2]);
+            threadScan[0][0] = (i < numElements) ? d_in[i] : op.identity();
+            threadScan[0][1] = op(((i+1) < numElements) ? d_in[i+1] : op.identity(), threadScan[0][0]);
+            threadScan[0][2] = op(((i+2) < numElements) ? d_in[i+2] : op.identity(), threadScan[0][1]);
+            threadScan[0][3] = s_out[ai] 
+                           = op(((i+3) < numElements) ? d_in[i+3] : op.identity(), threadScan[0][2]);
         }
 
         
@@ -232,19 +230,19 @@ __device__ void loadSharedChunkFromMem4(T        *s_out,
         if (traits::isFullBlock() || i + 3 < numElements)
         {
             tempData       = inData[biDev];
-            threadScan1[0] = tempData.x;           
-            threadScan1[1] = op(tempData.y, threadScan1[0]);
-            threadScan1[2] = op(tempData.z, threadScan1[1]);
-            threadScan1[3] = s_out[bi] 
-                           = op(tempData.w, threadScan1[2]);
+            threadScan[1][0] = tempData.x;           
+            threadScan[1][1] = op(tempData.y, threadScan[1][0]);
+            threadScan[1][2] = op(tempData.z, threadScan[1][1]);
+            threadScan[1][3] = s_out[bi] 
+                           = op(tempData.w, threadScan[1][2]);
         }
         else
         {
-            threadScan1[0] = (i < numElements) ? d_in[i] : op.identity();
-            threadScan1[1] = op(((i+1) < numElements) ? d_in[i+1] : op.identity(), threadScan1[0]);
-            threadScan1[2] = op(((i+2) < numElements) ? d_in[i+2] : op.identity(), threadScan1[1]);
-            threadScan1[3] = s_out[bi] 
-                           = op(((i+3) < numElements) ? d_in[i+3] : op.identity(), threadScan1[2]);
+            threadScan[1][0] = (i < numElements) ? d_in[i] : op.identity();
+            threadScan[1][1] = op(((i+1) < numElements) ? d_in[i+1] : op.identity(), threadScan[1][0]);
+            threadScan[1][2] = op(((i+2) < numElements) ? d_in[i+2] : op.identity(), threadScan[1][1]);
+            threadScan[1][3] = s_out[bi] 
+                           = op(((i+3) < numElements) ? d_in[i+3] : op.identity(), threadScan[1][2]);
         }  
         __syncthreads();
     }
@@ -262,9 +260,7 @@ __device__ void loadSharedChunkFromMem4(T        *s_out,
 * T4 is, e.g. int4 or float4) to global memory.
 *
 * @param[out] d_out The output (device) memory array
-* @param[in] threadScan0 Intermediate per-thread partial sums array 1
-* (contents computed in loadSharedChunkFromMem4())
-* @param[in] threadScan1 Intermediate per-thread partial sums array 2
+* @param[in] threadScan0 Intermediate per-thread partial sums array (x2)
 * (contents computed in loadSharedChunkFromMem4())
 * @param[in] s_in The input (shared) memory array
 * @param[in] numElements The number of elements in the array being scanned
@@ -281,8 +277,8 @@ __device__ void loadSharedChunkFromMem4(T        *s_out,
 */
 template <class T, class traits>
 __device__ void storeSharedChunkToMem4(T   *d_out,
-                                       T   threadScan0[4],
-                                       T   threadScan1[4],
+                                       T   threadScan[2][4],
+                                       //T   threadScan1[4],
                                        T   *s_in,
                                        int numElements, 
                                        int oDataOffset,
@@ -321,16 +317,16 @@ __device__ void storeSharedChunkToMem4(T   *d_out,
         if (traits::isExclusive())
         {
             tempData.w = temp;
-            tempData.z = op(temp, threadScan0[3]);
-            tempData.y = op(temp, threadScan0[2]);
-            tempData.x = op(temp, threadScan0[1]);
+            tempData.z = op(temp, threadScan[0][3]);
+            tempData.y = op(temp, threadScan[0][2]);
+            tempData.x = op(temp, threadScan[0][1]);
         }
         else
         {
-            tempData.w = op(temp, threadScan0[3]);
-            tempData.z = op(temp, threadScan0[2]);
-            tempData.y = op(temp, threadScan0[1]);
-            tempData.x = op(temp, threadScan0[0]);
+            tempData.w = op(temp, threadScan[0][3]);
+            tempData.z = op(temp, threadScan[0][2]);
+            tempData.y = op(temp, threadScan[0][1]);
+            tempData.x = op(temp, threadScan[0][0]);
         }
 
         int i = aiDev * 4;
@@ -354,16 +350,16 @@ __device__ void storeSharedChunkToMem4(T   *d_out,
         if (traits::isExclusive())
         {
             tempData.w = temp;
-            tempData.z = op(temp, threadScan1[3]);
-            tempData.y = op(temp, threadScan1[2]);
-            tempData.x = op(temp, threadScan1[1]);
+            tempData.z = op(temp, threadScan[1][3]);
+            tempData.y = op(temp, threadScan[1][2]);
+            tempData.x = op(temp, threadScan[1][1]);
         }
         else
         {
-            tempData.w = op(temp, threadScan1[3]);
-            tempData.z = op(temp, threadScan1[2]);
-            tempData.y = op(temp, threadScan1[1]);
-            tempData.x = op(temp, threadScan1[0]);
+            tempData.w = op(temp, threadScan[1][3]);
+            tempData.z = op(temp, threadScan[1][2]);
+            tempData.y = op(temp, threadScan[1][1]);
+            tempData.x = op(temp, threadScan[1][0]);
         }
 
         i = biDev * 4;
@@ -386,16 +382,16 @@ __device__ void storeSharedChunkToMem4(T   *d_out,
         if (traits::isExclusive())
         {
             tempData.x = temp;
-            tempData.y = op(temp, threadScan0[0]);
-            tempData.z = op(temp, threadScan0[1]);
-            tempData.w = op(temp, threadScan0[2]);
+            tempData.y = op(temp, threadScan[0][0]);
+            tempData.z = op(temp, threadScan[0][1]);
+            tempData.w = op(temp, threadScan[0][2]);
         }
         else
         {
-            tempData.x = op(temp, threadScan0[0]);
-            tempData.y = op(temp, threadScan0[1]);
-            tempData.z = op(temp, threadScan0[2]);
-            tempData.w = op(temp, threadScan0[3]);
+            tempData.x = op(temp, threadScan[0][0]);
+            tempData.y = op(temp, threadScan[0][1]);
+            tempData.z = op(temp, threadScan[0][2]);
+            tempData.w = op(temp, threadScan[0][3]);
         }
 
         int i = aiDev * 4;
@@ -421,16 +417,16 @@ __device__ void storeSharedChunkToMem4(T   *d_out,
         if (traits::isExclusive())
         {
             tempData.x = temp;
-            tempData.y = op(temp, threadScan1[0]);
-            tempData.z = op(temp, threadScan1[1]);
-            tempData.w = op(temp, threadScan1[2]);
+            tempData.y = op(temp, threadScan[1][0]);
+            tempData.z = op(temp, threadScan[1][1]);
+            tempData.w = op(temp, threadScan[1][2]);
         }
         else
         {
-            tempData.x = op(temp, threadScan1[0]);
-            tempData.y = op(temp, threadScan1[1]);
-            tempData.z = op(temp, threadScan1[2]);
-            tempData.w = op(temp, threadScan1[3]);
+            tempData.x = op(temp, threadScan[1][0]);
+            tempData.y = op(temp, threadScan[1][1]);
+            tempData.z = op(temp, threadScan[1][2]);
+            tempData.w = op(temp, threadScan[1][3]);
         }
 
         i = biDev * 4;
@@ -496,11 +492,11 @@ __device__ T warpscan(T val, volatile T* s_data)
     int idx = 2 * threadIdx.x - (threadIdx.x & (WARP_SIZE-1));
     s_data[idx] = op.identity();
     idx += WARP_SIZE;
-    s_data[idx] = val;                                 __EMUSYNC;
+    T t = s_data[idx] = val;                   __EMUSYNC;
 
-        // This code is needed because the warp size of device emulation
-        // is only 1 thread, so sync-less cooperation within a warp doesn't 
-        // work.
+    // This code is needed because the warp size of device emulation
+    // is only 1 thread, so sync-less cooperation within a warp doesn't 
+    // work.
 #ifdef __DEVICE_EMULATION__
     T t = s_data[idx -  1]; __EMUSYNC; 
     s_data[idx] = op((const T&)s_data[idx],t); __EMUSYNC;
@@ -513,11 +509,11 @@ __device__ T warpscan(T val, volatile T* s_data)
     t = s_data[idx - 16]; __EMUSYNC; 
     s_data[idx] = op((const T&)s_data[idx],t); __EMUSYNC;
 #else
-    if (0 <= maxlevel) { s_data[idx] = op((const T&)s_data[idx], (const T&)s_data[idx - 1]); }
-    if (1 <= maxlevel) { s_data[idx] = op((const T&)s_data[idx], (const T&)s_data[idx - 2]); }
-    if (2 <= maxlevel) { s_data[idx] = op((const T&)s_data[idx], (const T&)s_data[idx - 4]); }
-    if (3 <= maxlevel) { s_data[idx] = op((const T&)s_data[idx], (const T&)s_data[idx - 8]); }
-    if (4 <= maxlevel) { s_data[idx] = op((const T&)s_data[idx], (const T&)s_data[idx -16]); }
+    if (0 <= maxlevel) { s_data[idx] = t = op(t, (const T&)s_data[idx - 1]); }
+    if (1 <= maxlevel) { s_data[idx] = t = op(t, (const T&)s_data[idx - 2]); }
+    if (2 <= maxlevel) { s_data[idx] = t = op(t, (const T&)s_data[idx - 4]); }
+    if (3 <= maxlevel) { s_data[idx] = t = op(t, (const T&)s_data[idx - 8]); }
+    if (4 <= maxlevel) { s_data[idx] = t = op(t, (const T&)s_data[idx -16]); }
 #endif
 
     return s_data[idx-1];      // convert inclusive -> exclusive

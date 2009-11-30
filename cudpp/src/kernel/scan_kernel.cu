@@ -76,7 +76,8 @@ __global__ void scan4(T            *d_out,
     T* temp = smem.getPointer();
 
     int devOffset, ai, bi, aiDev, biDev;
-    T threadScan0[4], threadScan1[4];
+    //T threadScan0[4], threadScan1[4];
+    T threadScan[2][4];
 
     unsigned int blockN = numElements;
     unsigned int blockSumIndex = blockIdx.x;
@@ -97,14 +98,14 @@ __global__ void scan4(T            *d_out,
     
     // load data into shared memory
     loadSharedChunkFromMem4<T, traits>
-        (temp, threadScan0, threadScan1, d_in,
+        (temp, threadScan/*0, threadScan1*/, d_in,
          blockN, devOffset, ai, bi, aiDev, biDev);
 
     scanCTA<T, traits>(temp, d_blockSums, blockSumIndex);
     
     // write results to device memory
     storeSharedChunkToMem4<T, traits>
-        (d_out, threadScan0, threadScan1, temp, 
+        (d_out, threadScan/*0, threadScan1*/, temp, 
          blockN, devOffset, ai, bi, aiDev, biDev);
 
 }
