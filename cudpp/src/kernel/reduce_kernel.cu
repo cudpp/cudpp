@@ -76,7 +76,6 @@ __global__ void reduce(T *odata, const T *idata, unsigned int n)
         // in a larger gridSize and therefore fewer elements per thread
         while (i < n)
         {         
-            //sdata[tid] += idata[i];
             mySum = op(mySum, idata[i]);
             // ensure we don't read out of bounds -- this is optimized away for powerOf2 sized arrays
             if (nIsPow2 || i + blockSize < n) 
