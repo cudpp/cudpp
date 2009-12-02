@@ -165,13 +165,23 @@ void scanArrayRecursive(T                   *d_out,
             ((T*)d_blockSums[level], (const T*)d_blockSums[level],
              (T**)d_blockSums, numBlocks, numRows, rowPitches, level + 1); // recursive (CPU) call
         
-        vectorAddUniform4<T, Op, SCAN_ELTS_PER_THREAD>
-            <<< grid, threads >>>(d_out, 
-                                  (T*)d_blockSums[level], 
-                                  numElements,
-                                  rowPitch*4,
-                                  blockSumRowPitch*4,
-                                  0, 0);
+        if (fullBlock)
+            vectorAddUniform4<T, Op, SCAN_ELTS_PER_THREAD, true>
+                <<< grid, threads >>>(d_out, 
+                                      (T*)d_blockSums[level], 
+                                      numElements,
+                                      rowPitch*4,
+                                      blockSumRowPitch*4,
+                                      0, 0);
+        else
+            vectorAddUniform4<T, Op, SCAN_ELTS_PER_THREAD, false>
+                <<< grid, threads >>>(d_out, 
+                                      (T*)d_blockSums[level], 
+                                      numElements,
+                                      rowPitch*4,
+                                      blockSumRowPitch*4,
+                                      0, 0);
+       
         CUT_CHECK_ERROR("vectorAddUniform");
     }
 }
@@ -197,8 +207,6 @@ extern "C"
   */
 void allocScanStorage(CUDPPScanPlan *plan)
 {
-    //assert(config->_numEltsAllocated == 0); // shouldn't be called 
-
     plan->m_numEltsAllocated = plan->m_numElements;
 
     size_t numElts = plan->m_numElements;

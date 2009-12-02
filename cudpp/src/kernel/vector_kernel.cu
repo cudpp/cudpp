@@ -114,6 +114,36 @@ __global__ void vectorAddUniform(T       *d_vector,
     if (threadIdx.x + blockDim.x < numElements) d_vector[address + blockDim.x] += uni;
 }
 
+template <typename T>
+__global__ void vectorAddUniform2(T *g_data, 
+                                  T *uniforms, 
+                                  int n, 
+                                  int eltsPerBlock)
+{
+    __shared__ T uni;
+    if (threadIdx.x == 0)
+        uni = uniforms[blockIdx.x];
+
+    unsigned int address = blockIdx.x * eltsPerBlock + threadIdx.x; 
+
+    __syncthreads();
+
+    typename typeToVector<T, 2>::Result *g_data2 = (typename typeToVector<T, 2>::Result*)g_data;
+
+    // note two adds per thread
+    typename typeToVector<T, 2>::Result temp =  g_data2[address];
+    temp.x += uni;
+    temp.y += uni;
+    g_data2[address]              = temp;
+    if (threadIdx.x + 2*blockDim.x < n )
+    {
+        temp =  g_data2[address + blockDim.x];
+        temp.x += uni;
+        temp.y += uni;
+        g_data2[address + blockDim.x] = temp;
+    }
+}
+
 
 /** @brief Add a uniform value to each data element of an array (vec4 version)
   *
@@ -133,7 +163,7 @@ __global__ void vectorAddUniform(T       *d_vector,
   * @param[in] baseIndex an optional offset to the beginning of the array 
   * within \a d_vector.
   */
-template <class T, class Oper, int elementsPerThread>
+template <class T, class Oper, int elementsPerThread, bool fullBlocks>
 __global__ void vectorAddUniform4(T       *d_vector, 
                                   const T *d_uniforms, 
                                   int      numElements,             
@@ -163,12 +193,21 @@ __global__ void vectorAddUniform4(T       *d_vector,
 
     // create the operator functor
     Oper op;
-    
+#if 0
     for (int i = 0; i < elementsPerThread && address < numElements; i++)
     {
         d_vector[address] = op(d_vector[address], uni);
         address += blockDim.x;
     }
+#else
+    for (int i = 0; i < elementsPerThread; i++)
+    {
+        if (!fullBlocks && address >= numElements) return;
+
+        d_vector[address] = op(d_vector[address], uni);
+        address += blockDim.x;
+    }
+#endif
 }
 
 /** @brief Adds together two vectors

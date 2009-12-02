@@ -77,14 +77,17 @@ __global__ void scan4(T            *d_out,
 
     int devOffset, ai, bi, aiDev, biDev;
     //T threadScan0[4], threadScan1[4];
+#if 0
+    T threadScan[2][2];
+#else
     T threadScan[2][4];
+#endif
 
     unsigned int blockN = numElements;
     unsigned int blockSumIndex = blockIdx.x;
 
     if (traits::isMultiRow())
     {
-        //int width = __mul24(gridDim.x, blockDim.x) << 1;
         int yIndex     = __umul24(blockDim.y, blockIdx.y) + threadIdx.y;
         devOffset      = __umul24(dataRowPitch, yIndex);
         blockN        += (devOffset << 2);
@@ -93,20 +96,28 @@ __global__ void scan4(T            *d_out,
     }
     else
     {
-        devOffset = __umul24(blockIdx.x, (blockDim.x << 1));
+        devOffset = blockIdx.x * (blockDim.x << 1);
     }
     
     // load data into shared memory
+#if 0
+    loadSharedChunkFromMem2<T, traits>
+        (temp, threadScan, d_in, blockN, devOffset, ai, bi, aiDev, biDev);
+#else
     loadSharedChunkFromMem4<T, traits>
-        (temp, threadScan/*0, threadScan1*/, d_in,
-         blockN, devOffset, ai, bi, aiDev, biDev);
+        (temp, threadScan, d_in, blockN, devOffset, ai, bi, aiDev, biDev);
+#endif
 
     scanCTA<T, traits>(temp, d_blockSums, blockSumIndex);
     
     // write results to device memory
+#if 0
+    storeSharedChunkToMem2<T, traits>
+        (d_out, threadScan, temp, blockN, devOffset, ai, bi, aiDev, biDev);
+#else
     storeSharedChunkToMem4<T, traits>
-        (d_out, threadScan/*0, threadScan1*/, temp, 
-         blockN, devOffset, ai, bi, aiDev, biDev);
+        (d_out, threadScan, temp, blockN, devOffset, ai, bi, aiDev, biDev);
+#endif
 
 }
 

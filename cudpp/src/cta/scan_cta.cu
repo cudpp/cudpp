@@ -445,6 +445,322 @@ __device__ void storeSharedChunkToMem4(T   *d_out,
     }
 }
 
+/**
+* @brief Handles loading input s_data from global memory to shared memory 
+* (vec4 version)
+*
+* Load a chunk of 8*blockDim.x elements from global memory into a 
+* shared memory array.  Each thread loads two T4 elements (where
+* T4 is, e.g. int4 or float4), computes the scan of those two vec4s in 
+* thread local arrays (in registers), and writes the two total sums of the
+* vec4s into shared memory, where they will be cooperatively scanned with 
+* the other partial sums by all threads in the CTA.
+*
+* @param[out] s_out The output (shared) memory array
+* @param[out] threadScan Intermediate per-thread partial sums array (x2)
+* @param[in] d_in The input (device) memory array
+* @param[in] numElements The number of elements in the array being scanned
+* @param[in] iDataOffset the offset of the input array in global memory for this 
+* thread block
+* @param[out] ai The shared memory address for the thread's first element 
+* (returned for reuse)
+* @param[out] bi The shared memory address for the thread's second element 
+* (returned for reuse)
+* @param[out] aiDev The device memory address for this thread's first element 
+* (returned for reuse)
+* @param[out] biDev The device memory address for this thread's second element 
+* (returned for reuse)
+*/
+template <class T, class traits> 
+__device__ void loadSharedChunkFromMem2(T        *s_out,
+                                        T        threadScan[2][2],
+                                        const T  *d_in,
+                                        int      numElements, 
+                                        int      iDataOffset,
+                                        int      &ai, 
+                                        int      &bi, 
+                                        int      &aiDev, 
+                                        int      &biDev)
+{
+    int thid = threadIdx.x;
+    aiDev = iDataOffset + thid;
+    biDev = aiDev + blockDim.x;
+
+    // convert to 2-vector
+    typename typeToVector<T,2>::Result  tempData;
+    typename typeToVector<T,2>::Result* inData = (typename typeToVector<T,2>::Result*)d_in;
+
+    ai = thid;
+    bi = thid + blockDim.x;
+
+    // create the operator functor
+    typename traits::Op op;
+
+    // read into tempData;
+    if (traits::isBackward())
+    {
+        int i = aiDev * 2;
+        if (traits::isFullBlock() || i + 1 < numElements) 
+        {
+            tempData       = inData[aiDev];
+            threadScan[0][1] = tempData.y;
+            threadScan[0][0] = s_out[ai] 
+                             = op(tempData.x, threadScan[0][1]);
+        }
+        else
+        {
+            threadScan[0][1] = op.identity();
+            threadScan[0][0] = s_out[ai] 
+                             = op((i < numElements) ? d_in[i]   : op.identity(), threadScan[0][1]);
+        }
+
+#ifdef DISALLOW_LOADSTORE_OVERLAP
+        __syncthreads();
+#endif
+
+        i = biDev * 2;
+        if (traits::isFullBlock() || i + 1 < numElements)
+        {
+            tempData       = inData[biDev];
+            threadScan[1][1] = tempData.y;
+            threadScan[1][0] = s_out[bi] 
+                             = op(tempData.x, threadScan[1][1]);
+        }
+        else
+        {
+            threadScan[1][1] = op.identity();
+            threadScan[1][0] = s_out[bi] 
+                             = op((i < numElements) ? d_in[i]   : op.identity(), threadScan[1][1]);
+        }
+        __syncthreads();
+
+        // reverse s_data in shared memory
+        if (ai < SCAN_CTA_SIZE)
+        {       
+            unsigned int leftIdx = ai;
+            unsigned int rightIdx = (2 * SCAN_CTA_SIZE - 1) - ai;
+                
+            if (leftIdx < rightIdx) 
+            {
+                T tmp           = s_out[leftIdx];
+                s_out[leftIdx]  = s_out[rightIdx];
+                s_out[rightIdx] = tmp;
+            }
+        }
+        __syncthreads();
+    }
+    else
+    {
+        int i = aiDev * 2;
+        if (traits::isFullBlock() || i + 1 < numElements)
+        {
+            tempData       = inData[aiDev];
+            threadScan[0][0] = tempData.x;           
+            threadScan[0][1] = s_out[ai]
+                             = op(tempData.y, threadScan[0][0]);
+        }
+        else
+        {
+            threadScan[0][0] = (i < numElements) ? d_in[i] : op.identity();
+            threadScan[0][1] = s_out[ai]
+                             = op(((i+1) < numElements) ? d_in[i+1] : op.identity(), threadScan[0][0]);
+        }
+
+        
+#ifdef DISALLOW_LOADSTORE_OVERLAP
+        __syncthreads();
+#endif
+
+        i = biDev * 2;
+        if (traits::isFullBlock() || i + 1 < numElements)
+        {
+            tempData       = inData[biDev];
+            threadScan[1][0] = tempData.x;           
+            threadScan[1][1] = s_out[bi] 
+                             = op(tempData.y, threadScan[1][0]);
+        }
+        else
+        {
+            threadScan[1][0] = (i < numElements) ? d_in[i] : op.identity();
+            threadScan[1][1] = s_out[bi]
+                             = op(((i+1) < numElements) ? d_in[i+1] : op.identity(), threadScan[1][0]);
+        }  
+        __syncthreads();
+    }
+}
+
+
+/**
+* @brief Handles storing result s_data from shared memory to global memory 
+* (vec4 version)
+*
+* Store a chunk of SCAN_ELTS_PER_THREAD*blockDim.x elements from shared memory 
+* into a device memory array.  Each thread stores reads two elements from shared
+* memory, adds them to the intermediate sums computed in 
+* loadSharedChunkFromMem4(), and writes two T4 elements (where
+* T4 is, e.g. int4 or float4) to global memory.
+*
+* @param[out] d_out The output (device) memory array
+* @param[in] threadScan0 Intermediate per-thread partial sums array (x2)
+* (contents computed in loadSharedChunkFromMem4())
+* @param[in] s_in The input (shared) memory array
+* @param[in] numElements The number of elements in the array being scanned
+* @param[in] oDataOffset the offset of the output array in global memory 
+* for this thread block
+* @param[in] ai The shared memory address for the thread's first element 
+* (computed in loadSharedChunkFromMem4())
+* @param[in] bi The shared memory address for the thread's second element 
+* (computed in loadSharedChunkFromMem4())
+* @param[in] aiDev The device memory address for this thread's first element 
+* (computed in loadSharedChunkFromMem4())
+* @param[in] biDev The device memory address for this thread's second element 
+* (computed in loadSharedChunkFromMem4())
+*/
+template <class T, class traits>
+__device__ void storeSharedChunkToMem2(T   *d_out,
+                                       T   threadScan[2][2],
+                                       T   *s_in,
+                                       int numElements, 
+                                       int oDataOffset,
+                                       int ai, 
+                                       int bi, 
+                                       int aiDev, 
+                                       int biDev)
+{
+    // create the operator functor
+    typename traits::Op op;
+
+    // Convert to 2-vector
+    typename typeToVector<T,2>::Result tempData;
+    typename typeToVector<T,2>::Result* outData = (typename typeToVector<T,2>::Result*)d_out;
+
+    // write results to global memory
+    if (traits::isBackward())
+    {   
+        if (ai < SCAN_CTA_SIZE)
+        {
+
+            unsigned int leftIdx = ai;
+            unsigned int rightIdx = (2 * SCAN_CTA_SIZE - 1) - ai;
+            
+            if (leftIdx < rightIdx) 
+            {
+                T tmp = s_in[leftIdx];
+                s_in[leftIdx] = s_in[rightIdx];
+                s_in[rightIdx] = tmp;
+            }
+        }
+        __syncthreads();
+
+        T temp = s_in[ai];
+
+        if (traits::isExclusive())
+        {
+            tempData.y = temp; 
+            tempData.x = op(temp, threadScan[0][1]);
+        }
+        else
+        {
+            tempData.y = op(temp, threadScan[0][1]);
+            tempData.x = op(temp, threadScan[0][0]);
+        }
+
+        int i = aiDev * 2;
+        if (traits::isFullBlock() || i + 1 < numElements)
+        {
+            outData[aiDev] = tempData;
+        }
+        else if (i < numElements) 
+        { 
+            d_out[i] = tempData.x; 
+        }
+
+#ifdef DISALLOW_LOADSTORE_OVERLAP
+        __syncthreads();
+#endif
+
+        temp = s_in[bi];
+
+        if (traits::isExclusive())
+        {
+            tempData.y = temp;
+            tempData.x = op(temp, threadScan[1][1]);
+        }
+        else
+        {
+            tempData.y = op(temp, threadScan[1][1]);
+            tempData.x = op(temp, threadScan[1][0]);
+        }
+
+        i = biDev * 2;
+        if (traits::isFullBlock() || i + 1 < numElements)
+        {
+            outData[biDev] = tempData;
+        }
+        else if (i < numElements) 
+        { 
+            d_out[i] = tempData.x;
+        }
+    }
+    else
+    {
+        T temp;
+        temp = s_in[ai]; 
+
+        if (traits::isExclusive())
+        {
+            tempData.x = temp;
+            tempData.y = op(temp, threadScan[0][0]);
+        }
+        else
+        {
+            tempData.x = op(temp, threadScan[0][0]);
+            tempData.y = op(temp, threadScan[0][1]);
+        }
+
+        int i = aiDev * 2;
+        if (traits::isFullBlock() || i + 1 < numElements)
+        {                       
+            outData[aiDev] = tempData; 
+        }
+        else if (i < numElements) 
+        {     
+            // we can't use vec4 because the original array isn't a multiple of 
+            // 4 elements
+            d_out[i]   = tempData.x;  
+        }
+
+#ifdef DISALLOW_LOADSTORE_OVERLAP
+        __syncthreads();
+#endif
+
+        temp = s_in[bi]; 
+
+        if (traits::isExclusive())
+        {
+            tempData.x = temp;
+            tempData.y = op(temp, threadScan[1][0]);
+        }
+        else
+        {
+            tempData.x = op(temp, threadScan[1][0]);
+            tempData.y = op(temp, threadScan[1][1]);
+        }
+
+        i = biDev * 2;
+        if (traits::isFullBlock() || i + 1 < numElements)
+        {
+            outData[biDev] = tempData;
+        }
+        else if (i < numElements) 
+        {
+            // we can't use vec4 because the original array isn't a multiple of 
+            // 4 elements
+            d_out[i]   = tempData.x;
+        }
+    }
+}
+
 /** @brief Scan all warps of a CTA without synchronization
   * 
   * The warp-scan algorithm breaks a block of data into warp-sized chunks, and
@@ -498,7 +814,7 @@ __device__ T warpscan(T val, volatile T* s_data)
     // is only 1 thread, so sync-less cooperation within a warp doesn't 
     // work.
 #ifdef __DEVICE_EMULATION__
-    T t = s_data[idx -  1]; __EMUSYNC; 
+    t = s_data[idx -  1]; __EMUSYNC; 
     s_data[idx] = op((const T&)s_data[idx],t); __EMUSYNC;
     t = s_data[idx -  2]; __EMUSYNC; 
     s_data[idx] = op((const T&)s_data[idx],t); __EMUSYNC;
