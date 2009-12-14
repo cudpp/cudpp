@@ -39,7 +39,7 @@
   * @param[in]  plan A pointer to the plan structure for the reduction.
 */
 template <class T, class Oper>
-void reduceBlocks(T *d_odata, const T *d_idata, size_t numElements, CUDPPReducePlan *plan)
+void reduceBlocks(T *d_odata, const T *d_idata, size_t numElements, const CUDPPReducePlan *plan)
 {
     unsigned int numThreads = (numElements > 2 * plan->m_threadsPerBlock) ?
         plan->m_threadsPerBlock : ceilPow2((numElements + 1) / 2);
@@ -118,7 +118,7 @@ void reduceBlocks(T *d_odata, const T *d_idata, size_t numElements, CUDPPReduceP
   * @param [in]  plan A pointer to the plan structure for the reduction.
 */
 template <class Oper, class T>
-void reduceArray(T *d_odata, const T *d_idata, size_t numElements, CUDPPReducePlan *plan)
+void reduceArray(T *d_odata, const T *d_idata, size_t numElements, const CUDPPReducePlan *plan)
 {
     unsigned int numBlocks = min(plan->m_maxBlocks, 
         (numElements + (2*plan->m_threadsPerBlock - 1)) / (2*plan->m_threadsPerBlock));
@@ -200,7 +200,7 @@ void freeReduceStorage(CUDPPReducePlan *plan)
   * @param[in]  plan     Pointer to CUDPPReducePlan object containing reduce options
   *                      and intermediate storage
   */
-void cudppReduceDispatch(void *d_odata, const void *d_idata, size_t numElements, CUDPPReducePlan *plan)
+void cudppReduceDispatch(void *d_odata, const void *d_idata, size_t numElements, const CUDPPReducePlan *plan)
 {
     switch (plan->m_config.datatype)
     {

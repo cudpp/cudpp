@@ -326,25 +326,25 @@ void cudppScanDispatchOperator(void                *d_out,
     switch(plan->m_config.op)
     {
     case CUDPP_ADD:
-        scanArrayRecursive<T, isExclusive, isBackward, OperatorAdd<T>>
+        scanArrayRecursive<T, isExclusive, isBackward, OperatorAdd<T> >
             ((T*)d_out, (const T*)d_in, 
             (T**)plan->m_blockSums, 
             numElements, numRows, plan->m_rowPitches, 0);
         break;
     case CUDPP_MULTIPLY:
-        scanArrayRecursive<T, isExclusive, isBackward, OperatorMultiply<T>>
+        scanArrayRecursive<T, isExclusive, isBackward, OperatorMultiply<T> >
             ((T*)d_out, (const T*)d_in, 
             (T**)plan->m_blockSums, 
             numElements, numRows, plan->m_rowPitches, 0);
         break;
     case CUDPP_MAX:
-        scanArrayRecursive<T, isExclusive, isBackward, OperatorMax<T>>
+        scanArrayRecursive<T, isExclusive, isBackward, OperatorMax<T> >
             ((T*)d_out, (const T*)d_in, 
             (T**)plan->m_blockSums, 
             numElements, numRows, plan->m_rowPitches, 0);
         break;
     case CUDPP_MIN:
-        scanArrayRecursive<T, isExclusive, isBackward, OperatorMin<T>>
+        scanArrayRecursive<T, isExclusive, isBackward, OperatorMin<T> >
             ((T*)d_out, (const T*)d_in, 
             (T**)plan->m_blockSums, 
             numElements, numRows, plan->m_rowPitches, 0);
