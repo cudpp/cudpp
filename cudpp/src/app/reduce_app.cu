@@ -44,8 +44,10 @@ void reduceBlocks(T *d_odata, const T *d_idata, size_t numElements, const CUDPPR
     unsigned int numThreads = (numElements > 2 * plan->m_threadsPerBlock) ?
         plan->m_threadsPerBlock : ceilPow2((numElements + 1) / 2);
     dim3 dimBlock(numThreads, 1, 1);
-    unsigned int numBlocks = min(plan->m_maxBlocks, 
-        (numElements + (2*plan->m_threadsPerBlock - 1)) / (2*plan->m_threadsPerBlock));
+    unsigned int numBlocks =
+        min(plan->m_maxBlocks,
+        ((unsigned int)(numElements) +
+         (2*plan->m_threadsPerBlock - 1)) / (2*plan->m_threadsPerBlock));
 
     dim3 dimGrid(numBlocks, 1, 1);
     int smemSize = numThreads * sizeof(T);
@@ -120,8 +122,10 @@ void reduceBlocks(T *d_odata, const T *d_idata, size_t numElements, const CUDPPR
 template <class Oper, class T>
 void reduceArray(T *d_odata, const T *d_idata, size_t numElements, const CUDPPReducePlan *plan)
 {
-    unsigned int numBlocks = min(plan->m_maxBlocks, 
-        (numElements + (2*plan->m_threadsPerBlock - 1)) / (2*plan->m_threadsPerBlock));
+    unsigned int numBlocks =
+        min(plan->m_maxBlocks,
+        ((unsigned int)(numElements) +
+         (2*plan->m_threadsPerBlock - 1)) / (2*plan->m_threadsPerBlock));
 
     if (numBlocks > 1)
     {
@@ -147,8 +151,10 @@ void reduceArray(T *d_odata, const T *d_idata, size_t numElements, const CUDPPRe
   */
 void allocReduceStorage(CUDPPReducePlan *plan)
 {
-    unsigned int blocks = min(plan->m_maxBlocks, 
-        (plan->m_numElements + plan->m_threadsPerBlock - 1) / plan->m_threadsPerBlock);
+    unsigned int blocks =
+        min(plan->m_maxBlocks,
+        ((unsigned int)(plan->m_numElements) +
+         plan->m_threadsPerBlock - 1) / plan->m_threadsPerBlock);
   
     switch (plan->m_config.datatype)
     {
