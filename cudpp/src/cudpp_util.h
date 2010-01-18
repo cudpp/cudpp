@@ -212,7 +212,7 @@ public:
       * @param b Second operand
       * @returns a OP b, where OP is defined by ::CUDPPOperator \a oper.
       */
-    static __device__ T op(const T &a, const T &b)
+    static __device__ T op(const T a, const T b)
     {
         switch (oper)
         {
@@ -236,7 +236,7 @@ template <CUDPPOperator oper>
 class Operator <int, oper>
 {
 public:
-    static __device__ int op(const int &a, const int &b)
+    static __device__ int op(const int a, const int b)
     {
         switch (oper)
         {
@@ -273,7 +273,7 @@ template <CUDPPOperator oper>
 class Operator <unsigned int, oper>
 {
 public:
-    static __device__ unsigned int op(const unsigned int &a, const unsigned int &b)
+    static __device__ unsigned int op(const unsigned int a, const unsigned int b)
     {
         switch (oper)
         {
@@ -311,7 +311,7 @@ template <CUDPPOperator oper>
 class Operator <float, oper>
 {
 public:
-    static __device__ float op(const float &a, const float &b)
+    static __device__ float op(const float a, const float b)
     {
         switch (oper)
         {

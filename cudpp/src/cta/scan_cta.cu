@@ -81,7 +81,7 @@ public:
     
         
     //! The operator function used for the scan
-    static __device__ T op(const T &a, const T &b)
+    static __device__ T op(const T a, const T b)
     {
         return Operator<T, oper>::op(a, b);
     }  
