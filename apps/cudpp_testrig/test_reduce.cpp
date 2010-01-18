@@ -166,12 +166,12 @@ int reduceTest(int argc, const char **argv, const CUDPPConfiguration &config, te
         cudppReduce(plan, d_odata, d_idata, test[k]);
 #endif
 
-        CUDA_SAFE_CALL( cudaEventRecord(startEvent) );
+        CUDA_SAFE_CALL( cudaEventRecord(startEvent, 0) );
         for (int i = 0; i < testOptions.numIterations; i++)
         {
             cudppReduce(plan, d_odata, d_idata, test[k]);
         }
-        CUDA_SAFE_CALL( cudaEventRecord(stopEvent) );
+        CUDA_SAFE_CALL( cudaEventRecord(stopEvent, 0) );
         CUDA_SAFE_CALL( cudaEventSynchronize(stopEvent) );
 
         float time = 0;
