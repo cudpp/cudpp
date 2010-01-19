@@ -189,7 +189,7 @@ template <typename T>
 class OperatorAdd
 {
 public:
-    __device__ T operator()(const T& a, const T& b) { return a + b; }
+    __device__ T operator()(const T a, const T b) { return a + b; }
     __device__ T identity() { return (T)0; }
 };
 
@@ -197,7 +197,7 @@ template <typename T>
 class OperatorMultiply
 {
 public:
-    __device__ T operator()(const T& a, const T& b) { return a * b; }
+    __device__ T operator()(const T a, const T b) { return a * b; }
     __device__ T identity() { return (T)1; }
 };
 
@@ -205,7 +205,7 @@ template <typename T>
 class OperatorMax
 {
 public:
-    __device__ T operator() (const T& a, const T& b) const { return max(a, b); }
+    __device__ T operator() (const T a, const T b) const { return max(a, b); }
     __device__ T identity() const { return (T)0; }
 };
 
@@ -222,7 +222,7 @@ template <typename T>
 class OperatorMin
 {
 public:
-    __device__ T operator() (const T& a, const T& b) const { return min(a, b); }
+    __device__ T operator() (const T a, const T b) const { return min(a, b); }
     __device__ T identity() const { return (T)0; }
 };
 
