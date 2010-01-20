@@ -502,15 +502,15 @@ __device__ T warpscan(T val, volatile T* s_data)
         // work.
 #ifdef __DEVICE_EMULATION__
     T t = s_data[idx -  1]; __EMUSYNC; 
-    s_data[idx] = traits::op((const T&)s_data[idx],t); __EMUSYNC;
+    s_data[idx] = traits::op((const T)s_data[idx],t); __EMUSYNC;
     t = s_data[idx -  2]; __EMUSYNC; 
-    s_data[idx] = traits::op((const T&)s_data[idx],t); __EMUSYNC;
+    s_data[idx] = traits::op((const T)s_data[idx],t); __EMUSYNC;
     t = s_data[idx -  4]; __EMUSYNC; 
-    s_data[idx] = traits::op((const T&)s_data[idx],t); __EMUSYNC;
+    s_data[idx] = traits::op((const T)s_data[idx],t); __EMUSYNC;
     t = s_data[idx -  8]; __EMUSYNC; 
-    s_data[idx] = traits::op((const T&)s_data[idx],t); __EMUSYNC;
+    s_data[idx] = traits::op((const T)s_data[idx],t); __EMUSYNC;
     t = s_data[idx - 16]; __EMUSYNC; 
-    s_data[idx] = traits::op((const T&)s_data[idx],t); __EMUSYNC;
+    s_data[idx] = traits::op((const T)s_data[idx],t); __EMUSYNC;
 #else
     if (0 <= maxlevel) { s_data[idx] = traits::op((const T)s_data[idx], (const T)s_data[idx - 1]); }
     if (1 <= maxlevel) { s_data[idx] = traits::op((const T)s_data[idx], (const T)s_data[idx - 2]); }
