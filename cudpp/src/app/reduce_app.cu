@@ -15,9 +15,10 @@
  * @brief CUDPP application-level reduction routines
  */
 
-#include "kernel/reduce_kernel.cu"
 #include "cudpp_plan.h"
 #include "cudpp_util.h"
+#include "kernel/reduce_kernel.cu"
+#include <stdio.h>
 #include <cutil.h>
 
 /** \addtogroup cudpp_app
@@ -50,7 +51,7 @@ void reduceBlocks(T *d_odata, const T *d_idata, size_t numElements, const CUDPPR
          (2*plan->m_threadsPerBlock - 1)) / (2*plan->m_threadsPerBlock));
 
     dim3 dimGrid(numBlocks, 1, 1);
-    int smemSize = numThreads * sizeof(T);
+    int smemSize = plan->m_threadsPerBlock * sizeof(T);
 
     // choose which of the optimized versions of reduction to launch
     

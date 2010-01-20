@@ -1429,7 +1429,7 @@
 					>
 					<Tool
 						Name="CUDA Build Rule"
-						ExtraNvccOptions="-m32"
+						ExtraNvccOptions="-m32 –gencode=arch=compute_20,code=sm_20 –gencode=arch=compute_10,code=sm_10"
 						Runtime="1"
 					/>
 				</FileConfiguration>
@@ -1449,7 +1449,7 @@
 					>
 					<Tool
 						Name="CUDA Build Rule"
-						ExtraNvccOptions="-m32"
+						ExtraNvccOptions="-m32 –gencode=arch=compute_20,code=sm_20 –gencode=arch=compute_10,code=sm_10"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1655,7 +1655,7 @@
 					>
 					<Tool
 						Name="CUDA Build Rule"
-						ExtraNvccOptions="-m32"
+						ExtraNvccOptions="-m32 –gencode=arch=compute_20,code=sm_20 –gencode=arch=compute_10,code=sm_10"
 						Runtime="1"
 					/>
 				</FileConfiguration>
@@ -1664,7 +1664,7 @@
 					>
 					<Tool
 						Name="CUDA Build Rule"
-						ExtraNvccOptions="-m32"
+						ExtraNvccOptions="-m32 –gencode=arch=compute_20,code=sm_20 –gencode=arch=compute_10,code=sm_10"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1874,7 +1874,7 @@
 					>
 					<Tool
 						Name="CUDA Build Rule"
-						ExtraNvccOptions="-m32"
+						ExtraNvccOptions="-m32 –gencode=arch=compute_20,code=sm_20 –gencode=arch=compute_10,code=sm_10"
 						Runtime="1"
 					/>
 				</FileConfiguration>
@@ -1883,7 +1883,7 @@
 					>
 					<Tool
 						Name="CUDA Build Rule"
-						ExtraNvccOptions="-m32"
+						ExtraNvccOptions="-m32 –gencode=arch=compute_20,code=sm_20 –gencode=arch=compute_10,code=sm_10"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -2091,7 +2091,7 @@
 					>
 					<Tool
 						Name="CUDA Build Rule"
-						ExtraNvccOptions="-m32 -gencode=arch=compute_10,code=sm_10 -gencode=arch=compute_13,code=sm_13"
+						ExtraNvccOptions="-m32 -gencode=arch=compute_10,code=sm_10 -gencode=arch=compute_13,code=sm_13 -gencode=arch=compute_20,code=sm_20"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -2100,7 +2100,7 @@
 					<Tool
 						Name="CUDA Build Rule"
 						PtxAsOptionV="true"
-						ExtraNvccOptions="-m32 -gencode=arch=compute_10,code=sm_10 -gencode=arch=compute_13,code=sm_13"
+						ExtraNvccOptions="-m32 -gencode=arch=compute_10,code=sm_10 -gencode=arch=compute_13,code=sm_13  -gencode=arch=compute_20,code=sm_20"
 					/>
 				</FileConfiguration>
 			</File>
@@ -2181,7 +2181,7 @@
 					>
 					<Tool
 						Name="CUDA Build Rule"
-						ExtraNvccOptions="-m32"
+						ExtraNvccOptions="-m32 –gencode=arch=compute_20,code=sm_20 –gencode=arch=compute_10,code=sm_10"
 						Runtime="1"
 					/>
 				</FileConfiguration>
@@ -2201,7 +2201,7 @@
 					>
 					<Tool
 						Name="CUDA Build Rule"
-						ExtraNvccOptions="-m32"
+						ExtraNvccOptions="-m32 –gencode=arch=compute_20,code=sm_20 –gencode=arch=compute_10,code=sm_10"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -2590,7 +2590,7 @@
 					>
 					<Tool
 						Name="CUDA Build Rule"
-						ExtraNvccOptions="-m32"
+						ExtraNvccOptions="-m32 –gencode=arch=compute_20,code=sm_20 –gencode=arch=compute_10,code=sm_10"
 						Runtime="1"
 					/>
 				</FileConfiguration>
@@ -2610,7 +2610,7 @@
 					>
 					<Tool
 						Name="CUDA Build Rule"
-						ExtraNvccOptions="-m32"
+						ExtraNvccOptions="-m32 –gencode=arch=compute_20,code=sm_20 –gencode=arch=compute_10,code=sm_10"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -2851,7 +2851,7 @@
 					>
 					<Tool
 						Name="CUDA Build Rule"
-						ExtraNvccOptions="-m32"
+						ExtraNvccOptions="-m32 –gencode=arch=compute_20,code=sm_20 –gencode=arch=compute_10,code=sm_10"
 						Runtime="1"
 					/>
 				</FileConfiguration>
@@ -2871,7 +2871,7 @@
 					>
 					<Tool
 						Name="CUDA Build Rule"
-						ExtraNvccOptions="-m32"
+						ExtraNvccOptions="-m32 –gencode=arch=compute_20,code=sm_20 –gencode=arch=compute_10,code=sm_10"
 					/>
 				</FileConfiguration>
 				<FileConfiguration

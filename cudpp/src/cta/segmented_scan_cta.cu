@@ -815,7 +815,7 @@ void storeForSegmentedScanSharedChunkToMem4(T *d_odata,
 
 template <class T, class traits, unsigned int blockSize>
 __device__ T
-reduceCTA(T *s_data)
+reduceCTA(volatile T *s_data)
 {
     // instantiate operator functor
     typename traits::Op op;
@@ -893,7 +893,7 @@ __device__ void warpSegScan(T val,
     }
     
     __EMUSYNC; 
-    s_data[idx] = s_flags[idx] ? s_data[idx] : op((const T&)s_data[idx],t); 
+    s_data[idx] = s_flags[idx] ? s_data[idx] : op((const T)s_data[idx],t); 
     s_flags[idx] = f | s_flags[idx];  __EMUSYNC;
 
     if (traits::isBackward())
@@ -906,7 +906,7 @@ __device__ void warpSegScan(T val,
     }
     
     __EMUSYNC; 
-    s_data[idx] = s_flags[idx] ? s_data[idx] : op((const T&)s_data[idx],t); 
+    s_data[idx] = s_flags[idx] ? s_data[idx] : op((const T)s_data[idx],t); 
     s_flags[idx] = f | s_flags[idx]; __EMUSYNC;
     
     if (traits::isBackward())
@@ -919,7 +919,7 @@ __device__ void warpSegScan(T val,
     }
     
     __EMUSYNC; 
-    s_data[idx] = s_flags[idx] ? s_data[idx] : op((const T&)s_data[idx],t); 
+    s_data[idx] = s_flags[idx] ? s_data[idx] : op((const T)s_data[idx],t); 
     s_flags[idx] = f | s_flags[idx]; __EMUSYNC;
 
     if (traits::isBackward())
@@ -932,7 +932,7 @@ __device__ void warpSegScan(T val,
     }
     
     __EMUSYNC; 
-    s_data[idx] = s_flags[idx] ? s_data[idx] : op((const T&)s_data[idx],t); 
+    s_data[idx] = s_flags[idx] ? s_data[idx] : op((const T)s_data[idx],t); 
     s_flags[idx] = f | s_flags[idx]; __EMUSYNC;
 
     if (traits::isBackward())
@@ -945,7 +945,7 @@ __device__ void warpSegScan(T val,
     }
     
     __EMUSYNC; 
-    s_data[idx] = s_flags[idx] ? s_data[idx] : op((const T&)s_data[idx],t); 
+    s_data[idx] = s_flags[idx] ? s_data[idx] : op((const T)s_data[idx],t); 
     s_flags[idx] = f | s_flags[idx]; __EMUSYNC;
 
 #else
@@ -953,12 +953,12 @@ __device__ void warpSegScan(T val,
     {
         if (traits::isBackward())
         {
-            s_data[idx] = s_flags[idx] ? s_data[idx] : op((const T&)s_data[idx +  1] , (const T&)s_data[idx]);
+            s_data[idx] = s_flags[idx] ? s_data[idx] : op((const T)s_data[idx +  1] , (const T)s_data[idx]);
             s_flags[idx] = s_flags[idx +  1] | s_flags[idx];
         }
         else
         {
-            s_data[idx] = s_flags[idx] ? s_data[idx] : op((const T&)s_data[idx -  1] , (const T&)s_data[idx]);
+            s_data[idx] = s_flags[idx] ? s_data[idx] : op((const T)s_data[idx -  1] , (const T)s_data[idx]);
             s_flags[idx] = s_flags[idx -  1] | s_flags[idx];
         }
     }
@@ -966,12 +966,12 @@ __device__ void warpSegScan(T val,
     {
         if (traits::isBackward())
         {
-            s_data[idx] = s_flags[idx] ? s_data[idx] : op((const T&)s_data[idx +  2] , (const T&)s_data[idx]);
+            s_data[idx] = s_flags[idx] ? s_data[idx] : op((const T)s_data[idx +  2] , (const T)s_data[idx]);
             s_flags[idx] = s_flags[idx +  2] | s_flags[idx];
         }
         else
         {
-            s_data[idx] = s_flags[idx] ? s_data[idx] : op((const T&)s_data[idx -  2] , (const T&)s_data[idx]);
+            s_data[idx] = s_flags[idx] ? s_data[idx] : op((const T)s_data[idx -  2] , (const T)s_data[idx]);
             s_flags[idx] = s_flags[idx -  2] | s_flags[idx];
         }
     }
@@ -979,12 +979,12 @@ __device__ void warpSegScan(T val,
     {
         if (traits::isBackward())
         {
-            s_data[idx] = s_flags[idx] ? s_data[idx] : op((const T&)s_data[idx +  4] , (const T&)s_data[idx]);
+            s_data[idx] = s_flags[idx] ? s_data[idx] : op((const T)s_data[idx +  4] , (const T)s_data[idx]);
             s_flags[idx] = s_flags[idx +  4] | s_flags[idx];
         }
         else
         {
-            s_data[idx] = s_flags[idx] ? s_data[idx] : op((const T&)s_data[idx -  4] , (const T&)s_data[idx]);
+            s_data[idx] = s_flags[idx] ? s_data[idx] : op((const T)s_data[idx -  4] , (const T)s_data[idx]);
             s_flags[idx] = s_flags[idx -  4] | s_flags[idx];
         }
     }
@@ -992,12 +992,12 @@ __device__ void warpSegScan(T val,
     {
         if (traits::isBackward())
         {
-            s_data[idx] = s_flags[idx] ? s_data[idx] : op((const T&)s_data[idx +  8] , (const T&)s_data[idx]);
+            s_data[idx] = s_flags[idx] ? s_data[idx] : op((const T)s_data[idx +  8] , (const T)s_data[idx]);
             s_flags[idx] = s_flags[idx +  8] | s_flags[idx];
         }
         else
         {
-            s_data[idx] = s_flags[idx] ? s_data[idx] : op((const T&)s_data[idx -  8] , (const T&)s_data[idx]);
+            s_data[idx] = s_flags[idx] ? s_data[idx] : op((const T)s_data[idx -  8] , (const T)s_data[idx]);
             s_flags[idx] = s_flags[idx -  8] | s_flags[idx];
         }
     }
@@ -1005,12 +1005,12 @@ __device__ void warpSegScan(T val,
     {
         if (traits::isBackward())
         {
-            s_data[idx] = s_flags[idx] ? s_data[idx] : op((const T&)s_data[idx + 16] , (const T&)s_data[idx]);
+            s_data[idx] = s_flags[idx] ? s_data[idx] : op((const T)s_data[idx + 16] , (const T)s_data[idx]);
             s_flags[idx] = s_flags[idx + 16] | s_flags[idx];
         }
         else
         {
-            s_data[idx] = s_flags[idx] ? s_data[idx] : op((const T&)s_data[idx - 16] , (const T&)s_data[idx]);
+            s_data[idx] = s_flags[idx] ? s_data[idx] : op((const T)s_data[idx - 16] , (const T)s_data[idx]);
             s_flags[idx] = s_flags[idx - 16] | s_flags[idx];
         }
     }
@@ -1033,8 +1033,8 @@ __device__ void segmentedScanWarps(T val1,
                                    unsigned int flag1,
                                    T val2,
                                    unsigned int flag2,
-                                   T *s_data, 
-                                   unsigned int *s_flags)
+                                   volatile T *s_data, 
+                                   volatile unsigned int *s_flags)
 {
     // instantiate operator functor
     typename traits::Op op;

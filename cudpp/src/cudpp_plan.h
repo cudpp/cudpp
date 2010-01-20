@@ -14,20 +14,7 @@ typedef void* KernelPointer;
 class CUDPPPlan;
 class CUDPPManager;
 
-/*extern "C" size_t getNumCTAs(const CUDPPPlan* plan, KernelPointer kernel);
-extern "C" void   compNumCTAs(const CUDPPPlan* plan, KernelPointer kernel, size_t bytesDynamicSharedMem, size_t threadsPerBlock);
-
-template <typename T>
-size_t numCTAs(const CUDPPPlan* plan, T kernel)
-{
-    return getNumCTAs(plan, (KernelPointer)kernel);
-}
-
-template <typename T>
-void computeNumCTAs(const CUDPPPlan* plan, T kernel, unsigned int bytesDynamicSharedMem, size_t threadsPerBlock)
-{
-    compNumCTAs(plan, (KernelPointer)kernel, bytesDynamicSharedMem, threadsPerBlock);
-}*/
+#include "cudpp.h"
 
 //! @internal Convert an opaque handle to a pointer to a plan
 template <typename T>
