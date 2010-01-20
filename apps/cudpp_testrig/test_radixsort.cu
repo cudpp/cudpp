@@ -7,8 +7,8 @@
 // This source code is distributed under the terms of license.txt
 // in the root directory of this source distribution.
 // ------------------------------------------------------------- 
-#ifndef _SCAN_XOR_KERNEL_H_
-#define _SCAN_XOR_KERNEL_H_
+#ifndef _TEST_RADIXSORT_H_
+#define _TEST_RADIXSORT_H_
 
 #include <stdio.h>
 #include <cutil.h>
@@ -361,6 +361,5 @@ int testRadixSort(int argc, const char **argv, CUDPPConfiguration *configPtr)
         	          
     return retval;
 }
-
 
 #endif
