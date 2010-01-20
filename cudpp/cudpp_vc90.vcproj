@@ -1425,6 +1425,7 @@
 					>
 					<Tool
 						Name="CUDA Build Rule"
+						ExtraNvccOptions="-m32 –gencode=arch=compute_20,code=sm_20 –gencode=arch=compute_10,code=sm_10"
 						Runtime="1"
 					/>
 				</FileConfiguration>
@@ -1440,6 +1441,14 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+						ExtraNvccOptions="-m32 –gencode=arch=compute_20,code=sm_20 –gencode=arch=compute_10,code=sm_10"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="Release|x64"
 					>
 					<Tool
@@ -1451,6 +1460,14 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="EmuDebug|Win32"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+						ExtraNvccOptions="-m32 "
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="EmuDebug|x64"
 					>
 					<Tool
@@ -1459,6 +1476,14 @@
 						CommandLine="$(CUDA_BIN_PATH)/nvcc.exe -ccbin &quot;$(VCInstallDir)bin&quot; -deviceemu -D_DEBUG -I&quot;$(CUDA_INC_PATH)&quot; -I./ -I../common/inc -I&quot;$(VCInstallDir)/include&quot; -I&quot;$(VCInstallDir)/PlatformSDK/include&quot; -I./src -I./include -o $(ConfigurationName)/compact_app.obj -c -g ./src/app/compact_app.cu&#x0D;&#x0A;"
 						AdditionalDependencies="compact_app.cu compact_kernel.cu"
 						Outputs="$(ConfigurationName)\compact_app.obj"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="EmuRelease|Win32"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+						ExtraNvccOptions="-m32 "
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1625,6 +1650,7 @@
 					>
 					<Tool
 						Name="CUDA Build Rule"
+						ExtraNvccOptions="-m32 –gencode=arch=compute_20,code=sm_20 –gencode=arch=compute_10,code=sm_10"
 						Runtime="1"
 					/>
 				</FileConfiguration>
@@ -1633,7 +1659,23 @@
 					>
 					<Tool
 						Name="CUDA Build Rule"
-						ExtraNvccOptions=""
+						ExtraNvccOptions="-m32 –gencode=arch=compute_20,code=sm_20 –gencode=arch=compute_10,code=sm_10"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="EmuDebug|Win32"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+						ExtraNvccOptions="-m32 "
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="EmuRelease|Win32"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+						ExtraNvccOptions="-m32 "
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1827,7 +1869,32 @@
 					>
 					<Tool
 						Name="CUDA Build Rule"
+						ExtraNvccOptions="-m32 –gencode=arch=compute_20,code=sm_20 –gencode=arch=compute_10,code=sm_10"
 						Runtime="1"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+						ExtraNvccOptions="-m32 –gencode=arch=compute_20,code=sm_20 –gencode=arch=compute_10,code=sm_10"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="EmuDebug|Win32"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+						ExtraNvccOptions="-m32 "
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="EmuRelease|Win32"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+						ExtraNvccOptions="-m32 "
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -2019,7 +2086,7 @@
 					>
 					<Tool
 						Name="CUDA Build Rule"
-						ExtraNvccOptions="-gencode=arch=compute_20,code=sm_20 -gencode=arch=compute_10,code=sm_10"
+						ExtraNvccOptions="-m32 –gencode=arch=compute_20,code=sm_20 –gencode=arch=compute_10,code=sm_10"
 						Runtime="1"
 					/>
 				</FileConfiguration>
@@ -2035,6 +2102,14 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+						ExtraNvccOptions="-m32 –gencode=arch=compute_20,code=sm_20 –gencode=arch=compute_10,code=sm_10"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="Release|x64"
 					>
 					<Tool
@@ -2046,6 +2121,14 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="EmuDebug|Win32"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+						ExtraNvccOptions="-m32 "
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="EmuDebug|x64"
 					>
 					<Tool
@@ -2054,6 +2137,14 @@
 						CommandLine="$(CUDA_BIN_PATH)/nvcc.exe -ccbin &quot;$(VCInstallDir)bin&quot; --host-compilation=C -deviceemu -D_DEBUG -I&quot;$(CUDA_INC_PATH)&quot; -I./ -I../common/inc -I&quot;$(VCInstallDir)/include&quot; -I&quot;$(VCInstallDir)/PlatformSDK/include&quot; -I./src -I./include -o $(ConfigurationName)/scan_app.obj -c -g ./src/app/scan_app.cu&#x0D;&#x0A;"
 						AdditionalDependencies="scan_app.cu scan_kernel.cu scan_cta.cu"
 						Outputs="$(ConfigurationName)/scan_app.obj"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="EmuRelease|Win32"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+						ExtraNvccOptions="-m32 "
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -2404,6 +2495,7 @@
 					>
 					<Tool
 						Name="CUDA Build Rule"
+						ExtraNvccOptions="-m32 –gencode=arch=compute_20,code=sm_20 –gencode=arch=compute_10,code=sm_10"
 						Runtime="1"
 					/>
 				</FileConfiguration>
@@ -2419,6 +2511,14 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+						ExtraNvccOptions="-m32 –gencode=arch=compute_20,code=sm_20 –gencode=arch=compute_10,code=sm_10"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="Release|x64"
 					>
 					<Tool
@@ -2430,6 +2530,14 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="EmuDebug|Win32"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+						ExtraNvccOptions="-m32 "
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="EmuDebug|x64"
 					>
 					<Tool
@@ -2438,6 +2546,14 @@
 						CommandLine="$(CUDA_BIN_PATH)/nvcc.exe -ccbin &quot;$(VCInstallDir)bin&quot; --host-compilation=C -deviceemu -D_DEBUG -I&quot;$(CUDA_INC_PATH)&quot; -I./ -I../common/inc -I&quot;$(VCInstallDir)/include&quot; -I&quot;$(VCInstallDir)/PlatformSDK/include&quot; -I./src -I./include -o $(ConfigurationName)/segmented_scan_app.obj -c -g ./src/app/segmented_scan_app.cu&#x0D;&#x0A;"
 						AdditionalDependencies="segmented_scan_app.cu segmented_scan_kernel.cu segmented_scan_cta.cu"
 						Outputs="$(ConfigurationName)\segmented_scan_app.obj"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="EmuRelease|Win32"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+						ExtraNvccOptions="-m32 "
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -2640,6 +2756,7 @@
 					>
 					<Tool
 						Name="CUDA Build Rule"
+						ExtraNvccOptions="-m32 –gencode=arch=compute_20,code=sm_20 –gencode=arch=compute_10,code=sm_10"
 						Runtime="1"
 					/>
 				</FileConfiguration>
@@ -2655,6 +2772,14 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+						ExtraNvccOptions="-m32 –gencode=arch=compute_20,code=sm_20 –gencode=arch=compute_10,code=sm_10"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="Release|x64"
 					>
 					<Tool
@@ -2666,6 +2791,14 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="EmuDebug|Win32"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+						ExtraNvccOptions="-m32 "
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="EmuDebug|x64"
 					>
 					<Tool
@@ -2674,6 +2807,14 @@
 						CommandLine="$(CUDA_BIN_PATH)/nvcc.exe -ccbin &quot;$(VCInstallDir)bin&quot; --host-compilation=C -deviceemu -D_DEBUG -I&quot;$(CUDA_INC_PATH)&quot; -I./ -I../common/inc -I&quot;$(VCInstallDir)/include&quot; -I&quot;$(VCInstallDir)/PlatformSDK/include&quot; -I./src -I./include -o $(ConfigurationName)/spmvmult_app.obj -c -g ./src/app/spmvmult_app.cu&#x0D;&#x0A;"
 						AdditionalDependencies="spmvmult_app.cu spmvmult_kernel.cu"
 						Outputs="$(ConfigurationName)\spmvmult_app.obj"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="EmuRelease|Win32"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+						ExtraNvccOptions="-m32 "
 					/>
 				</FileConfiguration>
 				<FileConfiguration
