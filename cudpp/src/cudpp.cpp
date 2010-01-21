@@ -471,6 +471,7 @@ CUDPPResult cudppRandSeed(const CUDPPHandle planHandle,
     return CUDPP_SUCCESS;
 }//end cudppRandSeed
 
+
 CUDPP_DLL
 CUDPPResult cudppReduce(const CUDPPHandle planHandle, 
                          int  *d_in,
@@ -479,9 +480,8 @@ CUDPPResult cudppReduce(const CUDPPHandle planHandle,
                          bool tune)
 {
     CUDPPReducePlan * plan = 
-        (CUDPPReducePlan *) getPlanPtrFromHandle<CUDPPRandPlan>(planHandle);
-
-    //switch on the plan to figure out which seed to update
+        (CUDPPReducePlan *) getPlanPtrFromHandle<CUDPPReducePlan>(planHandle);
+    
     switch(plan->m_config.algorithm)
     {
     case CUDPP_REDUCE:
