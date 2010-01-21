@@ -37,11 +37,6 @@ char regDir[100];	//a string holding the directory name of the regression data
 ///////////////////////////////////////////////////////////////////////
 //declaration forward
 
-
-
-
-
-
 bool file_exists(const char * filename)
 {
     if (FILE * file = fopen(filename, "r"))
@@ -60,7 +55,7 @@ void constructFileName(char * fileName, testrigOptions & testOptions, unsigned i
     {
         //use default location for the files
         strcpy(fileName, path);
-//              printf("the default path is: %s\n\n", fileName);
+
 #if defined(MD5_WRITE_BINARY) || defined(MD5_TEST_BINARY) 
         sprintf(fileName, "%smd5_regression_%u.dat",fileName, size); 
 #else
@@ -155,6 +150,7 @@ testRandMD5(int argc, const char** argv)
 
     FILE * randFile = NULL;
     char fileName[200] = "";
+
     //initialize the CUDPP config
     CUDPPConfiguration config;
     config.op = CUDPP_ADD;
@@ -235,7 +231,7 @@ testRandMD5(int argc, const char** argv)
             if(devOutputsize < 128) blockSize = devOutputsize;
 
             unsigned int n_blocks = 
-                    devOutputsize/blockSize + (devOutputsize%blockSize == 0 ? 0:1);  
+                devOutputsize/blockSize + (devOutputsize%blockSize == 0 ? 0:1);  
 
             printf("Generating %u random numbers using %u %u-thread blocks\n", test[i], n_blocks, blockSize);
         }
@@ -249,14 +245,14 @@ testRandMD5(int argc, const char** argv)
         
         if(quiet)
         {
-            //print out basic information here
+            // print out basic information here
             printf("\t%10u\t%0.4f%5c\n", test[i], cutGetTimerValue(randTimer),' ');
         }
         else
         {
             printf("%u pseudorandom numbers generated in %f ms\n", test[i], cutGetTimerValue(randTimer));
         }
-        //copy the data back
+        // copy the data back
         CUDA_SAFE_CALL(cudaMemcpy(md5GPUHost1, md5GPU1, sizeof(unsigned int) * test[i],cudaMemcpyDeviceToHost));
 
 
@@ -277,15 +273,13 @@ testRandMD5(int argc, const char** argv)
         {
             printf("something wrong here!\n%s\n", fileName);
         }
-        //fwrite(md5GPUHost1, sizeof(unsigned int), test[i], randFile);
         for(int j=0; j<test[i]; j++)
         {
 #ifdef MD5_WRITE_BINARY  
             fwrite(&md5GPUHost1[j], sizeof(unsigned int), 1, randFile);
 #else 
-          fprintf(randFile, "%u\n", md5GPUHost1[j]);
+            fprintf(randFile, "%u\n", md5GPUHost1[j]);
 #endif
-    //          printf("%u ", md5GPUHost1[j]);
         }
 #else
         

@@ -107,16 +107,26 @@ void radixSortSingleWarp(uint *keys,
         uint val_i = sValues[i];
         
         sFlags[threadIdx.x] = 0;
-        
+      
+        uint temp, tempval;
         if( (threadIdx.x < i) && (sKeys[threadIdx.x] > key_i) ) 
         {
-            uint temp = sKeys[threadIdx.x];
-            uint tempval = sValues[threadIdx.x];
+            temp = sKeys[threadIdx.x];
+            tempval = sValues[threadIdx.x];
             sFlags[threadIdx.x] = 1;
+
+#ifdef __DEVICE_EMULATION__
+        }
+        __EMUSYNC;
+        if( (threadIdx.x < i) && (sKeys[threadIdx.x] > key_i) ) 
+        {
+#endif
             sKeys[threadIdx.x + 1] = temp;
             sValues[threadIdx.x + 1] = tempval;
             sFlags[threadIdx.x + 1] = 0;
         }
+
+        
         if(sFlags[threadIdx.x] == 1 )
         {
             sKeys[threadIdx.x] = key_i;
@@ -155,10 +165,17 @@ void radixSortSingleWarpKeysOnly(uint *keys,
         
         sFlags[threadIdx.x] = 0;
         
+        uint temp;
         if( (threadIdx.x < i) && (sKeys[threadIdx.x] > key_i) ) 
         {
-            uint temp = sKeys[threadIdx.x];
+            temp = sKeys[threadIdx.x];
             sFlags[threadIdx.x] = 1;
+#ifdef __DEVICE_EMULATION__
+        }
+        __EMUSYNC;
+        if( (threadIdx.x < i) && (sKeys[threadIdx.x] > key_i) ) 
+        {
+#endif
             sKeys[threadIdx.x + 1] = temp;
             sFlags[threadIdx.x + 1] = 0;
         }

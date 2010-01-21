@@ -7,8 +7,6 @@
 // This source code is distributed under the terms of license.txt
 // in the root directory of this source distribution.
 // ------------------------------------------------------------- 
-#ifndef _TEST_RADIXSORT_H_
-#define _TEST_RADIXSORT_H_
 
 #include <stdio.h>
 #include <cutil.h>
@@ -174,12 +172,12 @@ int radixSortTest(CUDPPHandle plan, CUDPPConfiguration config, size_t *tests,
 
         for (int i = 0; i < testOptions.numIterations; i++)
         {
-            CUDA_SAFE_CALL(cudaMemcpy(d_keys, h_keys, numElements * sizeof(T), cudaMemcpyHostToDevice));
+            CUDA_SAFE_CALL(cudaMemcpy(d_keys, h_keys, tests[k] * sizeof(T), cudaMemcpyHostToDevice));
             if(config.options & CUDPP_OPTION_KEY_VALUE_PAIRS)
             {
                 CUDA_SAFE_CALL( cudaMemcpy((void*)d_values, 
                                            (void*)h_values, 
-                                           numElements * sizeof(unsigned int), 
+                                           tests[k] * sizeof(unsigned int), 
                                            cudaMemcpyHostToDevice) );
             }
 
@@ -227,7 +225,8 @@ int radixSortTest(CUDPPHandle plan, CUDPPConfiguration config, size_t *tests,
     CUT_CHECK_ERROR("after radixsort");
 
     cudaFree(d_keys);
-    cudaFree((void*)d_values);
+    if (config.options & CUDPP_OPTION_KEY_VALUE_PAIRS)
+        cudaFree(d_values);
     free(h_keys);
     free(h_values);	
 
@@ -266,13 +265,13 @@ int testRadixSort(int argc, const char **argv, CUDPPConfiguration *configPtr)
     config.options = CUDPP_OPTION_KEY_VALUE_PAIRS;
 	
     if(configPtr != NULL)
-      {
-       config = *configPtr;
-      }
+    {
+        config = *configPtr;
+    }
     else
-      {
-          config.datatype = CUDPP_UINT;       
-      }
+    {
+        config.datatype = CUDPP_UINT;       
+    }
  
     size_t test[] = {39, 128, 256, 512, 513, 1000, 1024, 1025, 32768, 
                      45537, 65536, 131072, 262144, 500001, 524288, 
@@ -361,5 +360,3 @@ int testRadixSort(int argc, const char **argv, CUDPPConfiguration *configPtr)
         	          
     return retval;
 }
-
-#endif

@@ -80,7 +80,7 @@ computeMinSegmentedScanGold(float* reference, const float* idata,
 /**
  * testScan exercises cudpp's unsegmented scan functionality.
  * Possible command line arguments:
- * - --op=OP: sets scan operation to OP (sum, max, etc.)
+ * - --op=OP: sets scan operation to OP (sum, max, min and multiply.)
  * - --forward, --backward: sets direction of scan
  * - --exclusive, --inclusive: sets exclusivity of scan
  * - --n=#: number of elements in scan
@@ -331,7 +331,7 @@ int testScan(int argc, const char **argv, CUDPPConfiguration *configPtr)
 /**
  * testSegmentedScan exercises cudpp's unsegmented scan functionality.
  * Possible command line arguments:
- * - --op=OP: sets scan operation to OP (sum, max, etc.)
+ * - --op=OP: sets scan operation to OP (sum, max, min and multiply.)
  * - --forward: sets direction of scan
  * - --exclusive, --inclusive: sets exclusivity of scan
  * - --n=#: number of elements in scan

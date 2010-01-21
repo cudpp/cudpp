@@ -1,8 +1,8 @@
 // -------------------------------------------------------------
-// cuDPP -- CUDA Data Parallel Primitives library
+// CUDPP -- CUDA Data Parallel Primitives library
 // -------------------------------------------------------------
-// $Revision: 3572$
-// $Date: 2009-07-02 04:20:26 +1000 (Thu, 02 Jul 2009) $
+// $Revision:$
+// $Date:$
 // ------------------------------------------------------------- 
 // This source code is distributed under the terms of license.txt in
 // the root directory of this source distribution.
@@ -33,7 +33,13 @@
  * variety of data-parallel algorithms, including sorting, stream 
  * compaction, and building data structures such as trees and 
  * summed-area tables.
+ *
+ * \section overview Overview Presentation
  * 
+ * A brief set of slides that describe the features, design principles,
+ * applications and impact of CUDPP is available here:
+ * <a href="http://cudpp.googlecode.com/svn/trunk/cudpp/doc/CUDPP_slides.pdf">CUDPP Presentation</a>.
+ *
  * \section homepage Homepage
  * Homepage for CUDPP: http://www.gpgpu.org/developer/cudpp/
  * 
@@ -375,14 +381,14 @@ enum CUDPPOperator
 */
 enum CUDPPAlgorithm
 {
-    CUDPP_SCAN,
-    CUDPP_SEGMENTED_SCAN,
-    CUDPP_COMPACT,
-    CUDPP_REDUCE,
-    CUDPP_SORT_RADIX,        
-    CUDPP_SPMVMULT,          /**< Sparse matrix-dense vector multiplication */
-    CUDPP_RAND_MD5,          /**< Pseudo Random Number Generator using MD5 hash algorithm*/
-    CUDPP_ALGORITHM_INVALID, /**< Placeholder at end of enum */
+    CUDPP_SCAN,              //!< Scan or prefix-sum
+    CUDPP_SEGMENTED_SCAN,    //!< Segmented scan
+    CUDPP_COMPACT,           //!< Stream compact
+    CUDPP_REDUCE,            //!< Parallel reduction (NOTE: currently unimplemented)
+    CUDPP_SORT_RADIX,        //!< Radix sort
+    CUDPP_SPMVMULT,          //!< Sparse matrix-dense vector multiplication
+    CUDPP_RAND_MD5,          //!< PseudoRandom Number Generator using MD5 hash algorithm
+    CUDPP_ALGORITHM_INVALID, //!< Placeholder at end of enum
 };
 
 /**

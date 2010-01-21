@@ -40,6 +40,8 @@
 #include <vector>
 #include <iostream>
 #include <algorithm>
+#include <cstdlib>
+#include <cstring>
 #include <math.h>
 
 // includes, cuda
