@@ -43,6 +43,16 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 
 <h1><a class="anchor" id="changelog">CUDPP Change Log </a></h1><div class="fragment"><pre class="fragment">CUDPP Change Log
 
+Release: 1.1.1 (Bugfix release)
+DATE HERE
+- Fix scan, segmented scan, and radix sort correctness on upcoming Fermi architecture (proper use of <span class="stringliteral">&quot;volatile&quot;</span> keyword)
+- Fix emulation mode radix sort of very small arrays
+- Minor efficiency improvement to radix sort test in cudpp_testrig
+- Fixed incorrect identity <span class="keywordflow">for</span> min <span class="keyword">operator</span>
+- Fixes <span class="keywordflow">for</span> unix builds
+- Bibliography updates
+- Minor documentation fixes
+
 Release: 1.1
 1 July 2009
 - Switched to pure BSD license.
@@ -97,7 +107,7 @@ Release: 1.1
 </iframe>
 </div>
 
-<hr size="1"/><address style="text-align: right;"><small>Generated on Thu Nov 19 15:47:17 2009 for CUDPP by&nbsp;
+<hr size="1"/><address style="text-align: right;"><small>Generated on Thu Jan 21 11:52:57 2010 for CUDPP by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.6.1 </small></address>
 </body>

@@ -87,9 +87,6 @@ Here is a list of all documented class members with links to the class documenta
 <li>CUDPPPlan()
 : <a class="el" href="class_c_u_d_p_p_plan.html#a4e8fe74981db775756ff5b26819c4d81">CUDPPPlan</a>
 </li>
-<li>CUDPPRadixSortPlan()
-: <a class="el" href="class_c_u_d_p_p_radix_sort_plan.html#a7e22dad9103ab2871bee560acd54e4e3">CUDPPRadixSortPlan</a>
-</li>
 <li>CUDPPRandPlan()
 : <a class="el" href="class_c_u_d_p_p_rand_plan.html#a6c7ae85f59cc36a2daf4b7399a77f60f">CUDPPRandPlan</a>
 </li>
@@ -156,21 +153,12 @@ Here is a list of all documented class members with links to the class documenta
 <li>m_blockIndices
 : <a class="el" href="class_c_u_d_p_p_segmented_scan_plan.html#a06c4dd4c1d4b7e2ad2779a205509358c">CUDPPSegmentedScanPlan</a>
 </li>
-<li>m_blockOffsets
-: <a class="el" href="class_c_u_d_p_p_radix_sort_plan.html#af16c7a661aaf713e5043144db33584ea">CUDPPRadixSortPlan</a>
-</li>
 <li>m_blockSums
-: <a class="el" href="class_c_u_d_p_p_scan_plan.html#adc77e0650b6b79ec6d39cd401040bc8c">CUDPPScanPlan</a>
-, <a class="el" href="class_c_u_d_p_p_segmented_scan_plan.html#a4f2e61fd5159477548f36172ef3329e6">CUDPPSegmentedScanPlan</a>
+: <a class="el" href="class_c_u_d_p_p_segmented_scan_plan.html#a4f2e61fd5159477548f36172ef3329e6">CUDPPSegmentedScanPlan</a>
+, <a class="el" href="class_c_u_d_p_p_scan_plan.html#adc77e0650b6b79ec6d39cd401040bc8c">CUDPPScanPlan</a>
 </li>
 <li>m_config
 : <a class="el" href="class_c_u_d_p_p_plan.html#aaf1dbf736de9a486d5f48ddc52a3727d">CUDPPPlan</a>
-</li>
-<li>m_counters
-: <a class="el" href="class_c_u_d_p_p_radix_sort_plan.html#a6993cab30434a939e762de7839040a67">CUDPPRadixSortPlan</a>
-</li>
-<li>m_countersSum
-: <a class="el" href="class_c_u_d_p_p_radix_sort_plan.html#a6e8cba1b916fbd90b58bd1c0532183b8">CUDPPRadixSortPlan</a>
 </li>
 <li>m_d_A
 : <a class="el" href="class_c_u_d_p_p_sparse_matrix_vector_multiply_plan.html#ab1a9f132ac3f74ac7f8d8d234df7a1ff">CUDPPSparseMatrixVectorMultiplyPlan</a>
@@ -224,8 +212,7 @@ Here is a list of all documented class members with links to the class documenta
 : <a class="el" href="class_c_u_d_p_p_scan_plan.html#ae429ce6e21f51c73d32cf8e087890208">CUDPPScanPlan</a>
 </li>
 <li>m_scanPlan
-: <a class="el" href="class_c_u_d_p_p_radix_sort_plan.html#a06d794404700c1cf23a709d3106f76a4">CUDPPRadixSortPlan</a>
-, <a class="el" href="class_c_u_d_p_p_compact_plan.html#a3b27289988791c41f9bac0ba6ac63800">CUDPPCompactPlan</a>
+: <a class="el" href="class_c_u_d_p_p_compact_plan.html#a3b27289988791c41f9bac0ba6ac63800">CUDPPCompactPlan</a>
 </li>
 <li>m_seed
 : <a class="el" href="class_c_u_d_p_p_rand_plan.html#a7639c62ccc32db85c1adb5c4c1dc0a98">CUDPPRandPlan</a>
@@ -233,21 +220,15 @@ Here is a list of all documented class members with links to the class documenta
 <li>m_segmentedScanPlan
 : <a class="el" href="class_c_u_d_p_p_sparse_matrix_vector_multiply_plan.html#a2099fe0993b208a1f204f31fa4c9481a">CUDPPSparseMatrixVectorMultiplyPlan</a>
 </li>
-<li>m_tempKeys
-: <a class="el" href="class_c_u_d_p_p_radix_sort_plan.html#ae81cbab379b017f180422724bcd03694">CUDPPRadixSortPlan</a>
-</li>
-<li>m_tempValues
-: <a class="el" href="class_c_u_d_p_p_radix_sort_plan.html#a04f9137424e0487cb1c9357cd06eeaa4">CUDPPRadixSortPlan</a>
-</li>
 </ul>
 
 
 <h3><a class="anchor" id="index_o">- o -</a></h3><ul>
 <li>op
 : <a class="el" href="struct_c_u_d_p_p_configuration.html#a78a6e0a90e97b79be8850ae3dff7819e">CUDPPConfiguration</a>
-, <a class="el" href="class_scan_traits.html#ac31ec265e47aee4ff6173bce9d47abf2">ScanTraits&lt; T, oper, backward, exclusive, multiRow, sums, fullBlock &gt;</a>
-, <a class="el" href="class_operator.html#aa33b94ed706913e58dca03f2cf8c8a6f">Operator&lt; T, oper &gt;</a>
-, <a class="el" href="class_segmented_scan_traits.html#a17fade9e34b3d6fd80bf83383d65ece4">SegmentedScanTraits&lt; T, oper, backward, exclusivity, doShiftFlags, fullBlock, sums, sm12OrBetter &gt;</a>
+, <a class="el" href="class_scan_traits.html#ae7f08a2d9d6836a9289a4510c1e98331">ScanTraits&lt; T, oper, backward, exclusive, multiRow, sums, fullBlock &gt;</a>
+, <a class="el" href="class_operator.html#aa7660f593eaf8f2ce576fd40b53a8896">Operator&lt; T, oper &gt;</a>
+, <a class="el" href="class_segmented_scan_traits.html#ab2cb3fada4d32e8934643fabde26ce93">SegmentedScanTraits&lt; T, oper, backward, exclusivity, doShiftFlags, fullBlock, sums, sm12OrBetter &gt;</a>
 </li>
 <li>options
 : <a class="el" href="struct_c_u_d_p_p_configuration.html#a32140ada5ca87b081d1cd42d29a18c11">CUDPPConfiguration</a>
@@ -306,7 +287,7 @@ Here is a list of all documented class members with links to the class documenta
 </iframe>
 </div>
 
-<hr size="1"/><address style="text-align: right;"><small>Generated on Thu Nov 19 15:47:17 2009 for CUDPP by&nbsp;
+<hr size="1"/><address style="text-align: right;"><small>Generated on Thu Jan 21 11:52:57 2010 for CUDPP by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.6.1 </small></address>
 </body>

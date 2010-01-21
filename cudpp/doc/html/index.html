@@ -39,9 +39,12 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   </div>
 </div>
 <div class="contents">
-<h1>CUDPP Documentation</h1><h3>1.1 </h3><h2><a class="anchor" id="introduction">
+<h1>CUDPP Documentation</h1><h3>1.1.1 </h3><h2><a class="anchor" id="introduction">
 Introduction</a></h2>
 <p>CUDPP is the CUDA Data Parallel Primitives Library. CUDPP is a library of data-parallel algorithm primitives such as parallel-prefix-sum ("scan"), parallel sort and parallel reduction. Primitives such as these are important building blocks for a wide variety of data-parallel algorithms, including sorting, stream compaction, and building data structures such as trees and summed-area tables.</p>
+<h2><a class="anchor" id="overview">
+Overview Presentation</a></h2>
+<p>A brief set of slides that describe the features, design principles, applications and impact of CUDPP is available here: <a href="http://cudpp.googlecode.com/svn/trunk/cudpp/doc/CUDPP_slides.pdf">CUDPP Presentation</a>.</p>
 <h2><a class="anchor" id="homepage">
 Homepage</a></h2>
 <p>Homepage for CUDPP: <a href="http://www.gpgpu.org/developer/cudpp/">http://www.gpgpu.org/developer/cudpp/</a></p>
@@ -65,9 +68,9 @@ Release Notes</a></h2>
 <p>For specific release details see the <a class="el" href="changelog.html">Change Log</a>.</p>
 <h2><a class="anchor" id="opSys">
 Operating System Support</a></h2>
-<p>This release (1.1) has been thoroughly tested on the following OSes.</p>
+<p>This release (1.1.1) has been thoroughly tested on the following OSes.</p>
 <ul>
-<li>Windows XP (32-bit) (CUDA 2.2)</li>
+<li>Windows XP (32-bit) (CUDA 2.2, 3.0)</li>
 <li>Windows Vista (32-bit) (CUDA 2.2)</li>
 <li>Redhat Enterprise Linux 5 (64-bit) (CUDA 2.2)</li>
 <li>Ubuntu Linux 8.04 (32-bit and 64-bit) (CUDA 2.2)</li>
@@ -77,7 +80,7 @@ Operating System Support</a></h2>
 <p>Note: CUDPP is not compatible with CUDA 2.1. A compiler bug in 2.1 causes the compiler to crash.</p>
 <h2><a class="anchor" id="cuda">
 CUDA</a></h2>
-<p>CUDPP is implemented in <a href="http://developer.nvidia.com/cuda">C for CUDA</a>. It requires the CUDA Toolkit version 2.2 or later. Please see the NVIDIA <a href="http://developer.nvidia.com/cuda">CUDA</a> homepage to download CUDA as well as the CUDA Programming Guide and CUDA SDK, which includes many CUDA code examples. Two of the samples in the CUDA SDK ("marchingCubes" and "lineOfSight") also use CUDPP.</p>
+<p>CUDPP is implemented in <a href="http://developer.nvidia.com/cuda">CUDA C/C++</a>. It requires the CUDA Toolkit version 2.2 or later. Please see the NVIDIA <a href="http://developer.nvidia.com/cuda">CUDA</a> homepage to download CUDA as well as the CUDA Programming Guide and CUDA SDK, which includes many CUDA code examples. Two of the samples in the CUDA SDK ("marchingCubes" and "lineOfSight") also use CUDPP.</p>
 <h2><a class="anchor" id="design-goals">
 Design Goals</a></h2>
 <p>Design goals for CUDPP include:</p>
@@ -166,7 +169,7 @@ CUDPP Copyright and Software License</a></h2>
 </iframe>
 </div>
 
-<hr size="1"/><address style="text-align: right;"><small>Generated on Thu Nov 19 15:47:17 2009 for CUDPP by&nbsp;
+<hr size="1"/><address style="text-align: right;"><small>Generated on Thu Jan 21 11:52:56 2010 for CUDPP by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.6.1 </small></address>
 </body>

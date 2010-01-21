@@ -80,8 +80,8 @@
  * 
  * \section opSys Operating System Support
  * 
- * This release (1.1) has been thoroughly tested on the following OSes.
- * - Windows XP (32-bit) (CUDA 2.2)
+ * This release (1.1.1) has been thoroughly tested on the following OSes.
+ * - Windows XP (32-bit) (CUDA 2.2, 3.0)
  * - Windows Vista (32-bit) (CUDA 2.2)
  * - Redhat Enterprise Linux 5 (64-bit) (CUDA 2.2)
  * - Ubuntu Linux 8.04 (32-bit and 64-bit) (CUDA 2.2)
@@ -95,7 +95,7 @@
  *
  * \section cuda CUDA
  * CUDPP is implemented in
- * <a href="http://developer.nvidia.com/cuda">C for CUDA</a>. It requires the 
+ * <a href="http://developer.nvidia.com/cuda">CUDA C/C++</a>. It requires the 
  * CUDA Toolkit version 2.2 or later.  Please see the NVIDIA 
  * <a href="http://developer.nvidia.com/cuda">CUDA</a> homepage to download 
  * CUDA as well as the CUDA Programming Guide and CUDA SDK, which includes many 

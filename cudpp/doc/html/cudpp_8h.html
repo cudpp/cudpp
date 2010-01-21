@@ -92,9 +92,17 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
  }</td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight"><p>Operators supported by CUDPP algorithms (currently scan and segmented scan). </p>
  <a href="cudpp_8h.html#afbc449e0243beebf799175ba0633a386">More...</a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">enum &nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="cudpp_8h.html#a6499e5c26f56db82f520367ae853462f">CUDPPAlgorithm</a> { , <a class="el" href="cudpp_8h.html#a6499e5c26f56db82f520367ae853462fac187df604b1942f1406e4fabd563985a">CUDPP_SPMVMULT</a>, 
+<tr><td class="memItemLeft" align="right" valign="top">enum &nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="cudpp_8h.html#a6499e5c26f56db82f520367ae853462f">CUDPPAlgorithm</a> { <br/>
+&nbsp;&nbsp;<a class="el" href="cudpp_8h.html#a6499e5c26f56db82f520367ae853462fa82cf703e248569c24544c3792048e06f">CUDPP_SCAN</a>, 
+<a class="el" href="cudpp_8h.html#a6499e5c26f56db82f520367ae853462fa1a53919c245c4f4f29711c39e510bf49">CUDPP_SEGMENTED_SCAN</a>, 
+<a class="el" href="cudpp_8h.html#a6499e5c26f56db82f520367ae853462faa4d8e485eac9f83ace5e7fdd3c059e8f">CUDPP_COMPACT</a>, 
+<a class="el" href="cudpp_8h.html#a6499e5c26f56db82f520367ae853462fa5b473bede212c7e863d2b682d72a3ea0">CUDPP_REDUCE</a>, 
+<br/>
+&nbsp;&nbsp;<a class="el" href="cudpp_8h.html#a6499e5c26f56db82f520367ae853462fa24e588c95a4e957137f5b2a0600019c3">CUDPP_SORT_RADIX</a>, 
+<a class="el" href="cudpp_8h.html#a6499e5c26f56db82f520367ae853462fac187df604b1942f1406e4fabd563985a">CUDPP_SPMVMULT</a>, 
 <a class="el" href="cudpp_8h.html#a6499e5c26f56db82f520367ae853462fa223458cbd6681433df11e569dbe2deaf">CUDPP_RAND_MD5</a>, 
 <a class="el" href="cudpp_8h.html#a6499e5c26f56db82f520367ae853462fa07b612137fce2b8a000a703209e8073d">CUDPP_ALGORITHM_INVALID</a>
+<br/>
  }</td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight"><p>Algorithms supported by CUDPP. Used to create appropriate plans using cudppPlan. </p>
  <a href="cudpp_8h.html#a6499e5c26f56db82f520367ae853462f">More...</a><br/></td></tr>
@@ -284,14 +292,29 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <p>Algorithms supported by CUDPP. Used to create appropriate plans using cudppPlan. </p>
 <dl class="see"><dt><b>See also:</b></dt><dd><a class="el" href="struct_c_u_d_p_p_configuration.html" title="Configuration struct used to specify algorithm, datatype, operator, and options when...">CUDPPConfiguration</a>, <a class="el" href="group__public_interface.html#ga0d39e7c3e14963c7cc3df3b879362c25" title="Create a CUDPP plan.">cudppPlan</a> </dd></dl>
 <dl><dt><b>Enumerator: </b></dt><dd><table border="0" cellspacing="2" cellpadding="0">
+<tr><td valign="top"><em><a class="anchor" id="a6499e5c26f56db82f520367ae853462fa82cf703e248569c24544c3792048e06f"></a><!-- doxytag: member="CUDPP_SCAN" ref="a6499e5c26f56db82f520367ae853462fa82cf703e248569c24544c3792048e06f" args="" -->CUDPP_SCAN</em>&nbsp;</td><td>
+<p>Scan or prefix-sum. </p>
+</td></tr>
+<tr><td valign="top"><em><a class="anchor" id="a6499e5c26f56db82f520367ae853462fa1a53919c245c4f4f29711c39e510bf49"></a><!-- doxytag: member="CUDPP_SEGMENTED_SCAN" ref="a6499e5c26f56db82f520367ae853462fa1a53919c245c4f4f29711c39e510bf49" args="" -->CUDPP_SEGMENTED_SCAN</em>&nbsp;</td><td>
+<p>Segmented scan. </p>
+</td></tr>
+<tr><td valign="top"><em><a class="anchor" id="a6499e5c26f56db82f520367ae853462faa4d8e485eac9f83ace5e7fdd3c059e8f"></a><!-- doxytag: member="CUDPP_COMPACT" ref="a6499e5c26f56db82f520367ae853462faa4d8e485eac9f83ace5e7fdd3c059e8f" args="" -->CUDPP_COMPACT</em>&nbsp;</td><td>
+<p>Stream compact. </p>
+</td></tr>
+<tr><td valign="top"><em><a class="anchor" id="a6499e5c26f56db82f520367ae853462fa5b473bede212c7e863d2b682d72a3ea0"></a><!-- doxytag: member="CUDPP_REDUCE" ref="a6499e5c26f56db82f520367ae853462fa5b473bede212c7e863d2b682d72a3ea0" args="" -->CUDPP_REDUCE</em>&nbsp;</td><td>
+<p>Parallel reduction (NOTE: currently unimplemented). </p>
+</td></tr>
+<tr><td valign="top"><em><a class="anchor" id="a6499e5c26f56db82f520367ae853462fa24e588c95a4e957137f5b2a0600019c3"></a><!-- doxytag: member="CUDPP_SORT_RADIX" ref="a6499e5c26f56db82f520367ae853462fa24e588c95a4e957137f5b2a0600019c3" args="" -->CUDPP_SORT_RADIX</em>&nbsp;</td><td>
+<p>Radix sort. </p>
+</td></tr>
 <tr><td valign="top"><em><a class="anchor" id="a6499e5c26f56db82f520367ae853462fac187df604b1942f1406e4fabd563985a"></a><!-- doxytag: member="CUDPP_SPMVMULT" ref="a6499e5c26f56db82f520367ae853462fac187df604b1942f1406e4fabd563985a" args="" -->CUDPP_SPMVMULT</em>&nbsp;</td><td>
-<p>Sparse matrix-dense vector multiplication </p>
+<p>Sparse matrix-dense vector multiplication. </p>
 </td></tr>
 <tr><td valign="top"><em><a class="anchor" id="a6499e5c26f56db82f520367ae853462fa223458cbd6681433df11e569dbe2deaf"></a><!-- doxytag: member="CUDPP_RAND_MD5" ref="a6499e5c26f56db82f520367ae853462fa223458cbd6681433df11e569dbe2deaf" args="" -->CUDPP_RAND_MD5</em>&nbsp;</td><td>
-<p>Pseudo Random Number Generator using MD5 hash algorithm </p>
+<p>PseudoRandom Number Generator using MD5 hash algorithm. </p>
 </td></tr>
 <tr><td valign="top"><em><a class="anchor" id="a6499e5c26f56db82f520367ae853462fa07b612137fce2b8a000a703209e8073d"></a><!-- doxytag: member="CUDPP_ALGORITHM_INVALID" ref="a6499e5c26f56db82f520367ae853462fa07b612137fce2b8a000a703209e8073d" args="" -->CUDPP_ALGORITHM_INVALID</em>&nbsp;</td><td>
-<p>Placeholder at end of enum </p>
+<p>Placeholder at end of enum. </p>
 </td></tr>
 </table>
 </dd>
@@ -314,7 +337,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </iframe>
 </div>
 
-<hr size="1"/><address style="text-align: right;"><small>Generated on Thu Nov 19 15:47:17 2009 for CUDPP by&nbsp;
+<hr size="1"/><address style="text-align: right;"><small>Generated on Thu Jan 21 11:52:56 2010 for CUDPP by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.6.1 </small></address>
 </body>

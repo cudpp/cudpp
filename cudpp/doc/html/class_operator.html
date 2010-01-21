@@ -55,7 +55,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <p><a href="class_operator-members.html">List of all members.</a></p>
 <table border="0" cellpadding="0" cellspacing="0">
 <tr><td colspan="2"><h2>Static Public Member Functions</h2></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">static __device__ T&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operator.html#aa33b94ed706913e58dca03f2cf8c8a6f">op</a> (const T &amp;a, const T &amp;b)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">static __device__ T&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operator.html#aa7660f593eaf8f2ce576fd40b53a8896">op</a> (const T a, const T b)</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">static __device__ T&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operator.html#a9221551bfafc74c687d3fc42763c996f">identity</a> ()</td></tr>
 </table>
 <hr/><a name="_details"></a><h2>Detailed Description</h2>
@@ -63,9 +63,9 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
  class Operator&lt; T, oper &gt;</h3>
 
 <p>Templatized operator class used by scan and segmented scan. </p>
-<p>This <a class="el" href="class_operator.html" title="Templatized operator class used by scan and segmented scan.">Operator</a> class is used to allow generic support of binary associative operators in scan. It defines two member functions, <a class="el" href="class_operator.html#aa33b94ed706913e58dca03f2cf8c8a6f">op()</a> and <a class="el" href="class_operator.html#a9221551bfafc74c687d3fc42763c996f">identity()</a>, that are used in place of + and 0 (for example) in the scan and segmented scan code. Because this is template code, all decisions in the code are made at compile time, resulting in optimal operator code. Currently the operators CUDPP_ADD, CUDPP_MULTIPLY, CUDPP_MIN, and CUDPP_MAX are supported. <a class="el" href="class_operator.html" title="Templatized operator class used by scan and segmented scan.">Operator</a> is implemented using template specialization for the types <code>int</code>, <code>unsigned</code> int, and <code>float</code>. </p>
+<p>This <a class="el" href="class_operator.html" title="Templatized operator class used by scan and segmented scan.">Operator</a> class is used to allow generic support of binary associative operators in scan. It defines two member functions, <a class="el" href="class_operator.html#aa7660f593eaf8f2ce576fd40b53a8896">op()</a> and <a class="el" href="class_operator.html#a9221551bfafc74c687d3fc42763c996f">identity()</a>, that are used in place of + and 0 (for example) in the scan and segmented scan code. Because this is template code, all decisions in the code are made at compile time, resulting in optimal operator code. Currently the operators CUDPP_ADD, CUDPP_MULTIPLY, CUDPP_MIN, and CUDPP_MAX are supported. <a class="el" href="class_operator.html" title="Templatized operator class used by scan and segmented scan.">Operator</a> is implemented using template specialization for the types <code>int</code>, <code>unsigned</code> int, and <code>float</code>. </p>
 <hr/><h2>Member Function Documentation</h2>
-<a class="anchor" id="aa33b94ed706913e58dca03f2cf8c8a6f"></a><!-- doxytag: member="Operator::op" ref="aa33b94ed706913e58dca03f2cf8c8a6f" args="(const T &amp;a, const T &amp;b)" -->
+<a class="anchor" id="aa7660f593eaf8f2ce576fd40b53a8896"></a><!-- doxytag: member="Operator::op" ref="aa7660f593eaf8f2ce576fd40b53a8896" args="(const T a, const T b)" -->
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
@@ -74,13 +74,13 @@ template&lt;typename T , CUDPPOperator oper&gt; </div>
         <tr>
           <td class="memname">static __device__ T <a class="el" href="class_operator.html">Operator</a>&lt; T, oper &gt;::op </td>
           <td>(</td>
-          <td class="paramtype">const T &amp;&nbsp;</td>
+          <td class="paramtype">const T&nbsp;</td>
           <td class="paramname"> <em>a</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const T &amp;&nbsp;</td>
+          <td class="paramtype">const T&nbsp;</td>
           <td class="paramname"> <em>b</em></td><td>&nbsp;</td>
         </tr>
         <tr>
@@ -141,7 +141,7 @@ template&lt;typename T , CUDPPOperator oper&gt; </div>
 </iframe>
 </div>
 
-<hr size="1"/><address style="text-align: right;"><small>Generated on Thu Nov 19 15:47:17 2009 for CUDPP by&nbsp;
+<hr size="1"/><address style="text-align: right;"><small>Generated on Thu Jan 21 11:52:57 2010 for CUDPP by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.6.1 </small></address>
 </body>

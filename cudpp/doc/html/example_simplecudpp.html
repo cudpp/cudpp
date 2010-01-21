@@ -86,7 +86,7 @@ CUDPP Plans</a></h3>
     <a class="code" href="struct_c_u_d_p_p_configuration.html" title="Configuration struct used to specify algorithm, datatype, operator, and options when...">CUDPPConfiguration</a> config;
     config.<a class="code" href="struct_c_u_d_p_p_configuration.html#a78a6e0a90e97b79be8850ae3dff7819e" title="The numerical operator to be applied.">op</a> = <a class="code" href="cudpp_8h.html#afbc449e0243beebf799175ba0633a386a2464c1df67b312f9b1461e0214ed5ade" title="Addition of two operands.">CUDPP_ADD</a>;
     config.<a class="code" href="struct_c_u_d_p_p_configuration.html#a8127968c4b5c05d22956e2baa41a664d" title="The datatype of the input arrays.">datatype</a> = <a class="code" href="cudpp_8h.html#a8d0edad02eb8303164acb8f4abca612dafe9aa2a2ea7725eb0ea758a8dbc54399" title="Float type (C float).">CUDPP_FLOAT</a>;
-    config.<a class="code" href="struct_c_u_d_p_p_configuration.html#a2d11e99b0c4a2b919c0bdb1c5001acfe" title="The algorithm to be used.">algorithm</a> = CUDPP_SCAN;
+    config.<a class="code" href="struct_c_u_d_p_p_configuration.html#a2d11e99b0c4a2b919c0bdb1c5001acfe" title="The algorithm to be used.">algorithm</a> = <a class="code" href="cudpp_8h.html#a6499e5c26f56db82f520367ae853462fa82cf703e248569c24544c3792048e06f" title="Scan or prefix-sum.">CUDPP_SCAN</a>;
     config.<a class="code" href="struct_c_u_d_p_p_configuration.html#a32140ada5ca87b081d1cd42d29a18c11" title="Options to configure the algorithm.">options</a> = <a class="code" href="cudpp_8h.html#afdaa492f807dd46b6b529a7f962d3576af3195c0a67325a796954c781372c7e13">CUDPP_OPTION_FORWARD</a> | <a class="code" href="cudpp_8h.html#afdaa492f807dd46b6b529a7f962d3576a65c9029495c4bda89f73435c221cc46b">CUDPP_OPTION_EXCLUSIVE</a>;
     
     CUDPPHandle scanplan = 0;
@@ -142,7 +142,7 @@ CUDPP Plans</a></h3>
 </iframe>
 </div>
 
-<hr size="1"/><address style="text-align: right;"><small>Generated on Thu Nov 19 15:47:17 2009 for CUDPP by&nbsp;
+<hr size="1"/><address style="text-align: right;"><small>Generated on Thu Jan 21 11:52:57 2010 for CUDPP by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.6.1 </small></address>
 </body>

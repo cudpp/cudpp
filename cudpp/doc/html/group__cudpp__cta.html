@@ -57,8 +57,8 @@ typedef unsigned int&nbsp;</td><td class="memItemRight" valign="bottom"><b>uint<
 <tr><td class="memTemplItemLeft" align="right" valign="top">__device__ uint&nbsp;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="group__cudpp__cta.html#ga3cf28e5904a54e10af2d1c3fea729a59">floatUnflip</a> (uint f)</td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Reverses bit-flip of single-precision floating-point number (parameterized by doFlip).  <a href="#ga3cf28e5904a54e10af2d1c3fea729a59"></a><br/></td></tr>
 <tr><td class="memTemplParams" colspan="2">template&lt;class T , int maxlevel&gt; </td></tr>
-<tr><td class="memTemplItemLeft" align="right" valign="top">__device__ T&nbsp;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="group__cudpp__cta.html#gad65926bbfd7939404fa697e7b23a2286">scanwarp</a> (T val, T *sData)</td></tr>
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Scans one warp quickly, optimized for 32-element warps, using shared memory.  <a href="#gad65926bbfd7939404fa697e7b23a2286"></a><br/></td></tr>
+<tr><td class="memTemplItemLeft" align="right" valign="top">__device__ T&nbsp;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="group__cudpp__cta.html#ga5328c4100b48f78b8ae2b11126ae241b">scanwarp</a> (T val, volatile T *sData)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Scans one warp quickly, optimized for 32-element warps, using shared memory.  <a href="#ga5328c4100b48f78b8ae2b11126ae241b"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">__device__ uint4&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cudpp__cta.html#gabfa515588187af6524cbfd4d76fd16c5">scan4</a> (uint4 idata)</td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Scans 4*CTA_SIZE unsigned ints in a block.  <a href="#gabfa515588187af6524cbfd4d76fd16c5"></a><br/></td></tr>
 <tr><td class="memTemplParams" colspan="2">template&lt;int ctasize&gt; </td></tr>
@@ -126,9 +126,9 @@ typedef unsigned int&nbsp;</td><td class="memItemRight" valign="bottom"><b>uint<
 <tr><td class="memTemplParams" colspan="2">template&lt;class T , class traits &gt; </td></tr>
 <tr><td class="memTemplItemLeft" align="right" valign="top">__device__ void&nbsp;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="group__cudpp__cta.html#gab970a2f1d36591efe8376d8a1eaf2964">storeForSegmentedScanSharedChunkToMem4</a> (T *d_odata, T threadScan0[4], T threadScan1[4], unsigned int threadFlag, T *s_idata, unsigned int numElements, int oDataOffset, int ai, int bi, int aiDev, int biDev)</td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Handles storing result s_data from shared memory to global memory (vec4 version).  <a href="#gab970a2f1d36591efe8376d8a1eaf2964"></a><br/></td></tr>
-<tr><td class="memTemplParams" colspan="2"><a class="anchor" id="gade4eab4e53da4eb280fabcb4755d124b"></a><!-- doxytag: member="cudpp_cta::reduceCTA" ref="gade4eab4e53da4eb280fabcb4755d124b" args="(T *s_data)" -->
+<tr><td class="memTemplParams" colspan="2"><a class="anchor" id="ga8b51979d7cac3f974b17293ded017b04"></a><!-- doxytag: member="cudpp_cta::reduceCTA" ref="ga8b51979d7cac3f974b17293ded017b04" args="(volatile T *s_data)" -->
 template&lt;class T , class traits , unsigned int blockSize&gt; </td></tr>
-<tr><td class="memTemplItemLeft" align="right" valign="top">__device__ T&nbsp;</td><td class="memTemplItemRight" valign="bottom"><b>reduceCTA</b> (T *s_data)</td></tr>
+<tr><td class="memTemplItemLeft" align="right" valign="top">__device__ T&nbsp;</td><td class="memTemplItemRight" valign="bottom"><b>reduceCTA</b> (volatile T *s_data)</td></tr>
 <tr><td class="memTemplParams" colspan="2"><a class="anchor" id="gac76cb191574c4814932e7eaa832332f4"></a><!-- doxytag: member="cudpp_cta::warpSegScan" ref="gac76cb191574c4814932e7eaa832332f4" args="(T val, unsigned int flag, volatile T *s_data, volatile unsigned int *s_flags, T &amp;oVal, unsigned int &amp;oFlag)" -->
 template&lt;class T , class traits , bool isExclusive, unsigned int maxlevel&gt; </td></tr>
 <tr><td class="memTemplItemLeft" align="right" valign="top">__device__ void&nbsp;</td><td class="memTemplItemRight" valign="bottom"><b>warpSegScan</b> (T val, unsigned int flag, volatile T *s_data, volatile unsigned int *s_flags, T &amp;oVal, unsigned int &amp;oFlag)</td></tr>
@@ -218,7 +218,7 @@ template&lt;bool doFlip&gt; </div>
 
 </div>
 </div>
-<a class="anchor" id="gad65926bbfd7939404fa697e7b23a2286"></a><!-- doxytag: member="radixsort_cta.cu::scanwarp" ref="gad65926bbfd7939404fa697e7b23a2286" args="(T val, T *sData)" -->
+<a class="anchor" id="ga5328c4100b48f78b8ae2b11126ae241b"></a><!-- doxytag: member="radixsort_cta.cu::scanwarp" ref="ga5328c4100b48f78b8ae2b11126ae241b" args="(T val, volatile T *sData)" -->
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
@@ -233,7 +233,7 @@ template&lt;class T , int maxlevel&gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">T *&nbsp;</td>
+          <td class="paramtype">volatile T *&nbsp;</td>
           <td class="paramname"> <em>sData</em></td><td>&nbsp;</td>
         </tr>
         <tr>
@@ -1587,7 +1587,7 @@ template&lt;class T , class traits &gt; </div>
 </iframe>
 </div>
 
-<hr size="1"/><address style="text-align: right;"><small>Generated on Thu Nov 19 15:47:17 2009 for CUDPP by&nbsp;
+<hr size="1"/><address style="text-align: right;"><small>Generated on Thu Jan 21 11:52:57 2010 for CUDPP by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.6.1 </small></address>
 </body>

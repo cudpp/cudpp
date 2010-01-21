@@ -66,9 +66,9 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <tr><td class="memTemplParams" colspan="2">template&lt;class T , class traits &gt; </td></tr>
 <tr><td class="memTemplItemLeft" align="right" valign="top">__device__ void&nbsp;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="group__cudpp__cta.html#gab970a2f1d36591efe8376d8a1eaf2964">storeForSegmentedScanSharedChunkToMem4</a> (T *d_odata, T threadScan0[4], T threadScan1[4], unsigned int threadFlag, T *s_idata, unsigned int numElements, int oDataOffset, int ai, int bi, int aiDev, int biDev)</td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Handles storing result s_data from shared memory to global memory (vec4 version).  <a href="group__cudpp__cta.html#gab970a2f1d36591efe8376d8a1eaf2964"></a><br/></td></tr>
-<tr><td class="memTemplParams" colspan="2"><a class="anchor" id="gade4eab4e53da4eb280fabcb4755d124b"></a><!-- doxytag: member="segmented_scan_cta.cu::reduceCTA" ref="gade4eab4e53da4eb280fabcb4755d124b" args="(T *s_data)" -->
+<tr><td class="memTemplParams" colspan="2"><a class="anchor" id="ga8b51979d7cac3f974b17293ded017b04"></a><!-- doxytag: member="segmented_scan_cta.cu::reduceCTA" ref="ga8b51979d7cac3f974b17293ded017b04" args="(volatile T *s_data)" -->
 template&lt;class T , class traits , unsigned int blockSize&gt; </td></tr>
-<tr><td class="memTemplItemLeft" align="right" valign="top">__device__ T&nbsp;</td><td class="memTemplItemRight" valign="bottom"><b>reduceCTA</b> (T *s_data)</td></tr>
+<tr><td class="memTemplItemLeft" align="right" valign="top">__device__ T&nbsp;</td><td class="memTemplItemRight" valign="bottom"><b>reduceCTA</b> (volatile T *s_data)</td></tr>
 <tr><td class="memTemplParams" colspan="2"><a class="anchor" id="gac76cb191574c4814932e7eaa832332f4"></a><!-- doxytag: member="segmented_scan_cta.cu::warpSegScan" ref="gac76cb191574c4814932e7eaa832332f4" args="(T val, unsigned int flag, volatile T *s_data, volatile unsigned int *s_flags, T &amp;oVal, unsigned int &amp;oFlag)" -->
 template&lt;class T , class traits , bool isExclusive, unsigned int maxlevel&gt; </td></tr>
 <tr><td class="memTemplItemLeft" align="right" valign="top">__device__ void&nbsp;</td><td class="memTemplItemRight" valign="bottom"><b>warpSegScan</b> (T val, unsigned int flag, volatile T *s_data, volatile unsigned int *s_flags, T &amp;oVal, unsigned int &amp;oFlag)</td></tr>
@@ -97,7 +97,7 @@ template&lt;class T , class traits &gt; </td></tr>
 </iframe>
 </div>
 
-<hr size="1"/><address style="text-align: right;"><small>Generated on Thu Nov 19 15:47:17 2009 for CUDPP by&nbsp;
+<hr size="1"/><address style="text-align: right;"><small>Generated on Thu Jan 21 11:52:56 2010 for CUDPP by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.6.1 </small></address>
 </body>
