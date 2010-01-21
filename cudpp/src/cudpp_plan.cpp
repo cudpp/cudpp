@@ -397,11 +397,13 @@ CUDPPCompactPlan::~CUDPPCompactPlan()
 */
 CUDPPReducePlan::CUDPPReducePlan(CUDPPManager *mgr,
                                  CUDPPConfiguration config, 
+                                 CUDPPTune tuneConfig,
                                  size_t numElements)
 : CUDPPPlan(mgr, config, numElements, 1, 0),
   m_threadsPerBlock(REDUCE_CTA_SIZE),
   m_maxBlocks(64)
 {
+    tuneConfig.tune = false;
     allocReduceStorage(this);
 }
 

@@ -220,4 +220,11 @@ public:
 
     unsigned int m_seed; //!< @internal the seed for the random number generator
 };
+
+class CUDPPReducePlan : public CUDPPPlan
+{
+public:
+    CUDPPReducePlan(CUDPPManager *mgr, CUDPPConfiguration config, CUDPPTuneReduce tuneConfig, size_t num_elements);
+    
+};
 #endif // __CUDPP_PLAN_H__

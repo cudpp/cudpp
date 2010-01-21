@@ -471,6 +471,31 @@ CUDPPResult cudppRandSeed(const CUDPPHandle planHandle,
     return CUDPP_SUCCESS;
 }//end cudppRandSeed
 
+CUDPP_DLL
+CUDPPResult cudppReduce(const CUDPPHandle planHandle, 
+                         int  *d_in,
+                         int  *d_out,
+                         int  nElements,
+                         bool tune)
+{
+    CUDPPReducePlan * plan = 
+        (CUDPPReducePlan *) getPlanPtrFromHandle<CUDPPRandPlan>(planHandle);
+
+    //switch on the plan to figure out which seed to update
+    switch(plan->m_config.algorithm)
+    {
+    case CUDPP_REDUCE:
+        CUDPPTuneReduce tuneConfig;
+        tuneConfig.tuneEnabled = tune;
+        cudppReduceDispatch(d_out, d_in, nElements, plan);
+        break;
+    default:
+        break;
+    }
+
+    return CUDPP_SUCCESS;
+}//end cudppReduce
+
 /** @} */ // end Algorithm Interface
 /** @} */ // end of publicInterface group
 
