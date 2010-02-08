@@ -50,6 +50,7 @@ int testRadixSort(int argc, const char ** argv, const CUDPPConfiguration *config
 int testSparseMatrixVectorMultiply(int argc, const char ** argv);
 int testRandMD5(int argc, const char ** argv);
 int testReduce(int argc, const char ** argv, const CUDPPConfiguration *config);
+int testTridiagonal(int argc, const char** argv);
 
 /**
  * main in cudpp_testrig is a dispatch routine to exercise cudpp functionality. 
@@ -376,6 +377,11 @@ int main(int argc, const char** argv)
     {
         //in the future we need to add so that it tests other random numbers as well
         retval += testRandMD5(argc, argv);
+    }
+
+    if (testAll ||(CUTTrue == cutCheckCmdLineFlag(argc, argv, "tridiagonal")))
+    {
+        retval += testTridiagonal(argc, argv);
     }
 
     if (retval)

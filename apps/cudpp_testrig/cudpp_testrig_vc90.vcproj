@@ -421,6 +421,10 @@
 				RelativePath=".\test_spmvmult.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\test_tridiagonal.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -445,6 +449,10 @@
 			</File>
 			<File
 				RelativePath=".\sparse.h"
+				>
+			</File>
+			<File
+				RelativePath=".\tridiagonal_gold.h"
 				>
 			</File>
 		</Filter>
