@@ -66,9 +66,21 @@ void cudppTridiagonalDispatch(void *a, void *b, void *c, void *d, void *x, int s
     }
     else
     {
-        printf("hellow, just a test");
+        switch(plan->m_config.algorithm)
+        {
+            case CUDPP_TRIDIAGONAL_CR:
+                cyclic_small_systems<double>((double *)a, (double *)b, (double *)c, (double *)d, (double *)x, system_size, num_systems);
+                break;
+            case CUDPP_TRIDIAGONAL_PCR:
+                pcr_small_systems<double>((double *)a, (double *)b, (double *)c, (double *)d, (double *)x, system_size, num_systems);
+                break;
+            case CUDPP_TRIDIAGONAL_CRPCR:
+                crpcr_small_systems<double>((double *)a, (double *)b, (double *)c, (double *)d, (double *)x, system_size, num_systems);
+                break;
+            default:
+                break;
+        }
     }
-
 }
 
 #ifdef __cplusplus
