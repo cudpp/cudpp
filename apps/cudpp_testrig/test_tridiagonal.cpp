@@ -36,6 +36,8 @@ int testTridiagonal(int argc, const char** argv)
     CUDPPConfiguration config;
     config.datatype = CUDPP_FLOAT;
     typedef float T;
+    //config.datatype = CUDPP_DOUBLE;
+    //typedef double T;
     config.algorithm = CUDPP_TRIDIAGONAL_CRPCR;
     config.options = 0;
 
@@ -55,7 +57,7 @@ int testTridiagonal(int argc, const char** argv)
         exit(-1);
     }
 
-    int num_systems = 3;
+    int num_systems = 512;
     int system_size = 512;
     const unsigned int mem_size = sizeof(T)*num_systems*system_size;
 
@@ -71,10 +73,31 @@ int testTridiagonal(int argc, const char** argv)
         test_gen(&a[i*system_size],&b[i*system_size],&c[i*system_size],&d[i*system_size],&x1[i*system_size],system_size);
     }
 
-    serial_small_systems<T>(a,b,c,d,x2,system_size,num_systems);
-    //cudppTridiagonal(tridiagonalPlan, a, b, c, d, x2, system_size, num_systems);
+    unsigned int timer1, timer2;
 
-    file_write_small_systems<T>(x2,min(10,num_systems),system_size,"gpu_result12.txt");
+    CUT_SAFE_CALL(cutCreateTimer(&timer2));
+    cutStartTimer(timer2);
+    cudppTridiagonal(tridiagonalPlan, a, b, c, d, x2, system_size, num_systems);
+    cutStopTimer(timer2);
+    printf("num_systems: %d, system_size: %d, GPU execution time: %f ms\n", num_systems, system_size, cutGetTimerValue(timer2));
+
+    CUT_SAFE_CALL(cutCreateTimer(&timer1));
+    cutStartTimer(timer1);
+    serial_small_systems<T>(a,b,c,d,x1,system_size,num_systems);
+    cutStopTimer(timer1);
+    printf("num_systems: %d, system_size: %d, CPU execution time: %f ms\n", num_systems, system_size, cutGetTimerValue(timer1));
+
+    file_write_small_systems<T>(x1,num_systems,system_size,"cpu_result.txt");
+    file_write_small_systems<T>(x2,num_systems,system_size,"gpu_result.txt");
+
+    CUTBoolean tridiagonal_result;
+
+    for (int i = 0; i < num_systems; i++)
+    {
+        CUTBoolean tridiagonal_result = cutCompareL2fe(&x2[i*system_size], &x1[i*system_size], system_size, 0.0001f);
+        retval += (CUTTrue == tridiagonal_result) ? 0 : 1;
+        printf("i = %d, tridiagonal test %s\n", i, (CUTTrue == tridiagonal_result) ? "PASSED" : "FAILED");
+    }
 
     free(a);
     free(b);

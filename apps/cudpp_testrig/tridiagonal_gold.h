@@ -65,10 +65,10 @@ void test_gen(T *a,T *b,T *c,T *d,T *x,int system_size)
     //generate a diagonally dominated matrix
     for (int j = 0; j < system_size; j++)
     {
-        T ratio = rand01<T>();
+        T ratio = 1 ; //rand01<T>();
         b[j] = rand01<T>();
-        a[j] = b[j]*ratio*T(0.5);
-        c[j] = b[j]*(1-ratio)*T(0.5);
+        a[j] = b[j]*ratio*T(0.4);
+        c[j] = b[j]*ratio*T(0.6);
         d[j] = rand01<T>();
         x[j] = 0;
     }      
@@ -82,7 +82,6 @@ void file_write_small_systems(T *x,int num_systems,int system_size, char *file_n
 {
     ofstream myfile;
     myfile.open (file_name);
-    myfile << "Writing this to a file.\n";
     for(int i=0;i<num_systems*system_size;i++)
     {
         if (i%system_size==0)
