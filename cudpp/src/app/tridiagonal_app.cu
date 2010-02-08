@@ -47,20 +47,27 @@ extern "C"
 void cudppTridiagonalDispatch(void *a, void *b, void *c, void *d, void *x, int system_size, int num_systems, const CUDPPTridiagonalPlan * plan)
 {
     //switch to figure out which algorithm to run
-    switch(plan->m_config.algorithm)
+    if (plan->m_config.datatype == CUDPP_FLOAT)
     {
-    case CUDPP_TRIDIAGONAL_CR:
-        cyclic_small_systems<float>((float *)a, (float *)b, (float *)c, (float *)d, (float *)x, system_size, num_systems);
-        break;
-    case CUDPP_TRIDIAGONAL_PCR:
-        pcr_small_systems<float>((float *)a, (float *)b, (float *)c, (float *)d, (float *)x, system_size, num_systems);
-        break;
-    case CUDPP_TRIDIAGONAL_CRPCR:
-        crpcr_small_systems<float>((float *)a, (float *)b, (float *)c, (float *)d, (float *)x, system_size, num_systems);
-        break;
-    default:
-        break;
-    }//end switch
+        switch(plan->m_config.algorithm)
+        {
+            case CUDPP_TRIDIAGONAL_CR:
+                cyclic_small_systems<float>((float *)a, (float *)b, (float *)c, (float *)d, (float *)x, system_size, num_systems);
+                break;
+            case CUDPP_TRIDIAGONAL_PCR:
+                pcr_small_systems<float>((float *)a, (float *)b, (float *)c, (float *)d, (float *)x, system_size, num_systems);
+                break;
+            case CUDPP_TRIDIAGONAL_CRPCR:
+                crpcr_small_systems<float>((float *)a, (float *)b, (float *)c, (float *)d, (float *)x, system_size, num_systems);
+                break;
+            default:
+                break;
+        }
+    }
+    else
+    {
+        printf("hellow, just a test");
+    }
 
 }
 
