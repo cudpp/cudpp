@@ -18,6 +18,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <limits>
 
 #include <iostream>
 #include <fstream>
@@ -65,11 +66,10 @@ void test_gen(T *a,T *b,T *c,T *d,T *x,int system_size)
     //generate a diagonally dominated matrix
     for (int j = 0; j < system_size; j++)
     {
-        T ratio = 1 ; //rand01<T>();
-        b[j] = rand01<T>();
-        a[j] = b[j]*ratio*T(0.4);
-        c[j] = b[j]*ratio*T(0.6);
-        d[j] = rand01<T>();
+        b[j] = 8 + rand01<T>();
+        a[j] = 3 + rand01<T>();
+        c[j] = 2 + rand01<T>();
+        d[j] = 5 + rand01<T>();
         x[j] = 0;
     }      
     a[0] = 0;
@@ -89,4 +89,42 @@ void file_write_small_systems(T *x,int num_systems,int system_size, char *file_n
         myfile << x[i] << "\n";
     }
     myfile.close();
+}
+
+template <class T>
+T compare(T *x1, T *x2, int num_elements)
+{
+    T mean = 0;//mean error
+    T root = 0;//root mean square error
+    T max = 0; //max error
+
+    for (int i = 0; i < num_elements; i++)
+    {
+        root += (x1[i] - x2[i]) * (x1[i] - x2[i]);
+        mean += fabs(x1[i] - x2[i]);
+        if(fabs(x1[i] - x2[i]) > max) max = fabs(x1[i] - x2[i]);
+    }
+    mean /= num_elements;
+    root /= num_elements;
+    root = sqrt(root); 
+
+    return root;
+}
+
+template <class T>
+int compare_small_systems(T *x1,T *x2, int system_size, int num_systems, const T epsilon)
+{
+    int retval = 0;
+
+    for (int i = 0; i < num_systems; i++)
+    {
+        T diff = compare<T>(&x1[i*system_size],&x2[i*system_size],system_size);
+        if(diff > epsilon || diff != diff) //if diff is QNAN/NAN, diff != diff will return true
+        {
+            cout<<"test failed, error is larger than " << epsilon << "\n";
+            retval++;
+        }
+    }
+
+    return retval;
 }

@@ -38,7 +38,7 @@ int testTridiagonal(int argc, const char** argv)
     typedef float T;
     //config.datatype = CUDPP_DOUBLE;
     //typedef double T;
-    config.algorithm = CUDPP_TRIDIAGONAL_CRPCR;
+    config.algorithm = CUDPP_TRIDIAGONAL_CR;
     config.options = 0;
 
     CUDPPHandle theCudpp;
@@ -87,17 +87,10 @@ int testTridiagonal(int argc, const char** argv)
     cutStopTimer(timer1);
     printf("num_systems: %d, system_size: %d, CPU execution time: %f ms\n", num_systems, system_size, cutGetTimerValue(timer1));
 
-    file_write_small_systems<T>(x1,num_systems,system_size,"cpu_result.txt");
-    file_write_small_systems<T>(x2,num_systems,system_size,"gpu_result.txt");
+    //file_write_small_systems<T>(x1,num_systems,system_size,"cpu_result.txt");
+    //file_write_small_systems<T>(x2,num_systems,system_size,"gpu_result.txt");
 
-    CUTBoolean tridiagonal_result;
-
-    for (int i = 0; i < num_systems; i++)
-    {
-        CUTBoolean tridiagonal_result = cutCompareL2fe(&x2[i*system_size], &x1[i*system_size], system_size, 0.0001f);
-        retval += (CUTTrue == tridiagonal_result) ? 0 : 1;
-        printf("i = %d, tridiagonal test %s\n", i, (CUTTrue == tridiagonal_result) ? "PASSED" : "FAILED");
-    }
+    retval = compare_small_systems<T>(x1,x2,system_size,num_systems,0.001f);
 
     free(a);
     free(b);
@@ -108,4 +101,3 @@ int testTridiagonal(int argc, const char** argv)
 
     return retval;
 }
-
