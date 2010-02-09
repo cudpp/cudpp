@@ -174,7 +174,7 @@ __global__ void pcr_small_systems_kernel_branch_free(T *a_d, T *b_d, T *c_d, T *
         x[addr2] = (d[addr2]*b[addr1]-d[addr1]*a[addr2])/tmp3;
     }
 
-    __syncthreads();    
+    __syncthreads();
 
     x_d[thid + blid * system_size] = x[thid];
 }

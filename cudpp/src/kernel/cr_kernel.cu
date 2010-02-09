@@ -25,7 +25,7 @@
 template <class T>
 __global__ void cyclic_small_systems_kernel(T *a_d, T *b_d, T *c_d, T *d_d, T *x_d)
 {
-    int thid = threadIdx.x;	
+    int thid = threadIdx.x;
     int blid = blockIdx.x;
 
     int stride = 1;
@@ -76,7 +76,7 @@ __global__ void cyclic_small_systems_kernel(T *a_d, T *b_d, T *c_d, T *d_d, T *x
                 b[i] = b[i] - c[i-delta] * tmp;
                 d[i] = d[i] - d[i-delta] * tmp;
                 a[i] = -a[i-delta] * tmp;
-                c[i] = 0;			
+                c[i] = 0;
             }
             else
             {
@@ -118,7 +118,7 @@ __global__ void cyclic_small_systems_kernel(T *a_d, T *b_d, T *c_d, T *d_d, T *x
          thid_num *= 2;
       }
 
-    __syncthreads();    
+    __syncthreads();
 
     x_d[thid + blid * system_size] = x[thid];
     x_d[thid + blockDim.x + blid * system_size] = x[thid + blockDim.x];

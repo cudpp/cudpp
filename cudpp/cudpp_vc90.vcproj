@@ -1442,7 +1442,7 @@
 					>
 					<Tool
 						Name="CUDA Build Rule"
-						ExtraNvccOptions="-m32 –gencode=arch=compute_20,code=sm_20 –gencode=arch=compute_10,code=sm_10"
+						ExtraNvccOptions="-m32 –gencode=arch=compute_10,code=sm_10"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1662,6 +1662,14 @@
 						Name="CUDA Build Rule"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\src\kernel\crpcr_kernel.cu"
@@ -1674,12 +1682,28 @@
 						Name="CUDA Build Rule"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\src\kernel\pcr_kernel.cu"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1704,7 +1728,7 @@
 					>
 					<Tool
 						Name="CUDA Build Rule"
-						ExtraNvccOptions="-m32 –gencode=arch=compute_20,code=sm_20 –gencode=arch=compute_10,code=sm_10"
+						ExtraNvccOptions="-m32 –gencode=arch=compute_10,code=sm_10"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1923,7 +1947,7 @@
 					>
 					<Tool
 						Name="CUDA Build Rule"
-						ExtraNvccOptions="-m32 –gencode=arch=compute_20,code=sm_20 –gencode=arch=compute_10,code=sm_10"
+						ExtraNvccOptions="-m32 –gencode=arch=compute_10,code=sm_10"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -2140,7 +2164,7 @@
 					<Tool
 						Name="CUDA Build Rule"
 						PtxAsOptionV="true"
-						ExtraNvccOptions="-m32 -gencode=arch=compute_10,code=sm_10 -gencode=arch=compute_13,code=sm_13  -gencode=arch=compute_20,code=sm_20"
+						ExtraNvccOptions="-m32 –gencode=arch=compute_10,code=sm_10"
 					/>
 				</FileConfiguration>
 			</File>
@@ -2230,7 +2254,7 @@
 					>
 					<Tool
 						Name="CUDA Build Rule"
-						ExtraNvccOptions="-m32 –gencode=arch=compute_20,code=sm_20 –gencode=arch=compute_10,code=sm_10"
+						ExtraNvccOptions="-m32 –gencode=arch=compute_10,code=sm_10"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -2639,7 +2663,7 @@
 					>
 					<Tool
 						Name="CUDA Build Rule"
-						ExtraNvccOptions="-m32 –gencode=arch=compute_20,code=sm_20 –gencode=arch=compute_10,code=sm_10"
+						ExtraNvccOptions="-m32 –gencode=arch=compute_10,code=sm_10"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -2900,7 +2924,7 @@
 					>
 					<Tool
 						Name="CUDA Build Rule"
-						ExtraNvccOptions="-m32 –gencode=arch=compute_20,code=sm_20 –gencode=arch=compute_10,code=sm_10"
+						ExtraNvccOptions="-m32 –gencode=arch=compute_10,code=sm_10"
 					/>
 				</FileConfiguration>
 				<FileConfiguration

@@ -299,10 +299,10 @@ __global__ void crpcr_small_systems_kernel_branch_free(T *a_d, T *b_d, T *c_d, T
             bb[i] = bNew;
             dd[i] = dNew;
             aa[i] = aNew;
-            cc[i] = cNew;	
-    
+            cc[i] = cNew;
+
             delta *=2;
-            __syncthreads();    
+            __syncthreads();
         }
 
         if (thid < delta)
@@ -316,7 +316,7 @@ __global__ void crpcr_small_systems_kernel_branch_free(T *a_d, T *b_d, T *c_d, T
         __syncthreads(); 
         x[thid*stride+stride-1]=xx[thid];
     }
-  
+
     //backward substitution
     thid_num = rest_system_size;
     
@@ -336,7 +336,7 @@ __global__ void crpcr_small_systems_kernel_branch_free(T *a_d, T *b_d, T *c_d, T
         thid_num *= 2;
     }
 
-    __syncthreads();    
+    __syncthreads();
 
     x_d[thid + blid * system_size] = x[thid];
     x_d[thid + blockDim.x + blid * system_size] = x[thid + blockDim.x];
