@@ -114,7 +114,7 @@ __global__ void crpcr_small_systems_kernel(T *a_d, T *b_d, T *c_d, T *d_d, T *x_
                 bNew = bb[i] - aa[i+delta] * tmp2;
                 dNew = dd[i] - dd[i+delta] * tmp2;
                 aNew = 0;
-                cNew = -cc[i+delta] * tmp2;	
+                cNew = -cc[i+delta] * tmp2;
             }
             else if((rest_system_size-i-1) < delta)
             {

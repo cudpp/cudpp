@@ -110,7 +110,7 @@ __global__ void pcr_small_systems_kernel(T *a_d, T *b_d, T *c_d, T *d_d, T *x_d)
 template <class T>
 __global__ void pcr_small_systems_kernel_branch_free(T *a_d, T *b_d, T *c_d, T *d_d, T *x_d)
 {
-    int thid = threadIdx.x;	
+    int thid = threadIdx.x;
     int blid = blockIdx.x;
     int delta = 1;
     const unsigned int system_size = blockDim.x;

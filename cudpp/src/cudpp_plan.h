@@ -118,7 +118,6 @@ class CUDPPRadixSortPlan : public CUDPPPlan
 public:
     CUDPPRadixSortPlan(CUDPPManager *mgr, CUDPPConfiguration config, size_t numElements);
     virtual ~CUDPPRadixSortPlan();
-	
     bool           m_bKeysOnly;
     bool           m_bManualCoalesce;
     unsigned int   m_persistentCTAThreshold[2];
