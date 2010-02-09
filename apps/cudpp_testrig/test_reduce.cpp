@@ -207,7 +207,7 @@ int reduceTest(int argc, const char **argv, const CUDPPConfiguration &config, te
     result = cudppDestroyPlan(plan);
 
     if (result != CUDPP_SUCCESS)
-    {	
+    {
         printf("Error destroying CUDPPPlan for Scan\n");
         retval = numTests;
     }
@@ -215,7 +215,7 @@ int reduceTest(int argc, const char **argv, const CUDPPConfiguration &config, te
     result = cudppDestroy(theCudpp);
 
     if (result != CUDPP_SUCCESS)
-    {	
+    {
         printf("Error shutting down CUDPP Library.\n");
         retval = numTests;
     }

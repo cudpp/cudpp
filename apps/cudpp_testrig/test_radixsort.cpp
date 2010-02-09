@@ -32,21 +32,21 @@ int radixSortTest(CUDPPHandle theCudpp, CUDPPHandle plan, CUDPPConfiguration con
 
     h_keys       = (T*)malloc(numElements*sizeof(T));
     h_keysSorted = (T*)malloc(numElements*sizeof(T));
-    h_values     = 0;			
+    h_values     = 0;
     h_valuesSorted = 0;
 
 
-    if (config.options & CUDPP_OPTION_KEY_VALUE_PAIRS)	    
+    if (config.options & CUDPP_OPTION_KEY_VALUE_PAIRS)
     {
         h_values       = (unsigned int*)malloc(numElements*sizeof(unsigned int));
         h_valuesSorted = (unsigned int*)malloc(numElements*sizeof(unsigned int));
 
-        for(unsigned int i=0; i < numElements; ++i)   			
-            h_values[i] = i; 		
-    }																	
+        for(unsigned int i=0; i < numElements; ++i)
+            h_values[i] = i;
+    }
 
     // Fill up with some random data   
-    VectorSupport<T>::fillVector(h_keys, numElements, keybits, (T)(1 << keybits));		
+    VectorSupport<T>::fillVector(h_keys, numElements, keybits, (T)(1 << keybits));
 
     CUDA_SAFE_CALL(cudaMalloc((void **)&d_keys, numElements*sizeof(T)));
     if (config.options & CUDPP_OPTION_KEY_VALUE_PAIRS)
@@ -62,7 +62,7 @@ int radixSortTest(CUDPPHandle theCudpp, CUDPPHandle plan, CUDPPConfiguration con
     for (unsigned int k = 0; k < numTests; ++k)
     {
         if(numTests == 1)
-            tests[0] = numElements;			  			
+            tests[0] = numElements;
 
         if(!quiet)
             printf("Running a sort of %d %s\n", tests[k], outString);        
@@ -82,7 +82,7 @@ int radixSortTest(CUDPPHandle theCudpp, CUDPPHandle plan, CUDPPConfiguration con
 
             CUDA_SAFE_CALL( cudaEventRecord(start_event, 0) );
 
-            cudppSort(plan, d_keys, (void*)d_values, keybits, tests[k]);            			 
+            cudppSort(plan, d_keys, (void*)d_values, keybits, tests[k]);
 
             CUDA_SAFE_CALL( cudaEventRecord(stop_event, 0) );
             CUDA_SAFE_CALL( cudaEventSynchronize(stop_event) );
@@ -100,16 +100,16 @@ int radixSortTest(CUDPPHandle theCudpp, CUDPPHandle plan, CUDPPConfiguration con
         {
             CUDA_SAFE_CALL( cudaMemcpy((void*)h_valuesSorted, 
                                        (void*)d_values, 
-                                       tests[k] * sizeof(unsigned int), 
+                                       tests[k] * sizeof(unsigned int),
                                        cudaMemcpyDeviceToHost) );
         }
         else
-            h_values = 0;	        
+            h_values = 0;
 
         retval += VectorSupport<T>::verifySort(h_keysSorted, h_valuesSorted, h_keys, tests[k]);
 
         if(!quiet)
-        {			  
+        {
             printf("%s test %s\n", testOptions.runMode, (retval == 0) ? "PASSED" : "FAILED");
             printf("Average execution time: %f ms\n", totalTime / testOptions.numIterations);
         }
@@ -127,7 +127,7 @@ int radixSortTest(CUDPPHandle theCudpp, CUDPPHandle plan, CUDPPConfiguration con
     if (config.options & CUDPP_OPTION_KEY_VALUE_PAIRS)
         cudaFree(d_values);
     free(h_keys);
-    free(h_values);	
+    free(h_values);
 
     return retval;
 }
@@ -162,7 +162,7 @@ int testRadixSort(int argc, const char **argv, const CUDPPConfiguration *configP
     config.algorithm = CUDPP_SORT_RADIX;
     config.datatype = CUDPP_UINT;
     config.options = CUDPP_OPTION_KEY_VALUE_PAIRS;
-	
+
     if(configPtr != NULL)
     {
         config = *configPtr;
@@ -188,9 +188,9 @@ int testRadixSort(int argc, const char **argv, const CUDPPConfiguration *configP
         exit(1);
     }
 
-    bool keysOnly = (cutCheckCmdLineFlag(argc, (const char**)argv, "keysonly") == CUTTrue);	
+    bool keysOnly = (cutCheckCmdLineFlag(argc, (const char**)argv, "keysonly") == CUTTrue);
     bool keyValue = (cutCheckCmdLineFlag(argc, (const char**)argv, "keyval") == CUTTrue);
-    quiet = (cutCheckCmdLineFlag(argc, (const char**)argv, "quiet") == CUTTrue);	
+    quiet = (cutCheckCmdLineFlag(argc, (const char**)argv, "quiet") == CUTTrue);
     
     if( cutCheckCmdLineFlag(argc, (const char**)argv, "float") )
     {     
@@ -205,7 +205,7 @@ int testRadixSort(int argc, const char **argv, const CUDPPConfiguration *configP
     {
         keysOnly = true;        
         config.options = CUDPP_OPTION_KEYS_ONLY;
-    }	
+    }
     else 
     {
         keysOnly = false;
@@ -215,7 +215,7 @@ int testRadixSort(int argc, const char **argv, const CUDPPConfiguration *configP
     if( cutGetCmdLineArgumenti( argc, (const char**)argv, "n", &cmdVal) )
     { 
         numElements = cmdVal;
-        numTests = 1;                		
+        numTests = 1;
     }
     if( cutGetCmdLineArgumenti( argc, (const char**)argv, "keybits", &cmdVal) )
     {
@@ -236,7 +236,7 @@ int testRadixSort(int argc, const char **argv, const CUDPPConfiguration *configP
     }
 
     CUDPPHandle plan;   
-    result = cudppPlan(theCudpp, &plan, config, numElements, 1, 0);	
+    result = cudppPlan(theCudpp, &plan, config, numElements, 1, 0);
 
     if(result != CUDPP_SUCCESS)
     {
@@ -252,7 +252,7 @@ int testRadixSort(int argc, const char **argv, const CUDPPConfiguration *configP
     case CUDPP_UINT:
         retval = radixSortTest<unsigned int>(theCudpp, plan, config, test, numTests, numElements, keybits, testOptions, quiet);
         break;
-    case CUDPP_FLOAT:	
+    case CUDPP_FLOAT:
         retval = radixSortTest<float>(theCudpp, plan, config, test, numTests, numElements, keybits, testOptions, quiet);
         break;
     }
@@ -260,7 +260,7 @@ int testRadixSort(int argc, const char **argv, const CUDPPConfiguration *configP
     result = cudppDestroyPlan(plan);
     
     if (result != CUDPP_SUCCESS)
-    {	
+    {
         printf("Error destroying CUDPPPlan for Scan\n");
         retval = numTests;
     }
@@ -268,10 +268,10 @@ int testRadixSort(int argc, const char **argv, const CUDPPConfiguration *configP
     result = cudppDestroy(theCudpp);
 
     if (result != CUDPP_SUCCESS)
-    {	
+    {
         printf("Error shutting down CUDPP Library.\n");
         retval = numTests;
     }
-        	          
+
     return retval;
 }

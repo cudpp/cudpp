@@ -404,7 +404,7 @@ int testSegmentedScan(int argc, const char **argv, const CUDPPConfiguration *con
             config.op = CUDPP_MIN;
         }
 
-		if (CUTTrue == cutCheckCmdLineFlag(argc, argv, "backward"))
+        if (CUTTrue == cutCheckCmdLineFlag(argc, argv, "backward"))
         {
             direction = CUDPP_OPTION_BACKWARD;
         }
@@ -527,7 +527,7 @@ int testSegmentedScan(int argc, const char **argv, const CUDPPConfiguration *con
             // printf("Setting flag at pos %d\n", idx);
             i_flags[idx] = 1;
         }
-		// i_flags[5]=1;
+        // i_flags[5]=1;
         // Copy flags to GPU
         CUDA_SAFE_CALL( cudaMemcpy(d_iflags, i_flags, 
                                    sizeof(unsigned int) * test[k],
@@ -550,7 +550,7 @@ int testSegmentedScan(int argc, const char **argv, const CUDPPConfiguration *con
             break;
         }
 
-		if (!quiet)
+        if (!quiet)
         {
             printf("Running a%s%s %s-segmented scan of %d elements\n",               
                    (config.options & CUDPP_OPTION_BACKWARD) ? " backward" : "",
@@ -620,11 +620,11 @@ int testSegmentedScan(int argc, const char **argv, const CUDPPConfiguration *con
         {
             for (unsigned int i = 0; i < test[k]; ++i)
             {
-				if (reference[i] != o_data[i]) printf("%d %f %f\n", i, o_data[i], reference[i]);
+                if (reference[i] != o_data[i]) printf("%d %f %f\n", i, o_data[i], reference[i]);
                 // printf("%f %f\n", reference[i], o_data[i]);
             }
             // printf("\n");
-			// for (unsigned int i = 0; i < test[k]; ++i)
+            // for (unsigned int i = 0; i < test[k]; ++i)
             // {
             //    printf("%f ", reference[i]);
             //}

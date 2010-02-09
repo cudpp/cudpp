@@ -126,13 +126,13 @@ int VectorSupport<unsigned int>::verifySort(unsigned int *keysSorted, unsigned i
     int retval = 0;
 
     for(unsigned int i=0; i<len-1; ++i)
-    {	   
+    {
         if( (keysSorted[i])>(keysSorted[i+1]) )
         {
             printf("Unordered key[%u]:%u > key[%u]:%u\n", i, keysSorted[i], i+1, keysSorted[i+1]);
             retval = 1;
             break;
-        }		
+        }
     }
 
     if (valuesSorted)
@@ -159,13 +159,13 @@ int VectorSupport<float>::verifySort(float *keysSorted, unsigned int *valuesSort
     int retval = 0;
 
     for(unsigned int i=0; i<len-1; ++i)
-    {	   
+    {
         if( (keysSorted[i])>(keysSorted[i+1]) )
         {
             printf("Unordered key[%u]:%f > key[%u]:%f\n", i, keysSorted[i], i+1, keysSorted[i+1]);
             retval = 1;
             break;
-        }		
+        }
     }
 
     if (valuesSorted)

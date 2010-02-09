@@ -125,7 +125,7 @@ void II(uint4 * td, int i, uint4 * Ir, float p, unsigned int * data)
 
 
 void setupInput(unsigned int * input, unsigned int seed, dim3 threadIdx, dim3 blockIdx, dim3 blockDim)
-{	
+{
     //loop unroll, also do this more intelligently
     input[0] = threadIdx.x ^ seed;
     input[1] = threadIdx.y ^ seed;
@@ -149,7 +149,7 @@ void gen_randMD5CPU(uint4 *d_out, size_t numElements, unsigned int seed,dim3 thr
 {
     unsigned int idx = blockIdx.x*blockDim.x + threadIdx.x;
     unsigned int data[16];
-    setupInput(data, seed, threadIdx, blockIdx, blockDim);	//meaning we fix this at the same time
+    setupInput(data, seed, threadIdx, blockIdx, blockDim);//meaning we fix this at the same time
     
     unsigned int h0 = 0x67452301;
     unsigned int h1 = 0xEFCDAB89;
@@ -164,7 +164,7 @@ void gen_randMD5CPU(uint4 *d_out, size_t numElements, unsigned int seed,dim3 thr
     uint4 Fr = { 7,12,17,22 };
     uint4 Gr = { 5,9,14,20 };
     uint4 Hr = { 4,11,16,23 };
-    uint4 Ir = { 6,10,15,21 };	
+    uint4 Ir = { 6,10,15,21 };
     
     //for optimization, this is loop unrolled
     FF(&td, 0, &Fr,p,data);
