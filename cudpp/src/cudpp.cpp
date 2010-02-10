@@ -473,13 +473,13 @@ CUDPPResult cudppRandSeed(const CUDPPHandle planHandle,
 }//end cudppRandSeed
 
 CUDPP_DLL
-CUDPPResult cudppTridiagonal(CUDPPHandle planHandle, void *a, void *b, void *c, void *d, void *x, int system_size, int num_systems)
+CUDPPResult cudppTridiagonal(CUDPPHandle planHandle, void *a, void *b, void *c, void *d, void *x, int systemSize, int numSystems)
 {
     CUDPPTridiagonalPlan * plan = (CUDPPTridiagonalPlan *) getPlanPtrFromHandle<CUDPPTridiagonalPlan>(planHandle);
     if(plan != NULL)
     {
         //dispatch the tridiagonal solver here
-        cudppTridiagonalDispatch(a, b, c, d, x, system_size, num_systems, plan);
+        cudppTridiagonalDispatch(a, b, c, d, x, systemSize, numSystems, plan);
         return CUDPP_SUCCESS;
     }
     else

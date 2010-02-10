@@ -23,7 +23,7 @@
 #include "cudpp_plan.h"
 
 extern "C"
-void cudppTridiagonalDispatch(void *a, void *b, void *c, void *d, void *x, int system_size, int num_systems, const CUDPPTridiagonalPlan * plan);
+void cudppTridiagonalDispatch(void *a, void *b, void *c, void *d, void *x, int systemSize, int numSystems, const CUDPPTridiagonalPlan * plan);
 
 #endif //__CUDPP_TRIDIAGONAL_H__
 

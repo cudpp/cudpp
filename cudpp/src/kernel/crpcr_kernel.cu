@@ -23,48 +23,48 @@
  */
 
 template <class T>
-__global__ void crpcr_small_systems_kernel(T *a_d, T *b_d, T *c_d, T *d_d, T *x_d)
+__global__ void crpcrKernel(T *a_d, T *b_d, T *c_d, T *d_d, T *x_d)
 {
     int thid = threadIdx.x;
     int blid = blockIdx.x;
     int stride = 1;
-    int thid_num = blockDim.x;
-    const unsigned int system_size = blockDim.x * 2;
-    int Iteration = (int)log2(T(system_size/2));
-    int rest_system_size = system_size/2;
-    int restIteration = (int)log2(T(rest_system_size/2));
+    int numThreads = blockDim.x;
+    const unsigned int systemSize = blockDim.x * 2;
+    int iteration = (int)log2(T(systemSize/2));
+    int restSystemSize = systemSize/2;
+    int restIteration = (int)log2(T(restSystemSize/2));
 
     __syncthreads();
 
     extern __shared__ char shared[];
     T* a = (T*)shared;
-    T* b = (T*)&a[system_size+1];
-    T* c = (T*)&b[system_size+1];
-    T* d = (T*)&c[system_size+1];
-    T* x = (T*)&d[system_size+1];
+    T* b = (T*)&a[systemSize+1];
+    T* c = (T*)&b[systemSize+1];
+    T* d = (T*)&c[systemSize+1];
+    T* x = (T*)&d[systemSize+1];
 
-    a[thid] = a_d[thid + blid * system_size];
-    a[thid + blockDim.x] = a_d[thid + blockDim.x + blid * system_size];
+    a[thid] = a_d[thid + blid * systemSize];
+    a[thid + blockDim.x] = a_d[thid + blockDim.x + blid * systemSize];
 
-    b[thid] = b_d[thid + blid * system_size];
-    b[thid + blockDim.x] = b_d[thid + blockDim.x + blid * system_size];
+    b[thid] = b_d[thid + blid * systemSize];
+    b[thid + blockDim.x] = b_d[thid + blockDim.x + blid * systemSize];
 
-    c[thid] = c_d[thid + blid * system_size];
-    c[thid + blockDim.x] = c_d[thid + blockDim.x + blid * system_size];
+    c[thid] = c_d[thid + blid * systemSize];
+    c[thid + blockDim.x] = c_d[thid + blockDim.x + blid * systemSize];
 
-    d[thid] = d_d[thid + blid * system_size];
-    d[thid + blockDim.x] = d_d[thid + blockDim.x + blid * system_size];
+    d[thid] = d_d[thid + blid * systemSize];
+    d[thid + blockDim.x] = d_d[thid + blockDim.x + blid * systemSize];
 
     __syncthreads();
 
-    for (int j = 0; j <(Iteration-restIteration); j++)
+    for (int j = 0; j <(iteration-restIteration); j++)
     {
         stride *= 2;
         int delta = stride/2;
-        if (thid < thid_num)
+        if (thid < numThreads)
         {
             int i = stride * thid + stride - 1;
-            if(i == system_size - 1)
+            if(i == systemSize - 1)
             {
                 T tmp = a[i] / b[i-delta];
                  b[i] = b[i] - c[i-delta] * tmp;
@@ -82,17 +82,17 @@ __global__ void crpcr_small_systems_kernel(T *a_d, T *b_d, T *c_d, T *d_d, T *x_
                 c[i] = -c[i+delta] * tmp2;
             }
         }
-        thid_num /= 2;
+        numThreads /= 2;
         __syncthreads();    
     }
     
-    T* aa = (T*)&x[system_size+1];
-    T* bb = (T*)&aa[rest_system_size];
-    T* cc = (T*)&bb[rest_system_size];
-    T* dd = (T*)&cc[rest_system_size];
-    T* xx = (T*)&dd[rest_system_size];
+    T* aa = (T*)&x[systemSize+1];
+    T* bb = (T*)&aa[restSystemSize];
+    T* cc = (T*)&bb[restSystemSize];
+    T* dd = (T*)&cc[restSystemSize];
+    T* xx = (T*)&dd[restSystemSize];
 
-    if(thid<rest_system_size)
+    if(thid<restSystemSize)
     {
         aa[thid] = a[thid*stride+stride-1];
         bb[thid] = b[thid*stride+stride-1];
@@ -116,7 +116,7 @@ __global__ void crpcr_small_systems_kernel(T *a_d, T *b_d, T *c_d, T *d_d, T *x_
                 aNew = 0;
                 cNew = -cc[i+delta] * tmp2;
             }
-            else if((rest_system_size-i-1) < delta)
+            else if((restSystemSize-i-1) < delta)
             {
                 T tmp = aa[i] / bb[i-delta];
                 bNew = bb[i] - cc[i-delta] * tmp;
@@ -156,13 +156,13 @@ __global__ void crpcr_small_systems_kernel(T *a_d, T *b_d, T *c_d, T *d_d, T *x_
     }
   
     //backward substitution
-    thid_num = rest_system_size;
+    numThreads = restSystemSize;
     
-    for (int j = 0; j <(Iteration-restIteration); j++)
+    for (int j = 0; j <(iteration-restIteration); j++)
     {
         int delta = stride/2;
         __syncthreads();
-        if (thid < thid_num)
+        if (thid < numThreads)
         {
             int i = stride * thid + stride/2 - 1;
             if(i == delta - 1)
@@ -171,64 +171,64 @@ __global__ void crpcr_small_systems_kernel(T *a_d, T *b_d, T *c_d, T *d_d, T *x_
             x[i] = (d[i] - a[i]*x[i-delta] - c[i]*x[i+delta])/b[i];
         }
         stride /= 2;
-        thid_num *= 2;
+        numThreads *= 2;
     }
 
     __syncthreads();    
 
-    x_d[thid + blid * system_size] = x[thid];
-    x_d[thid + blockDim.x + blid * system_size] = x[thid + blockDim.x];
+    x_d[thid + blid * systemSize] = x[thid];
+    x_d[thid + blockDim.x + blid * systemSize] = x[thid + blockDim.x];
 }
 
 template <class T>
-__global__ void crpcr_small_systems_kernel_branch_free(T *a_d, T *b_d, T *c_d, T *d_d, T *x_d)
+__global__ void crpcrKernelBranchFree(T *a_d, T *b_d, T *c_d, T *d_d, T *x_d)
 {
     int thid = threadIdx.x;
     int blid = blockIdx.x;
 
     int stride = 1;
 
-    int thid_num = blockDim.x;
+    int numThreads = blockDim.x;
 
-    const unsigned int system_size = blockDim.x * 2;
-    int Iteration = (int)log2(T(system_size/2));
-    int rest_system_size = system_size/2;
-    int restIteration = (int)log2(T(rest_system_size/2));
+    const unsigned int systemSize = blockDim.x * 2;
+    int iteration = (int)log2(T(systemSize/2));
+    int restSystemSize = systemSize/2;
+    int restIteration = (int)log2(T(restSystemSize/2));
 
     __syncthreads();
 
     extern __shared__ char shared[];
 
     T* a = (T*)shared;
-    T* b = (T*)&a[system_size+1];
-    T* c = (T*)&b[system_size+1];
-    T* d = (T*)&c[system_size+1];
-    T* x = (T*)&d[system_size+1];
+    T* b = (T*)&a[systemSize+1];
+    T* c = (T*)&b[systemSize+1];
+    T* d = (T*)&c[systemSize+1];
+    T* x = (T*)&d[systemSize+1];
 
-    a[thid] = a_d[thid + blid * system_size];
-    a[thid + blockDim.x] = a_d[thid + blockDim.x + blid * system_size];
+    a[thid] = a_d[thid + blid * systemSize];
+    a[thid + blockDim.x] = a_d[thid + blockDim.x + blid * systemSize];
 
-    b[thid] = b_d[thid + blid * system_size];
-    b[thid + blockDim.x] = b_d[thid + blockDim.x + blid * system_size];
+    b[thid] = b_d[thid + blid * systemSize];
+    b[thid + blockDim.x] = b_d[thid + blockDim.x + blid * systemSize];
 
-    c[thid] = c_d[thid + blid * system_size];
-    c[thid + blockDim.x] = c_d[thid + blockDim.x + blid * system_size];
+    c[thid] = c_d[thid + blid * systemSize];
+    c[thid + blockDim.x] = c_d[thid + blockDim.x + blid * systemSize];
 
-    d[thid] = d_d[thid + blid * system_size];
-    d[thid + blockDim.x] = d_d[thid + blockDim.x + blid * system_size];
+    d[thid] = d_d[thid + blid * systemSize];
+    d[thid + blockDim.x] = d_d[thid + blockDim.x + blid * systemSize];
 
 
     __syncthreads();
 
-    for (int j = 0; j <(Iteration-restIteration); j++)
+    for (int j = 0; j <(iteration-restIteration); j++)
     {
         stride *= 2;
         int delta = stride/2;
-        if (thid < thid_num)
+        if (thid < numThreads)
         { 
             int i = stride * thid + stride - 1;
             int iRight = i+delta;
-            iRight = iRight%system_size;
+            iRight = iRight%systemSize;
 
             T tmp1 = a[i] / b[i-delta];
             T tmp2 = c[i] / b[iRight];
@@ -240,17 +240,17 @@ __global__ void crpcr_small_systems_kernel_branch_free(T *a_d, T *b_d, T *c_d, T
             c[i] = -c[iRight]  * tmp2;
         }
 
-        thid_num /= 2;
+        numThreads /= 2;
         __syncthreads();    
     }
 
-    T* aa = (T*)&x[system_size+1];
-    T* bb = (T*)&aa[rest_system_size];
-    T* cc = (T*)&bb[rest_system_size];
-    T* dd = (T*)&cc[rest_system_size];
-    T* xx = (T*)&dd[rest_system_size];
+    T* aa = (T*)&x[systemSize+1];
+    T* bb = (T*)&aa[restSystemSize];
+    T* cc = (T*)&bb[restSystemSize];
+    T* dd = (T*)&cc[restSystemSize];
+    T* xx = (T*)&dd[restSystemSize];
   
-    if(thid<rest_system_size)
+    if(thid<restSystemSize)
     {
         aa[thid] = a[thid*stride+stride-1];
         bb[thid] = b[thid*stride+stride-1];
@@ -276,7 +276,7 @@ __global__ void crpcr_small_systems_kernel_branch_free(T *a_d, T *b_d, T *c_d, T
             }
             else
             {
-            if((rest_system_size-i-1) < delta)
+            if((restSystemSize-i-1) < delta)
             {
                 T tmp = aa[i] / bb[i-delta];
                 bNew = bb[i] - cc[i-delta] * tmp;
@@ -318,13 +318,13 @@ __global__ void crpcr_small_systems_kernel_branch_free(T *a_d, T *b_d, T *c_d, T
     }
 
     //backward substitution
-    thid_num = rest_system_size;
+    numThreads = restSystemSize;
     
-    for (int j = 0; j <(Iteration-restIteration); j++)
+    for (int j = 0; j <(iteration-restIteration); j++)
     {
         int delta = stride/2;
         __syncthreads();
-        if (thid < thid_num)
+        if (thid < numThreads)
         {
             int i = stride * thid + stride/2 - 1;
             if(i == delta - 1)
@@ -333,58 +333,58 @@ __global__ void crpcr_small_systems_kernel_branch_free(T *a_d, T *b_d, T *c_d, T
             x[i] = (d[i] - a[i]*x[i-delta] - c[i]*x[i+delta])/b[i];
         }
         stride /= 2;
-        thid_num *= 2;
+        numThreads *= 2;
     }
 
     __syncthreads();
 
-    x_d[thid + blid * system_size] = x[thid];
-    x_d[thid + blockDim.x + blid * system_size] = x[thid + blockDim.x];
+    x_d[thid + blid * systemSize] = x[thid];
+    x_d[thid + blockDim.x + blid * systemSize] = x[thid + blockDim.x];
 }
 
 template <class T>
-void crpcr_small_systems(T *a, T *b, T *c, T *d, T *x, int system_size, int num_systems)
+void crpcr(T *a, T *b, T *c, T *d, T *x, int systemSize, int numSystems)
 {
-    const unsigned int num_threads_block = system_size/2;
-    int rest_system_size = system_size/2;
-    const unsigned int mem_size = sizeof(T)*num_systems*system_size;
+    const unsigned int num_threads_block = systemSize/2;
+    int restSystemSize = systemSize/2;
+    const unsigned int memSize = sizeof(T)*numSystems*systemSize;
 
     // allocate device memory input and output arrays
-    T* device_a;
-    T* device_b;
-    T* device_c;
-    T* device_d;
-    T* device_x;
+    T* d_a;
+    T* d_b;
+    T* d_c;
+    T* d_d;
+    T* d_x;
 
-    CUDA_SAFE_CALL( cudaMalloc( (void**) &device_a,mem_size));
-    CUDA_SAFE_CALL( cudaMalloc( (void**) &device_b,mem_size));
-    CUDA_SAFE_CALL( cudaMalloc( (void**) &device_c,mem_size));
-    CUDA_SAFE_CALL( cudaMalloc( (void**) &device_d,mem_size));
-    CUDA_SAFE_CALL( cudaMalloc( (void**) &device_x,mem_size));
+    CUDA_SAFE_CALL( cudaMalloc( (void**) &d_a,memSize));
+    CUDA_SAFE_CALL( cudaMalloc( (void**) &d_b,memSize));
+    CUDA_SAFE_CALL( cudaMalloc( (void**) &d_c,memSize));
+    CUDA_SAFE_CALL( cudaMalloc( (void**) &d_d,memSize));
+    CUDA_SAFE_CALL( cudaMalloc( (void**) &d_x,memSize));
 
     // copy host memory to device input array
-    CUDA_SAFE_CALL( cudaMemcpy( device_a, a,mem_size, cudaMemcpyHostToDevice));
-    CUDA_SAFE_CALL( cudaMemcpy( device_b, b,mem_size, cudaMemcpyHostToDevice));
-    CUDA_SAFE_CALL( cudaMemcpy( device_c, c,mem_size, cudaMemcpyHostToDevice));
-    CUDA_SAFE_CALL( cudaMemcpy( device_d, d,mem_size, cudaMemcpyHostToDevice));
-    CUDA_SAFE_CALL( cudaMemcpy( device_x, x,mem_size, cudaMemcpyHostToDevice));
+    CUDA_SAFE_CALL( cudaMemcpy( d_a, a,memSize, cudaMemcpyHostToDevice));
+    CUDA_SAFE_CALL( cudaMemcpy( d_b, b,memSize, cudaMemcpyHostToDevice));
+    CUDA_SAFE_CALL( cudaMemcpy( d_c, c,memSize, cudaMemcpyHostToDevice));
+    CUDA_SAFE_CALL( cudaMemcpy( d_d, d,memSize, cudaMemcpyHostToDevice));
+    CUDA_SAFE_CALL( cudaMemcpy( d_x, x,memSize, cudaMemcpyHostToDevice));
 
     // setup execution parameters
-    dim3  grid(num_systems, 1, 1);
+    dim3  grid(numSystems, 1, 1);
     dim3  threads(num_threads_block, 1, 1);
 
-    crpcr_small_systems_kernel<<< grid, threads,(system_size+1)*5*sizeof(T)+rest_system_size*(5+0)*sizeof(float)>>>(device_a, device_b, device_c, device_d, device_x);
-    //crpcr_small_systems_kernel_branch_free<<< grid, threads,(system_size+1)*5*sizeof(float)+rest_system_size*(5+0)*sizeof(float)>>>(device_a, device_b, device_c, device_d, device_x);
+    crpcrKernel<<< grid, threads,(systemSize+1)*5*sizeof(T)+restSystemSize*(5+0)*sizeof(float)>>>(d_a, d_b, d_c, d_d, d_x);
+    //crpcrKernelBranchFree<<< grid, threads,(systemSize+1)*5*sizeof(float)+restSystemSize*(5+0)*sizeof(float)>>>(d_a, d_b, d_c, d_d, d_x);
 
     // copy result from device to host
-    CUDA_SAFE_CALL( cudaMemcpy(x, device_x,mem_size, cudaMemcpyDeviceToHost));
+    CUDA_SAFE_CALL( cudaMemcpy(x, d_x,memSize, cudaMemcpyDeviceToHost));
 
     // cleanup memory
-    CUDA_SAFE_CALL(cudaFree(device_a));
-    CUDA_SAFE_CALL(cudaFree(device_b));
-    CUDA_SAFE_CALL(cudaFree(device_c));
-    CUDA_SAFE_CALL(cudaFree(device_d));
-    CUDA_SAFE_CALL(cudaFree(device_x));
+    CUDA_SAFE_CALL(cudaFree(d_a));
+    CUDA_SAFE_CALL(cudaFree(d_b));
+    CUDA_SAFE_CALL(cudaFree(d_c));
+    CUDA_SAFE_CALL(cudaFree(d_d));
+    CUDA_SAFE_CALL(cudaFree(d_x));
 }
 /** @} */ // end tridiagonal functions
 /** @} */ // end cudpp_kernel

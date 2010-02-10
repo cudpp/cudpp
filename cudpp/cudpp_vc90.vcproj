@@ -3103,6 +3103,14 @@
 			<File
 				RelativePath=".\src\app\tridiagonal_app.cu"
 				>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+						ExtraNvccOptions="-m32 –gencode=arch=compute_10,code=sm_10"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\src\kernel\vector_kernel.cu"

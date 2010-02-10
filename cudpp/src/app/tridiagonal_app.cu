@@ -44,7 +44,7 @@ extern "C"
  * @param[in] numElements the number of elements in the array d_out
  * @param[in] plan pointer to CUDPPRandPlan which contains the algorithm to run
  */
-void cudppTridiagonalDispatch(void *a, void *b, void *c, void *d, void *x, int system_size, int num_systems, const CUDPPTridiagonalPlan * plan)
+void cudppTridiagonalDispatch(void *a, void *b, void *c, void *d, void *x, int systemSize, int numSystems, const CUDPPTridiagonalPlan * plan)
 {
     //switch to figure out which algorithm to run
     if (plan->m_config.datatype == CUDPP_FLOAT)
@@ -52,35 +52,37 @@ void cudppTridiagonalDispatch(void *a, void *b, void *c, void *d, void *x, int s
         switch(plan->m_config.algorithm)
         {
             case CUDPP_TRIDIAGONAL_CR:
-                cyclic_small_systems<float>((float *)a, (float *)b, (float *)c, (float *)d, (float *)x, system_size, num_systems);
+                cr<float>((float *)a, (float *)b, (float *)c, (float *)d, (float *)x, systemSize, numSystems);
                 break;
             case CUDPP_TRIDIAGONAL_PCR:
-                pcr_small_systems<float>((float *)a, (float *)b, (float *)c, (float *)d, (float *)x, system_size, num_systems);
+                pcr<float>((float *)a, (float *)b, (float *)c, (float *)d, (float *)x, systemSize, numSystems);
                 break;
             case CUDPP_TRIDIAGONAL_CRPCR:
-                crpcr_small_systems<float>((float *)a, (float *)b, (float *)c, (float *)d, (float *)x, system_size, num_systems);
+                crpcr<float>((float *)a, (float *)b, (float *)c, (float *)d, (float *)x, systemSize, numSystems);
+                break;
+            default:
+                break;
+        }
+    }
+    else if (plan->m_config.datatype == CUDPP_DOUBLE)
+    {
+        switch(plan->m_config.algorithm)
+        {
+            case CUDPP_TRIDIAGONAL_CR:
+                cr<double>((double *)a, (double *)b, (double *)c, (double *)d, (double *)x, systemSize, numSystems);
+                break;
+            case CUDPP_TRIDIAGONAL_PCR:
+                pcr<double>((double *)a, (double *)b, (double *)c, (double *)d, (double *)x, systemSize, numSystems);
+                break;
+            case CUDPP_TRIDIAGONAL_CRPCR:
+                crpcr<double>((double *)a, (double *)b, (double *)c, (double *)d, (double *)x, systemSize, numSystems);
                 break;
             default:
                 break;
         }
     }
     else
-    {
-        switch(plan->m_config.algorithm)
-        {
-            case CUDPP_TRIDIAGONAL_CR:
-                cyclic_small_systems<double>((double *)a, (double *)b, (double *)c, (double *)d, (double *)x, system_size, num_systems);
-                break;
-            case CUDPP_TRIDIAGONAL_PCR:
-                pcr_small_systems<double>((double *)a, (double *)b, (double *)c, (double *)d, (double *)x, system_size, num_systems);
-                break;
-            case CUDPP_TRIDIAGONAL_CRPCR:
-                crpcr_small_systems<double>((double *)a, (double *)b, (double *)c, (double *)d, (double *)x, system_size, num_systems);
-                break;
-            default:
-                break;
-        }
-    }
+        printf("datatype not specified\n");
 }
 
 #ifdef __cplusplus
