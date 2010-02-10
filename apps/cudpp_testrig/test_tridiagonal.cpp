@@ -28,16 +28,21 @@
 #include "cudpp_testrig_options.h"
 #include "tridiagonal_gold.h"
 
+//#define TRIDIAGONAL_DOUBLE
+
 int testTridiagonal(int argc, const char** argv)
 {
     int retval =0;
     CUDPPHandle tridiagonalPlan = 0;
     CUDPPResult result;
     CUDPPConfiguration config;
-    config.datatype = CUDPP_FLOAT;
-    typedef float T;
-    //config.datatype = CUDPP_DOUBLE;
-    //typedef double T;
+    #ifdef TRIDIAGONAL_DOUBLE
+        config.datatype = CUDPP_DOUBLE;
+        typedef double T;
+    #else
+        config.datatype = CUDPP_FLOAT;
+        typedef float T;
+    #endif
     config.algorithm = CUDPP_TRIDIAGONAL_CR;
     config.options = 0;
 
@@ -57,40 +62,40 @@ int testTridiagonal(int argc, const char** argv)
         exit(-1);
     }
 
-    int num_systems = 512;
-    int system_size = 512;
-    const unsigned int mem_size = sizeof(T)*num_systems*system_size;
+    int numSystems = 256;
+    int systemSize = 256;
+    const unsigned int memSize = sizeof(T)*numSystems*systemSize;
 
-    T* a = (T*) malloc(mem_size);
-    T* b = (T*) malloc(mem_size);
-    T* c = (T*) malloc(mem_size);
-    T* d = (T*) malloc(mem_size);
-    T* x1 = (T*) malloc(mem_size);
-    T* x2 = (T*) malloc(mem_size);
+    T* a = (T*) malloc(memSize);
+    T* b = (T*) malloc(memSize);
+    T* c = (T*) malloc(memSize);
+    T* d = (T*) malloc(memSize);
+    T* x1 = (T*) malloc(memSize);
+    T* x2 = (T*) malloc(memSize);
 
-    for (int i = 0; i < num_systems; i++)
+    for (int i = 0; i < numSystems; i++)
     {
-        test_gen(&a[i*system_size],&b[i*system_size],&c[i*system_size],&d[i*system_size],&x1[i*system_size],system_size);
+        testGeneration(&a[i*systemSize],&b[i*systemSize],&c[i*systemSize],&d[i*systemSize],&x1[i*systemSize],systemSize);
     }
 
     unsigned int timer1, timer2;
 
-    CUT_SAFE_CALL(cutCreateTimer(&timer2));
-    cutStartTimer(timer2);
-    cudppTridiagonal(tridiagonalPlan, a, b, c, d, x2, system_size, num_systems);
-    cutStopTimer(timer2);
-    printf("num_systems: %d, system_size: %d, GPU execution time: %f ms\n", num_systems, system_size, cutGetTimerValue(timer2));
-
     CUT_SAFE_CALL(cutCreateTimer(&timer1));
     cutStartTimer(timer1);
-    serial_small_systems<T>(a,b,c,d,x1,system_size,num_systems);
+    cudppTridiagonal(tridiagonalPlan, a, b, c, d, x2, systemSize, numSystems);
     cutStopTimer(timer1);
-    printf("num_systems: %d, system_size: %d, CPU execution time: %f ms\n", num_systems, system_size, cutGetTimerValue(timer1));
+    printf("numSystems: %d, systemSize: %d, GPU execution time: %f ms\n", numSystems, systemSize, cutGetTimerValue(timer1));
 
-    //file_write_small_systems<T>(x1,num_systems,system_size,"cpu_result.txt");
-    //file_write_small_systems<T>(x2,num_systems,system_size,"gpu_result.txt");
+    CUT_SAFE_CALL(cutCreateTimer(&timer2));
+    cutStartTimer(timer2);
+    serialManySystems<T>(a,b,c,d,x1,systemSize,numSystems);
+    cutStopTimer(timer2);
+    printf("numSystems: %d, systemSize: %d, CPU execution time: %f ms\n", numSystems, systemSize, cutGetTimerValue(timer2));
 
-    retval = compare_small_systems<T>(x1,x2,system_size,num_systems,0.001f);
+    writeResultToFile<T>(x1,numSystems,systemSize,"cpu_result.txt");
+    writeResultToFile<T>(x2,numSystems,systemSize,"gpu_result.txt");
+
+    retval = compareManySystems<T>(x1,x2,systemSize,numSystems,0.001f);
 
     free(a);
     free(b);
