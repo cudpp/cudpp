@@ -396,14 +396,12 @@ CUDPPCompactPlan::~CUDPPCompactPlan()
 * @param[in]  numElements The maximum number of elements to be compacted
 */
 CUDPPReducePlan::CUDPPReducePlan(CUDPPManager *mgr,
-                                 CUDPPConfiguration config, 
-                                 CUDPPTune tuneConfig,
+                                 CUDPPConfiguration config,                                  
                                  size_t numElements)
 : CUDPPPlan(mgr, config, numElements, 1, 0),
   m_threadsPerBlock(REDUCE_CTA_SIZE),
   m_maxBlocks(64)
-{
-    tuneConfig.tune = false;
+{    
     allocReduceStorage(this);
 }
 
