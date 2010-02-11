@@ -1652,6 +1652,18 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\src\app\cr_app.cu"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
 				RelativePath=".\src\kernel\cr_kernel.cu"
 				>
 				<FileConfiguration
@@ -1672,6 +1684,18 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\src\app\crpcr_app.cu"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
 				RelativePath=".\src\kernel\crpcr_kernel.cu"
 				>
 				<FileConfiguration
@@ -1684,6 +1708,18 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\src\app\pcr_app.cu"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool

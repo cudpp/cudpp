@@ -10,20 +10,36 @@
 
 /**
  * @file
- * pcr_kernel.cu
+ * crpcr_kernel.cu
  *
- * @brief CUDPP kernel-level tridiagonal routines
+ * @brief CUDPP kernel-level CR-PCR tridiagonal solver
  */
 
 /** \addtogroup cudpp_kernel
   * @{
   */
-/** @name tridiagonal Functions
+/** @name Hybrid CR-PCR solver (CRPCR)
  * @{
  */
 
+/**
+ * @brief Hybrid CR-PCR solver (CRPCR)
+ *
+ * This kernel solves a tridiagonal linear system using a hybrid CR-PCR algorithm.
+ * The solver first reduces the system size using
+ * cyclic reduction, then solves the intermediate system using parallel cyclic 
+ * reduction to reduce shared memory bank conflicts and algorithmic steps, and 
+ * finally switch back to cyclic reduction to solve all unknowns.
+ *
+ * @param[out] d_x Solution vector
+ * @param[in] d_a Lower diagonal
+ * @param[in] d_b Main diagonal
+ * @param[in] d_c Upper diagonal
+ * @param[in] d_d Right hand side
+ */
+
 template <class T>
-__global__ void crpcrKernel(T *a_d, T *b_d, T *c_d, T *d_d, T *x_d)
+__global__ void crpcrKernel(T *d_a, T *d_b, T *d_c, T *d_d, T *d_x)
 {
     int thid = threadIdx.x;
     int blid = blockIdx.x;
@@ -43,14 +59,14 @@ __global__ void crpcrKernel(T *a_d, T *b_d, T *c_d, T *d_d, T *x_d)
     T* d = (T*)&c[systemSize+1];
     T* x = (T*)&d[systemSize+1];
 
-    a[thid] = a_d[thid + blid * systemSize];
-    a[thid + blockDim.x] = a_d[thid + blockDim.x + blid * systemSize];
+    a[thid] = d_a[thid + blid * systemSize];
+    a[thid + blockDim.x] = d_a[thid + blockDim.x + blid * systemSize];
 
-    b[thid] = b_d[thid + blid * systemSize];
-    b[thid + blockDim.x] = b_d[thid + blockDim.x + blid * systemSize];
+    b[thid] = d_b[thid + blid * systemSize];
+    b[thid + blockDim.x] = d_b[thid + blockDim.x + blid * systemSize];
 
-    c[thid] = c_d[thid + blid * systemSize];
-    c[thid + blockDim.x] = c_d[thid + blockDim.x + blid * systemSize];
+    c[thid] = d_c[thid + blid * systemSize];
+    c[thid + blockDim.x] = d_c[thid + blockDim.x + blid * systemSize];
 
     d[thid] = d_d[thid + blid * systemSize];
     d[thid + blockDim.x] = d_d[thid + blockDim.x + blid * systemSize];
@@ -176,12 +192,12 @@ __global__ void crpcrKernel(T *a_d, T *b_d, T *c_d, T *d_d, T *x_d)
 
     __syncthreads();    
 
-    x_d[thid + blid * systemSize] = x[thid];
-    x_d[thid + blockDim.x + blid * systemSize] = x[thid + blockDim.x];
+    d_x[thid + blid * systemSize] = x[thid];
+    d_x[thid + blockDim.x + blid * systemSize] = x[thid + blockDim.x];
 }
 
 template <class T>
-__global__ void crpcrKernelBranchFree(T *a_d, T *b_d, T *c_d, T *d_d, T *x_d)
+__global__ void crpcrKernelBranchFree(T *d_a, T *d_b, T *d_c, T *d_d, T *d_x)
 {
     int thid = threadIdx.x;
     int blid = blockIdx.x;
@@ -205,14 +221,14 @@ __global__ void crpcrKernelBranchFree(T *a_d, T *b_d, T *c_d, T *d_d, T *x_d)
     T* d = (T*)&c[systemSize+1];
     T* x = (T*)&d[systemSize+1];
 
-    a[thid] = a_d[thid + blid * systemSize];
-    a[thid + blockDim.x] = a_d[thid + blockDim.x + blid * systemSize];
+    a[thid] = d_a[thid + blid * systemSize];
+    a[thid + blockDim.x] = d_a[thid + blockDim.x + blid * systemSize];
 
-    b[thid] = b_d[thid + blid * systemSize];
-    b[thid + blockDim.x] = b_d[thid + blockDim.x + blid * systemSize];
+    b[thid] = d_b[thid + blid * systemSize];
+    b[thid + blockDim.x] = d_b[thid + blockDim.x + blid * systemSize];
 
-    c[thid] = c_d[thid + blid * systemSize];
-    c[thid + blockDim.x] = c_d[thid + blockDim.x + blid * systemSize];
+    c[thid] = d_c[thid + blid * systemSize];
+    c[thid + blockDim.x] = d_c[thid + blockDim.x + blid * systemSize];
 
     d[thid] = d_d[thid + blid * systemSize];
     d[thid + blockDim.x] = d_d[thid + blockDim.x + blid * systemSize];
@@ -338,54 +354,10 @@ __global__ void crpcrKernelBranchFree(T *a_d, T *b_d, T *c_d, T *d_d, T *x_d)
 
     __syncthreads();
 
-    x_d[thid + blid * systemSize] = x[thid];
-    x_d[thid + blockDim.x + blid * systemSize] = x[thid + blockDim.x];
+    d_x[thid + blid * systemSize] = x[thid];
+    d_x[thid + blockDim.x + blid * systemSize] = x[thid + blockDim.x];
 }
 
-template <class T>
-void crpcr(T *a, T *b, T *c, T *d, T *x, int systemSize, int numSystems)
-{
-    const unsigned int num_threads_block = systemSize/2;
-    int restSystemSize = systemSize/2;
-    const unsigned int memSize = sizeof(T)*numSystems*systemSize;
-
-    // allocate device memory input and output arrays
-    T* d_a;
-    T* d_b;
-    T* d_c;
-    T* d_d;
-    T* d_x;
-
-    CUDA_SAFE_CALL( cudaMalloc( (void**) &d_a,memSize));
-    CUDA_SAFE_CALL( cudaMalloc( (void**) &d_b,memSize));
-    CUDA_SAFE_CALL( cudaMalloc( (void**) &d_c,memSize));
-    CUDA_SAFE_CALL( cudaMalloc( (void**) &d_d,memSize));
-    CUDA_SAFE_CALL( cudaMalloc( (void**) &d_x,memSize));
-
-    // copy host memory to device input array
-    CUDA_SAFE_CALL( cudaMemcpy( d_a, a,memSize, cudaMemcpyHostToDevice));
-    CUDA_SAFE_CALL( cudaMemcpy( d_b, b,memSize, cudaMemcpyHostToDevice));
-    CUDA_SAFE_CALL( cudaMemcpy( d_c, c,memSize, cudaMemcpyHostToDevice));
-    CUDA_SAFE_CALL( cudaMemcpy( d_d, d,memSize, cudaMemcpyHostToDevice));
-    CUDA_SAFE_CALL( cudaMemcpy( d_x, x,memSize, cudaMemcpyHostToDevice));
-
-    // setup execution parameters
-    dim3  grid(numSystems, 1, 1);
-    dim3  threads(num_threads_block, 1, 1);
-
-    crpcrKernel<<< grid, threads,(systemSize+1)*5*sizeof(T)+restSystemSize*(5+0)*sizeof(float)>>>(d_a, d_b, d_c, d_d, d_x);
-    //crpcrKernelBranchFree<<< grid, threads,(systemSize+1)*5*sizeof(float)+restSystemSize*(5+0)*sizeof(float)>>>(d_a, d_b, d_c, d_d, d_x);
-
-    // copy result from device to host
-    CUDA_SAFE_CALL( cudaMemcpy(x, d_x,memSize, cudaMemcpyDeviceToHost));
-
-    // cleanup memory
-    CUDA_SAFE_CALL(cudaFree(d_a));
-    CUDA_SAFE_CALL(cudaFree(d_b));
-    CUDA_SAFE_CALL(cudaFree(d_c));
-    CUDA_SAFE_CALL(cudaFree(d_d));
-    CUDA_SAFE_CALL(cudaFree(d_x));
-}
-/** @} */ // end tridiagonal functions
+/** @} */ // end crpcr functions
 /** @} */ // end cudpp_kernel
 

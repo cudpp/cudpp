@@ -66,7 +66,8 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Rand puts <em>numElements</em> random 32-bit elements into <em>d_out</em>.  <a href="#gac27c987891faceedf79598f744212c67"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">CUDPP_DLL <a class="el" href="cudpp_8h.html#a4a73ab815831334b5a7649e538ac1d0a">CUDPPResult</a>&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__public_interface.html#ga9120af9942d2553d2f376ede0f7079dd">cudppRandSeed</a> (const CUDPPHandle planHandle, unsigned int seed)</td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Sets the seed used for rand.  <a href="#ga9120af9942d2553d2f376ede0f7079dd"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">CUDPP_DLL <a class="el" href="cudpp_8h.html#a4a73ab815831334b5a7649e538ac1d0a">CUDPPResult</a>&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__public_interface.html#ga6d491cc0e5552111d0874bbe5e77f38b">cudppTridiagonal</a> (CUDPPHandle planHandle, void *a, void *b, void *c, void *d, void *x, int system_size, int num_systems)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">CUDPP_DLL <a class="el" href="cudpp_8h.html#a4a73ab815831334b5a7649e538ac1d0a">CUDPPResult</a>&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__public_interface.html#ga6b15f62a1712622a797e6b39a78ae62f">cudppTridiagonal</a> (CUDPPHandle planHandle, void *a, void *b, void *c, void *d, void *x, int systemSize, int numSystems)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Solves a tridiagonal linear system.  <a href="#ga6b15f62a1712622a797e6b39a78ae62f"></a><br/></td></tr>
 <tr><td colspan="2"><h2>Plan Interface</h2></td></tr>
 <tr><td colspan="2"><p><a class="anchor" id="amgrp1a6fe3a5203cb363a7d1a6cbbd1b08a3"></a> </p>
 <br/><br/></td></tr>
@@ -603,7 +604,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 
 </div>
 </div>
-<a class="anchor" id="ga6d491cc0e5552111d0874bbe5e77f38b"></a><!-- doxytag: member="cudpp.cpp::cudppTridiagonal" ref="ga6d491cc0e5552111d0874bbe5e77f38b" args="(CUDPPHandle planHandle, void *a, void *b, void *c, void *d, void *x, int system_size, int num_systems)" -->
+<a class="anchor" id="ga6b15f62a1712622a797e6b39a78ae62f"></a><!-- doxytag: member="cudpp.cpp::cudppTridiagonal" ref="ga6b15f62a1712622a797e6b39a78ae62f" args="(CUDPPHandle planHandle, void *a, void *b, void *c, void *d, void *x, int systemSize, int numSystems)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -647,13 +648,13 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">int&nbsp;</td>
-          <td class="paramname"> <em>system_size</em>, </td>
+          <td class="paramname"> <em>systemSize</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">int&nbsp;</td>
-          <td class="paramname"> <em>num_systems</em></td><td>&nbsp;</td>
+          <td class="paramname"> <em>numSystems</em></td><td>&nbsp;</td>
         </tr>
         <tr>
           <td></td>
@@ -664,8 +665,23 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div>
 <div class="memdoc">
 
-<p><dl class="todo"><dt><b><a class="el" href="todo.html#_todo000016">Todo:</a></b></dt><dd>Return more specific errors </dd></dl>
-</p>
+<p>Solves a tridiagonal linear system. </p>
+<p>We support three algorithms, which are cyclic reduction (CR), parallel cyclic reduction (PCR), and the hybrid CR-PCR algorithm. We support both float and double datatypes. By configuring a plan, you can select the algorithm and datatype to be used.</p>
+<p>The maximum system size is limited by the maximum number of threads of a CUDA block, the number of registers per multiprocessor, and the amount of shared memory available. For the GTX 280 GPU, the maximum system size we support is 512 for float datatype, and 256 for double datatype, which is determined by the size of shared memory in this case. There is virtually no limitation on the number of systems to be solved, which depends on the maximum number of CUDA blocks that can be issued for a kernel launch.</p>
+<dl><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"><tt>[out]</tt>&nbsp;</td><td valign="top"><em>x</em>&nbsp;</td><td>Solution vector </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>planHandle</em>&nbsp;</td><td>Handle to plan for tridiagonal solver </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>a</em>&nbsp;</td><td>Lower diagonal </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>b</em>&nbsp;</td><td>Main diagonal </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>c</em>&nbsp;</td><td>Upper diagonal </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>d</em>&nbsp;</td><td>Right hand side </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>systemSize</em>&nbsp;</td><td>The size of the linear system </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>numSystems</em>&nbsp;</td><td>The number of systems to be solved</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="see"><dt><b>See also:</b></dt><dd><a class="el" href="group__public_interface.html#ga31fd56135f9c8f73da79af83a958f27c" title="Create a CUDPP plan.">cudppPlan</a>, <a class="el" href="struct_c_u_d_p_p_configuration.html" title="Configuration struct used to specify algorithm, datatype, operator, and options when...">CUDPPConfiguration</a>, <a class="el" href="cudpp_8h.html#a6499e5c26f56db82f520367ae853462f" title="Algorithms supported by CUDPP. Used to create appropriate plans using cudppPlan.">CUDPPAlgorithm</a> </dd></dl>
 
 </div>
 </div>
@@ -787,7 +803,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   </dd>
 </dl>
 
-<p><dl class="todo"><dt><b><a class="el" href="todo.html#_todo000018">Todo:</a></b></dt><dd>: implement <a class="el" href="group__public_interface.html#ga21d9b2b3c74daffbec52ef628f835313" title="Reduces an array to a single element using a binary associative operator.">cudppReduce()</a> </dd></dl>
+<p><dl class="todo"><dt><b><a class="el" href="todo.html#_todo000017">Todo:</a></b></dt><dd>: implement <a class="el" href="group__public_interface.html#ga21d9b2b3c74daffbec52ef628f835313" title="Reduces an array to a single element using a binary associative operator.">cudppReduce()</a> </dd></dl>
 </p>
 
 </div>
@@ -817,7 +833,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   </dd>
 </dl>
 
-<p><dl class="todo"><dt><b><a class="el" href="todo.html#_todo000019">Todo:</a></b></dt><dd>: implement <a class="el" href="group__public_interface.html#ga21d9b2b3c74daffbec52ef628f835313" title="Reduces an array to a single element using a binary associative operator.">cudppReduce()</a> </dd></dl>
+<p><dl class="todo"><dt><b><a class="el" href="todo.html#_todo000018">Todo:</a></b></dt><dd>: implement <a class="el" href="group__public_interface.html#ga21d9b2b3c74daffbec52ef628f835313" title="Reduces an array to a single element using a binary associative operator.">cudppReduce()</a> </dd></dl>
 </p>
 
 </div>

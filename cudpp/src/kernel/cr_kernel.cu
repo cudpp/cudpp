@@ -12,18 +12,30 @@
  * @file
  * cr_kernel.cu
  *
- * @brief CUDPP kernel-level tridiagonal routines
+ * @brief CUDPP kernel-level CR tridiagonal solver
  */
 
 /** \addtogroup cudpp_kernel
   * @{
   */
-/** @name tridiagonal Functions
+/** @name Cyclic reduction solver (CR)
  * @{
  */
 
+/**
+ * @brief Cyclic reduction solver (CR)
+ *
+ * This kernel solves a tridiagonal linear system using the CR algorithm.
+ *
+ * @param[out] d_x Solution vector
+ * @param[in] d_a Lower diagonal
+ * @param[in] d_b Main diagonal
+ * @param[in] d_c Upper diagonal
+ * @param[in] d_d Right hand side
+ */
+
 template <class T>
-__global__ void crKernel(T *a_d, T *b_d, T *c_d, T *d_d, T *x_d)
+__global__ void crKernel(T *d_a, T *d_b, T *d_c, T *d_d, T *d_x)
 {
     int thid = threadIdx.x;
     int blid = blockIdx.x;
@@ -45,14 +57,14 @@ __global__ void crKernel(T *a_d, T *b_d, T *c_d, T *d_d, T *x_d)
     T* d = (T*)&c[systemSize];
     T* x = (T*)&d[systemSize];
 
-    a[thid] = a_d[thid + blid * systemSize];
-    a[thid + blockDim.x] = a_d[thid + blockDim.x + blid * systemSize];
+    a[thid] = d_a[thid + blid * systemSize];
+    a[thid + blockDim.x] = d_a[thid + blockDim.x + blid * systemSize];
 
-    b[thid] = b_d[thid + blid * systemSize];
-    b[thid + blockDim.x] = b_d[thid + blockDim.x + blid * systemSize];
+    b[thid] = d_b[thid + blid * systemSize];
+    b[thid + blockDim.x] = d_b[thid + blockDim.x + blid * systemSize];
 
-    c[thid] = c_d[thid + blid * systemSize];
-    c[thid + blockDim.x] = c_d[thid + blockDim.x + blid * systemSize];
+    c[thid] = d_c[thid + blid * systemSize];
+    c[thid + blockDim.x] = d_c[thid + blockDim.x + blid * systemSize];
 
     d[thid] = d_d[thid + blid * systemSize];
     d[thid + blockDim.x] = d_d[thid + blockDim.x + blid * systemSize];
@@ -120,61 +132,10 @@ __global__ void crKernel(T *a_d, T *b_d, T *c_d, T *d_d, T *x_d)
 
     __syncthreads();
 
-    x_d[thid + blid * systemSize] = x[thid];
-    x_d[thid + blockDim.x + blid * systemSize] = x[thid + blockDim.x];
-
+    d_x[thid + blid * systemSize] = x[thid];
+    d_x[thid + blockDim.x + blid * systemSize] = x[thid + blockDim.x];
 }
 
-template <class T>
-void cr(T *a, T *b, T *c, T *d, T *x, int systemSize, int numSystems)
-{
-    const unsigned int num_threads_block = systemSize/2;
-    const unsigned int memSize = sizeof(T)*numSystems*systemSize;
-
-    // allocate device memory input and output arrays
-    T* d_a;
-    T* d_b;
-    T* d_c;
-    T* d_d;
-    T* d_x;
-
-    unsigned int timer;
-    CUT_SAFE_CALL(cutCreateTimer(&timer));
-    cutStartTimer(timer);
-
-    CUDA_SAFE_CALL( cudaMalloc( (void**) &d_a,memSize));
-    CUDA_SAFE_CALL( cudaMalloc( (void**) &d_b,memSize));
-    CUDA_SAFE_CALL( cudaMalloc( (void**) &d_c,memSize));
-    CUDA_SAFE_CALL( cudaMalloc( (void**) &d_d,memSize));
-    CUDA_SAFE_CALL( cudaMalloc( (void**) &d_x,memSize));
-
-    cutStopTimer(timer);
-    printf("GPU cudaMalloc time: %f ms\n", cutGetTimerValue(timer));
-
-   // copy host memory to device input array
-    CUDA_SAFE_CALL( cudaMemcpy( d_a, a,memSize, cudaMemcpyHostToDevice));
-    CUDA_SAFE_CALL( cudaMemcpy( d_b, b,memSize, cudaMemcpyHostToDevice));
-    CUDA_SAFE_CALL( cudaMemcpy( d_c, c,memSize, cudaMemcpyHostToDevice));
-    CUDA_SAFE_CALL( cudaMemcpy( d_d, d,memSize, cudaMemcpyHostToDevice));
-    CUDA_SAFE_CALL( cudaMemcpy( d_x, x,memSize, cudaMemcpyHostToDevice));
-
-    // setup execution parameters
-    dim3  grid(numSystems, 1, 1);
-    dim3  threads(num_threads_block, 1, 1);
-
-    crKernel<<< grid, threads,systemSize*5*sizeof(T)>>>(d_a, d_b, d_c, d_d, d_x);
-    //cudaThreadSynchronize();
-
-    // copy result from device to host
-    CUDA_SAFE_CALL( cudaMemcpy(x, d_x,memSize, cudaMemcpyDeviceToHost));
-
-    // cleanup memory
-    CUDA_SAFE_CALL(cudaFree(d_a));
-    CUDA_SAFE_CALL(cudaFree(d_b));
-    CUDA_SAFE_CALL(cudaFree(d_c));
-    CUDA_SAFE_CALL(cudaFree(d_d));
-    CUDA_SAFE_CALL(cudaFree(d_x));
-}
 /** @} */ // end tridiagonal functions
 /** @} */ // end cudpp_kernel
 

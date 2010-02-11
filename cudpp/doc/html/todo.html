@@ -55,7 +55,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <p class="enddd">Return more specific errors. </p>
 </dd>
 </dl>
-<p><a class="anchor" id="_todo000019"></a> </p>
+<p><a class="anchor" id="_todo000018"></a> </p>
 <dl>
 <dt>Member <a class="el" href="group__public_interface.html#ga4015898886e140ad95f320ab4c07db2c">&lt;globalScope&gt;::cudppDestroyPlan</a> (CUDPPHandle planHandle) </dt>
 <dd>: implement <a class="el" href="group__public_interface.html#ga21d9b2b3c74daffbec52ef628f835313" title="Reduces an array to a single element using a binary associative operator.">cudppReduce()</a> </dd>
@@ -65,7 +65,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <dt>Member <a class="el" href="group__public_interface.html#gad9655b51dba16bc43b8adee4507dc1d0">&lt;globalScope&gt;::cudppMultiScan</a> (const CUDPPHandle planHandle, void *d_out, const void *d_in, size_t numElements, size_t numRows) </dt>
 <dd>Return more specific errors </dd>
 </dl>
-<p><a class="anchor" id="_todo000018"></a> </p>
+<p><a class="anchor" id="_todo000017"></a> </p>
 <dl>
 <dt>Member <a class="el" href="group__public_interface.html#ga31fd56135f9c8f73da79af83a958f27c">&lt;globalScope&gt;::cudppPlan</a> (const CUDPPHandle cudppHandle, CUDPPHandle *planHandle, <a class="el" href="struct_c_u_d_p_p_configuration.html" title="Configuration struct used to specify algorithm, datatype, operator, and options when...">CUDPPConfiguration</a> config, size_t numElements, size_t numRows, size_t rowPitch) </dt>
 <dd>: implement <a class="el" href="group__public_interface.html#ga21d9b2b3c74daffbec52ef628f835313" title="Reduces an array to a single element using a binary associative operator.">cudppReduce()</a> </dd>
@@ -108,11 +108,6 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <dt>Member <a class="el" href="group__public_interface.html#gaeedaa3a7ec8bbd6770c6fbce3c4276c5">&lt;globalScope&gt;::cudppSparseMatrixVectorMultiply</a> (const CUDPPHandle sparseMatrixHandle, void *d_y, const void *d_x) </dt>
 <dd>Return more specific errors. </dd>
 </dl>
-<p><a class="anchor" id="_todo000016"></a> </p>
-<dl>
-<dt>Member <a class="el" href="group__public_interface.html#ga6d491cc0e5552111d0874bbe5e77f38b">&lt;globalScope&gt;::cudppTridiagonal</a> (CUDPPHandle planHandle, void *a, void *b, void *c, void *d, void *x, int system_size, int num_systems) </dt>
-<dd>Return more specific errors </dd>
-</dl>
 <p><a class="anchor" id="_todo000004"></a> </p>
 <dl>
 <dt>Member <a class="el" href="group__cudpp__cta.html#gab75dfd738e3beffebf497fbf120019fb">&lt;globalScope&gt;::DISALLOW_LOADSTORE_OVERLAP</a>  </dt>
@@ -128,26 +123,26 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <dt>Member <a class="el" href="group__cudpp__cta.html#gac598a1e6647cdfdb14ab24d0411ad1f5">&lt;globalScope&gt;::rank4</a> (uint4 preds) </dt>
 <dd>is the description of "preds" correct? </dd>
 </dl>
-<p><a class="anchor" id="_todo000021"></a> </p>
+<p><a class="anchor" id="_todo000020"></a> </p>
 <dl>
 <dt>Member <a class="el" href="group__cudpp__kernel.html#ga326b66a44772c53ef1657289c511252d">&lt;globalScope&gt;::reorderData</a> (uint *outKeys, uint *outValues, uint2 *keys, uint2 *values, uint *blockOffsets, uint *offsets, uint *sizes, uint numElements, uint totalBlocks) </dt>
 <dd>Args that are const below should be prototyped as const </dd>
 </dl>
-<p><a class="anchor" id="_todo000022"></a> </p>
+<p><a class="anchor" id="_todo000021"></a> </p>
 <dl>
 <dt>Member <a class="el" href="group__cudpp__kernel.html#ga97c40c1ecc9e0fac1dea5e0bc82873f2">&lt;globalScope&gt;::vectorAddConstant</a> (T *d_vector, T constant, int n, int baseIndex) </dt>
 <dd><p class="startdd">Test this function -- it is currently not yet used.</p>
 <p class="enddd"></p>
 </dd>
 </dl>
-<p><a class="anchor" id="_todo000023"></a> </p>
+<p><a class="anchor" id="_todo000022"></a> </p>
 <dl>
 <dt>Member <a class="el" href="group__cudpp__kernel.html#ga0db4319e840ddb75cc7d62847ad29638">&lt;globalScope&gt;::vectorAddVector</a> (T *d_vectorA, const T *d_vectorB, int numElements, int baseIndex) </dt>
 <dd><p class="startdd">Test this function -- it is currently not yet used.</p>
 <p class="enddd"></p>
 </dd>
 </dl>
-<p><a class="anchor" id="_todo000020"></a> </p>
+<p><a class="anchor" id="_todo000019"></a> </p>
 <dl>
 <dt>Member <a class="el" href="class_c_u_d_p_p_compact_plan.html#aa1df588ee2410a36c407804b8c3707a3">CUDPPCompactPlan::CUDPPCompactPlan</a> (<a class="el" href="class_c_u_d_p_p_manager.html" title="Internal manager class for CUDPPP resources.">CUDPPManager</a> *mgr, <a class="el" href="struct_c_u_d_p_p_configuration.html" title="Configuration struct used to specify algorithm, datatype, operator, and options when...">CUDPPConfiguration</a> config, size_t numElements, size_t numRows, size_t rowPitch) </dt>
 <dd>Add support for multirow compaction </dd>

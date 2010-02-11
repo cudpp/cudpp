@@ -559,6 +559,11 @@ CUDPPRandPlan::CUDPPRandPlan(CUDPPManager *mgr, CUDPPConfiguration config, size_
     
 }
 
+/** @brief CUDPP Tridiagonal Plan Constructor
+  *
+  * @param[in]  mgr pointer to the CUDPPManager
+  * @param[in] config The configuration struct specifying options
+  */
 CUDPPTridiagonalPlan::CUDPPTridiagonalPlan(CUDPPManager *mgr, CUDPPConfiguration config) 
  : CUDPPPlan(mgr, config, 0, 0, 0)
 {

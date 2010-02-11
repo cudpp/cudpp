@@ -82,39 +82,30 @@ __global__ void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el"
 <tr><td class="memTemplParams" colspan="2">template&lt;class T , bool isBackward&gt; </td></tr>
 <tr><td class="memTemplItemLeft" align="right" valign="top">__global__ void&nbsp;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="group__cudpp__kernel.html#ga02aca9cfcac6799d445c857626e7d317">compactData</a> (T *d_out, size_t *d_numValidElements, const unsigned int *d_indices, const unsigned int *d_isValid, const T *d_in, unsigned int numElements)</td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Consolidate non-null elements - for each non-null element in <em>d_in</em> write it to <em>d_out</em>, in the position specified by <em>d_isValid</em>. Called by <a class="el" href="group__cudpp__app.html#ga00003db78fb8a269263a5e1205257f40" title="Compact the non-zero elements of an array.">compactArray()</a>.  <a href="#ga02aca9cfcac6799d445c857626e7d317"></a><br/></td></tr>
-<tr><td colspan="2"><h2>tridiagonal Functions</h2></td></tr>
-<tr><td colspan="2"><p><a class="anchor" id="amgrpf5ca8b2d7f9033863a30679c92bd4352"></a> </p>
+<tr><td colspan="2"><h2>Cyclic reduction solver (CR)</h2></td></tr>
+<tr><td colspan="2"><p><a class="anchor" id="amgrp324b103d4084f368a670235a0773d499"></a> </p>
 <br/><br/></td></tr>
-<tr><td class="memTemplParams" colspan="2"><a class="anchor" id="ga610e47cd4a2de4e4ad89eb1fa47ec474"></a><!-- doxytag: member="cudpp_kernel::cyclic_small_systems_kernel" ref="ga610e47cd4a2de4e4ad89eb1fa47ec474" args="(T *a_d, T *b_d, T *c_d, T *d_d, T *x_d)" -->
-template&lt;class T &gt; </td></tr>
-<tr><td class="memTemplItemLeft" align="right" valign="top">__global__ void&nbsp;</td><td class="memTemplItemRight" valign="bottom"><b>cyclic_small_systems_kernel</b> (T *a_d, T *b_d, T *c_d, T *d_d, T *x_d)</td></tr>
-<tr><td class="memTemplParams" colspan="2"><a class="anchor" id="gac1d4ecbbcb69a54da834bb42d499b330"></a><!-- doxytag: member="cudpp_kernel::cyclic_small_systems" ref="gac1d4ecbbcb69a54da834bb42d499b330" args="(T *a, T *b, T *c, T *d, T *x, int system_size, int num_systems)" -->
-template&lt;class T &gt; </td></tr>
-<tr><td class="memTemplItemLeft" align="right" valign="top">void&nbsp;</td><td class="memTemplItemRight" valign="bottom"><b>cyclic_small_systems</b> (T *a, T *b, T *c, T *d, T *x, int system_size, int num_systems)</td></tr>
-<tr><td colspan="2"><h2>tridiagonal Functions</h2></td></tr>
-<tr><td colspan="2"><p><a class="anchor" id="amgrpf5ca8b2d7f9033863a30679c92bd4352"></a> </p>
+<tr><td class="memTemplParams" colspan="2">template&lt;class T &gt; </td></tr>
+<tr><td class="memTemplItemLeft" align="right" valign="top">__global__ void&nbsp;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="group__cudpp__kernel.html#gac5b5f0acf58f706b62fdcb09090d4ac3">crKernel</a> (T *d_a, T *d_b, T *d_c, T *d_d, T *d_x)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Cyclic reduction solver (CR).  <a href="#gac5b5f0acf58f706b62fdcb09090d4ac3"></a><br/></td></tr>
+<tr><td colspan="2"><h2>Hybrid CR-PCR solver (CRPCR)</h2></td></tr>
+<tr><td colspan="2"><p><a class="anchor" id="amgrp92ff2f646a08c971c8431d6564cbcb8d"></a> </p>
 <br/><br/></td></tr>
-<tr><td class="memTemplParams" colspan="2"><a class="anchor" id="ga53cea114ef8cdda2724ca1054c40c95d"></a><!-- doxytag: member="cudpp_kernel::crpcr_small_systems_kernel" ref="ga53cea114ef8cdda2724ca1054c40c95d" args="(T *a_d, T *b_d, T *c_d, T *d_d, T *x_d)" -->
+<tr><td class="memTemplParams" colspan="2">template&lt;class T &gt; </td></tr>
+<tr><td class="memTemplItemLeft" align="right" valign="top">__global__ void&nbsp;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="group__cudpp__kernel.html#ga0bf79818a35b1de6056f683e2e98f74f">crpcrKernel</a> (T *d_a, T *d_b, T *d_c, T *d_d, T *d_x)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Hybrid CR-PCR solver (CRPCR).  <a href="#ga0bf79818a35b1de6056f683e2e98f74f"></a><br/></td></tr>
+<tr><td class="memTemplParams" colspan="2"><a class="anchor" id="gaa529c5613d57400b6dcddd6fdd61a3f4"></a><!-- doxytag: member="cudpp_kernel::crpcrKernelBranchFree" ref="gaa529c5613d57400b6dcddd6fdd61a3f4" args="(T *d_a, T *d_b, T *d_c, T *d_d, T *d_x)" -->
 template&lt;class T &gt; </td></tr>
-<tr><td class="memTemplItemLeft" align="right" valign="top">__global__ void&nbsp;</td><td class="memTemplItemRight" valign="bottom"><b>crpcr_small_systems_kernel</b> (T *a_d, T *b_d, T *c_d, T *d_d, T *x_d)</td></tr>
-<tr><td class="memTemplParams" colspan="2"><a class="anchor" id="ga48122f56fa5df7d4e0d7de841c7a300d"></a><!-- doxytag: member="cudpp_kernel::crpcr_small_systems_kernel_branch_free" ref="ga48122f56fa5df7d4e0d7de841c7a300d" args="(T *a_d, T *b_d, T *c_d, T *d_d, T *x_d)" -->
-template&lt;class T &gt; </td></tr>
-<tr><td class="memTemplItemLeft" align="right" valign="top">__global__ void&nbsp;</td><td class="memTemplItemRight" valign="bottom"><b>crpcr_small_systems_kernel_branch_free</b> (T *a_d, T *b_d, T *c_d, T *d_d, T *x_d)</td></tr>
-<tr><td class="memTemplParams" colspan="2"><a class="anchor" id="ga3688387f88dde5b8c9b46c5ff82db5ac"></a><!-- doxytag: member="cudpp_kernel::crpcr_small_systems" ref="ga3688387f88dde5b8c9b46c5ff82db5ac" args="(T *a, T *b, T *c, T *d, T *x, int system_size, int num_systems)" -->
-template&lt;class T &gt; </td></tr>
-<tr><td class="memTemplItemLeft" align="right" valign="top">void&nbsp;</td><td class="memTemplItemRight" valign="bottom"><b>crpcr_small_systems</b> (T *a, T *b, T *c, T *d, T *x, int system_size, int num_systems)</td></tr>
-<tr><td colspan="2"><h2>tridiagonal Functions</h2></td></tr>
-<tr><td colspan="2"><p><a class="anchor" id="amgrpf5ca8b2d7f9033863a30679c92bd4352"></a> </p>
+<tr><td class="memTemplItemLeft" align="right" valign="top">__global__ void&nbsp;</td><td class="memTemplItemRight" valign="bottom"><b>crpcrKernelBranchFree</b> (T *d_a, T *d_b, T *d_c, T *d_d, T *d_x)</td></tr>
+<tr><td colspan="2"><h2>Parallel cyclic reduction solver (PCR)</h2></td></tr>
+<tr><td colspan="2"><p><a class="anchor" id="amgrpea1f23744a1b75fbe47b02908313668a"></a> </p>
 <br/><br/></td></tr>
-<tr><td class="memTemplParams" colspan="2"><a class="anchor" id="gad5f45bfe16a2ca0c5c50ebd08cf4f164"></a><!-- doxytag: member="cudpp_kernel::pcr_small_systems_kernel" ref="gad5f45bfe16a2ca0c5c50ebd08cf4f164" args="(T *a_d, T *b_d, T *c_d, T *d_d, T *x_d)" -->
+<tr><td class="memTemplParams" colspan="2">template&lt;class T &gt; </td></tr>
+<tr><td class="memTemplItemLeft" align="right" valign="top">__global__ void&nbsp;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="group__cudpp__kernel.html#ga8a896b0d560b88329a1baa6070141bea">pcrKernel</a> (T *d_a, T *d_b, T *d_c, T *d_d, T *d_x)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Parallel cyclic reduction solver (PCR).  <a href="#ga8a896b0d560b88329a1baa6070141bea"></a><br/></td></tr>
+<tr><td class="memTemplParams" colspan="2"><a class="anchor" id="gadbf6856e0d2ccc1d2dc488a77fb12384"></a><!-- doxytag: member="cudpp_kernel::pcrKernelBranchFree" ref="gadbf6856e0d2ccc1d2dc488a77fb12384" args="(T *d_a, T *d_b, T *d_c, T *d_d, T *d_x)" -->
 template&lt;class T &gt; </td></tr>
-<tr><td class="memTemplItemLeft" align="right" valign="top">__global__ void&nbsp;</td><td class="memTemplItemRight" valign="bottom"><b>pcr_small_systems_kernel</b> (T *a_d, T *b_d, T *c_d, T *d_d, T *x_d)</td></tr>
-<tr><td class="memTemplParams" colspan="2"><a class="anchor" id="ga5fcf281d47218a3af19646552069a527"></a><!-- doxytag: member="cudpp_kernel::pcr_small_systems_kernel_branch_free" ref="ga5fcf281d47218a3af19646552069a527" args="(T *a_d, T *b_d, T *c_d, T *d_d, T *x_d)" -->
-template&lt;class T &gt; </td></tr>
-<tr><td class="memTemplItemLeft" align="right" valign="top">__global__ void&nbsp;</td><td class="memTemplItemRight" valign="bottom"><b>pcr_small_systems_kernel_branch_free</b> (T *a_d, T *b_d, T *c_d, T *d_d, T *x_d)</td></tr>
-<tr><td class="memTemplParams" colspan="2"><a class="anchor" id="gac2862d2763131c69b4a441588e745d47"></a><!-- doxytag: member="cudpp_kernel::pcr_small_systems" ref="gac2862d2763131c69b4a441588e745d47" args="(T *a, T *b, T *c, T *d, T *x, int system_size, int num_systems)" -->
-template&lt;class T &gt; </td></tr>
-<tr><td class="memTemplItemLeft" align="right" valign="top">void&nbsp;</td><td class="memTemplItemRight" valign="bottom"><b>pcr_small_systems</b> (T *a, T *b, T *c, T *d, T *x, int system_size, int num_systems)</td></tr>
+<tr><td class="memTemplItemLeft" align="right" valign="top">__global__ void&nbsp;</td><td class="memTemplItemRight" valign="bottom"><b>pcrKernelBranchFree</b> (T *d_a, T *d_b, T *d_c, T *d_d, T *d_x)</td></tr>
 <tr><td colspan="2"><h2>Rand Functions</h2></td></tr>
 <tr><td colspan="2"><p><a class="anchor" id="amgrp7e5594390c1143b2357bb7410fb0c282"></a> </p>
 <br/><br/></td></tr>
@@ -291,6 +282,186 @@ template&lt;class T , bool isBackward&gt; </div>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>d_isValid</em>&nbsp;</td><td>Flags indicating valid (1) and invalid (0) elements. Only valid elements will be copied to <em>d_out</em>. </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>d_in</em>&nbsp;</td><td>The input array </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>numElements</em>&nbsp;</td><td>The length of the <em>d_in</em> in elements. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="gac5b5f0acf58f706b62fdcb09090d4ac3"></a><!-- doxytag: member="cr_kernel.cu::crKernel" ref="gac5b5f0acf58f706b62fdcb09090d4ac3" args="(T *d_a, T *d_b, T *d_c, T *d_d, T *d_x)" -->
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class T &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">__global__ void crKernel </td>
+          <td>(</td>
+          <td class="paramtype">T *&nbsp;</td>
+          <td class="paramname"> <em>d_a</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">T *&nbsp;</td>
+          <td class="paramname"> <em>d_b</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">T *&nbsp;</td>
+          <td class="paramname"> <em>d_c</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">T *&nbsp;</td>
+          <td class="paramname"> <em>d_d</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">T *&nbsp;</td>
+          <td class="paramname"> <em>d_x</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td><code> [inline]</code></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Cyclic reduction solver (CR). </p>
+<p>This kernel solves a tridiagonal linear system using the CR algorithm.</p>
+<dl><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"><tt>[out]</tt>&nbsp;</td><td valign="top"><em>d_x</em>&nbsp;</td><td>Solution vector </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>d_a</em>&nbsp;</td><td>Lower diagonal </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>d_b</em>&nbsp;</td><td>Main diagonal </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>d_c</em>&nbsp;</td><td>Upper diagonal </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>d_d</em>&nbsp;</td><td>Right hand side </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="ga0bf79818a35b1de6056f683e2e98f74f"></a><!-- doxytag: member="crpcr_kernel.cu::crpcrKernel" ref="ga0bf79818a35b1de6056f683e2e98f74f" args="(T *d_a, T *d_b, T *d_c, T *d_d, T *d_x)" -->
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class T &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">__global__ void crpcrKernel </td>
+          <td>(</td>
+          <td class="paramtype">T *&nbsp;</td>
+          <td class="paramname"> <em>d_a</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">T *&nbsp;</td>
+          <td class="paramname"> <em>d_b</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">T *&nbsp;</td>
+          <td class="paramname"> <em>d_c</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">T *&nbsp;</td>
+          <td class="paramname"> <em>d_d</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">T *&nbsp;</td>
+          <td class="paramname"> <em>d_x</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td><code> [inline]</code></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Hybrid CR-PCR solver (CRPCR). </p>
+<p>This kernel solves a tridiagonal linear system using a hybrid CR-PCR algorithm. The solver first reduces the system size using cyclic reduction, then solves the intermediate system using parallel cyclic reduction to reduce shared memory bank conflicts and algorithmic steps, and finally switch back to cyclic reduction to solve all unknowns.</p>
+<dl><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"><tt>[out]</tt>&nbsp;</td><td valign="top"><em>d_x</em>&nbsp;</td><td>Solution vector </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>d_a</em>&nbsp;</td><td>Lower diagonal </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>d_b</em>&nbsp;</td><td>Main diagonal </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>d_c</em>&nbsp;</td><td>Upper diagonal </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>d_d</em>&nbsp;</td><td>Right hand side </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="ga8a896b0d560b88329a1baa6070141bea"></a><!-- doxytag: member="pcr_kernel.cu::pcrKernel" ref="ga8a896b0d560b88329a1baa6070141bea" args="(T *d_a, T *d_b, T *d_c, T *d_d, T *d_x)" -->
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class T &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">__global__ void pcrKernel </td>
+          <td>(</td>
+          <td class="paramtype">T *&nbsp;</td>
+          <td class="paramname"> <em>d_a</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">T *&nbsp;</td>
+          <td class="paramname"> <em>d_b</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">T *&nbsp;</td>
+          <td class="paramname"> <em>d_c</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">T *&nbsp;</td>
+          <td class="paramname"> <em>d_d</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">T *&nbsp;</td>
+          <td class="paramname"> <em>d_x</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td><code> [inline]</code></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Parallel cyclic reduction solver (PCR). </p>
+<p>This kernel solves a tridiagonal linear system using the PCR algorithm.</p>
+<dl><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"><tt>[out]</tt>&nbsp;</td><td valign="top"><em>d_x</em>&nbsp;</td><td>Solution vector </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>d_a</em>&nbsp;</td><td>Lower diagonal </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>d_b</em>&nbsp;</td><td>Main diagonal </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>d_c</em>&nbsp;</td><td>Upper diagonal </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>d_d</em>&nbsp;</td><td>Right hand side </td></tr>
   </table>
   </dd>
 </dl>
@@ -673,7 +844,7 @@ template&lt;uint startbit, bool fullBlocks, bool manualCoalesce, bool unflip, bo
   </table>
   </dd>
 </dl>
-<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000021">Todo:</a></b></dt><dd>Args that are const below should be prototyped as const </dd></dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000020">Todo:</a></b></dt><dd>Args that are const below should be prototyped as const </dd></dl>
 
 </div>
 </div>
@@ -1252,7 +1423,7 @@ template&lt;class T &gt; </div>
 
 <p>Adds a constant value to all values in the input d_vector. </p>
 <p>Each thread adds two pairs of elements. </p>
-<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000022">Todo:</a></b></dt><dd>Test this function -- it is currently not yet used.</dd></dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000021">Todo:</a></b></dt><dd>Test this function -- it is currently not yet used.</dd></dl>
 <dl><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>d_vector</em>&nbsp;</td><td>The array of elements to be modified </td></tr>
@@ -1440,7 +1611,7 @@ template&lt;class T &gt; </div>
 
 <p>Adds together two vectors. </p>
 <p>Each thread adds two pairs of elements. </p>
-<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000023">Todo:</a></b></dt><dd>Test this function -- it is currently not yet used.</dd></dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000022">Todo:</a></b></dt><dd>Test this function -- it is currently not yet used.</dd></dl>
 <dl><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"><tt>[out]</tt>&nbsp;</td><td valign="top"><em>d_vectorA</em>&nbsp;</td><td>The left operand array and the result </td></tr>
