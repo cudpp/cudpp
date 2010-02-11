@@ -50,6 +50,8 @@
 #include "cudpp_rand.h"
 #include "cudpp_reduce.h"
 
+
+
 /**
  * @brief Performs a scan operation of numElements on its input in
  * GPU memory (d_in) and places the output in GPU memory
@@ -107,6 +109,25 @@ CUDPPResult cudppScan(const CUDPPHandle planHandle,
     {    
         return CUDPP_ERROR_UNKNOWN; //! @todo Return more specific errors
     }
+}
+/**
+ * @brief Tunes a particular algorithm for optimal performance 
+ * independent of the machine. It first checks to see whether
+ * a tuning method exists for the given plan configuration, and 
+ * modifies the plan values accordingly. 
+**/
+CUDPP_DLL
+CUDPPResult cudppTune(const CUDPPHandle planHandle, CUDPPTuneConfig config)
+{
+
+    CUDPPReducePlan *plan = 
+        (CUDPPReducePlan*)getPlanPtrFromHandle<CUDPPReducePlan>(planHandle);
+
+
+    CUDPPTuneConfig* tConfig = (CUDPPTuneConfig*)&config;
+
+    tuneReduce(plan, tConfig);
+    return CUDPP_SUCCESS;
 }
 
 /**
@@ -472,29 +493,6 @@ CUDPPResult cudppRandSeed(const CUDPPHandle planHandle,
 }//end cudppRandSeed
 
 
-CUDPP_DLL
-CUDPPResult cudppReduce(const CUDPPHandle planHandle, 
-                         int  *d_in,
-                         int  *d_out,
-                         int  nElements,
-                         bool tune)
-{
-    CUDPPReducePlan * plan = 
-        (CUDPPReducePlan *) getPlanPtrFromHandle<CUDPPReducePlan>(planHandle);
-    
-    switch(plan->m_config.algorithm)
-    {
-    case CUDPP_REDUCE:
-        CUDPPTuneReduce tuneConfig;
-        tuneConfig.tuneEnabled = tune;
-        cudppReduceDispatch(d_out, d_in, nElements, plan);
-        break;
-    default:
-        break;
-    }
-
-    return CUDPP_SUCCESS;
-}//end cudppReduce
 
 /** @} */ // end Algorithm Interface
 /** @} */ // end of publicInterface group
