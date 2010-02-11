@@ -32,7 +32,7 @@
 
 int testTridiagonal(int argc, const char** argv)
 {
-    int retval =0;
+    int retval = 0;
     CUDPPHandle tridiagonalPlan = 0;
     CUDPPResult result;
     CUDPPConfiguration config;
@@ -75,8 +75,10 @@ int testTridiagonal(int argc, const char** argv)
 
     for (int i = 0; i < numSystems; i++)
     {
-        testGeneration(&a[i*systemSize],&b[i*systemSize],&c[i*systemSize],&d[i*systemSize],&x1[i*systemSize],systemSize);
+        testGeneration(&a[i*systemSize], &b[i*systemSize], &c[i*systemSize], &d[i*systemSize], &x1[i*systemSize], systemSize);
     }
+
+    cutilDeviceInit(argc, argv);
 
     unsigned int timer1, timer2;
 
@@ -92,10 +94,10 @@ int testTridiagonal(int argc, const char** argv)
     cutStopTimer(timer2);
     printf("numSystems: %d, systemSize: %d, CPU execution time: %f ms\n", numSystems, systemSize, cutGetTimerValue(timer2));
 
-    writeResultToFile<T>(x1,numSystems,systemSize,"cpu_result.txt");
-    writeResultToFile<T>(x2,numSystems,systemSize,"gpu_result.txt");
+    //writeResultToFile<T>(x1,numSystems,systemSize,"cpu_result.txt");
+    //writeResultToFile<T>(x2,numSystems,systemSize,"gpu_result.txt");
 
-    retval = compareManySystems<T>(x1,x2,systemSize,numSystems,0.001f);
+    retval = compareManySystems<T>(x1, x2, systemSize, numSystems, 0.001f);
 
     free(a);
     free(b);
