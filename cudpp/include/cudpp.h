@@ -409,6 +409,18 @@ struct CUDPPConfiguration
 #define CUDPP_INVALID_HANDLE 0xC0DABAD1
 typedef size_t CUDPPHandle;
 
+
+struct CUDPPTuneConfig
+{
+  //For reduction only now TODO: make more flexible
+    float timeLimit;
+    char* tuneFilePath;
+
+    unsigned int numElements;
+    //bool tuneEnabled; 
+    bool reTune;
+};
+
 /* To use CUDPP as a static library, #define CUDPP_STATIC_LIB before 
  * including cudpp.h
  */
@@ -447,6 +459,10 @@ CUDPPResult cudppPlan(const CUDPPHandle  cudppHandle,
 
 CUDPP_DLL
 CUDPPResult cudppDestroyPlan(CUDPPHandle plan);
+
+//Tuning Functions
+CUDPP_DLL
+CUDPPResult cudppTune(const CUDPPHandle plan, CUDPPTuneConfig config);
 
 // Scan and sort algorithms
 
@@ -490,7 +506,6 @@ CUDPPResult cudppSort(const CUDPPHandle planHandle,
                       void              *d_values,                                                                       
                       int               keybits,
                       size_t            numElements);
-
 // Sparse matrix allocation
 
 CUDPP_DLL
