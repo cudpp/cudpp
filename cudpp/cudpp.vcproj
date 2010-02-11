@@ -115,96 +115,6 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="Debug|x64"
-			OutputDirectory="lib"
-			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
-			ConfigurationType="2"
-			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
-			CharacterSet="2"
-			>
-			<Tool
-				Name="VCPreBuildEventTool"
-			/>
-			<Tool
-				Name="VCCustomBuildTool"
-			/>
-			<Tool
-				Name="CUDA Build Rule"
-			/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"
-			/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"
-			/>
-			<Tool
-				Name="VCMIDLTool"
-				TargetEnvironment="3"
-			/>
-			<Tool
-				Name="VCCLCompilerTool"
-				Optimization="0"
-				AdditionalIncludeDirectories="./src,./include"
-				PreprocessorDefinitions="WIN64;_WINDOWS;BUILD_DLL;_USRDLL"
-				GeneratePreprocessedFile="1"
-				MinimalRebuild="true"
-				BasicRuntimeChecks="3"
-				RuntimeLibrary="1"
-				UsePrecompiledHeader="0"
-				WarningLevel="3"
-				Detect64BitPortabilityProblems="true"
-				DebugInformationFormat="3"
-			/>
-			<Tool
-				Name="VCManagedResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCPreLinkEventTool"
-			/>
-			<Tool
-				Name="VCLinkerTool"
-				AdditionalDependencies="cudart.lib cutil64D.lib"
-				ShowProgress="0"
-				OutputFile="lib/cudpp64d.dll"
-				LinkIncremental="2"
-				AdditionalLibraryDirectories="$(CUDA_LIB_PATH),../common/lib"
-				GenerateDebugInformation="true"
-				ProgramDatabaseFile="$(OutDir)\$(TargetName).pdb"
-				SubSystem="2"
-				ImportLibrary="$(OutDir)/$(TargetName).lib"
-				TargetMachine="17"
-			/>
-			<Tool
-				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCManifestTool"
-			/>
-			<Tool
-				Name="VCXDCMakeTool"
-			/>
-			<Tool
-				Name="VCBscMakeTool"
-			/>
-			<Tool
-				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCWebDeploymentTool"
-			/>
-			<Tool
-				Name="VCPostBuildEventTool"
-				Description="Copying $(OutDir)\$(TargetFileName) to ..\bin\win64\$(ConfigurationName)\$(TargetFileName)"
-				CommandLine="copy $(OutDir)\$(TargetFileName) ..\bin\win64\$(ConfigurationName)\$(TargetFileName)"
-			/>
-		</Configuration>
-		<Configuration
 			Name="Release|Win32"
 			OutputDirectory="lib"
 			IntermediateDirectory="$(ConfigurationName)"
@@ -289,93 +199,6 @@
 				Name="VCPostBuildEventTool"
 				Description="Copying $(OutDir)\$(TargetFileName) to ..\bin\win32\$(ConfigurationName)\$(TargetFileName)"
 				CommandLine="copy $(OutDir)\$(TargetFileName) ..\bin\win32\$(ConfigurationName)\$(TargetFileName)"
-			/>
-		</Configuration>
-		<Configuration
-			Name="Release|x64"
-			OutputDirectory="lib"
-			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
-			ConfigurationType="2"
-			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
-			CharacterSet="2"
-			>
-			<Tool
-				Name="VCPreBuildEventTool"
-			/>
-			<Tool
-				Name="VCCustomBuildTool"
-			/>
-			<Tool
-				Name="CUDA Build Rule"
-			/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"
-			/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"
-			/>
-			<Tool
-				Name="VCMIDLTool"
-				TargetEnvironment="3"
-			/>
-			<Tool
-				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="./src,./include"
-				PreprocessorDefinitions="WIN64;_WINDOWS;BUILD_DLL;_USRDLL"
-				RuntimeLibrary="0"
-				UsePrecompiledHeader="0"
-				WarningLevel="3"
-				Detect64BitPortabilityProblems="true"
-				DebugInformationFormat="3"
-			/>
-			<Tool
-				Name="VCManagedResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCPreLinkEventTool"
-			/>
-			<Tool
-				Name="VCLinkerTool"
-				AdditionalDependencies="cudart.lib cutil64.lib"
-				OutputFile="lib/cudpp64.dll"
-				LinkIncremental="1"
-				AdditionalLibraryDirectories="$(CUDA_LIB_PATH),../common/lib"
-				GenerateDebugInformation="true"
-				ProgramDatabaseFile="$(OutDir)\$(TargetName).pdb"
-				SubSystem="2"
-				OptimizeReferences="2"
-				EnableCOMDATFolding="2"
-				ImportLibrary="$(OutDir)/$(TargetName).lib"
-				TargetMachine="17"
-			/>
-			<Tool
-				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCManifestTool"
-			/>
-			<Tool
-				Name="VCXDCMakeTool"
-			/>
-			<Tool
-				Name="VCBscMakeTool"
-			/>
-			<Tool
-				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCWebDeploymentTool"
-			/>
-			<Tool
-				Name="VCPostBuildEventTool"
-				Description="Copying $(OutDir)\$(TargetFileName) to ..\bin\win64\$(ConfigurationName)\$(TargetFileName)"
-				CommandLine="copy $(OutDir)\$(TargetFileName) ..\bin\win64\$(ConfigurationName)\$(TargetFileName)"
 			/>
 		</Configuration>
 		<Configuration
@@ -473,6 +296,554 @@
 			/>
 		</Configuration>
 		<Configuration
+			Name="EmuRelease|Win32"
+			OutputDirectory="lib"
+			IntermediateDirectory="$(ConfigurationName)"
+			ConfigurationType="2"
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
+			CharacterSet="2"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="CUDA Build Rule"
+				Include="$(CUDA_INC_PATH);./;../common/inc;./src;./include"
+				Emulation="true"
+				Runtime="0"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				AdditionalIncludeDirectories="./src;./include;$(CUDA_INC_PATH)"
+				PreprocessorDefinitions="WIN32;_WINDOWS;BUILD_DLL;_USRDLL"
+				RuntimeLibrary="0"
+				UsePrecompiledHeader="0"
+				WarningLevel="3"
+				Detect64BitPortabilityProblems="true"
+				DebugInformationFormat="3"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLinkerTool"
+				AdditionalDependencies="cudart.lib cutil32.lib"
+				OutputFile="lib/cudpp32_emu.dll"
+				LinkIncremental="1"
+				AdditionalLibraryDirectories="$(CUDA_LIB_PATH),../common/lib"
+				GenerateDebugInformation="true"
+				ProgramDatabaseFile="$(OutDir)\$(TargetName).pdb"
+				SubSystem="2"
+				OptimizeReferences="2"
+				EnableCOMDATFolding="2"
+				ImportLibrary="$(OutDir)/$(TargetName).lib"
+				TargetMachine="1"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCWebDeploymentTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+				Description="Copying $(OutDir)\$(TargetFileName) to ..\bin\win32\$(ConfigurationName)\$(TargetFileName)"
+				CommandLine="copy $(OutDir)\$(TargetFileName) ..\bin\win32\$(ConfigurationName)\$(TargetFileName)"
+			/>
+		</Configuration>
+		<Configuration
+			Name="StaticLib_Debug|Win32"
+			OutputDirectory="lib"
+			IntermediateDirectory="$(ConfigurationName)"
+			ConfigurationType="4"
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
+			CharacterSet="2"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="CUDA Build Rule"
+				Include="$(CUDA_INC_PATH);./;../common/inc;./src;./include"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="0"
+				AdditionalIncludeDirectories="./src,./include"
+				PreprocessorDefinitions="WIN32;_WINDOWS;CUDPP_STATIC_LIB;_DEBUG"
+				GeneratePreprocessedFile="1"
+				MinimalRebuild="true"
+				BasicRuntimeChecks="3"
+				RuntimeLibrary="1"
+				UsePrecompiledHeader="0"
+				WarningLevel="3"
+				Detect64BitPortabilityProblems="true"
+				DebugInformationFormat="4"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLibrarianTool"
+				OutputFile="lib/cudpp32d.lib"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+				CommandLine=""
+			/>
+		</Configuration>
+		<Configuration
+			Name="StaticLib_Release|Win32"
+			OutputDirectory="lib"
+			IntermediateDirectory="$(ConfigurationName)"
+			ConfigurationType="4"
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
+			CharacterSet="2"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="CUDA Build Rule"
+				Include="$(CUDA_INC_PATH);./;../common/inc;./src;./include"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				AdditionalIncludeDirectories="./src,./include"
+				PreprocessorDefinitions="WIN32;_WINDOWS;CUDPP_STATIC_LIB;"
+				RuntimeLibrary="0"
+				UsePrecompiledHeader="0"
+				WarningLevel="3"
+				Detect64BitPortabilityProblems="true"
+				DebugInformationFormat="3"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLibrarianTool"
+				OutputFile="lib\cudpp32.lib"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+				Description="Copying $(OutDir)\$(TargetFileName) to ..\bin\win32\$(ConfigurationName)\$(TargetFileName)"
+				CommandLine="copy $(OutDir)\$(TargetFileName) ..\bin\win32\$(ConfigurationName)\$(TargetFileName)"
+				ExcludedFromBuild="true"
+			/>
+		</Configuration>
+		<Configuration
+			Name="StaticLib_EmuDebug|Win32"
+			OutputDirectory="lib"
+			IntermediateDirectory="$(ConfigurationName)"
+			ConfigurationType="4"
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
+			CharacterSet="2"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="CUDA Build Rule"
+				Include="$(CUDA_INC_PATH);./;../common/inc;./src;./include"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="0"
+				AdditionalIncludeDirectories="./src,./include"
+				PreprocessorDefinitions="WIN32;_WINDOWS;CUDPP_STATIC_LIB;_DEBUG"
+				MinimalRebuild="true"
+				BasicRuntimeChecks="3"
+				RuntimeLibrary="1"
+				UsePrecompiledHeader="0"
+				WarningLevel="3"
+				Detect64BitPortabilityProblems="true"
+				DebugInformationFormat="4"
+				DisableSpecificWarnings="4090"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLibrarianTool"
+				OutputFile="lib\cudpp32d_emu.lib"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+				Description="Copying $(OutDir)\$(TargetFileName) to ..\bin\win32\$(ConfigurationName)\$(TargetFileName)"
+				CommandLine="copy $(OutDir)\$(TargetFileName) ..\bin\win32\$(ConfigurationName)\$(TargetFileName)"
+				ExcludedFromBuild="true"
+			/>
+		</Configuration>
+		<Configuration
+			Name="StaticLib_EmuRelease|Win32"
+			OutputDirectory="lib"
+			IntermediateDirectory="$(ConfigurationName)"
+			ConfigurationType="4"
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
+			CharacterSet="2"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="CUDA Build Rule"
+				Include="$(CUDA_INC_PATH);./;../common/inc;./src;./include"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				AdditionalIncludeDirectories="./src,./include"
+				PreprocessorDefinitions="WIN32;_WINDOWS;CUDPP_STATIC_LIB;"
+				RuntimeLibrary="0"
+				UsePrecompiledHeader="0"
+				WarningLevel="3"
+				Detect64BitPortabilityProblems="true"
+				DebugInformationFormat="3"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLibrarianTool"
+				OutputFile="lib\cudpp32_emu.lib"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+				Description="Copying $(OutDir)\$(TargetFileName) to ..\bin\win32\$(ConfigurationName)\$(TargetFileName)"
+				CommandLine="copy $(OutDir)\$(TargetFileName) ..\bin\win32\$(ConfigurationName)\$(TargetFileName)"
+				ExcludedFromBuild="true"
+			/>
+		</Configuration>
+		<Configuration
+			Name="Debug|x64"
+			OutputDirectory="lib"
+			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
+			ConfigurationType="2"
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
+			CharacterSet="2"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="CUDA Build Rule"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				TargetEnvironment="3"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="0"
+				AdditionalIncludeDirectories="./src,./include"
+				PreprocessorDefinitions="WIN64;_WINDOWS;BUILD_DLL;_USRDLL"
+				GeneratePreprocessedFile="1"
+				MinimalRebuild="true"
+				BasicRuntimeChecks="3"
+				RuntimeLibrary="1"
+				UsePrecompiledHeader="0"
+				WarningLevel="3"
+				Detect64BitPortabilityProblems="true"
+				DebugInformationFormat="3"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLinkerTool"
+				AdditionalDependencies="cudart.lib cutil64D.lib"
+				ShowProgress="0"
+				OutputFile="lib/cudpp64d.dll"
+				LinkIncremental="2"
+				AdditionalLibraryDirectories="$(CUDA_LIB_PATH),../common/lib"
+				GenerateDebugInformation="true"
+				ProgramDatabaseFile="$(OutDir)\$(TargetName).pdb"
+				SubSystem="2"
+				ImportLibrary="$(OutDir)/$(TargetName).lib"
+				TargetMachine="17"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCWebDeploymentTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+				Description="Copying $(OutDir)\$(TargetFileName) to ..\bin\win64\$(ConfigurationName)\$(TargetFileName)"
+				CommandLine="copy $(OutDir)\$(TargetFileName) ..\bin\win64\$(ConfigurationName)\$(TargetFileName)"
+			/>
+		</Configuration>
+		<Configuration
+			Name="Release|x64"
+			OutputDirectory="lib"
+			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
+			ConfigurationType="2"
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
+			CharacterSet="2"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="CUDA Build Rule"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				TargetEnvironment="3"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				AdditionalIncludeDirectories="./src,./include"
+				PreprocessorDefinitions="WIN64;_WINDOWS;BUILD_DLL;_USRDLL"
+				RuntimeLibrary="0"
+				UsePrecompiledHeader="0"
+				WarningLevel="3"
+				Detect64BitPortabilityProblems="true"
+				DebugInformationFormat="3"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLinkerTool"
+				AdditionalDependencies="cudart.lib cutil64.lib"
+				OutputFile="lib/cudpp64.dll"
+				LinkIncremental="1"
+				AdditionalLibraryDirectories="$(CUDA_LIB_PATH),../common/lib"
+				GenerateDebugInformation="true"
+				ProgramDatabaseFile="$(OutDir)\$(TargetName).pdb"
+				SubSystem="2"
+				OptimizeReferences="2"
+				EnableCOMDATFolding="2"
+				ImportLibrary="$(OutDir)/$(TargetName).lib"
+				TargetMachine="17"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCWebDeploymentTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+				Description="Copying $(OutDir)\$(TargetFileName) to ..\bin\win64\$(ConfigurationName)\$(TargetFileName)"
+				CommandLine="copy $(OutDir)\$(TargetFileName) ..\bin\win64\$(ConfigurationName)\$(TargetFileName)"
+			/>
+		</Configuration>
+		<Configuration
 			Name="EmuDebug|x64"
 			OutputDirectory="lib"
 			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
@@ -563,95 +934,6 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="EmuRelease|Win32"
-			OutputDirectory="lib"
-			IntermediateDirectory="$(ConfigurationName)"
-			ConfigurationType="2"
-			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
-			CharacterSet="2"
-			>
-			<Tool
-				Name="VCPreBuildEventTool"
-			/>
-			<Tool
-				Name="VCCustomBuildTool"
-			/>
-			<Tool
-				Name="CUDA Build Rule"
-				Include="$(CUDA_INC_PATH);./;../common/inc;./src;./include"
-				Emulation="true"
-				Runtime="0"
-			/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"
-			/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"
-			/>
-			<Tool
-				Name="VCMIDLTool"
-			/>
-			<Tool
-				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="./src;./include;$(CUDA_INC_PATH)"
-				PreprocessorDefinitions="WIN32;_WINDOWS;BUILD_DLL;_USRDLL"
-				RuntimeLibrary="0"
-				UsePrecompiledHeader="0"
-				WarningLevel="3"
-				Detect64BitPortabilityProblems="true"
-				DebugInformationFormat="3"
-			/>
-			<Tool
-				Name="VCManagedResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCPreLinkEventTool"
-			/>
-			<Tool
-				Name="VCLinkerTool"
-				AdditionalDependencies="cudart.lib cutil32.lib"
-				OutputFile="lib/cudpp32_emu.dll"
-				LinkIncremental="1"
-				AdditionalLibraryDirectories="$(CUDA_LIB_PATH),../common/lib"
-				GenerateDebugInformation="true"
-				ProgramDatabaseFile="$(OutDir)\$(TargetName).pdb"
-				SubSystem="2"
-				OptimizeReferences="2"
-				EnableCOMDATFolding="2"
-				ImportLibrary="$(OutDir)/$(TargetName).lib"
-				TargetMachine="1"
-			/>
-			<Tool
-				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCManifestTool"
-			/>
-			<Tool
-				Name="VCXDCMakeTool"
-			/>
-			<Tool
-				Name="VCBscMakeTool"
-			/>
-			<Tool
-				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCWebDeploymentTool"
-			/>
-			<Tool
-				Name="VCPostBuildEventTool"
-				Description="Copying $(OutDir)\$(TargetFileName) to ..\bin\win32\$(ConfigurationName)\$(TargetFileName)"
-				CommandLine="copy $(OutDir)\$(TargetFileName) ..\bin\win32\$(ConfigurationName)\$(TargetFileName)"
-			/>
-		</Configuration>
-		<Configuration
 			Name="EmuRelease|x64"
 			OutputDirectory="lib"
 			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
@@ -739,77 +1021,6 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="StaticLib_Debug|Win32"
-			OutputDirectory="lib"
-			IntermediateDirectory="$(ConfigurationName)"
-			ConfigurationType="4"
-			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
-			CharacterSet="2"
-			>
-			<Tool
-				Name="VCPreBuildEventTool"
-			/>
-			<Tool
-				Name="VCCustomBuildTool"
-			/>
-			<Tool
-				Name="CUDA Build Rule"
-				Include="$(CUDA_INC_PATH);./;../common/inc;./src;./include"
-			/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"
-			/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"
-			/>
-			<Tool
-				Name="VCMIDLTool"
-			/>
-			<Tool
-				Name="VCCLCompilerTool"
-				Optimization="0"
-				AdditionalIncludeDirectories="./src,./include"
-				PreprocessorDefinitions="WIN32;_WINDOWS;CUDPP_STATIC_LIB;_DEBUG"
-				GeneratePreprocessedFile="1"
-				MinimalRebuild="true"
-				BasicRuntimeChecks="3"
-				RuntimeLibrary="1"
-				UsePrecompiledHeader="0"
-				WarningLevel="3"
-				Detect64BitPortabilityProblems="true"
-				DebugInformationFormat="4"
-			/>
-			<Tool
-				Name="VCManagedResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCPreLinkEventTool"
-			/>
-			<Tool
-				Name="VCLibrarianTool"
-				OutputFile="lib/cudpp32d.lib"
-			/>
-			<Tool
-				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCXDCMakeTool"
-			/>
-			<Tool
-				Name="VCBscMakeTool"
-			/>
-			<Tool
-				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCPostBuildEventTool"
-				CommandLine=""
-			/>
-		</Configuration>
-		<Configuration
 			Name="StaticLib_Debug|x64"
 			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
 			ConfigurationType="1"
@@ -870,75 +1081,6 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-			/>
-		</Configuration>
-		<Configuration
-			Name="StaticLib_Release|Win32"
-			OutputDirectory="lib"
-			IntermediateDirectory="$(ConfigurationName)"
-			ConfigurationType="4"
-			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
-			CharacterSet="2"
-			>
-			<Tool
-				Name="VCPreBuildEventTool"
-			/>
-			<Tool
-				Name="VCCustomBuildTool"
-			/>
-			<Tool
-				Name="CUDA Build Rule"
-				Include="$(CUDA_INC_PATH);./;../common/inc;./src;./include"
-			/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"
-			/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"
-			/>
-			<Tool
-				Name="VCMIDLTool"
-			/>
-			<Tool
-				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="./src,./include"
-				PreprocessorDefinitions="WIN32;_WINDOWS;CUDPP_STATIC_LIB;"
-				RuntimeLibrary="0"
-				UsePrecompiledHeader="0"
-				WarningLevel="3"
-				Detect64BitPortabilityProblems="true"
-				DebugInformationFormat="3"
-			/>
-			<Tool
-				Name="VCManagedResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCPreLinkEventTool"
-			/>
-			<Tool
-				Name="VCLibrarianTool"
-				OutputFile="lib\cudpp32.lib"
-			/>
-			<Tool
-				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCXDCMakeTool"
-			/>
-			<Tool
-				Name="VCBscMakeTool"
-			/>
-			<Tool
-				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCPostBuildEventTool"
-				Description="Copying $(OutDir)\$(TargetFileName) to ..\bin\win32\$(ConfigurationName)\$(TargetFileName)"
-				CommandLine="copy $(OutDir)\$(TargetFileName) ..\bin\win32\$(ConfigurationName)\$(TargetFileName)"
-				ExcludedFromBuild="true"
 			/>
 		</Configuration>
 		<Configuration
@@ -1005,79 +1147,6 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="StaticLib_EmuDebug|Win32"
-			OutputDirectory="lib"
-			IntermediateDirectory="$(ConfigurationName)"
-			ConfigurationType="4"
-			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
-			CharacterSet="2"
-			>
-			<Tool
-				Name="VCPreBuildEventTool"
-			/>
-			<Tool
-				Name="VCCustomBuildTool"
-			/>
-			<Tool
-				Name="CUDA Build Rule"
-				Include="$(CUDA_INC_PATH);./;../common/inc;./src;./include"
-			/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"
-			/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"
-			/>
-			<Tool
-				Name="VCMIDLTool"
-			/>
-			<Tool
-				Name="VCCLCompilerTool"
-				Optimization="0"
-				AdditionalIncludeDirectories="./src,./include"
-				PreprocessorDefinitions="WIN32;_WINDOWS;CUDPP_STATIC_LIB;_DEBUG"
-				MinimalRebuild="true"
-				BasicRuntimeChecks="3"
-				RuntimeLibrary="1"
-				UsePrecompiledHeader="0"
-				WarningLevel="3"
-				Detect64BitPortabilityProblems="true"
-				DebugInformationFormat="4"
-				DisableSpecificWarnings="4090"
-			/>
-			<Tool
-				Name="VCManagedResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCPreLinkEventTool"
-			/>
-			<Tool
-				Name="VCLibrarianTool"
-				OutputFile="lib\cudpp32d_emu.lib"
-			/>
-			<Tool
-				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCXDCMakeTool"
-			/>
-			<Tool
-				Name="VCBscMakeTool"
-			/>
-			<Tool
-				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCPostBuildEventTool"
-				Description="Copying $(OutDir)\$(TargetFileName) to ..\bin\win32\$(ConfigurationName)\$(TargetFileName)"
-				CommandLine="copy $(OutDir)\$(TargetFileName) ..\bin\win32\$(ConfigurationName)\$(TargetFileName)"
-				ExcludedFromBuild="true"
-			/>
-		</Configuration>
-		<Configuration
 			Name="StaticLib_EmuDebug|x64"
 			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
 			ConfigurationType="1"
@@ -1138,75 +1207,6 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-			/>
-		</Configuration>
-		<Configuration
-			Name="StaticLib_EmuRelease|Win32"
-			OutputDirectory="lib"
-			IntermediateDirectory="$(ConfigurationName)"
-			ConfigurationType="4"
-			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
-			CharacterSet="2"
-			>
-			<Tool
-				Name="VCPreBuildEventTool"
-			/>
-			<Tool
-				Name="VCCustomBuildTool"
-			/>
-			<Tool
-				Name="CUDA Build Rule"
-				Include="$(CUDA_INC_PATH);./;../common/inc;./src;./include"
-			/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"
-			/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"
-			/>
-			<Tool
-				Name="VCMIDLTool"
-			/>
-			<Tool
-				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="./src,./include"
-				PreprocessorDefinitions="WIN32;_WINDOWS;CUDPP_STATIC_LIB;"
-				RuntimeLibrary="0"
-				UsePrecompiledHeader="0"
-				WarningLevel="3"
-				Detect64BitPortabilityProblems="true"
-				DebugInformationFormat="3"
-			/>
-			<Tool
-				Name="VCManagedResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCPreLinkEventTool"
-			/>
-			<Tool
-				Name="VCLibrarianTool"
-				OutputFile="lib\cudpp32_emu.lib"
-			/>
-			<Tool
-				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCXDCMakeTool"
-			/>
-			<Tool
-				Name="VCBscMakeTool"
-			/>
-			<Tool
-				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCPostBuildEventTool"
-				Description="Copying $(OutDir)\$(TargetFileName) to ..\bin\win32\$(ConfigurationName)\$(TargetFileName)"
-				CommandLine="copy $(OutDir)\$(TargetFileName) ..\bin\win32\$(ConfigurationName)\$(TargetFileName)"
-				ExcludedFromBuild="true"
 			/>
 		</Configuration>
 		<Configuration
@@ -1294,7 +1294,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|x64"
+					Name="StaticLib_Debug|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1303,12 +1303,24 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="StaticLib_Debug|Win32"
+					Name="Debug|x64"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
 						GeneratePreprocessedFile="0"
 						WarningLevel="3"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\src\cudpp_manager.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						GeneratePreprocessedFile="0"
 					/>
 				</FileConfiguration>
 			</File>
@@ -1337,14 +1349,6 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						GeneratePreprocessedFile="0"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
 					Name="StaticLib_Debug|Win32"
 					>
 					<Tool
@@ -1352,12 +1356,8 @@
 						GeneratePreprocessedFile="0"
 					/>
 				</FileConfiguration>
-			</File>
-			<File
-				RelativePath=".\src\cudpp_manager.cpp"
-				>
 				<FileConfiguration
-					Name="Debug|Win32"
+					Name="Debug|x64"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1384,6 +1384,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\cudpp_manager.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\cudpp_maximal_launch.h"
 				>
 			</File>
@@ -1392,15 +1396,15 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\cudpp_manager.h"
-				>
-			</File>
-			<File
 				RelativePath=".\src\cudpp_radixsort.h"
 				>
 			</File>
 			<File
 				RelativePath=".\src\cudpp_rand.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\cudpp_reduce.h"
 				>
 			</File>
 			<File
@@ -1413,6 +1417,10 @@
 			</File>
 			<File
 				RelativePath=".\src\cudpp_spmvmult.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\cudpp_tune.h"
 				>
 			</File>
 			<File
@@ -1437,50 +1445,6 @@
 					<Tool
 						Name="CUDA Build Rule"
 						Runtime="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|x64"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-						Description="CUDA is compiling $(InputFileName)..."
-						CommandLine="$(CUDA_BIN_PATH)/nvcc.exe -ccbin &quot;$(VSInstallDir)\VC\bin&quot; -m64 -D_DEBUG -I&quot;$(CUDA_INC_PATH)&quot; -I./ -I../common/inc -I&quot;$(VCInstallDir)/include&quot;  -I&quot;$(VCInstallDir)/PlatformSDK/include&quot; -I./src -I./include -o $(ConfigurationName)/compact_app.obj -c -g ./src/app/compact_app.cu&#x0D;&#x0A;"
-						AdditionalDependencies="compact_app.cu compact_kernel.cu"
-						Outputs="$(ConfigurationName)\compact_app.obj"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|x64"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-						Description="CUDA is compiling $(InputFileName)..."
-						CommandLine="$(CUDA_BIN_PATH)/nvcc.exe -ccbin &quot;$(VCInstallDir)bin&quot; -I&quot;$(CUDA_INC_PATH)&quot; -I./ -I../common/inc -I&quot;$(VCInstallDir)/include&quot;  -I&quot;$(VCInstallDir)/PlatformSDK/include&quot; -I./src -I./include -o $(ConfigurationName)/compact_app.obj -c ./src/app/compact_app.cu&#x0D;&#x0A;"
-						AdditionalDependencies="compact_app.cu compact_kernel.cu"
-						Outputs="$(ConfigurationName)\compact_app.obj"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="EmuDebug|x64"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-						Description="CUDA is compiling $(InputFileName)..."
-						CommandLine="$(CUDA_BIN_PATH)/nvcc.exe -ccbin &quot;$(VCInstallDir)bin&quot; -deviceemu -D_DEBUG -I&quot;$(CUDA_INC_PATH)&quot; -I./ -I../common/inc -I&quot;$(VCInstallDir)/include&quot; -I&quot;$(VCInstallDir)/PlatformSDK/include&quot; -I./src -I./include -o $(ConfigurationName)/compact_app.obj -c -g ./src/app/compact_app.cu&#x0D;&#x0A;"
-						AdditionalDependencies="compact_app.cu compact_kernel.cu"
-						Outputs="$(ConfigurationName)\compact_app.obj"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="EmuRelease|x64"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-						Description="CUDA is compiling $(InputFileName)..."
-						CommandLine="$(CUDA_BIN_PATH)/nvcc.exe -ccbin &quot;$(VCInstallDir)bin&quot; -deviceemu -I&quot;$(CUDA_INC_PATH)&quot; -I./ -I../common/inc -I&quot;$(VCInstallDir)/include&quot; -I&quot;$(VCInstallDir)/PlatformSDK/include&quot; -I./src -I./include -o $(ConfigurationName)/compact_app.obj -c ./src/app/compact_app.cu&#x0D;&#x0A;"
-						AdditionalDependencies="compact_app.cu compact_kernel.cu"
-						Outputs="$(ConfigurationName)\compact_app.obj"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1527,24 +1491,61 @@
 						Outputs="$(ConfigurationName)\compact_app.obj"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|x64"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="CUDA is compiling $(InputFileName)..."
+						CommandLine="$(CUDA_BIN_PATH)/nvcc.exe -ccbin &quot;$(VSInstallDir)\VC\bin&quot; -m64 -D_DEBUG -I&quot;$(CUDA_INC_PATH)&quot; -I./ -I../common/inc -I&quot;$(VCInstallDir)/include&quot;  -I&quot;$(VCInstallDir)/PlatformSDK/include&quot; -I./src -I./include -o $(ConfigurationName)/compact_app.obj -c -g ./src/app/compact_app.cu&#x0D;&#x0A;"
+						AdditionalDependencies="compact_app.cu compact_kernel.cu"
+						Outputs="$(ConfigurationName)\compact_app.obj"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="CUDA is compiling $(InputFileName)..."
+						CommandLine="$(CUDA_BIN_PATH)/nvcc.exe -ccbin &quot;$(VCInstallDir)bin&quot; -I&quot;$(CUDA_INC_PATH)&quot; -I./ -I../common/inc -I&quot;$(VCInstallDir)/include&quot;  -I&quot;$(VCInstallDir)/PlatformSDK/include&quot; -I./src -I./include -o $(ConfigurationName)/compact_app.obj -c ./src/app/compact_app.cu&#x0D;&#x0A;"
+						AdditionalDependencies="compact_app.cu compact_kernel.cu"
+						Outputs="$(ConfigurationName)\compact_app.obj"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="EmuDebug|x64"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="CUDA is compiling $(InputFileName)..."
+						CommandLine="$(CUDA_BIN_PATH)/nvcc.exe -ccbin &quot;$(VCInstallDir)bin&quot; -deviceemu -D_DEBUG -I&quot;$(CUDA_INC_PATH)&quot; -I./ -I../common/inc -I&quot;$(VCInstallDir)/include&quot; -I&quot;$(VCInstallDir)/PlatformSDK/include&quot; -I./src -I./include -o $(ConfigurationName)/compact_app.obj -c -g ./src/app/compact_app.cu&#x0D;&#x0A;"
+						AdditionalDependencies="compact_app.cu compact_kernel.cu"
+						Outputs="$(ConfigurationName)\compact_app.obj"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="EmuRelease|x64"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="CUDA is compiling $(InputFileName)..."
+						CommandLine="$(CUDA_BIN_PATH)/nvcc.exe -ccbin &quot;$(VCInstallDir)bin&quot; -deviceemu -I&quot;$(CUDA_INC_PATH)&quot; -I./ -I../common/inc -I&quot;$(VCInstallDir)/include&quot; -I&quot;$(VCInstallDir)/PlatformSDK/include&quot; -I./src -I./include -o $(ConfigurationName)/compact_app.obj -c ./src/app/compact_app.cu&#x0D;&#x0A;"
+						AdditionalDependencies="compact_app.cu compact_kernel.cu"
+						Outputs="$(ConfigurationName)\compact_app.obj"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\src\kernel\compact_kernel.cu"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
+					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="CUDA Build Rule"
 						Runtime="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|x64"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1556,14 +1557,6 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|x64"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
 					Name="EmuDebug|Win32"
 					ExcludedFromBuild="true"
 					>
@@ -1572,27 +1565,11 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="EmuDebug|x64"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
 					Name="EmuRelease|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="CUDA Build Rule"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="EmuRelease|x64"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1621,6 +1598,38 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="StaticLib_EmuRelease|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="EmuDebug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="EmuRelease|x64"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -2023,6 +2032,50 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\src\app\reduce_app.cu"
+				>
+			</File>
+			<File
+				RelativePath=".\src\kernel\reduce_kernel.cu"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="EmuDebug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="EmuRelease|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\src\app\reduce_tune.cu"
+				>
+			</File>
+			<File
 				RelativePath=".\src\app\scan_app.cu"
 				>
 				<FileConfiguration
@@ -2031,50 +2084,6 @@
 					<Tool
 						Name="CUDA Build Rule"
 						Runtime="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|x64"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-						Description="CUDA is compiling $(InputFileName)..."
-						CommandLine="$(CUDA_BIN_PATH)/nvcc.exe -ccbin &quot;$(VCInstallDir)bin&quot; --host-compilation=C -D_DEBUG -I&quot;$(CUDA_INC_PATH)&quot; -I./ -I../common/inc -I&quot;$(VCInstallDir)/include&quot;  -I&quot;$(VCInstallDir)/PlatformSDK/include&quot; -I./src -I./include -o $(ConfigurationName)/scan_app.obj -c -g ./src/app/scan_app.cu&#x0D;&#x0A;"
-						AdditionalDependencies="scan_app.cu scan_kernel.cu scan_cta.cu"
-						Outputs="$(ConfigurationName)\scan_app.obj"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|x64"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-						Description="CUDA is compiling $(InputFileName)..."
-						CommandLine="$(CUDA_BIN_PATH)/nvcc.exe -ccbin &quot;$(VCInstallDir)bin&quot; --host-compilation=C -I&quot;$(CUDA_INC_PATH)&quot; -I./ -I../common/inc -I&quot;$(VCInstallDir)/include&quot;  -I&quot;$(VCInstallDir)/PlatformSDK/include&quot; -I./src -I./include -o $(ConfigurationName)/scan_app.obj -c ./src/app/scan_app.cu&#x0D;&#x0A;"
-						AdditionalDependencies="scan_app.cu scan_kernel.cu scan_cta.cu"
-						Outputs="$(ConfigurationName)\scan_app.obj"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="EmuDebug|x64"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-						Description="CUDA is compiling $(InputFileName)..."
-						CommandLine="$(CUDA_BIN_PATH)/nvcc.exe -ccbin &quot;$(VCInstallDir)bin&quot; --host-compilation=C -deviceemu -D_DEBUG -I&quot;$(CUDA_INC_PATH)&quot; -I./ -I../common/inc -I&quot;$(VCInstallDir)/include&quot; -I&quot;$(VCInstallDir)/PlatformSDK/include&quot; -I./src -I./include -o $(ConfigurationName)/scan_app.obj -c -g ./src/app/scan_app.cu&#x0D;&#x0A;"
-						AdditionalDependencies="scan_app.cu scan_kernel.cu scan_cta.cu"
-						Outputs="$(ConfigurationName)/scan_app.obj"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="EmuRelease|x64"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-						Description="CUDA is compiling $(InputFileName)..."
-						CommandLine="$(CUDA_BIN_PATH)/nvcc.exe -ccbin &quot;$(VCInstallDir)bin&quot; --host-compilation=C -deviceemu -I&quot;$(CUDA_INC_PATH)&quot; -I./ -I../common/inc -I&quot;$(VCInstallDir)/include&quot; -I&quot;$(VCInstallDir)/PlatformSDK/include&quot; -I./src -I./include -o $(ConfigurationName)/scan_app.obj -c ./src/app/scan_app.cu&#x0D;&#x0A;"
-						AdditionalDependencies="scan_app.cu scan_kernel.cu scan_cta.cu"
-						Outputs="$(ConfigurationName)/scan_app.obj"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -2112,6 +2121,50 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="StaticLib_EmuRelease|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="CUDA is compiling $(InputFileName)..."
+						CommandLine="$(CUDA_BIN_PATH)/nvcc.exe -ccbin &quot;$(VCInstallDir)bin&quot; --host-compilation=C -deviceemu -I&quot;$(CUDA_INC_PATH)&quot; -I./ -I../common/inc -I&quot;$(VCInstallDir)/include&quot; -I&quot;$(VCInstallDir)/PlatformSDK/include&quot; -I./src -I./include -o $(ConfigurationName)/scan_app.obj -c ./src/app/scan_app.cu&#x0D;&#x0A;"
+						AdditionalDependencies="scan_app.cu scan_kernel.cu scan_cta.cu"
+						Outputs="$(ConfigurationName)/scan_app.obj"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|x64"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="CUDA is compiling $(InputFileName)..."
+						CommandLine="$(CUDA_BIN_PATH)/nvcc.exe -ccbin &quot;$(VCInstallDir)bin&quot; --host-compilation=C -D_DEBUG -I&quot;$(CUDA_INC_PATH)&quot; -I./ -I../common/inc -I&quot;$(VCInstallDir)/include&quot;  -I&quot;$(VCInstallDir)/PlatformSDK/include&quot; -I./src -I./include -o $(ConfigurationName)/scan_app.obj -c -g ./src/app/scan_app.cu&#x0D;&#x0A;"
+						AdditionalDependencies="scan_app.cu scan_kernel.cu scan_cta.cu"
+						Outputs="$(ConfigurationName)\scan_app.obj"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="CUDA is compiling $(InputFileName)..."
+						CommandLine="$(CUDA_BIN_PATH)/nvcc.exe -ccbin &quot;$(VCInstallDir)bin&quot; --host-compilation=C -I&quot;$(CUDA_INC_PATH)&quot; -I./ -I../common/inc -I&quot;$(VCInstallDir)/include&quot;  -I&quot;$(VCInstallDir)/PlatformSDK/include&quot; -I./src -I./include -o $(ConfigurationName)/scan_app.obj -c ./src/app/scan_app.cu&#x0D;&#x0A;"
+						AdditionalDependencies="scan_app.cu scan_kernel.cu scan_cta.cu"
+						Outputs="$(ConfigurationName)\scan_app.obj"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="EmuDebug|x64"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="CUDA is compiling $(InputFileName)..."
+						CommandLine="$(CUDA_BIN_PATH)/nvcc.exe -ccbin &quot;$(VCInstallDir)bin&quot; --host-compilation=C -deviceemu -D_DEBUG -I&quot;$(CUDA_INC_PATH)&quot; -I./ -I../common/inc -I&quot;$(VCInstallDir)/include&quot; -I&quot;$(VCInstallDir)/PlatformSDK/include&quot; -I./src -I./include -o $(ConfigurationName)/scan_app.obj -c -g ./src/app/scan_app.cu&#x0D;&#x0A;"
+						AdditionalDependencies="scan_app.cu scan_kernel.cu scan_cta.cu"
+						Outputs="$(ConfigurationName)/scan_app.obj"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="EmuRelease|x64"
 					>
 					<Tool
 						Name="VCCustomBuildTool"
@@ -2137,29 +2190,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|x64"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-						Description=" "
-						CommandLine="&#x0D;&#x0A;"
-						Outputs=""
-					/>
-				</FileConfiguration>
-				<FileConfiguration
 					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-						Description=" "
-						CommandLine="&#x0D;&#x0A;"
-						Outputs=""
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|x64"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -2181,29 +2212,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="EmuDebug|x64"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-						Description=" "
-						CommandLine="&#x0D;&#x0A;"
-						Outputs=""
-					/>
-				</FileConfiguration>
-				<FileConfiguration
 					Name="EmuRelease|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-						Description=" "
-						CommandLine="&#x0D;&#x0A;"
-						Outputs=""
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="EmuRelease|x64"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -2248,6 +2257,50 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="StaticLib_EmuRelease|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description=" "
+						CommandLine="&#x0D;&#x0A;"
+						Outputs=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description=" "
+						CommandLine="&#x0D;&#x0A;"
+						Outputs=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description=" "
+						CommandLine="&#x0D;&#x0A;"
+						Outputs=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="EmuDebug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description=" "
+						CommandLine="&#x0D;&#x0A;"
+						Outputs=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="EmuRelease|x64"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -2274,31 +2327,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|x64"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-						Description=" "
-						CommandLine="&#x0D;&#x0A;"
-						AdditionalDependencies=" "
-						Outputs=""
-					/>
-				</FileConfiguration>
-				<FileConfiguration
 					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-						Description=" "
-						CommandLine="&#x0D;&#x0A;"
-						AdditionalDependencies=" "
-						Outputs=""
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|x64"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -2322,31 +2351,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="EmuDebug|x64"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-						Description=" "
-						CommandLine="&#x0D;&#x0A;"
-						AdditionalDependencies=" "
-						Outputs=""
-					/>
-				</FileConfiguration>
-				<FileConfiguration
 					Name="EmuRelease|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-						Description=" "
-						CommandLine="&#x0D;&#x0A;"
-						AdditionalDependencies=" "
-						Outputs=""
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="EmuRelease|x64"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -2405,6 +2410,54 @@
 						Outputs=""
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description=" "
+						CommandLine="&#x0D;&#x0A;"
+						AdditionalDependencies=" "
+						Outputs=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description=" "
+						CommandLine="&#x0D;&#x0A;"
+						AdditionalDependencies=" "
+						Outputs=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="EmuDebug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description=" "
+						CommandLine="&#x0D;&#x0A;"
+						AdditionalDependencies=" "
+						Outputs=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="EmuRelease|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description=" "
+						CommandLine="&#x0D;&#x0A;"
+						AdditionalDependencies=" "
+						Outputs=""
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\src\app\segmented_scan_app.cu"
@@ -2415,6 +2468,50 @@
 					<Tool
 						Name="CUDA Build Rule"
 						Runtime="1"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="StaticLib_Debug|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="CUDA is compiling $(InputFileName)..."
+						CommandLine="$(CUDA_BIN_PATH)/nvcc.exe -ccbin &quot;$(VCInstallDir)bin&quot; --host-compilation=C -D_DEBUG -I&quot;$(CUDA_INC_PATH)&quot; -I./ -I../common/inc -I&quot;$(VCInstallDir)/include&quot;  -I&quot;$(VCInstallDir)/PlatformSDK/include&quot; -I./src -I./include -o $(ConfigurationName)/segmented_scan_app.obj -c -g ./src/app/segmented_scan_app.cu&#x0D;&#x0A;"
+						AdditionalDependencies="segmented_scan_app.cu segmented_scan_kernel.cu segmented_scan_cta.cu"
+						Outputs="$(ConfigurationName)\segmented_scan_app.obj"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="StaticLib_Release|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="CUDA is compiling $(InputFileName)..."
+						CommandLine="$(CUDA_BIN_PATH)/nvcc.exe -ccbin &quot;$(VCInstallDir)bin&quot; --host-compilation=C -I&quot;$(CUDA_INC_PATH)&quot; -I./ -I../common/inc -I&quot;$(VCInstallDir)/include&quot;  -I&quot;$(VCInstallDir)/PlatformSDK/include&quot; -I./src -I./include -o $(ConfigurationName)/segmented_scan_app.obj -c ./src/app/segmented_scan_app.cu&#x0D;&#x0A;"
+						AdditionalDependencies="segmented_scan_app.cu segmented_scan_kernel.cu segmented_scan_cta.cu"
+						Outputs="$(ConfigurationName)\segmented_scan_app.obj"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="StaticLib_EmuDebug|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="CUDA is compiling $(InputFileName)..."
+						CommandLine="$(CUDA_BIN_PATH)/nvcc.exe -ccbin &quot;$(VCInstallDir)bin&quot; --host-compilation=C -deviceemu -D_DEBUG -I&quot;$(CUDA_INC_PATH)&quot; -I./ -I../common/inc -I&quot;$(VCInstallDir)/include&quot; -I&quot;$(VCInstallDir)/PlatformSDK/include&quot; -I./src -I./include -o $(ConfigurationName)/segmented_scan_app.obj -c -g ./src/app/segmented_scan_app.cu&#x0D;&#x0A;"
+						AdditionalDependencies="segmented_scan_app.cu segmented_scan_kernel.cu segmented_scan_cta.cu"
+						Outputs="$(ConfigurationName)\segmented_scan_app.obj"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="StaticLib_EmuRelease|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="CUDA is compiling $(InputFileName)..."
+						CommandLine="$(CUDA_BIN_PATH)/nvcc.exe -ccbin &quot;$(VCInstallDir)bin&quot; --host-compilation=C -deviceemu -I&quot;$(CUDA_INC_PATH)&quot; -I./ -I../common/inc -I&quot;$(VCInstallDir)/include&quot; -I&quot;$(VCInstallDir)/PlatformSDK/include&quot; -I./src -I./include -o $(ConfigurationName)/segmented_scan_app.obj -c ./src/app/segmented_scan_app.cu&#x0D;&#x0A;"
+						AdditionalDependencies="segmented_scan_app.cu segmented_scan_kernel.cu segmented_scan_cta.cu"
+						Outputs="$(ConfigurationName)\segmented_scan_app.obj"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -2452,50 +2549,6 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="EmuRelease|x64"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-						Description="CUDA is compiling $(InputFileName)..."
-						CommandLine="$(CUDA_BIN_PATH)/nvcc.exe -ccbin &quot;$(VCInstallDir)bin&quot; --host-compilation=C -deviceemu -I&quot;$(CUDA_INC_PATH)&quot; -I./ -I../common/inc -I&quot;$(VCInstallDir)/include&quot; -I&quot;$(VCInstallDir)/PlatformSDK/include&quot; -I./src -I./include -o $(ConfigurationName)/segmented_scan_app.obj -c ./src/app/segmented_scan_app.cu&#x0D;&#x0A;"
-						AdditionalDependencies="segmented_scan_app.cu segmented_scan_kernel.cu segmented_scan_cta.cu"
-						Outputs="$(ConfigurationName)\segmented_scan_app.obj"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="StaticLib_Debug|Win32"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-						Description="CUDA is compiling $(InputFileName)..."
-						CommandLine="$(CUDA_BIN_PATH)/nvcc.exe -ccbin &quot;$(VCInstallDir)bin&quot; --host-compilation=C -D_DEBUG -I&quot;$(CUDA_INC_PATH)&quot; -I./ -I../common/inc -I&quot;$(VCInstallDir)/include&quot;  -I&quot;$(VCInstallDir)/PlatformSDK/include&quot; -I./src -I./include -o $(ConfigurationName)/segmented_scan_app.obj -c -g ./src/app/segmented_scan_app.cu&#x0D;&#x0A;"
-						AdditionalDependencies="segmented_scan_app.cu segmented_scan_kernel.cu segmented_scan_cta.cu"
-						Outputs="$(ConfigurationName)\segmented_scan_app.obj"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="StaticLib_Release|Win32"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-						Description="CUDA is compiling $(InputFileName)..."
-						CommandLine="$(CUDA_BIN_PATH)/nvcc.exe -ccbin &quot;$(VCInstallDir)bin&quot; --host-compilation=C -I&quot;$(CUDA_INC_PATH)&quot; -I./ -I../common/inc -I&quot;$(VCInstallDir)/include&quot;  -I&quot;$(VCInstallDir)/PlatformSDK/include&quot; -I./src -I./include -o $(ConfigurationName)/segmented_scan_app.obj -c ./src/app/segmented_scan_app.cu&#x0D;&#x0A;"
-						AdditionalDependencies="segmented_scan_app.cu segmented_scan_kernel.cu segmented_scan_cta.cu"
-						Outputs="$(ConfigurationName)\segmented_scan_app.obj"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="StaticLib_EmuDebug|Win32"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-						Description="CUDA is compiling $(InputFileName)..."
-						CommandLine="$(CUDA_BIN_PATH)/nvcc.exe -ccbin &quot;$(VCInstallDir)bin&quot; --host-compilation=C -deviceemu -D_DEBUG -I&quot;$(CUDA_INC_PATH)&quot; -I./ -I../common/inc -I&quot;$(VCInstallDir)/include&quot; -I&quot;$(VCInstallDir)/PlatformSDK/include&quot; -I./src -I./include -o $(ConfigurationName)/segmented_scan_app.obj -c -g ./src/app/segmented_scan_app.cu&#x0D;&#x0A;"
-						AdditionalDependencies="segmented_scan_app.cu segmented_scan_kernel.cu segmented_scan_cta.cu"
-						Outputs="$(ConfigurationName)\segmented_scan_app.obj"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="StaticLib_EmuRelease|Win32"
 					>
 					<Tool
 						Name="VCCustomBuildTool"
@@ -2654,50 +2707,6 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|x64"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-						Description="CUDA is compiling $(InputFileName)..."
-						CommandLine="$(CUDA_BIN_PATH)/nvcc.exe -ccbin &quot;$(VCInstallDir)bin&quot; --host-compilation=C -D_DEBUG -I&quot;$(CUDA_INC_PATH)&quot; -I./ -I../common/inc -I&quot;$(VCInstallDir)/include&quot;  -I&quot;$(VCInstallDir)/PlatformSDK/include&quot; -I./src -I./include -o $(ConfigurationName)/spmvmult_app.obj -c -g ./src/app/spmvmult_app.cu&#x0D;&#x0A;"
-						AdditionalDependencies="spmvmult_app.cu spmvmult_kernel.cu"
-						Outputs="$(ConfigurationName)\spmvmult_app.obj"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|x64"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-						Description="CUDA is compiling $(InputFileName)..."
-						CommandLine="$(CUDA_BIN_PATH)/nvcc.exe -ccbin &quot;$(VCInstallDir)bin&quot; -I&quot;$(CUDA_INC_PATH)&quot; -I./ -I../common/inc -I&quot;$(VCInstallDir)/include&quot;  -I&quot;$(VCInstallDir)/PlatformSDK/include&quot; -I./src -I./include -o $(ConfigurationName)/spmvmult_app.obj -c ./src/app/spmvmult_app.cu&#x0D;&#x0A;"
-						AdditionalDependencies="spmvmult_app.cu spmvmult_kernel.cu"
-						Outputs="$(ConfigurationName)\spmvmult_app.obj"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="EmuDebug|x64"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-						Description="CUDA is compiling $(InputFileName)..."
-						CommandLine="$(CUDA_BIN_PATH)/nvcc.exe -ccbin &quot;$(VCInstallDir)bin&quot; --host-compilation=C -deviceemu -D_DEBUG -I&quot;$(CUDA_INC_PATH)&quot; -I./ -I../common/inc -I&quot;$(VCInstallDir)/include&quot; -I&quot;$(VCInstallDir)/PlatformSDK/include&quot; -I./src -I./include -o $(ConfigurationName)/spmvmult_app.obj -c -g ./src/app/spmvmult_app.cu&#x0D;&#x0A;"
-						AdditionalDependencies="spmvmult_app.cu spmvmult_kernel.cu"
-						Outputs="$(ConfigurationName)\spmvmult_app.obj"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="EmuRelease|x64"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-						Description="CUDA is compiling $(InputFileName)..."
-						CommandLine="$(CUDA_BIN_PATH)/nvcc.exe -ccbin &quot;$(VCInstallDir)bin&quot; --host-compilation=C -deviceemu -I&quot;$(CUDA_INC_PATH)&quot; -I./ -I../common/inc -I&quot;$(VCInstallDir)/include&quot; -I&quot;$(VCInstallDir)/PlatformSDK/include&quot; -I./src -I./include -o $(ConfigurationName)/spmvmult_app.obj -c ./src/app/spmvmult_app.cu&#x0D;&#x0A;"
-						AdditionalDependencies="spmvmult_app.cu spmvmult_kernel.cu"
-						Outputs="$(ConfigurationName)\spmvmult_app.obj"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
 					Name="StaticLib_Debug|Win32"
 					>
 					<Tool
@@ -2732,6 +2741,50 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="StaticLib_EmuRelease|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="CUDA is compiling $(InputFileName)..."
+						CommandLine="$(CUDA_BIN_PATH)/nvcc.exe -ccbin &quot;$(VCInstallDir)bin&quot; --host-compilation=C -deviceemu -I&quot;$(CUDA_INC_PATH)&quot; -I./ -I../common/inc -I&quot;$(VCInstallDir)/include&quot; -I&quot;$(VCInstallDir)/PlatformSDK/include&quot; -I./src -I./include -o $(ConfigurationName)/spmvmult_app.obj -c ./src/app/spmvmult_app.cu&#x0D;&#x0A;"
+						AdditionalDependencies="spmvmult_app.cu spmvmult_kernel.cu"
+						Outputs="$(ConfigurationName)\spmvmult_app.obj"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|x64"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="CUDA is compiling $(InputFileName)..."
+						CommandLine="$(CUDA_BIN_PATH)/nvcc.exe -ccbin &quot;$(VCInstallDir)bin&quot; --host-compilation=C -D_DEBUG -I&quot;$(CUDA_INC_PATH)&quot; -I./ -I../common/inc -I&quot;$(VCInstallDir)/include&quot;  -I&quot;$(VCInstallDir)/PlatformSDK/include&quot; -I./src -I./include -o $(ConfigurationName)/spmvmult_app.obj -c -g ./src/app/spmvmult_app.cu&#x0D;&#x0A;"
+						AdditionalDependencies="spmvmult_app.cu spmvmult_kernel.cu"
+						Outputs="$(ConfigurationName)\spmvmult_app.obj"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="CUDA is compiling $(InputFileName)..."
+						CommandLine="$(CUDA_BIN_PATH)/nvcc.exe -ccbin &quot;$(VCInstallDir)bin&quot; -I&quot;$(CUDA_INC_PATH)&quot; -I./ -I../common/inc -I&quot;$(VCInstallDir)/include&quot;  -I&quot;$(VCInstallDir)/PlatformSDK/include&quot; -I./src -I./include -o $(ConfigurationName)/spmvmult_app.obj -c ./src/app/spmvmult_app.cu&#x0D;&#x0A;"
+						AdditionalDependencies="spmvmult_app.cu spmvmult_kernel.cu"
+						Outputs="$(ConfigurationName)\spmvmult_app.obj"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="EmuDebug|x64"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="CUDA is compiling $(InputFileName)..."
+						CommandLine="$(CUDA_BIN_PATH)/nvcc.exe -ccbin &quot;$(VCInstallDir)bin&quot; --host-compilation=C -deviceemu -D_DEBUG -I&quot;$(CUDA_INC_PATH)&quot; -I./ -I../common/inc -I&quot;$(VCInstallDir)/include&quot; -I&quot;$(VCInstallDir)/PlatformSDK/include&quot; -I./src -I./include -o $(ConfigurationName)/spmvmult_app.obj -c -g ./src/app/spmvmult_app.cu&#x0D;&#x0A;"
+						AdditionalDependencies="spmvmult_app.cu spmvmult_kernel.cu"
+						Outputs="$(ConfigurationName)\spmvmult_app.obj"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="EmuRelease|x64"
 					>
 					<Tool
 						Name="VCCustomBuildTool"
@@ -2822,23 +2875,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|x64"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
 					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|x64"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -2854,23 +2891,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="EmuDebug|x64"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
 					Name="EmuRelease|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="EmuRelease|x64"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -2903,6 +2924,38 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="StaticLib_EmuRelease|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="EmuDebug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="EmuRelease|x64"
 					ExcludedFromBuild="true"
 					>
 					<Tool
