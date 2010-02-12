@@ -7,6 +7,7 @@
 // This source code is distributed under the terms of license.txt
 // in the root directory of this source distribution.
 // ------------------------------------------------------------- 
+#include "cudpp.h"
 #ifndef __CUDPP_PLAN_H__
 #define __CUDPP_PLAN_H__
 
@@ -14,20 +15,6 @@ typedef void* KernelPointer;
 class CUDPPPlan;
 class CUDPPManager;
 
-/*extern "C" size_t getNumCTAs(const CUDPPPlan* plan, KernelPointer kernel);
-extern "C" void   compNumCTAs(const CUDPPPlan* plan, KernelPointer kernel, size_t bytesDynamicSharedMem, size_t threadsPerBlock);
-
-template <typename T>
-size_t numCTAs(const CUDPPPlan* plan, T kernel)
-{
-    return getNumCTAs(plan, (KernelPointer)kernel);
-}
-
-template <typename T>
-void computeNumCTAs(const CUDPPPlan* plan, T kernel, unsigned int bytesDynamicSharedMem, size_t threadsPerBlock)
-{
-    compNumCTAs(plan, (KernelPointer)kernel, bytesDynamicSharedMem, threadsPerBlock);
-}*/
 
 //! @internal Convert an opaque handle to a pointer to a plan
 template <typename T>
@@ -124,7 +111,7 @@ public:
     unsigned int m_threadsPerBlock;     //!< @internal number of threads to launch per block
     unsigned int m_maxBlocks;           //!< @internal maximum number of blocks to launch
     void         *m_blockSums;          //!< @internal Intermediate block sums array
-};  
+};
 
 class CUDPPRadixSortPlan : public CUDPPPlan
 {
@@ -221,10 +208,4 @@ public:
     unsigned int m_seed; //!< @internal the seed for the random number generator
 };
 
-class CUDPPReducePlan : public CUDPPPlan
-{
-public:
-    CUDPPReducePlan(CUDPPManager *mgr, CUDPPConfiguration config, CUDPPTuneReduce tuneConfig, size_t num_elements);
-    
-};
 #endif // __CUDPP_PLAN_H__
