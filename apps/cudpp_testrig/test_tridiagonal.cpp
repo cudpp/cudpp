@@ -78,8 +78,6 @@ int testTridiagonal(int argc, const char** argv)
         testGeneration(&a[i*systemSize], &b[i*systemSize], &c[i*systemSize], &d[i*systemSize], &x1[i*systemSize], systemSize);
     }
 
-    cutilDeviceInit(argc, argv);
-
     unsigned int timer1, timer2;
 
     CUT_SAFE_CALL(cutCreateTimer(&timer1));
