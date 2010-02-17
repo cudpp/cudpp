@@ -153,10 +153,12 @@ __global__ void pcrKernelBranchFree(T *d_a, T *d_b, T *d_c, T *d_d, T *d_x)
         int i = thid;
 
         int iRight = i+delta;
-        iRight = iRight%systemSize;
+        //iRight = iRight%systemSize;
+        if (iRight >= systemSize) iRight = systemSize - 1;
 
         int iLeft = i-delta;
-        iLeft = iLeft%systemSize;
+        //iLeft = iLeft%systemSize;
+        if (iLeft < 0) iLeft = 0;
 
         T tmp1 = a[i] / b[iLeft];
         T tmp2 = c[i] / b[iRight];
