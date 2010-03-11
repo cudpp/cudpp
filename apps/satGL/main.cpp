@@ -123,8 +123,8 @@ void mainMenu(int i);
 // Program main
 ////////////////////////////////////////////////////////////////////////////////
 int
-main( int argc, char** argv) {
-
+main( int argc, char** argv) 
+{
     CUT_DEVICE_INIT(argc, argv);
 
     runTest( argc, argv);
@@ -136,8 +136,8 @@ main( int argc, char** argv) {
 //! Run a simple test for CUDA
 ////////////////////////////////////////////////////////////////////////////////
 void
-runTest( int argc, char** argv) {
-
+runTest( int argc, char** argv) 
+{
     // Create GL context
     glutInit( &argc, argv);
     if (argc > 2)

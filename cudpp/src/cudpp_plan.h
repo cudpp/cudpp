@@ -102,6 +102,7 @@ public:
 	
     bool           m_bKeysOnly;
     bool           m_bManualCoalesce;
+    bool           m_bUsePersistentCTAs;
     unsigned int   m_persistentCTAThreshold[2];
     unsigned int   m_persistentCTAThresholdFullBlocks[2];
     CUDPPScanPlan *m_scanPlan;        //!< @internal Sort performs a scan of type unsigned int using this plan

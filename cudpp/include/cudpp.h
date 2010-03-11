@@ -99,8 +99,8 @@
  * CUDA Toolkit version 2.2 or later.  Please see the NVIDIA 
  * <a href="http://developer.nvidia.com/cuda">CUDA</a> homepage to download 
  * CUDA as well as the CUDA Programming Guide and CUDA SDK, which includes many 
- * CUDA code examples.  Two of the samples in the CUDA SDK ("marchingCubes" and
- * "lineOfSight") also use CUDPP.
+ * CUDA code examples.  Three of the samples in the CUDA SDK ("marchingCubes",
+ * "lineOfSight", and radixSort) also use CUDPP.
  *
  * \section design-goals Design Goals
  * Design goals for CUDPP include:

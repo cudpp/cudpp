@@ -495,7 +495,7 @@ __device__ T warpscan(T val, volatile T* s_data)
     int idx = 2 * threadIdx.x - (threadIdx.x & (WARP_SIZE-1));
     s_data[idx] = traits::identity();
     idx += WARP_SIZE;
-    s_data[idx] = val;                                 __EMUSYNC;
+    T t = s_data[idx] = val;                                 __EMUSYNC;
 
         // This code is needed because the warp size of device emulation
         // is only 1 thread, so sync-less cooperation within a warp doesn't 
@@ -512,11 +512,11 @@ __device__ T warpscan(T val, volatile T* s_data)
     t = s_data[idx - 16]; __EMUSYNC; 
     s_data[idx] = traits::op((const T)s_data[idx],t); __EMUSYNC;
 #else
-    if (0 <= maxlevel) { s_data[idx] = traits::op((const T)s_data[idx], (const T)s_data[idx - 1]); }
-    if (1 <= maxlevel) { s_data[idx] = traits::op((const T)s_data[idx], (const T)s_data[idx - 2]); }
-    if (2 <= maxlevel) { s_data[idx] = traits::op((const T)s_data[idx], (const T)s_data[idx - 4]); }
-    if (3 <= maxlevel) { s_data[idx] = traits::op((const T)s_data[idx], (const T)s_data[idx - 8]); }
-    if (4 <= maxlevel) { s_data[idx] = traits::op((const T)s_data[idx], (const T)s_data[idx -16]); }
+    if (0 <= maxlevel) { s_data[idx] = t = traits::op(t, (const T)s_data[idx - 1]); }
+    if (1 <= maxlevel) { s_data[idx] = t = traits::op(t, (const T)s_data[idx - 2]); }
+    if (2 <= maxlevel) { s_data[idx] = t = traits::op(t, (const T)s_data[idx - 4]); }
+    if (3 <= maxlevel) { s_data[idx] = t = traits::op(t, (const T)s_data[idx - 8]); }
+    if (4 <= maxlevel) { s_data[idx] = t = traits::op(t, (const T)s_data[idx -16]); }
 #endif
 
     return s_data[idx-1];      // convert inclusive -> exclusive

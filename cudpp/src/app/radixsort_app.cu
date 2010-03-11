@@ -65,14 +65,15 @@ void radixSortStep(uint *keys,
     (numElements / eltsPerBlock2 + 1);
 
     bool loop = numBlocks > 65535;
-
     uint blocks = loop ? 65535 : numBlocks;
     uint blocksFind = loop ? 65535 : numBlocks2;
     uint blocksReorder = loop ? 65535 : numBlocks2;
 
     uint threshold = fullBlocks ? plan->m_persistentCTAThresholdFullBlocks[0] : plan->m_persistentCTAThreshold[0];
 
-    if (numElements >= threshold)
+    bool persist = plan->m_bUsePersistentCTAs && (numElements >= threshold);
+
+    if (persist)
     {
         loop = (numElements > 262144) || (numElements >= 32768 && numElements < 65536);
         
@@ -92,7 +93,7 @@ void radixSortStep(uint *keys,
     {
         if (loop)
         {
-            if (numElements >= threshold) 
+            if (persist) 
             {
                 blocks = flip? numCTAs(radixSortBlocks<4, 0, true, true, true>) : 
                                numCTAs(radixSortBlocks<4, 0, true, false, true>);
@@ -113,7 +114,7 @@ void radixSortStep(uint *keys,
     {
         if (loop)
         {
-            if (numElements >= threshold) 
+            if (persist) 
             {
                 blocks = flip ? numCTAs(radixSortBlocks<4, 0, false, true, true>) : 
                                 numCTAs(radixSortBlocks<4, 0, false, false, true>);
@@ -137,7 +138,7 @@ void radixSortStep(uint *keys,
     {
         if (loop)
         {
-            if (numElements >= threshold) 
+            if (persist) 
             {
                 blocksFind = numCTAs(findRadixOffsets<0, true, true>);
             }
@@ -156,7 +157,7 @@ void radixSortStep(uint *keys,
     {
         if (loop)
         {
-            if (numElements >= threshold) 
+            if (persist) 
             {
                 blocksFind = numCTAs(findRadixOffsets<0, false, true>);
             }
@@ -182,7 +183,7 @@ void radixSortStep(uint *keys,
         {
             if (loop)
             {
-                if (numElements >= threshold) 
+                if (persist) 
                 {
                     blocksReorder = unflip ? numCTAs(reorderData<0, true, true, true, true>) :
                                              numCTAs(reorderData<0, true, true, false, true>);
@@ -204,7 +205,7 @@ void radixSortStep(uint *keys,
         {
             if (loop)
             {
-                if (numElements >= threshold) 
+                if (persist) 
                 {
                     blocksReorder = unflip ? numCTAs(reorderData<0, true, false, true, true>) :
                                              numCTAs(reorderData<0, true, false, false, true>);
@@ -229,7 +230,7 @@ void radixSortStep(uint *keys,
         {
             if (loop)
             {
-                if (numElements >= threshold) 
+                if (persist) 
                 {
                     blocksReorder = unflip ? 
                         numCTAs(reorderData<0, false, true, true, true>) :
@@ -252,7 +253,7 @@ void radixSortStep(uint *keys,
         {
             if (loop)
             {
-                if (numElements >= threshold) 
+                if (persist) 
                 {
                     blocksReorder = unflip ?
                         numCTAs(reorderData<0, false, false, true, true>) :
@@ -472,7 +473,9 @@ void radixSortStepKeysOnly(uint *keys,
 
     uint threshold = fullBlocks ? plan->m_persistentCTAThresholdFullBlocks[1] : plan->m_persistentCTAThreshold[1];
 
-    if (numElements >= threshold)
+    bool persist = plan->m_bUsePersistentCTAs && (numElements >= threshold);
+
+    if (persist)
     {
         loop = (numElements > 262144) || (numElements >= 32768 && numElements < 65536);
         
@@ -485,7 +488,7 @@ void radixSortStepKeysOnly(uint *keys,
     {
         if (loop)
         {
-            if (numElements >= threshold) 
+            if (persist) 
             {
                 blocks = flip ? numCTAs(radixSortBlocksKeysOnly<4, 0, true, true, true>) : 
                                 numCTAs(radixSortBlocksKeysOnly<4, 0, true, false, true>);
@@ -504,7 +507,7 @@ void radixSortStepKeysOnly(uint *keys,
     {
         if (loop)
         {
-            if (numElements >= threshold) 
+            if (persist) 
             {
                 blocks = flip ? numCTAs(radixSortBlocksKeysOnly<4, 0, false, true, true>) : 
                                 numCTAs(radixSortBlocksKeysOnly<4, 0, false, false, true>);
@@ -525,7 +528,7 @@ void radixSortStepKeysOnly(uint *keys,
     {
         if (loop)
         {
-            if (numElements >= threshold) 
+            if (persist) 
             {
                 blocksFind = numCTAs(findRadixOffsets<0, true, true>);
             }
@@ -542,7 +545,7 @@ void radixSortStepKeysOnly(uint *keys,
     {
         if (loop)
         {
-            if (numElements >= threshold) 
+            if (persist) 
             {
                 blocksFind = numCTAs(findRadixOffsets<0, false, true>);
             }
@@ -565,7 +568,7 @@ void radixSortStepKeysOnly(uint *keys,
         {
             if (loop)
             {
-                if (numElements >= threshold) 
+                if (persist) 
                 {
                     blocksReorder = unflip ? 
                         numCTAs(reorderDataKeysOnly<0, true, true, true, true>) : 
@@ -586,7 +589,7 @@ void radixSortStepKeysOnly(uint *keys,
         {
             if (loop)
             {
-                if (numElements >= threshold) 
+                if (persist) 
                 {
                     blocksReorder = unflip ?
                         numCTAs(reorderDataKeysOnly<0, true, false, true, true>) :
@@ -610,7 +613,7 @@ void radixSortStepKeysOnly(uint *keys,
         {
             if (loop)
             {
-                if (numElements >= threshold) 
+                if (persist) 
                 {
                     blocksReorder = unflip ? 
                         numCTAs(reorderDataKeysOnly<0, false, true, true, true>) :
@@ -631,7 +634,7 @@ void radixSortStepKeysOnly(uint *keys,
         {
             if (loop)
             {
-                if (numElements >= threshold) 
+                if (persist) 
                 {
                     blocksReorder = unflip ?
                         numCTAs(reorderDataKeysOnly<0, false, false, true, true>) :
@@ -802,57 +805,66 @@ void initDeviceParameters(CUDPPRadixSortPlan *plan)
         cudaDeviceProp devprop;
         cudaGetDeviceProperties(&devprop, deviceID);
 
+        int smVersion = devprop.major * 10 + devprop.minor;
+
         // sm_12 and later devices don't need help with coalesce in reorderData kernel
-        plan->m_bManualCoalesce = (devprop.major < 2 && devprop.minor < 2);
+        plan->m_bManualCoalesce = (smVersion < 12);
 
-        // Empirically we have found that for some (usually larger) sort
-        // sizes it is better to use exactly as many "persistent" CTAs 
-        // as can fill the GPU, which loop over the "blocks" of work. For smaller 
-        // arrays it is better to use the typical CUDA approach of launching one CTA
-        // per block of work.
-        // 0-element of these two-element arrays is for key-value sorts
-        // 1-element is for key-only sorts
-        plan->m_persistentCTAThreshold[0] = plan->m_bManualCoalesce ? 16777216 : 524288;
-        plan->m_persistentCTAThresholdFullBlocks[0] = plan->m_bManualCoalesce ? 2097152: 524288;
-        plan->m_persistentCTAThreshold[1] = plan->m_bManualCoalesce ? 16777216 : 8388608;
-        plan->m_persistentCTAThresholdFullBlocks[1] = plan->m_bManualCoalesce ? 2097152: 0;
+        // sm_20 and later devices are better off not using persistent CTAs
+        plan->m_bUsePersistentCTAs = (smVersion < 20);
 
-        // create a map of function pointers to register counts for more accurate occupancy calculation
-        // Must pass in the dynamic shared memory used by each kernel, since the runtime doesn't know it
-        // Note we only insert the "loop" version of the kernels (the one with the last template param = true)
-        // Because those are the only ones that require persistent CTAs that maximally fill the device.
-        computeNumCTAs(radixSortBlocks<4, 0, false, false, true>,         4 * SORT_CTA_SIZE * sizeof(uint), SORT_CTA_SIZE);
-        computeNumCTAs(radixSortBlocks<4, 0, false, true,  true>,         4 * SORT_CTA_SIZE * sizeof(uint), SORT_CTA_SIZE);
-        computeNumCTAs(radixSortBlocks<4, 0, true, false,  true>,         4 * SORT_CTA_SIZE * sizeof(uint), SORT_CTA_SIZE);
-        computeNumCTAs(radixSortBlocks<4, 0, true, true,  true>,          4 * SORT_CTA_SIZE * sizeof(uint), SORT_CTA_SIZE);
-        
-        computeNumCTAs(radixSortBlocksKeysOnly<4, 0, false, false, true>, 4 * SORT_CTA_SIZE * sizeof(uint), SORT_CTA_SIZE);
-        computeNumCTAs(radixSortBlocksKeysOnly<4, 0, false, true, true>,  4 * SORT_CTA_SIZE * sizeof(uint), SORT_CTA_SIZE);
-        computeNumCTAs(radixSortBlocksKeysOnly<4, 0, true, false, true>,  4 * SORT_CTA_SIZE * sizeof(uint), SORT_CTA_SIZE);
-        computeNumCTAs(radixSortBlocksKeysOnly<4, 0, true, true, true>,   4 * SORT_CTA_SIZE * sizeof(uint), SORT_CTA_SIZE);
+        if (plan->m_bUsePersistentCTAs)
+        {
+            // The following is only true on pre-sm_20 devices (pre-Fermi):
+            // Empirically we have found that for some (usually larger) sort
+            // sizes it is better to use exactly as many "persistent" CTAs 
+            // as can fill the GPU, which loop over the "blocks" of work. For smaller 
+            // arrays it is better to use the typical CUDA approach of launching one CTA
+            // per block of work.
+            // 0-element of these two-element arrays is for key-value sorts
+            // 1-element is for key-only sorts
+            plan->m_persistentCTAThreshold[0] = plan->m_bManualCoalesce ? 16777216 : 524288;
+            plan->m_persistentCTAThresholdFullBlocks[0] = plan->m_bManualCoalesce ? 2097152: 524288;
+            plan->m_persistentCTAThreshold[1] = plan->m_bManualCoalesce ? 16777216 : 8388608;
+            plan->m_persistentCTAThresholdFullBlocks[1] = plan->m_bManualCoalesce ? 2097152: 0;
 
-        computeNumCTAs(findRadixOffsets<0, false, true>,                  3 * SORT_CTA_SIZE * sizeof(uint), SORT_CTA_SIZE);
-        computeNumCTAs(findRadixOffsets<0, true, true>,                   3 * SORT_CTA_SIZE * sizeof(uint), SORT_CTA_SIZE);
+            // create a map of function pointers to register counts for more accurate occupancy calculation
+            // Must pass in the dynamic shared memory used by each kernel, since the runtime doesn't know it
+            // Note we only insert the "loop" version of the kernels (the one with the last template param = true)
+            // Because those are the only ones that require persistent CTAs that maximally fill the device.
+            computeNumCTAs(radixSortBlocks<4, 0, false, false, true>,         4 * SORT_CTA_SIZE * sizeof(uint), SORT_CTA_SIZE);
+            computeNumCTAs(radixSortBlocks<4, 0, false, true,  true>,         4 * SORT_CTA_SIZE * sizeof(uint), SORT_CTA_SIZE);
+            computeNumCTAs(radixSortBlocks<4, 0, true, false,  true>,         4 * SORT_CTA_SIZE * sizeof(uint), SORT_CTA_SIZE);
+            computeNumCTAs(radixSortBlocks<4, 0, true, true,  true>,          4 * SORT_CTA_SIZE * sizeof(uint), SORT_CTA_SIZE);
+            
+            computeNumCTAs(radixSortBlocksKeysOnly<4, 0, false, false, true>, 4 * SORT_CTA_SIZE * sizeof(uint), SORT_CTA_SIZE);
+            computeNumCTAs(radixSortBlocksKeysOnly<4, 0, false, true, true>,  4 * SORT_CTA_SIZE * sizeof(uint), SORT_CTA_SIZE);
+            computeNumCTAs(radixSortBlocksKeysOnly<4, 0, true, false, true>,  4 * SORT_CTA_SIZE * sizeof(uint), SORT_CTA_SIZE);
+            computeNumCTAs(radixSortBlocksKeysOnly<4, 0, true, true, true>,   4 * SORT_CTA_SIZE * sizeof(uint), SORT_CTA_SIZE);
 
-        computeNumCTAs(reorderData<0, false, false, false, true>,         0,                                SORT_CTA_SIZE);
-        computeNumCTAs(reorderData<0, false, false, true, true>,          0,                                SORT_CTA_SIZE);
-        computeNumCTAs(reorderData<0, false, true, false, true>,          0,                                SORT_CTA_SIZE);
-        computeNumCTAs(reorderData<0, false, true, true, true>,           0,                                SORT_CTA_SIZE);
-        computeNumCTAs(reorderData<0, true, false, false, true>,          0,                                SORT_CTA_SIZE);
-        computeNumCTAs(reorderData<0, true, false, true, true>,           0,                                SORT_CTA_SIZE);
-        computeNumCTAs(reorderData<0, true, true, false, true>,           0,                                SORT_CTA_SIZE);
-        computeNumCTAs(reorderData<0, true, true, true, true>,            0,                                SORT_CTA_SIZE);
+            computeNumCTAs(findRadixOffsets<0, false, true>,                  3 * SORT_CTA_SIZE * sizeof(uint), SORT_CTA_SIZE);
+            computeNumCTAs(findRadixOffsets<0, true, true>,                   3 * SORT_CTA_SIZE * sizeof(uint), SORT_CTA_SIZE);
 
-        computeNumCTAs(reorderDataKeysOnly<0, false, false, false, true>, 0,                                SORT_CTA_SIZE);
-        computeNumCTAs(reorderDataKeysOnly<0, false, false, true, true>,  0,                                SORT_CTA_SIZE);
-        computeNumCTAs(reorderDataKeysOnly<0, false, true, false, true>,  0,                                SORT_CTA_SIZE);
-        computeNumCTAs(reorderDataKeysOnly<0, false, true, true, true>,   0,                                SORT_CTA_SIZE);
-        computeNumCTAs(reorderDataKeysOnly<0, true, false, false, true>,  0,                                SORT_CTA_SIZE);
-        computeNumCTAs(reorderDataKeysOnly<0, true, false, true, true>,   0,                                SORT_CTA_SIZE);
-        computeNumCTAs(reorderDataKeysOnly<0, true, true, false, true>,   0,                                SORT_CTA_SIZE);
-        computeNumCTAs(reorderDataKeysOnly<0, true, true, true, true>,    0,                                SORT_CTA_SIZE);
-               
-        computeNumCTAs(emptyKernel,                                       0,                                SORT_CTA_SIZE);
+            computeNumCTAs(reorderData<0, false, false, false, true>,         0,                                SORT_CTA_SIZE);
+            computeNumCTAs(reorderData<0, false, false, true, true>,          0,                                SORT_CTA_SIZE);
+            computeNumCTAs(reorderData<0, false, true, false, true>,          0,                                SORT_CTA_SIZE);
+            computeNumCTAs(reorderData<0, false, true, true, true>,           0,                                SORT_CTA_SIZE);
+            computeNumCTAs(reorderData<0, true, false, false, true>,          0,                                SORT_CTA_SIZE);
+            computeNumCTAs(reorderData<0, true, false, true, true>,           0,                                SORT_CTA_SIZE);
+            computeNumCTAs(reorderData<0, true, true, false, true>,           0,                                SORT_CTA_SIZE);
+            computeNumCTAs(reorderData<0, true, true, true, true>,            0,                                SORT_CTA_SIZE);
+
+            computeNumCTAs(reorderDataKeysOnly<0, false, false, false, true>, 0,                                SORT_CTA_SIZE);
+            computeNumCTAs(reorderDataKeysOnly<0, false, false, true, true>,  0,                                SORT_CTA_SIZE);
+            computeNumCTAs(reorderDataKeysOnly<0, false, true, false, true>,  0,                                SORT_CTA_SIZE);
+            computeNumCTAs(reorderDataKeysOnly<0, false, true, true, true>,   0,                                SORT_CTA_SIZE);
+            computeNumCTAs(reorderDataKeysOnly<0, true, false, false, true>,  0,                                SORT_CTA_SIZE);
+            computeNumCTAs(reorderDataKeysOnly<0, true, false, true, true>,   0,                                SORT_CTA_SIZE);
+            computeNumCTAs(reorderDataKeysOnly<0, true, true, false, true>,   0,                                SORT_CTA_SIZE);
+            computeNumCTAs(reorderDataKeysOnly<0, true, true, true, true>,    0,                                SORT_CTA_SIZE);
+                   
+            computeNumCTAs(emptyKernel,                                       0,                                SORT_CTA_SIZE);
+        }
     }
 }
 
