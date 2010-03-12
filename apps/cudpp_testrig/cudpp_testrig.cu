@@ -78,7 +78,7 @@ int main(int argc, const char** argv)
         printf("[EMU] ");
 #endif
 
-        printf("%s; global mem: %dB; compute v%d.%d; clock: %d kHz\n",
+        printf("%s; global mem: %ldB; compute v%d.%d; clock: %d kHz\n",
                prop.name, prop.totalGlobalMem, prop.major, prop.minor,
                prop.clockRate);
     }

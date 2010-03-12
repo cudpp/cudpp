@@ -889,7 +889,7 @@ __device__ void warpSegScan(T val,
     }
     
     __EMUSYNC; 
-    s_data[idx] = s_flags[idx] ? s_data[idx] : traits::op((const T)s_data[idx],t); 
+    s_data[idx] = s_flags[idx] ? s_data[idx] : traits::op(s_data[idx],t); 
     s_flags[idx] = f | s_flags[idx];  __EMUSYNC;
 
     if (traits::isBackward())
@@ -902,7 +902,7 @@ __device__ void warpSegScan(T val,
     }
     
     __EMUSYNC; 
-    s_data[idx] = s_flags[idx] ? s_data[idx] : traits::op((const T)s_data[idx],t); 
+    s_data[idx] = s_flags[idx] ? s_data[idx] : traits::op(s_data[idx],t); 
     s_flags[idx] = f | s_flags[idx]; __EMUSYNC;
     
     if (traits::isBackward())
@@ -915,7 +915,7 @@ __device__ void warpSegScan(T val,
     }
     
     __EMUSYNC; 
-    s_data[idx] = s_flags[idx] ? s_data[idx] : traits::op((const T)s_data[idx],t); 
+    s_data[idx] = s_flags[idx] ? s_data[idx] : traits::op(s_data[idx],t); 
     s_flags[idx] = f | s_flags[idx]; __EMUSYNC;
 
     if (traits::isBackward())
@@ -928,7 +928,7 @@ __device__ void warpSegScan(T val,
     }
     
     __EMUSYNC; 
-    s_data[idx] = s_flags[idx] ? s_data[idx] : traits::op((const T)s_data[idx],t); 
+    s_data[idx] = s_flags[idx] ? s_data[idx] : traits::op(s_data[idx],t); 
     s_flags[idx] = f | s_flags[idx]; __EMUSYNC;
 
     if (traits::isBackward())
@@ -941,7 +941,7 @@ __device__ void warpSegScan(T val,
     }
     
     __EMUSYNC; 
-    s_data[idx] = s_flags[idx] ? s_data[idx] : traits::op((const T)s_data[idx],t); 
+    s_data[idx] = s_flags[idx] ? s_data[idx] : traits::op(s_data[idx],t); 
     s_flags[idx] = f | s_flags[idx]; __EMUSYNC;
 
 #else
@@ -949,12 +949,12 @@ __device__ void warpSegScan(T val,
     {
         if (traits::isBackward())
         {
-            s_data[idx]  = t = f ? t : traits::op((const T)s_data[idx + 1] , t);
+            s_data[idx]  = t = f ? t : traits::op(s_data[idx + 1] , t);
             s_flags[idx] = f = s_flags[idx + 1] | f;
         }
         else
         {
-            s_data[idx]  = t = f ? t : traits::op((const T)s_data[idx - 1] , t);
+            s_data[idx]  = t = f ? t : traits::op(s_data[idx - 1] , t);
             s_flags[idx] = f = s_flags[idx - 1] | f;
         }
     }
@@ -962,12 +962,12 @@ __device__ void warpSegScan(T val,
     {
         if (traits::isBackward())
         {
-            s_data[idx]  = t = f ? t : traits::op((const T)s_data[idx + 2] , t);
+            s_data[idx]  = t = f ? t : traits::op(s_data[idx + 2] , t);
             s_flags[idx] = f = s_flags[idx + 2] | f;
         }
         else
         {
-            s_data[idx]  = t = f ? t : traits::op((const T)s_data[idx - 2] , t);
+            s_data[idx]  = t = f ? t : traits::op(s_data[idx - 2] , t);
             s_flags[idx] = f = s_flags[idx - 2] | f;
         }
     }
@@ -975,12 +975,12 @@ __device__ void warpSegScan(T val,
     {
         if (traits::isBackward())
         {
-            s_data[idx]  = t = f ? t : traits::op((const T)s_data[idx + 4] , t);
+            s_data[idx]  = t = f ? t : traits::op(s_data[idx + 4] , t);
             s_flags[idx] = f = s_flags[idx + 4] | f;
         }
         else
         {
-            s_data[idx]  = t = f ? t : traits::op((const T)s_data[idx - 4] , t);
+            s_data[idx]  = t = f ? t : traits::op(s_data[idx - 4] , t);
             s_flags[idx] = f = s_flags[idx - 4] | f;
         }
     }
@@ -988,12 +988,12 @@ __device__ void warpSegScan(T val,
     {
         if (traits::isBackward())
         {
-            s_data[idx]  = t = f ? t : traits::op((const T)s_data[idx + 8] , t);
+            s_data[idx]  = t = f ? t : traits::op(s_data[idx + 8] , t);
             s_flags[idx] = f = s_flags[idx + 8] | f;
         }
         else
         {
-            s_data[idx]  = t = f ? t : traits::op((const T)s_data[idx - 8] , t);
+            s_data[idx]  = t = f ? t : traits::op(s_data[idx - 8] , t);
             s_flags[idx] = f = s_flags[idx - 8] | f;
         }
     }
@@ -1001,12 +1001,12 @@ __device__ void warpSegScan(T val,
     {
         if (traits::isBackward())
         {
-            s_data[idx]  = t = f ? t : traits::op((const T)s_data[idx + 16] , t);
+            s_data[idx]  = t = f ? t : traits::op(s_data[idx + 16] , t);
             s_flags[idx] = f = s_flags[idx + 16] | f;
         }
         else
         {
-            s_data[idx]  = t = f ? t : traits::op((const T)s_data[idx - 16] , t);
+            s_data[idx]  = t = f ? t : traits::op(s_data[idx - 16] , t);
             s_flags[idx] = f = s_flags[idx - 16] | f;
         }
     }

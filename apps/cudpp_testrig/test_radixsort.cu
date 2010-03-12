@@ -166,7 +166,7 @@ int radixSortTest(CUDPPHandle plan, CUDPPConfiguration config, size_t *tests,
             tests[0] = numElements;			  			
 
         if(!quiet)
-            printf("Running a sort of %d %s\n", tests[k], outString);        
+            printf("Running a sort of %ld %s\n", tests[k], outString);        
 
         float totalTime = 0;
 
@@ -216,7 +216,7 @@ int radixSortTest(CUDPPHandle plan, CUDPPConfiguration config, size_t *tests,
         }
         else
         {
-            printf("\t%10d\t%0.4f\n", tests[k], totalTime / testOptions.numIterations);
+            printf("\t%10ld\t%0.4f\n", tests[k], totalTime / testOptions.numIterations);
         }
     }
     printf("\n");

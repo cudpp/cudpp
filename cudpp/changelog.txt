@@ -3,10 +3,11 @@ CUDPP Change Log
 Release: 1.1.1 (Bugfix release)
 DATE HERE
 - Fix scan, segmented scan, and radix sort correctness on upcoming Fermi architecture (proper use of "volatile" keyword)
+- Some initial small optimizations for radix sort and scan on Fermi (sm_20) architecture
 - Fix emulation mode radix sort of very small arrays
 - Minor efficiency improvement to radix sort test in cudpp_testrig
 - Fixed incorrect identity for min operator
-- Fixes for unix builds
+- Fixes for unix and Mac OS X Snow Leopard builds
 - Bibliography updates
 - Minor documentation fixes
 

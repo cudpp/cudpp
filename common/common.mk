@@ -1,34 +1,5 @@
 ################################################################################
 #
-# Copyright 1993-2006 NVIDIA Corporation.  All rights reserved.
-#
-# NOTICE TO USER:   
-#
-# This source code is subject to NVIDIA ownership rights under U.S. and 
-# international Copyright laws.  
-#
-# NVIDIA MAKES NO REPRESENTATION ABOUT THE SUITABILITY OF THIS SOURCE 
-# CODE FOR ANY PURPOSE.  IT IS PROVIDED "AS IS" WITHOUT EXPRESS OR 
-# IMPLIED WARRANTY OF ANY KIND.  NVIDIA DISCLAIMS ALL WARRANTIES WITH 
-# REGARD TO THIS SOURCE CODE, INCLUDING ALL IMPLIED WARRANTIES OF 
-# MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE.   
-# IN NO EVENT SHALL NVIDIA BE LIABLE FOR ANY SPECIAL, INDIRECT, INCIDENTAL, 
-# OR CONSEQUENTIAL DAMAGES, OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS 
-# OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE 
-# OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE 
-# OR PERFORMANCE OF THIS SOURCE CODE.  
-#
-# U.S. Government End Users.  This source code is a "commercial item" as 
-# that term is defined at 48 C.F.R. 2.101 (OCT 1995), consisting  of 
-# "commercial computer software" and "commercial computer software 
-# documentation" as such terms are used in 48 C.F.R. 12.212 (SEPT 1995) 
-# and is provided to the U.S. Government only as a commercial end item.  
-# Consistent with 48 C.F.R.12.212 and 48 C.F.R. 227.7202-1 through 
-# 227.7202-4 (JUNE 1995), all U.S. Government End Users acquire the 
-# source code with only those rights set forth herein.
-#
-################################################################################
-#
 # Common build script
 #
 ################################################################################
@@ -41,46 +12,64 @@ ifdef cuda-install
 	CUDA_INSTALL_PATH := $(cuda-install)
 endif
 
+# detect OS
+OSUPPER = $(shell uname -s 2>/dev/null | tr [:lower:] [:upper:])
+OSLOWER = $(shell uname -s 2>/dev/null | tr [:upper:] [:lower:])
+
+# 'linux' is output for Linux system, 'darwin' for OS X
+DARWIN = $(strip $(findstring DARWIN, $(OSUPPER)))
+ifneq ($(DARWIN),)
+   SNOWLEOPARD = $(strip $(findstring 10.6, $(shell egrep "<string>10\.6" /System/Library/CoreServices/SystemVersion.plist)))
+endif
+
+# detect 32-bit or 64-bit platform
+HP_64 = $(shell uname -m | grep 64)
+OSARCH= $(shell uname -m)
+
 # Basic directory setup for SDK
 # (override directories only if they are not already defined)
 SRCDIR     ?= 
+CUSRCDIR   ?= 
 ROOTDIR    ?= ..
 ROOTBINDIR ?= $(ROOTDIR)/../bin
-BINDIR     ?= $(ROOTBINDIR)/linux
+BINDIR     ?= $(ROOTBINDIR)/$(OSLOWER)
 ROOTOBJDIR ?= obj
 LIBDIR     := $(ROOTDIR)/../lib
 COMMONDIR  := $(ROOTDIR)/../common
+MACPORTSDIR:= /opt/local
 
 # Compilers
 NVCC       := nvcc 
 CXX        := g++
 CC         := gcc
 LINK       := g++ -fPIC
+ifneq ($(DARWIN),)
+        # Additional command line param for declaring link path
+        # http://www.cocoadev.com/index.pl?ApplicationLinking
+	LINK +=  -Wl,-rpath,$(CUDA_INSTALL_PATH)/lib
+endif
 
 # Includes
 INCLUDES  += -I. -I$(CUDA_INSTALL_PATH)/include -I$(COMMONDIR)/inc
-
-# architecture flag for cubin build
-CUBIN_ARCH_FLAG := -m32
-
-# OpenGL is used or not (if it is used, then it is necessary to include GLEW)
-OPENGLLIB := -lGL -lGLU
-ifeq ($(USEGLLIB),1)
-
-	# detect if 32 bit or 64 bit system
-	HP_64 =	$(shell uname -m | grep 64)
-
-	ifeq "$(strip $(HP_64))" ""
-		OPENGLLIB += -lGLEW
-	else
-		OPENGLLIB += -lGLEW_x86_64
-	endif
-
-	CUBIN_ARCH_FLAG := -m64
+ifneq ($(DARWIN),)
+        # Link against macports install (currently for Boost)
+	INCLUDES += -I$(MACPORTSDIR)/include
 endif
 
 # Libs
-LIB       := -L$(CUDA_INSTALL_PATH)/lib -L$(LIBDIR) -L$(COMMONDIR)/lib -lcuda -lcudart ${OPENGLLIB} ${LIB}
+# standard
+ifneq ($(DARWIN),)
+        LIB      += -L$(CUDA_INSTALL_PATH)/lib -L$(LIBDIR) -L$(COMMONDIR)/lib -L$(COMMONDIR)/lib/darwin -lcuda -lcudart ${OPENGLLIB}
+else
+        LIB      += -L$(CUDA_INSTALL_PATH)/lib -L$(LIBDIR) -L$(COMMONDIR)/lib -L$(COMMONDIR)/lib/linux  -lcuda -lcudart ${OPENGLLIB}
+endif
+
+# There's no standard installation place for glut on Mac. Default I'm
+# using is the macports install.
+ifneq ($(DARWIN),)
+	DARWIN_GLUT_LIB ?= $(MACPORTSDIR)/lib
+	LIB  += -L$(DARWIN_GLUT_LIB)
+endif
 
 # Warning flags
 CXXWARN_FLAGS := \
@@ -106,9 +95,48 @@ CWARN_FLAGS := $(CXXWARN_FLAGS) \
 	-Wmain \
 
 # Compiler-specific flags
-NVCCFLAGS := --host-compilation=C
+# for CUDA 2.0, need this to compile on all platforms
+#NVCCFLAGS := --host-compilation=C
+
 CXXFLAGS  := $(CXXWARN_FLAGS)
 CFLAGS    := $(CWARN_FLAGS)
+LIB_ARCH  := $(OSARCH)
+
+# Determining the necessary Cross-Compilation Flags
+# 32-bit OS, but we target 64-bit cross compilation
+ifeq ($(x86_64),1)
+    NVCCFLAGS += -m64
+    LIB_ARCH = x86_64
+
+    ifneq ($(DARWIN),)
+         CXX_ARCH_FLAGS += -arch x86_64
+    else
+         CXX_ARCH_FLAGS += -m64
+    endif
+else
+# 64-bit OS, and we target 32-bit cross compilation
+    ifeq ($(i386),1)
+        NVCCFLAGS += -m32
+        LIB_ARCH = i386
+        ifneq ($(DARWIN),)
+             CXX_ARCH_FLAGS += -arch i386
+        else
+             CXX_ARCH_FLAGS += -m32
+        endif
+    else
+        ifneq ($(SNOWLEOPARD),)
+             NVCCFLAGS += -m32
+             CXX_ARCH_FLAGS += -arch i386 -m32
+             LIB_ARCH  = i386
+        endif
+    endif
+endif
+
+# Compiler-specific flags
+CXXFLAGS  := $(CXXWARN_FLAGS) $(CXX_ARCH_FLAGS)
+CFLAGS    := $(CWARN_FLAGS) $(CXX_ARCH_FLAGS)
+LINK      += $(CXX_ARCH_FLAGS)
+
 
 # Common flags
 COMMONFLAGS += $(INCLUDES) -DUNIX
@@ -117,12 +145,12 @@ COMMONFLAGS += $(INCLUDES) -DUNIX
 ifeq ($(dbg),1)
 	COMMONFLAGS += -g
 	NVCCFLAGS   += -D_DEBUG
-	CXXFLAGS    += -D_DEBUG
-	CFLAGS		+= -D_DEBUG
+        CXXFLAGS    += -D_DEBUG
+        CFLAGS      += -D_DEBUG
 	BINSUBDIR   := debug
 	LIBSUFFIX   := D
 else 
-	COMMONFLAGS += -O3 
+	COMMONFLAGS += -O2 
 	BINSUBDIR   := release
 	LIBSUFFIX   :=
 	NVCCFLAGS   += --compiler-options -fno-strict-aliasing
@@ -130,55 +158,122 @@ else
 	CFLAGS      += -fno-strict-aliasing
 endif
 
+ifeq ($(boost),1)
+	COMMONFLAGS += -D_USE_BOOST_
+endif
+
 # append optional arch/SM version flags (such as -arch sm_11)
-NVCCFLAGS += $(SMVERSIONFLAGS)
+NVCCFLAGS += $(SMVERSIONFLAGS) 
+NVCCFLAGS += -gencode=arch=compute_10,code=sm_10 -gencode=arch=compute_10,code=compute_10
+NVCCFLAGS += -gencode=arch=compute_20,code=sm_20 -gencode=arch=compute_20,code=compute_20
 
 # architecture flag for cubin build
 CUBIN_ARCH_FLAG := -m32
 
 # OpenGL is used or not (if it is used, then it is necessary to include GLEW)
-OPENGLLIB := -lGL -lGLU
+ifneq ($(DARWIN),)
+	OPENGLLIB := -framework OpenGL
+else
+	OPENGLLIB := -lGL -lGLU
+endif
+
+# OpenGL is used or not (if it is used, then it is necessary to include GLEW)
 ifeq ($(USEGLLIB),1)
-
-	# detect if 32 bit or 64 bit system
-	HP_64 =	$(shell uname -m | grep 64)
-
-	ifeq "$(strip $(HP_64))" ""
-		OPENGLLIB += -lGLEW
+	ifneq ($(DARWIN),)
+		OPENGLLIB := -L/System/Library/Frameworks/OpenGL.framework/Libraries -lGL -lGLU -lGLEW
 	else
-		OPENGLLIB += -lGLEW_x86_64
+		OPENGLLIB := -lGL -lGLU -lX11 -lXi -lXmu
+
+		ifeq "$(strip $(HP_64))" ""
+			OPENGLLIB += -lGLEW -L/usr/X11R6/lib
+		else
+			OPENGLLIB += -lGLEW_x86_64 -L/usr/X11R6/lib64
+		endif
 	endif
 
 	CUBIN_ARCH_FLAG := -m64
 endif
 
+ifeq ($(USEGLUT),1)
+	ifneq ($(DARWIN),)
+		OPENGLLIB += -framework GLUT
+	else
+		OPENGLLIB += -lglut
+	endif
+endif
+
 ifeq ($(USEPARAMGL),1)
-	PARAMGLLIB := -lparamgl$(LIBSUFFIX)
+	PARAMGLLIB := -lparamgl_$(LIB_ARCH)$(LIBSUFFIX)
+endif
+
+ifeq ($(USECUDPP), 1)
+	# detect if 32 bit or 64 bit system
+	HP_64 =	$(shell uname -m | grep 64)
+
+	CUDPPLIB := -lcudpp_$(LIB_ARCH)$(LIBSUFFIX)
+
+	ifeq ($(emu), 1)
+		CUDPPLIB := $(CUDPPLIB)_emu
+	endif
 endif
 
 # Libs
-LIB       := -L$(CUDA_INSTALL_PATH)/lib -L$(LIBDIR) -L$(COMMONDIR)/lib -lcuda -lcudart ${OPENGLLIB} $(PARAMGLLIB) ${LIB}
-
+ifeq "$(strip $(HP_64))" ""
+       LIB    := -L$(CUDA_INSTALL_PATH)/lib   -L$(LIBDIR) -L$(COMMONDIR)/lib -L$(COMMONDIR)/lib/linux -lcuda -lcudart ${OPENGLLIB} $(PARAMGLLIB) $(CUDPPLIB) ${LIB}
+else
+       LIB    := -L$(CUDA_INSTALL_PATH)/lib64 -L$(LIBDIR) -L$(COMMONDIR)/lib -L$(COMMONDIR)/lib/linux -lcuda -lcudart ${OPENGLLIB} $(PARAMGLLIB) $(CUDPPLIB) ${LIB}
+endif
 
 # Lib/exe configuration
 ifneq ($(STATIC_LIB),)
+	ifeq ($(emu), 1)
+		NVCCFLAGS   += -deviceemu
+		CUDACCFLAGS +=
+		BINSUBDIR   := emu$(BINSUBDIR)
+		LIBSUFFIX   := _$(LIB_ARCH)$(LIBSUFFIX)_emu
+		# consistency, makes developing easier
+		CXXFLAGS    += -D__DEVICE_EMULATION__
+		CFLAGS	    += -D__DEVICE_EMULATION__		
+	endif
 	TARGETDIR := $(LIBDIR)
 	TARGET   := $(subst .a,$(LIBSUFFIX).a,$(LIBDIR)/$(STATIC_LIB))
-	LINKLINE  = ar qv $(TARGET) $(OBJS) 
+	LINKLINE  = ar qv $(TARGET) $(OBJS); ranlib $(TARGET)
 else
-	LIB += -lcutil$(LIBSUFFIX)
+	LIB += -lcutil_$(LIB_ARCH)$(LIBSUFFIX)
 	# Device emulation configuration
 	ifeq ($(emu), 1)
 		NVCCFLAGS   += -deviceemu
 		CUDACCFLAGS += 
 		BINSUBDIR   := emu$(BINSUBDIR)
 		# consistency, makes developing easier
-		CXXFLAGS		+= -D__DEVICE_EMULATION__
-		CFLAGS			+= -D__DEVICE_EMULATION__
+		CXXFLAGS    += -D__DEVICE_EMULATION__
+		CFLAGS	    += -D__DEVICE_EMULATION__
 	endif
 	TARGETDIR := $(BINDIR)/$(BINSUBDIR)
 	TARGET    := $(TARGETDIR)/$(EXECUTABLE)
 	LINKLINE  = $(LINK) -o $(TARGET) $(OBJS) $(LIB)
+endif
+
+# Lib/exe configuration
+ifneq ($(CUDPP_STATIC_LIB),)
+	ifeq ($(emu), 1)
+		NVCCFLAGS   += -deviceemu
+		CUDACCFLAGS +=
+		LIBSUFFIX   := _$(LIB_ARCH)$(LIBSUFFIX)_emu
+		# consistency, makes developing easier
+		CXXFLAGS    += -D__DEVICE_EMULATION__
+		CFLAGS	    += -D__DEVICE_EMULATION__		
+        else
+		LIBSUFFIX   := _$(LIB_ARCH)$(LIBSUFFIX)
+	endif
+	TARGETDIR := $(LIBDIR)
+
+	# detect if 32 bit or 64 bit system
+	HP_64 =	$(shell uname -m | grep 64)
+
+	TARGET   := $(subst .a,$(LIBSUFFIX).a,$(LIBDIR)/$(CUDPP_STATIC_LIB))	
+
+	LINKLINE  = ar qv $(TARGET) $(OBJS); ranlib $(TARGET)
 endif
 
 # check if verbose 
@@ -220,7 +315,7 @@ endif
 ################################################################################
 # Set up object files
 ################################################################################
-OBJDIR := $(ROOTOBJDIR)/$(BINSUBDIR)
+OBJDIR := $(ROOTOBJDIR)/$(LIB_ARCH)/$(BINSUBDIR)
 OBJS +=  $(patsubst %.cpp,$(OBJDIR)/%.cpp_o,$(notdir $(CCFILES)))
 OBJS +=  $(patsubst %.c,$(OBJDIR)/%.c_o,$(notdir $(CFILES)))
 OBJS +=  $(patsubst %.cu,$(OBJDIR)/%.cu_o,$(notdir $(CUFILES)))
@@ -240,7 +335,7 @@ $(OBJDIR)/%.c_o : $(SRCDIR)%.c $(C_DEPS)
 $(OBJDIR)/%.cpp_o : $(SRCDIR)%.cpp $(C_DEPS)
 	$(VERBOSE)$(CXX) $(CXXFLAGS) -o $@ -c $<
 
-$(OBJDIR)/%.cu_o : $(SRCDIR)%.cu $(CU_DEPS)
+$(OBJDIR)/%.cu_o : $(CUSRCDIR)%.cu $(CU_DEPS)
 	$(VERBOSE)$(NVCC) -o $@ -c $< $(NVCCFLAGS)
 
 $(CUBINDIR)/%.cubin : $(SRCDIR)%.cu cubindirectory
@@ -257,10 +352,9 @@ makedirectories:
 	@mkdir -p $(OBJDIR)
 	@mkdir -p $(TARGETDIR)
 
-
 tidy :
-	@find | egrep "#" | xargs rm -f
-	@find | egrep "\~" | xargs rm -f
+	$(VERBOSE)find . | egrep "#" | xargs rm -f
+	$(VERBOSE)find . | egrep "\~" | xargs rm -f
 
 clean : tidy
 	$(VERBOSE)rm -f $(OBJS)
@@ -269,4 +363,4 @@ clean : tidy
 	$(VERBOSE)rm -f $(NVCC_KEEP_CLEAN)
 
 clobber : clean
-	rm -rf $(ROOTOBJDIR)
+	$(VERBOSE)rm -rf $(ROOTOBJDIR)
