@@ -6,6 +6,11 @@
 
 .SUFFIXES : .cu .cu_dbg_o .c_dbg_o .cpp_dbg_o .cu_rel_o .c_rel_o .cpp_rel_o .cubin
 
+CUDA_VERSION := $(shell nvcc --version | sed -n -e '/release/!d' -e 's/Cuda compilation tools, release \([0-9].[0-9]\), V[0-9].[0-9]*.[0-9]*/\1/p')
+
+threeplus := 3.0
+CUDA_VERSION_3PLUS := $(filter $(threeplus), $(firstword $(sort $(CUDA_VERSION) $(threeplus))))
+
 CUDA_INSTALL_PATH ?= /usr/local/cuda
 
 ifdef cuda-install
@@ -164,9 +169,11 @@ endif
 # append optional arch/SM version flags (such as -arch sm_11)
 NVCCFLAGS += $(SMVERSIONFLAGS) 
 NVCCFLAGS += -gencode=arch=compute_10,code=sm_10 
-#NVCCFLAGS += -gencode=arch=compute_10,code=compute_10
-NVCCFLAGS += -gencode=arch=compute_20,code=sm_20 
-#NVCCFLAGS += -gencode=arch=compute_20,code=compute_20
+
+ifneq ($(CUDA_VERSION_3PLUS),)
+	NVCCFLAGS += -gencode=arch=compute_20,code=sm_20 
+endif
+
 
 # architecture flag for cubin build
 CUBIN_ARCH_FLAG := -m32
