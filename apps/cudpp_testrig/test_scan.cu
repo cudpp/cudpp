@@ -281,10 +281,6 @@ int testScan(int argc, const char **argv, CUDPPConfiguration *configPtr)
         CUDA_SAFE_CALL(cudaMemcpy( o_data, d_odata, sizeof(float) * test[k],
                                    cudaMemcpyDeviceToHost));
           
-	    // 
-	    if (reference[0] > test[k])
-	      printf("Problem with reference data! %f\n", reference[0]);
-	
         // check if the result is equivalent to the expected soluion
         CUTBoolean result = cutComparefe( reference, o_data, test[k], 0.001f);
 
