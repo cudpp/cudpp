@@ -83,6 +83,7 @@ bool searchForFile(unsigned int numElements, FILE ** randFile, char * path, test
     strcpy(path, fullFileName);
 
     //search and see which one of them exists
+    //printf("looking for %s\n", fileName);
     if(file_exists(fileName))
     {
         if(!quiet)
@@ -90,6 +91,7 @@ bool searchForFile(unsigned int numElements, FILE ** randFile, char * path, test
         *randFile = fopen(fileName, "rb");
         return true;
     }
+    //printf("looking for %s\n",fullFileName);
     if(file_exists(fullFileName))
     {
         *randFile = fopen(fullFileName,"rb");
@@ -114,6 +116,7 @@ bool searchForFile(unsigned int numElements, FILE ** randFile, char * path, test
         return false;
 
     constructFileName(fullFileName, testOptions, numElements, quiet, dataPath);
+    //printf("looking for %s\n", fullFileName);
     if(file_exists(fullFileName))
     {
         if(!quiet) 

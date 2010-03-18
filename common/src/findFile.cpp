@@ -57,9 +57,56 @@ int checkWorkingDirName(const char * path, const char * target)
     while((start = strtok(NULL, "/")) != NULL) lastStart = start;
     //effect: find the last directory (i.e. current directory name)
 
-    return (strcmp(lastStart, target) ==0);
+    return (strstr(lastStart, target) !=NULL);
 }//end checkWorkingDirName
 
+int goUpDir(const char * startDir, char * parentPath)
+{
+	int val=1;
+	char oldDir[100];
+	getcwd(oldDir, 100);
+
+	chdir(startDir);
+	chdir("..");
+
+	getcwd(parentPath, 100);
+
+	if(strcmp(startDir, parentPath) == 0) val = 0;
+
+	chdir(oldDir);
+	return val;
+}
+
+int gotoParent(const char * parentDirName, char * parentPath)
+{
+	int atRoot = 0;
+	char cwd[100];
+	char parent[100];
+	getcwd(cwd,100);
+	
+	//check the working dir path first
+	if(checkWorkingDirName(cwd, parentDirName))
+	{
+		strcpy(parentPath, cwd);
+		return 1;
+	}
+	while(!atRoot)
+	{
+		int hitRoot = goUpDir(cwd,parent);
+		if(checkWorkingDirName(parent, parentDirName))
+		{
+			strcpy(parentPath, parent);
+			return 1;
+		}
+		strcpy(cwd, parent);
+		atRoot = !hitRoot;
+	}
+	return 0;
+}
+void getRootPath(char * path, int size)
+{
+	getcwd(path, size);
+}
 //finds out how high up our target directory is
 int cutupPath(const char * target)
 {
@@ -239,9 +286,56 @@ int checkWorkingDirName(const char * path, const char * target)
     while((start = strtok(NULL, "\\")) != NULL) lastStart = start;
     //effect: find the last directory (i.e. current directory name)
 
-    return (lastStart != 0 && strcmp(lastStart, target) ==0);
+    return (lastStart != 0 && strstr(lastStart, target) !=NULL);
 }//end checkWorkingDirName
 
+int goUpDir(const char * startDir, char * parentPath)
+{
+	int val=1;
+	char oldDir[100];
+	_getcwd(oldDir, 100);
+
+	_chdir(startDir);
+	_chdir("..");
+
+	_getcwd(parentPath, 100);
+
+	if(strcmp(startDir, parentPath) == 0) val = 0;
+
+	_chdir(oldDir);
+	return val;
+}
+int gotoParent(const char * parentDirName, char * parentPath)
+{
+	int atRoot = 0;
+	char cwd[100];
+	char parent[100];
+	_getcwd(cwd,100);
+
+	//check the working dir path first
+	if(checkWorkingDirName(cwd, parentDirName))
+	{
+		strcpy(parentPath, cwd);
+		return 1;
+	}
+	while(!atRoot)
+	{
+		int hitRoot = goUpDir(cwd,parent);
+		if(checkWorkingDirName(parent, parentDirName))
+		{
+			strcpy(parentPath, parent);
+			return 1;
+		}
+		strcpy(cwd, parent);
+		atRoot = !hitRoot;
+	}
+	return 0;
+}
+
+void getRootPath(char * rootPath, int size)
+{
+	_getcwd(rootPath, size);
+}
 int cutupPath(const char * target)
 {
     char path[100];
@@ -433,15 +527,15 @@ extern "C"
 int findDir(const char * startDir, const char * dirName, char * outputPath)
 {
     char rootPath[100];
-    int numUp = cutupPath(startDir);
-    if(numUp < 0)
-    {
-        //error, startDir is not part of the parent of current path
-        return 0;
-    }
+	char parentPath[100];
+	getRootPath(rootPath, 100);
+//	printf("starting at %s and looking for %s\n", rootPath, startDir);
+	int val = gotoParent(startDir, parentPath);
 
-    constructHomeDirBasePath(rootPath, numUp);
-    return findDirWithBase(rootPath, dirName,outputPath);
+	if(val == 0) return 0;	//startDir not part of the current working path
+
+//	printf("found base: %s\n", parentPath);
+    return findDirWithBase(parentPath, dirName,outputPath);
 }//end int findDir(char * startDir, char * dirName, char * outputPath)
 
 /**@brief Attempts to find a file starting the the root directory \a startDir which is named
@@ -459,14 +553,13 @@ extern "C"
 int findFile(const char * startDir, const char * fileName, char * outputPath)
 {
     char rootPath[100];
-    int numUp = cutupPath(startDir);
-    if(numUp < 0)
-    {
-        //error, startDir is not part of the parent of current path
-        return 0;
-    }
+	char parentPath[100];
+	getRootPath(rootPath, 100);
+//	printf("starting at %s and looking for %s\n", rootPath, startDir);
+	int val = gotoParent(startDir, parentPath);
 
-    constructHomeDirBasePath(rootPath, numUp);
+	if(val == 0) return 0;	//startDir not part of the current working path
+//	printf("found base: %s\n", parentPath);
     return findFileWithBase(rootPath, fileName,outputPath);
 }//end int findFile(char * startDir, char * fileName, char * outputPath)
 
