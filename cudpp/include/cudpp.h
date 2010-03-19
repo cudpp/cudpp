@@ -184,9 +184,9 @@
  * - <a href="http://www.markmark.net">Mark Harris</a>, NVIDIA Corporation
  * - <a href="http://www.ece.ucdavis.edu/~jowens/">John D. Owens</a>, University of California, Davis
  * - <a href="http://graphics.cs.ucdavis.edu/~shubho/">Shubho Sengupta</a>, University of California, Davis
- * - Stanley Tseng,   University of California, Davis
- * - Yao Zhang,       University of California, Davis
- * - Andrew Davidson, University of California, Davis (formerly Louisiana State University)
+ * - Stanley Tzeng,   University of California, Davis
+ * - <a href="http://www.ece.ucdavis.edu/~yaozhang/">Yao Zhang</a>,       University of California, Davis
+ * - <a href="http://www.ece.ucdavis.edu/~aaldavid/">Andrew Davidson</a>, University of California, Davis (formerly Louisiana State University)
  * 
  * \subsection contributors Other CUDPP Contributors
  * - <a href="http://www.eecs.berkeley.edu/~nrsatish/">Nadatur Satish</a>,  University of California, Berkeley
