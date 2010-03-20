@@ -20,14 +20,14 @@
 //Since file searching is heavily OS dependent, 
 //Our includes will be different based on which OS we choose
 #if defined (__linux__) || defined (__APPLE__) || defined (MACOSX)
-    //used dirent.h to read directories, POSIX standard
-    #include <dirent.h>
-    #include<unistd.h>
+//used dirent.h to read directories, POSIX standard
+#include <dirent.h>
+#include<unistd.h>
 #elif defined (WIN32) || defined (__WIN32)
-    #pragma warning (disable: 4996) // disable strtok safety warning
-    //use io.h and direct.h to read files, this is the windows-version
-    #include <io.h>
-    #include <direct.h>
+#pragma warning (disable: 4996) // disable strtok safety warning
+//use io.h and direct.h to read files, this is the windows-version
+#include <io.h>
+#include <direct.h>
 #else
 // error unimplemented OS functionality
 #error "No implementation for this OS in tools.cpp"
@@ -49,7 +49,7 @@ int checkWorkingDirName(const char * path, const char * target)
     //find the start of the target in path
     char * start;
     char * lastStart = NULL;
-    char newPath[100];
+    char newPath[500];
 
     strcpy(newPath, path);
     
@@ -57,62 +57,62 @@ int checkWorkingDirName(const char * path, const char * target)
     while((start = strtok(NULL, "/")) != NULL) lastStart = start;
     //effect: find the last directory (i.e. current directory name)
 
-	if(lastStart == NULL) return 0;
+    if(lastStart == NULL) return 0;
     return (strstr(lastStart, target) !=NULL);
 }//end checkWorkingDirName
 
 int goUpDir(const char * startDir, char * parentPath)
 {
-	int val=1;
-	char oldDir[100];
-	getcwd(oldDir, 100);
+    int val=1;
+    char oldDir[500];
+    getcwd(oldDir, 500);
 
-	chdir(startDir);
-	chdir("..");
+    chdir(startDir);
+    chdir("..");
 
-	getcwd(parentPath, 100);
+    getcwd(parentPath, 500);
 
-	if(strcmp(startDir, parentPath) == 0) val = 0;
+    if(strcmp(startDir, parentPath) == 0) val = 0;
 
-	chdir(oldDir);
-	return val;
+    chdir(oldDir);
+    return val;
 }
 
 int gotoParent(const char * parentDirName, char * parentPath)
 {
-	int atRoot = 0;
-	char cwd[100];
-	char parent[100];
-	getcwd(cwd,100);
-	
-	//check the working dir path first
-	if(checkWorkingDirName(cwd, parentDirName))
-	{
-		strcpy(parentPath, cwd);
-		return 1;
-	}
-	while(!atRoot)
-	{
-		int hitRoot = goUpDir(cwd,parent);
-		if(checkWorkingDirName(parent, parentDirName))
-		{
-			strcpy(parentPath, parent);
-			return 1;
-		}
-		strcpy(cwd, parent);
-		atRoot = !hitRoot;
-	}
-	return 0;
+    int atRoot = 0;
+    char cwd[500];
+    char parent[500];
+    getcwd(cwd,500);
+        
+    //check the working dir path first
+    if(checkWorkingDirName(cwd, parentDirName))
+    {
+        strcpy(parentPath, cwd);
+        return 1;
+    }
+    while(!atRoot)
+    {
+        int hitRoot = goUpDir(cwd,parent);
+        if(checkWorkingDirName(parent, parentDirName))
+        {
+            strcpy(parentPath, parent);
+            return 1;
+        }
+        strcpy(cwd, parent);
+        atRoot = !hitRoot;
+    }
+    return 0;
 }
 void getRootPath(char * path, int size)
 {
-	getcwd(path, size);
+    getcwd(path, size);
 }
 //finds out how high up our target directory is
 int cutupPath(const char * target)
 {
-    char path[100];
-    getcwd(path, 100);	//linux / apple version is getcwd, while windows is _getcwd...
+    char path[500];
+    getcwd(path, 500);  //linux / apple version is getcwd, while windows is _getcwd...
 
     if(checkWorkingDirName(path, target))
         return 0;
@@ -125,18 +125,18 @@ int cutupPath(const char * target)
     
     if(strcmp(curDir, target) == 0)
     {
-            haveSeen = true;
+        haveSeen = true;
     } //end if
     
     while((token = strtok(NULL, "/")) != NULL)
-    {		
+    {           
         if(haveSeen)
             counter++;
             
         if(strcmp(token, target) == 0)
-    {
+        {
             haveSeen = true;
-    }
+        }
     }  //end while
     
     if(haveSeen)
@@ -159,18 +159,18 @@ void constructHomeDirBasePath(char * pathName, int numUp)
     for(int i=0; i<numUp-1; i++)
         strcat(pathName, "../");
         
-    strcat(pathName, "..");	
+    strcat(pathName, "..");     
 }//end constructHomeDirBasePath
 
 int findDirWithBase(const char * base, const char * dirName, char * outputPath)
 {
     DIR *dir;
-    char newPath[100];
-    
+    char newPath[500];
+
     if((dir = opendir (base)) == NULL)
     {
-      printf( "Unable to open %s\n", base );
-      return 0;
+        printf( "Unable to open %s\n", base );
+        return 0;
     }//end if
     else
     {
@@ -183,10 +183,11 @@ int findDirWithBase(const char * base, const char * dirName, char * outputPath)
                strcmp(dp->d_name, ".") == 0  || 
                strcmp(dp->d_name, ".svn") == 0)
                 continue;
-            
+
             DIR * d;
             //need to concatenate
             sprintf(newPath, "%s/%s", base, dp->d_name);
+
             if((d = opendir(newPath))==NULL)
             {
                 //not a directory, do nothing for the directory search case
@@ -217,44 +218,44 @@ int findDirWithBase(const char * base, const char * dirName, char * outputPath)
     return 0;
 }//void findDirWithBase
 
-int findPaths(const char * parentDirName, char paths[10][100])
+int findPaths(const char * parentDirName, char paths[10][500])
 {
-	int numPathsFound=0;
-		int atRoot = 0;
-	char cwd[100];
-	char parent[100];
-	getcwd(cwd,100);
+    int numPathsFound=0;
+    int atRoot = 0;
+    char cwd[500];
+    char parent[500];
+    getcwd(cwd,500);
 
-	//check the working dir path first
-	if(checkWorkingDirName(cwd, parentDirName))
-	{
-		strcpy(paths[numPathsFound], cwd);
-		numPathsFound++;
-	}
+    //check the working dir path first
+    if(checkWorkingDirName(cwd, parentDirName))
+    {
+        strcpy(paths[numPathsFound], cwd);
+        numPathsFound++;
+    }
 
-	while(!atRoot)
-	{
-		int hitRoot = goUpDir(cwd,parent);
-		if(checkWorkingDirName(parent, parentDirName))
-		{
-			strcpy(paths[numPathsFound], parent);
-			numPathsFound++;
-		}
-		strcpy(cwd, parent);
-		atRoot = !hitRoot;
-	}
-	return numPathsFound;
+    while(!atRoot)
+    {
+        int hitRoot = goUpDir(cwd,parent);
+        if(checkWorkingDirName(parent, parentDirName))
+        {
+            strcpy(paths[numPathsFound], parent);
+            numPathsFound++;
+        }
+        strcpy(cwd, parent);
+        atRoot = !hitRoot;
+    }
+    return numPathsFound;
 }
 
 int findFileWithBase(const char * base, const char * fileName, char * outputPath)
 {
     DIR *dir;
-    char newPath[100];
+    char newPath[500];
     
     if((dir = opendir (base)) == NULL)
     {
-      printf( "Unable to open %s\n", base );
-      return 0;
+        printf( "Unable to open %s\n", base );
+        return 0;
     }//end if
     else
     {
@@ -308,7 +309,7 @@ int checkWorkingDirName(const char * path, const char * target)
     //find the start of the target in path
     char * start;
     char * lastStart = NULL;
-    char newPath[100];
+    char newPath[500];
 
     strcpy(newPath, path);
     
@@ -316,89 +317,89 @@ int checkWorkingDirName(const char * path, const char * target)
     while((start = strtok(NULL, "\\")) != NULL) lastStart = start;
     //effect: find the last directory (i.e. current directory name)
 
-	if(lastStart == NULL) return 0;
+    if(lastStart == NULL) return 0;
     return (lastStart != 0 && strstr(lastStart, target) !=NULL);
 }//end checkWorkingDirName
 
 int goUpDir(const char * startDir, char * parentPath)
 {
-	int val=1;
-	char oldDir[100];
-	_getcwd(oldDir, 100);
+    int val=1;
+    char oldDir[500];
+    _getcwd(oldDir, 500);
 
-	_chdir(startDir);
-	_chdir("..");
+    _chdir(startDir);
+    _chdir("..");
 
-	_getcwd(parentPath, 100);
+    _getcwd(parentPath, 500);
 
-	if(strcmp(startDir, parentPath) == 0) val = 0;
+    if(strcmp(startDir, parentPath) == 0) val = 0;
 
-	_chdir(oldDir);
-	return val;
+    _chdir(oldDir);
+    return val;
 }
 int gotoParent(const char * parentDirName, char * parentPath)
 {
-	int atRoot = 0;
-	char cwd[100];
-	char parent[100];
-	_getcwd(cwd,100);
+    int atRoot = 0;
+    char cwd[500];
+    char parent[500];
+    _getcwd(cwd,500);
 
-	//check the working dir path first
-	if(checkWorkingDirName(cwd, parentDirName))
-	{
-		strcpy(parentPath, cwd);
-		return 1;
-	}
-	while(!atRoot)
-	{
-		int hitRoot = goUpDir(cwd,parent);
-		if(checkWorkingDirName(parent, parentDirName))
-		{
-			strcpy(parentPath, parent);
-			return 1;
-		}
-		strcpy(cwd, parent);
-		atRoot = !hitRoot;
-	}
-	return 0;
+    //check the working dir path first
+    if(checkWorkingDirName(cwd, parentDirName))
+    {
+        strcpy(parentPath, cwd);
+        return 1;
+    }
+    while(!atRoot)
+    {
+        int hitRoot = goUpDir(cwd,parent);
+        if(checkWorkingDirName(parent, parentDirName))
+        {
+            strcpy(parentPath, parent);
+            return 1;
+        }
+        strcpy(cwd, parent);
+        atRoot = !hitRoot;
+    }
+    return 0;
 }
 
-int findPaths(const char * parentDirName, char paths[10][100])
+int findPaths(const char * parentDirName, char paths[10][500])
 {
-	int numPathsFound=0;
-		int atRoot = 0;
-	char cwd[100];
-	char parent[100];
-	_getcwd(cwd,100);
+    int numPathsFound=0;
+    int atRoot = 0;
+    char cwd[500];
+    char parent[500];
+    _getcwd(cwd,500);
 
-	//check the working dir path first
-	if(checkWorkingDirName(cwd, parentDirName))
-	{
-		strcpy(paths[numPathsFound], cwd);
-		numPathsFound++;
-	}
-	while(!atRoot)
-	{
-		int hitRoot = goUpDir(cwd,parent);
-		if(checkWorkingDirName(parent, parentDirName))
-		{
-			strcpy(paths[numPathsFound], parent);
-			numPathsFound++;
-		}
-		strcpy(cwd, parent);
-		atRoot = !hitRoot;
-	}
-	return numPathsFound;
+    //check the working dir path first
+    if(checkWorkingDirName(cwd, parentDirName))
+    {
+        strcpy(paths[numPathsFound], cwd);
+        numPathsFound++;
+    }
+    while(!atRoot)
+    {
+        int hitRoot = goUpDir(cwd,parent);
+        if(checkWorkingDirName(parent, parentDirName))
+        {
+            strcpy(paths[numPathsFound], parent);
+            numPathsFound++;
+        }
+        strcpy(cwd, parent);
+        atRoot = !hitRoot;
+    }
+    return numPathsFound;
 }
 
 void getRootPath(char * rootPath, int size)
 {
-	_getcwd(rootPath, size);
+    _getcwd(rootPath, size);
 }
 int cutupPath(const char * target)
 {
-    char path[100];
-    _getcwd(path, 100);
+    char path[500];
+    _getcwd(path, 500);
 
     if(checkWorkingDirName(path, target))
         return 0;
@@ -411,11 +412,11 @@ int cutupPath(const char * target)
     
     if(curDir != 0 && strcmp(curDir, target) == 0)
     {
-            haveSeen = true;
+        haveSeen = true;
     }
     
     while((token = strtok(NULL, "\\")) != NULL)
-    {		
+    {           
         if(haveSeen)
             counter++;
             
@@ -435,7 +436,7 @@ void constructHomeDirBasePath(char * pathName, int numUp)
 {
     pathName[0] = '\0';
 
-        //check a base case: if numUp = 0, then path is .    
+    //check a base case: if numUp = 0, then path is .    
     if(numUp == 0)
     {
         strcat(pathName, ".");
@@ -448,61 +449,61 @@ void constructHomeDirBasePath(char * pathName, int numUp)
     for(int i=0; i<numUp-1; i++)
         strcat(pathName, "..\\");
         
-    strcat(pathName, "..");	
+    strcat(pathName, "..");     
 }  //end constructHomeDirBasePath
 
 int findDirWithBase(const char * base, const char * dirName, char * outputPath)
 {
     _finddata_t c_file;
-   intptr_t hFile;
+    intptr_t hFile;
 
-   char newPath[100];
-   char baseCpy[100];
-   strcpy(baseCpy, base);
-   strcat(baseCpy, "\\*");
+    char newPath[500];
+    char baseCpy[500];
+    strcpy(baseCpy, base);
+    strcat(baseCpy, "\\*");
     
-   if( (hFile = _findfirst( baseCpy, &c_file )) == -1L )
-   {
-      printf( "Unable to open %s\n", base );
-      return 0;
-   }//end if 
-  else
-   {
-      do {
-          //first check, make sure it is not any of the directories we don't 
-          //want to search
-          if(strcmp(c_file.name, "..") == 0 ||
-              strcmp(c_file.name, ".") == 0 ||
-              strcmp(c_file.name, ".svn") == 0)
-              continue;
+    if( (hFile = _findfirst( baseCpy, &c_file )) == -1L )
+    {
+        printf( "Unable to open %s\n", base );
+        return 0;
+    }//end if 
+    else
+    {
+        do {
+            //first check, make sure it is not any of the directories we don't 
+            //want to search
+            if(strcmp(c_file.name, "..") == 0 ||
+               strcmp(c_file.name, ".") == 0 ||
+               strcmp(c_file.name, ".svn") == 0)
+                continue;
 
-         if(c_file.attrib & _A_SUBDIR)
-         {
-              //construct the new path
-             sprintf(newPath, "%s\\%s", base, c_file.name);
+            if(c_file.attrib & _A_SUBDIR)
+            {
+                //construct the new path
+                sprintf(newPath, "%s\\%s", base, c_file.name);
 
-             //this is a directory, see if it matches the name we are looking for
-             if(strcmp(dirName, c_file.name) == 0)
-             {
-                //this is the dir we are looking for
-                strcpy(outputPath, newPath);
-                strcat(outputPath, "\\");
-                _findclose( hFile );
-                return 1;
-             }//end if
-             //this is not the directory we are looking for (jedi powers...)
-             //recurse
-             int result = findDirWithBase(newPath, dirName, outputPath);
-             if(result)
-             {
-                 _findclose(hFile);
-                 return 1;
-             }  //end if(result)
+                //this is a directory, see if it matches the name we are looking for
+                if(strcmp(dirName, c_file.name) == 0)
+                {
+                    //this is the dir we are looking for
+                    strcpy(outputPath, newPath);
+                    strcat(outputPath, "\\");
+                    _findclose( hFile );
+                    return 1;
+                }//end if
+                //this is not the directory we are looking for (jedi powers...)
+                //recurse
+                int result = findDirWithBase(newPath, dirName, outputPath);
+                if(result)
+                {
+                    _findclose(hFile);
+                    return 1;
+                }  //end if(result)
 
-         }//end if(c_file.attrib & _A_SUBDIR)
-      } while( _findnext( hFile, &c_file ) == 0 );
-      _findclose( hFile );
-   }//end else
+            }//end if(c_file.attrib & _A_SUBDIR)
+        } while( _findnext( hFile, &c_file ) == 0 );
+        _findclose( hFile );
+    }//end else
 
     return 0;
 }  //end findDirWithBase
@@ -510,55 +511,55 @@ int findDirWithBase(const char * base, const char * dirName, char * outputPath)
 int findFileWithBase(const char * base, const char * fileName, char * outputFile)
 {
     _finddata_t c_file;
-   intptr_t hFile;
+    intptr_t hFile;
 
-   char newPath[100];
-   char baseCpy[100];
-   strcpy(baseCpy, base);
-   strcat(baseCpy, "\\*");
-   // Find first .c file in current directory 
-   if( (hFile = _findfirst( baseCpy, &c_file )) == -1L )
-   {
-      printf( "Unable to open %s\n", base );
-      return 0;
-   }//end if
-  else
-   {
-      do {
-          //first check, make sure it is not any of the directories we don't 
-          //want to search
-          if(strcmp(c_file.name, "..") == 0 ||
-              strcmp(c_file.name, ".") == 0 ||
-              strcmp(c_file.name, ".svn") == 0)
-              continue;
+    char newPath[500];
+    char baseCpy[500];
+    strcpy(baseCpy, base);
+    strcat(baseCpy, "\\*");
+    // Find first .c file in current directory 
+    if( (hFile = _findfirst( baseCpy, &c_file )) == -1L )
+    {
+        printf( "Unable to open %s\n", base );
+        return 0;
+    }//end if
+    else
+    {
+        do {
+            //first check, make sure it is not any of the directories we don't 
+            //want to search
+            if(strcmp(c_file.name, "..") == 0 ||
+               strcmp(c_file.name, ".") == 0 ||
+               strcmp(c_file.name, ".svn") == 0)
+                continue;
 
-         if(c_file.attrib & _A_SUBDIR)
-         {
-              //construct the new path
-             sprintf(newPath, "%s\\%s", base, c_file.name);
-             //recurse
-             int result = findFileWithBase(newPath, fileName, outputFile);
-             if(result)
-             {
-                 _findclose(hFile);
-                 return 1;
-             }//end if(result)
+            if(c_file.attrib & _A_SUBDIR)
+            {
+                //construct the new path
+                sprintf(newPath, "%s\\%s", base, c_file.name);
+                //recurse
+                int result = findFileWithBase(newPath, fileName, outputFile);
+                if(result)
+                {
+                    _findclose(hFile);
+                    return 1;
+                }//end if(result)
 
-         }//end if
-         else
-         {
-             //check the file to see if it matches the name
-             if(strcmp(fileName, c_file.name) == 0)
-             {
-                //this is the dir we are looking for
-                sprintf(outputFile, "%s\\%s", base, c_file.name);
-                _findclose( hFile );
-                return 1;
-             }  //end if
-         }  //end else
-      } while( _findnext( hFile, &c_file ) == 0 );
-      _findclose( hFile );
-   }//end else
+            }//end if
+            else
+            {
+                //check the file to see if it matches the name
+                if(strcmp(fileName, c_file.name) == 0)
+                {
+                    //this is the dir we are looking for
+                    sprintf(outputFile, "%s\\%s", base, c_file.name);
+                    _findclose( hFile );
+                    return 1;
+                }  //end if
+            }  //end else
+        } while( _findnext( hFile, &c_file ) == 0 );
+        _findclose( hFile );
+    }//end else
 
     return 0;
 }//end findFileWithBase
@@ -585,31 +586,32 @@ int findFileWithBase(const char * base, const char * fileName, char * outputFile
 extern "C"
 int findDir(const char * startDir, const char * dirName, char * outputPath)
 {
-    char rootPath[100];
-//	char parentPath[100];
-	char pathsFound[10][100];
-	getRootPath(rootPath, 100);
-//	printf("finding number of possible dirs...\n");
-	int numPossibleDirs = findPaths(startDir, pathsFound);
-//	printf("numPossibleDirs: %d\n", numPossibleDirs);
+    char rootPath[500];
+//      char parentPath[500];
+    char pathsFound[10][500];
+    getRootPath(rootPath, 500);
+    // fprintf(stderr, "finding number of possible dirs...\n");
+    int numPossibleDirs = findPaths(startDir, pathsFound);
+    // fprintf(stderr, "numPossibleDirs: %d\n", numPossibleDirs);
 
-	if(numPossibleDirs ==0) return 0;
+    if(numPossibleDirs ==0) return 0;
 
-	int val;
-	for(int i=0; i<numPossibleDirs; i++)
-	{
-		val =findDirWithBase(pathsFound[i], dirName,outputPath);
-		if(val == 1)
-			return 1;
-	}
+    int val;
+    for(int i=numPossibleDirs-1; i >=0; i--)
+        // for(int i=0; i<numPossibleDirs; i++)
+    {
+        val =findDirWithBase(pathsFound[i], dirName,outputPath);
+        if(val == 1)
+            return 1;
+    }
 
-	return 0;
-//	printf("starting at %s and looking for %s\n", rootPath, startDir);
-//	int val = gotoParent(startDir, parentPath);
+    return 0;
+//      printf("starting at %s and looking for %s\n", rootPath, startDir);
+//      int val = gotoParent(startDir, parentPath);
 
 
-//	printf("found base: %s\n", parentPath);
- //   return findDirWithBase(parentPath, dirName,outputPath);
+//      printf("found base: %s\n", parentPath);
+    //   return findDirWithBase(parentPath, dirName,outputPath);
 }//end int findDir(char * startDir, char * dirName, char * outputPath)
 
 /**@brief Attempts to find a file starting the the root directory \a startDir which is named
@@ -626,23 +628,23 @@ int findDir(const char * startDir, const char * dirName, char * outputPath)
 extern "C"
 int findFile(const char * startDir, const char * fileName, char * outputPath)
 {
-    char rootPath[100];
-//	char parentPath[100];
-	char pathsFound[10][100];
-	getRootPath(rootPath, 100);
-	int numPossibleDirs = findPaths(startDir, pathsFound);
+    char rootPath[500];
+//      char parentPath[500];
+    char pathsFound[10][500];
+    getRootPath(rootPath, 500);
+    int numPossibleDirs = findPaths(startDir, pathsFound);
 
-	if(numPossibleDirs ==0) return 0;
+    if(numPossibleDirs ==0) return 0;
 
-	int val;
-	for(int i=0; i<numPossibleDirs; i++)
-	{
-		val =findFileWithBase(pathsFound[i], fileName,outputPath);
-		if(val == 1)
-			return 1;
-	}
+    int val;
+    for(int i=0; i<numPossibleDirs; i++)
+    {
+        val =findFileWithBase(pathsFound[i], fileName,outputPath);
+        if(val == 1)
+            return 1;
+    }
 
-	return 0;
+    return 0;
 }//end int findFile(char * startDir, char * fileName, char * outputPath)
 
 
