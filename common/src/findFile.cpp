@@ -57,6 +57,7 @@ int checkWorkingDirName(const char * path, const char * target)
     while((start = strtok(NULL, "/")) != NULL) lastStart = start;
     //effect: find the last directory (i.e. current directory name)
 
+	if(lastStart == NULL) return 0;
     return (strstr(lastStart, target) !=NULL);
 }//end checkWorkingDirName
 
@@ -216,6 +217,35 @@ int findDirWithBase(const char * base, const char * dirName, char * outputPath)
     return 0;
 }//void findDirWithBase
 
+int findPaths(const char * parentDirName, char paths[10][100])
+{
+	int numPathsFound=0;
+		int atRoot = 0;
+	char cwd[100];
+	char parent[100];
+	getcwd(cwd,100);
+
+	//check the working dir path first
+	if(checkWorkingDirName(cwd, parentDirName))
+	{
+		strcpy(paths[numPathsFound], cwd);
+		numPathsFound++;
+	}
+
+	while(!atRoot)
+	{
+		int hitRoot = goUpDir(cwd,parent);
+		if(checkWorkingDirName(parent, parentDirName))
+		{
+			strcpy(paths[numPathsFound], parent);
+			numPathsFound++;
+		}
+		strcpy(cwd, parent);
+		atRoot = !hitRoot;
+	}
+	return numPathsFound;
+}
+
 int findFileWithBase(const char * base, const char * fileName, char * outputPath)
 {
     DIR *dir;
@@ -286,6 +316,7 @@ int checkWorkingDirName(const char * path, const char * target)
     while((start = strtok(NULL, "\\")) != NULL) lastStart = start;
     //effect: find the last directory (i.e. current directory name)
 
+	if(lastStart == NULL) return 0;
     return (lastStart != 0 && strstr(lastStart, target) !=NULL);
 }//end checkWorkingDirName
 
@@ -330,6 +361,34 @@ int gotoParent(const char * parentDirName, char * parentPath)
 		atRoot = !hitRoot;
 	}
 	return 0;
+}
+
+int findPaths(const char * parentDirName, char paths[10][100])
+{
+	int numPathsFound=0;
+		int atRoot = 0;
+	char cwd[100];
+	char parent[100];
+	_getcwd(cwd,100);
+
+	//check the working dir path first
+	if(checkWorkingDirName(cwd, parentDirName))
+	{
+		strcpy(paths[numPathsFound], cwd);
+		numPathsFound++;
+	}
+	while(!atRoot)
+	{
+		int hitRoot = goUpDir(cwd,parent);
+		if(checkWorkingDirName(parent, parentDirName))
+		{
+			strcpy(paths[numPathsFound], parent);
+			numPathsFound++;
+		}
+		strcpy(cwd, parent);
+		atRoot = !hitRoot;
+	}
+	return numPathsFound;
 }
 
 void getRootPath(char * rootPath, int size)
@@ -527,15 +586,30 @@ extern "C"
 int findDir(const char * startDir, const char * dirName, char * outputPath)
 {
     char rootPath[100];
-	char parentPath[100];
+//	char parentPath[100];
+	char pathsFound[10][100];
 	getRootPath(rootPath, 100);
-//	printf("starting at %s and looking for %s\n", rootPath, startDir);
-	int val = gotoParent(startDir, parentPath);
+//	printf("finding number of possible dirs...\n");
+	int numPossibleDirs = findPaths(startDir, pathsFound);
+//	printf("numPossibleDirs: %d\n", numPossibleDirs);
 
-	if(val == 0) return 0;	//startDir not part of the current working path
+	if(numPossibleDirs ==0) return 0;
+
+	int val;
+	for(int i=0; i<numPossibleDirs; i++)
+	{
+		val =findDirWithBase(pathsFound[i], dirName,outputPath);
+		if(val == 1)
+			return 1;
+	}
+
+	return 0;
+//	printf("starting at %s and looking for %s\n", rootPath, startDir);
+//	int val = gotoParent(startDir, parentPath);
+
 
 //	printf("found base: %s\n", parentPath);
-    return findDirWithBase(parentPath, dirName,outputPath);
+ //   return findDirWithBase(parentPath, dirName,outputPath);
 }//end int findDir(char * startDir, char * dirName, char * outputPath)
 
 /**@brief Attempts to find a file starting the the root directory \a startDir which is named
@@ -553,14 +627,22 @@ extern "C"
 int findFile(const char * startDir, const char * fileName, char * outputPath)
 {
     char rootPath[100];
-	char parentPath[100];
+//	char parentPath[100];
+	char pathsFound[10][100];
 	getRootPath(rootPath, 100);
-//	printf("starting at %s and looking for %s\n", rootPath, startDir);
-	int val = gotoParent(startDir, parentPath);
+	int numPossibleDirs = findPaths(startDir, pathsFound);
 
-	if(val == 0) return 0;	//startDir not part of the current working path
-//	printf("found base: %s\n", parentPath);
-    return findFileWithBase(rootPath, fileName,outputPath);
+	if(numPossibleDirs ==0) return 0;
+
+	int val;
+	for(int i=0; i<numPossibleDirs; i++)
+	{
+		val =findFileWithBase(pathsFound[i], fileName,outputPath);
+		if(val == 1)
+			return 1;
+	}
+
+	return 0;
 }//end int findFile(char * startDir, char * fileName, char * outputPath)
 
 
