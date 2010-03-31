@@ -326,25 +326,25 @@ void cudppScanDispatchOperator(void                *d_out,
     switch(plan->m_config.op)
     {
     case CUDPP_ADD:
-        scanArrayRecursive<T, isExclusive, isBackward, OperatorAdd<T> >
+        scanArrayRecursive<T, isBackward, isExclusive, OperatorAdd<T> >
             ((T*)d_out, (const T*)d_in, 
             (T**)plan->m_blockSums, 
             numElements, numRows, plan->m_rowPitches, 0);
         break;
     case CUDPP_MULTIPLY:
-        scanArrayRecursive<T, isExclusive, isBackward, OperatorMultiply<T> >
+        scanArrayRecursive<T, isBackward, isExclusive, OperatorMultiply<T> >
             ((T*)d_out, (const T*)d_in, 
             (T**)plan->m_blockSums, 
             numElements, numRows, plan->m_rowPitches, 0);
         break;
     case CUDPP_MAX:
-        scanArrayRecursive<T, isExclusive, isBackward, OperatorMax<T> >
+        scanArrayRecursive<T, isBackward, isExclusive, OperatorMax<T> >
             ((T*)d_out, (const T*)d_in, 
             (T**)plan->m_blockSums, 
             numElements, numRows, plan->m_rowPitches, 0);
         break;
     case CUDPP_MIN:
-        scanArrayRecursive<T, isExclusive, isBackward, OperatorMin<T> >
+        scanArrayRecursive<T, isBackward, isExclusive, OperatorMin<T> >
             ((T*)d_out, (const T*)d_in, 
             (T**)plan->m_blockSums, 
             numElements, numRows, plan->m_rowPitches, 0);
@@ -364,17 +364,17 @@ void cudppScanDispatchType(void                *d_out,
     switch(plan->m_config.datatype)
     {
     case CUDPP_INT:
-        cudppScanDispatchOperator<int, isExclusive, isBackward>(d_out, d_in, 
+        cudppScanDispatchOperator<int, isBackward, isExclusive>(d_out, d_in, 
                                                                 numElements, 
                                                                 numRows, plan);
         break;
     case CUDPP_UINT:
-        cudppScanDispatchOperator<unsigned int, isExclusive, isBackward>(d_out, d_in, 
+        cudppScanDispatchOperator<unsigned int, isBackward, isExclusive>(d_out, d_in, 
                                                                          numElements, 
                                                                          numRows, plan);
         break;
     case CUDPP_FLOAT:
-        cudppScanDispatchOperator<float, isExclusive, isBackward>(d_out, d_in, 
+        cudppScanDispatchOperator<float, isBackward, isExclusive>(d_out, d_in, 
                                                                   numElements, 
                                                                   numRows, plan);
         break;
