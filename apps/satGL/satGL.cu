@@ -23,6 +23,14 @@
 #include <cuda_gl_interop.h>
 #include "cutil.h"
 
+#include <cuda.h>
+#if CUDA_VERSION < 3000
+#define USE_CUDA_GRAPHICS_INTEROP 0
+#else
+#define USE_CUDA_GRAPHICS_INTEROP 1
+#endif
+
+
 int width = 0;
 int height = 0;
 size_t d_satPitch = 0;
@@ -191,13 +199,24 @@ __global__ void transpose(T *out_R,
 //! Run the Cuda part of the computation
 ////////////////////////////////////////////////////////////////////////////////
 extern "C"
+#if USE_CUDA_GRAPHICS_INTEROP
+void process( cudaGraphicsResource **pgres, int width, int height, int radius) 
+#else
 void process( int pbo_in, int pbo_out, int width, int height, int radius) 
+#endif
 {
     unsigned int *in_data;
     float *out_data;
 
+#if USE_CUDA_GRAPHICS_INTEROP
+    CUDA_SAFE_CALL(cudaGraphicsMapResources(2, pgres, 0));
+    size_t size;
+    CUDA_SAFE_CALL(cudaGraphicsResourceGetMappedPointer((void**)&in_data, &size, pgres[0]));
+    CUDA_SAFE_CALL(cudaGraphicsResourceGetMappedPointer((void**)&out_data, &size, pgres[1]));
+#else
     CUDA_SAFE_CALL(cudaGLMapBufferObject( (void**)&in_data, pbo_in));
     CUDA_SAFE_CALL(cudaGLMapBufferObject( (void**)&out_data, pbo_out));
+#endif
 
     dim3 block(16, 16, 1);
     dim3 grid(width / block.x, height / block.y, 1);
@@ -248,8 +267,12 @@ void process( int pbo_in, int pbo_out, int width, int height, int radius)
 
     CUT_CHECK_ERROR("interleave");
 
+#if USE_CUDA_GRAPHICS_INTEROP
+    CUDA_SAFE_CALL(cudaGraphicsUnmapResources(2, pgres, 0));
+#else
     CUDA_SAFE_CALL(cudaGLUnmapBufferObject( pbo_in));
     CUDA_SAFE_CALL(cudaGLUnmapBufferObject( pbo_out));
+#endif
 
     float ms;
     CUDA_SAFE_CALL( cudaEventSynchronize(timerStop) );
@@ -259,16 +282,3 @@ void process( int pbo_in, int pbo_out, int width, int height, int radius)
     glutSetWindowTitle(msg);
 }
 
-extern "C"
-void pboRegister(unsigned int pbo)
-{
-    // register this buffer object with CUDA
-    CUDA_SAFE_CALL(cudaGLRegisterBufferObject(pbo));
-}
-
-extern "C"
-void pboUnregister(unsigned int pbo)
-{
-    // unregister this buffer object with CUDA
-    CUDA_SAFE_CALL(cudaGLUnregisterBufferObject(pbo));
-}

@@ -49,6 +49,14 @@
 
 #include "cutil.h"
 #include "cutil_gl_error.h"
+#include <cuda.h>
+#include <cuda_gl_interop.h>
+
+#if CUDA_VERSION < 3000
+#define USE_CUDA_GRAPHICS_INTEROP 0
+#else
+#define USE_CUDA_GRAPHICS_INTEROP 1
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 // constants / global variables
@@ -60,6 +68,10 @@ unsigned int image_height = 512;
 // pbo variables
 GLuint pbo_source;
 GLuint pbo_dest;
+
+#if USE_CUDA_GRAPHICS_INTEROP
+cudaGraphicsResource *graphicsRes[2];
+#endif
 
 unsigned int vsSAT;
 unsigned int psSAT;
@@ -96,16 +108,24 @@ float zScale = 116.0f;
 ////////////////////////////////////////////////////////////////////////////////
 // declaration, forward
 extern "C" void runTest( int argc, char** argv);
+#if USE_CUDA_GRAPHICS_INTEROP
+extern "C" void process( cudaGraphicsResource **pgres, int width, int height, int radius);
+#else
 extern "C" void process( int pbo_in, int pbo_out, int width, int height, int radius);
-extern "C" void pboRegister( unsigned int pbo );
-extern "C" void pboUnregister( unsigned int pbo );
+#endif
 extern "C" void initialize(int width, int height);
 extern "C" void finalize();
 
 // GL functionality
 CUTBoolean initGL();
+#if USE_CUDA_GRAPHICS_INTEROP
+void createPBO( GLuint* pbo, cudaGraphicsResource *gres, bool bUseFloat);
+void deletePBO( GLuint* pbo, cudaGraphicsResource *gres);
+#else
 void createPBO( GLuint* pbo, bool bUseFloat);
 void deletePBO( GLuint* pbo);
+#endif
+
 void createFBO( GLuint* fbo, GLuint* tex, GLuint* depth_rb);
 void deleteFBO( GLuint* fbo, GLuint* tex);
 void createTexture(GLuint* tex_name, unsigned int size_x, unsigned int size_y, 
@@ -174,8 +194,13 @@ runTest( int argc, char** argv) {
     glutAttachMenu(GLUT_RIGHT_BUTTON);
 
     // create pbo
+#if USE_CUDA_GRAPHICS_INTEROP
+    createPBO( &pbo_source, graphicsRes[0], false);
+    createPBO( &pbo_dest, graphicsRes[1], true);
+#else
     createPBO( &pbo_source, false);
     createPBO( &pbo_dest, true);
+#endif
 
     // create fbo
     createFBO( &fbo, &tex_distance, &depth_rb);
@@ -376,7 +401,11 @@ initGL() {
 //! Create PBO
 ////////////////////////////////////////////////////////////////////////////////
 void
+#if USE_CUDA_GRAPHICS_INTEROP
+createPBO( GLuint* pbo, cudaGraphicsResource *gres, bool bUseFloat) 
+#else
 createPBO( GLuint* pbo, bool bUseFloat) 
+#endif
 {
     unsigned int size_tex_data;
     unsigned int num_texels;
@@ -406,7 +435,11 @@ createPBO( GLuint* pbo, bool bUseFloat)
     glBindBuffer( GL_ARRAY_BUFFER, 0);
 
     // attach this Buffer Object to CUDA
-    pboRegister(*pbo);
+#if USE_CUDA_GRAPHICS_INTEROP
+    cudaGraphicsGLRegisterBuffer(&gres, *pbo, cudaGraphicsMapFlagsWriteDiscard);
+#else
+    cudaGLRegisterBufferObject(*pbo);
+#endif
 
     CUT_CHECK_ERROR_GL();
 }
@@ -415,9 +448,18 @@ createPBO( GLuint* pbo, bool bUseFloat)
 //! Delete PBO
 ////////////////////////////////////////////////////////////////////////////////
 void
-deletePBO( GLuint* pbo) {
+#if USE_CUDA_GRAPHICS_INTEROP
+deletePBO( GLuint* pbo, cudaGraphicsResource *gres)
+#else
+deletePBO( GLuint* pbo) 
+#endif
+{
 
-    pboUnregister(*pbo);
+#if USE_CUDA_GRAPHICS_INTEROP
+    cudaGraphicsUnregisterResource(gres);
+#else
+    cudaGLUnregisterBufferObject(*pbo);
+#endif
 
     glBindBuffer( GL_ARRAY_BUFFER, *pbo);
     glDeleteBuffers( 1, pbo);
@@ -501,7 +543,11 @@ void processImage()
     //CUT_SAFE_CALL(cutStartTimer(timer));
 
     // run the Cuda kernel    
+#if USE_CUDA_GRAPHICS_INTEROP
+    process( graphicsRes, image_width, image_height, blur_radius);
+#else
     process( pbo_source, pbo_dest, image_width, image_height, blur_radius);
+#endif
     
     //CUT_SAFE_CALL(cutStopTimer(timer));
 
@@ -587,7 +633,7 @@ void displayImage()
 
 ////////////////////////////////////////////////////////////////////////////////
 //! Display callback
-////////////////////////////////////////////////////////////////////////////////
+//////////////o//////////////////////////////////////////////////////////////////
 void
 display() 
 {
@@ -642,8 +688,13 @@ keyboard( unsigned char key, int /*x*/, int /*y*/) {
 
     switch( key) {
     case( 27) :
+#if USE_CUDA_GRAPHICS_INTEROP
+        deletePBO( &pbo_source, graphicsRes[0]);
+        deletePBO( &pbo_dest, graphicsRes[1]);
+#else
         deletePBO( &pbo_source);
         deletePBO( &pbo_dest);
+#endif
         deleteFBO( &fbo, &tex_distance);
         deleteTexture( &tex_screen);
         exit( 0);
