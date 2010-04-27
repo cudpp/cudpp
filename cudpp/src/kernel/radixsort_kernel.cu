@@ -49,7 +49,10 @@ __global__ void emptyKernel() {}
  * @param[in,out] values  Values to be manipulated
  * @param[in] numValues Number of values to be flipped 
  **/
-__global__ void flipFloats(uint *values, uint numValues)
+
+__global__ void 
+LAUNCH_BOUNDS(SORT_CTA_SIZE)
+flipFloats(uint *values, uint numValues)
 {
     uint index = __umul24(blockDim.x*4, blockIdx.x) + threadIdx.x; 
     if (index < numValues) values[index] = floatFlip<true>(values[index]);
@@ -67,7 +70,9 @@ __global__ void flipFloats(uint *values, uint numValues)
  * @param[in,out] values  Values to be manipulated
  * @param[in] numValues Number of values to be unflipped 
  **/
-__global__ void unflipFloats(uint *values, uint numValues)
+__global__ void 
+LAUNCH_BOUNDS(SORT_CTA_SIZE)
+unflipFloats(uint *values, uint numValues)
 {
     uint index = __umul24(blockDim.x*4, blockIdx.x) + threadIdx.x; 
     if (index < numValues) values[index] = floatUnflip<true>(values[index]);
@@ -88,6 +93,7 @@ __global__ void unflipFloats(uint *values, uint numValues)
  */
 template <bool flip>
 __global__ 
+LAUNCH_BOUNDS(WARP_SIZE)
 void radixSortSingleWarp(uint *keys, 
                          uint *values, 
                          uint numElements)
@@ -149,6 +155,7 @@ void radixSortSingleWarp(uint *keys,
 
 template <bool flip>
 __global__ 
+LAUNCH_BOUNDS(WARP_SIZE)
 void radixSortSingleWarpKeysOnly(uint *keys, 
                                  uint numElements)
 {
@@ -217,7 +224,9 @@ void radixSortSingleWarpKeysOnly(uint *keys,
 * @param[in]  totalBlocks The number of blocks of data to sort
 */
 template<uint nbits, uint startbit, bool fullBlocks, bool flip, bool loop>
-__global__ void radixSortBlocks(uint4* keysOut, uint4* valuesOut, 
+__global__ void 
+LAUNCH_BOUNDS(SORT_CTA_SIZE)
+radixSortBlocks(uint4* keysOut, uint4* valuesOut, 
                                 uint4* keysIn, uint4* valuesIn, 
                                 uint numElements, uint totalBlocks)
 {
@@ -338,11 +347,13 @@ __global__ void radixSortBlocks(uint4* keysOut, uint4* valuesOut,
 * @param[in] totalBlocks Total number of blocks
 **/
 template<uint startbit, bool fullBlocks, bool loop>
-__global__ void findRadixOffsets(uint2 *keys, 
-                                 uint  *counters, 
-                                 uint  *blockOffsets, 
-                                 uint   numElements,
-                                 uint   totalBlocks)
+__global__ void 
+LAUNCH_BOUNDS(SORT_CTA_SIZE)
+findRadixOffsets(uint2 *keys, 
+                 uint  *counters, 
+                 uint  *blockOffsets, 
+                 uint   numElements,
+                 uint   totalBlocks)
 {
     extern __shared__ uint sRadix1[];
     __shared__ uint  sStartPointers[16];
@@ -469,15 +480,17 @@ __global__ void findRadixOffsets(uint2 *keys,
 * @todo Args that are const below should be prototyped as const
 **/
 template<uint startbit, bool fullBlocks, bool manualCoalesce, bool unflip, bool loop>
-__global__ void reorderData(uint  *outKeys, 
-                            uint  *outValues, 
-                            uint2 *keys, 
-                            uint2 *values, 
-                            uint  *blockOffsets, 
-                            uint  *offsets, 
-                            uint  *sizes, 
-                            uint   numElements,
-                            uint   totalBlocks)
+__global__ void 
+LAUNCH_BOUNDS(SORT_CTA_SIZE)
+reorderData(uint  *outKeys, 
+            uint  *outValues, 
+            uint2 *keys, 
+            uint2 *values, 
+            uint  *blockOffsets, 
+            uint  *offsets, 
+            uint  *sizes, 
+            uint   numElements,
+            uint   totalBlocks)
 {
     __shared__ uint2 sKeys2[SORT_CTA_SIZE];
     __shared__ uint2 sValues2[SORT_CTA_SIZE];
@@ -621,7 +634,9 @@ __global__ void reorderData(uint  *outKeys,
 *
 */
 template<uint nbits, uint startbit, bool fullBlocks, bool flip, bool loop>
-__global__ void radixSortBlocksKeysOnly(uint4* keysOut, uint4* keysIn, uint numElements, uint totalBlocks)
+__global__ void 
+LAUNCH_BOUNDS(SORT_CTA_SIZE)
+radixSortBlocksKeysOnly(uint4* keysOut, uint4* keysIn, uint numElements, uint totalBlocks)
 {
     extern __shared__ uint4 sMem[];
 
@@ -732,7 +747,9 @@ __global__ void radixSortBlocksKeysOnly(uint4* keysOut, uint4* keysIn, uint numE
 * @param[in] totalBlocks Total number of blocks
 */
 template<uint startbit, bool fullBlocks, bool manualCoalesce, bool unflip, bool loop>
-__global__ void reorderDataKeysOnly(uint  *outKeys, 
+__global__ void 
+LAUNCH_BOUNDS(SORT_CTA_SIZE)
+reorderDataKeysOnly(uint  *outKeys, 
                                     uint2 *keys, 
                                     uint  *blockOffsets, 
                                     uint  *offsets, 

@@ -304,6 +304,10 @@ ifdef maxregisters
 	NVCCFLAGS += -maxrregcount $(maxregisters)
 endif
 
+ifdef verboseptxas
+	NVCCFLAGS += --ptxas-options=-v
+endif
+
 # Add cudacc flags
 NVCCFLAGS += $(CUDACCFLAGS)
 
