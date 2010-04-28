@@ -501,7 +501,7 @@ __device__ T warpscan(T val, volatile T* s_data)
         // is only 1 thread, so sync-less cooperation within a warp doesn't 
         // work.
 #ifdef __DEVICE_EMULATION__
-    T t = s_data[idx -  1]; __EMUSYNC; 
+    t = s_data[idx -  1]; __EMUSYNC; 
     s_data[idx] = traits::op(s_data[idx],t); __EMUSYNC;
     t = s_data[idx -  2]; __EMUSYNC; 
     s_data[idx] = traits::op(s_data[idx],t); __EMUSYNC;
