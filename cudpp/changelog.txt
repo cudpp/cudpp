@@ -5,9 +5,11 @@ DATE HERE
 - Fix scan, segmented scan, and radix sort correctness on upcoming Fermi architecture (proper use of "volatile" keyword)
 - Some initial small optimizations for radix sort and scan on Fermi (sm_20) architecture
 - Fix emulation mode radix sort of very small arrays
+- Fix radix sort on 64-bit OSes by using __launch_bounds__ in CUDA 3.0
 - Minor efficiency improvement to radix sort test in cudpp_testrig
 - Fixed incorrect identity for min operator
 - Fixes for unix and Mac OS X Snow Leopard builds
+- Fixes for 64-bit windows builds
 - Bibliography updates
 - Minor documentation fixes
 
