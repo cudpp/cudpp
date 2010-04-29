@@ -68,9 +68,28 @@ int main(int argc, const char** argv)
 {
     bool quiet = (CUTTrue == cutCheckCmdLineFlag(argc, argv, "quiet"));
 
-    CUT_DEVICE_INIT(argc, argv);
+    //CUT_DEVICE_INIT(argc, argv);
+    int deviceCount;                                                         
+    CUDA_SAFE_CALL_NO_SYNC(cudaGetDeviceCount(&deviceCount));                
+    if (deviceCount == 0) {                                                  
+        fprintf(stderr, "cutil error: no devices supporting CUDA.\n");       
+        exit(EXIT_FAILURE);                                                  
+    }                                                                        
+    int dev = 0;                                                         
+    cutGetCmdLineArgumenti(argc, (const char **) argv, "device", &dev);
+    if (dev > deviceCount-1) 
+        dev = deviceCount - 1;
+    cudaDeviceProp deviceProp;
+    CUDA_SAFE_CALL_NO_SYNC(cudaGetDeviceProperties(&deviceProp, dev));
+    if (deviceProp.major < 1) {                                              
+        fprintf(stderr, "cutil error: device does not support CUDA.\n");     
+        exit(EXIT_FAILURE);                                                  
+    }                                                                        
+    if (cutCheckCmdLineFlag(argc, (const char **) argv, "quiet") == CUTFalse) 
+        fprintf(stderr, "Using device %d: %s\n", dev, deviceProp.name);       
+    CUDA_SAFE_CALL(cudaSetDevice(dev));                                      \
     cudaDeviceProp prop;
-    int dev = 0;
+    //int dev = 0;
     cudaGetDevice(&dev);
     if (!quiet && cudaGetDeviceProperties(&prop, dev) == 0)
     {
