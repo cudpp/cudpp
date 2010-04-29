@@ -141,7 +141,6 @@ CXXFLAGS  := $(CXXWARN_FLAGS) $(CXX_ARCH_FLAGS)
 CFLAGS    := $(CWARN_FLAGS) $(CXX_ARCH_FLAGS)
 LINK      += $(CXX_ARCH_FLAGS)
 
-
 # Common flags
 COMMONFLAGS += $(INCLUDES) -DUNIX
 
@@ -279,6 +278,9 @@ ifneq ($(CUDPP_STATIC_LIB),)
 	TARGET   := $(subst .a,$(LIBSUFFIX).a,$(LIBDIR)/$(CUDPP_STATIC_LIB))	
 
 	LINKLINE  = ar qv $(TARGET) $(OBJS); ranlib $(TARGET)
+else
+	# position independent code
+	NVCCFLAGS += -Xcompiler -fPIC
 endif
 
 # check if verbose 
