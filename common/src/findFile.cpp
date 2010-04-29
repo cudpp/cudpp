@@ -23,7 +23,7 @@
 //used dirent.h to read directories, POSIX standard
 #include <dirent.h>
 #include<unistd.h>
-#elif defined (WIN32) || defined (__WIN32)
+#elif defined (WIN32) || defined (__WIN32) || defined (WIN64) || defined (__WIN64)
 #pragma warning (disable: 4996) // disable strtok safety warning
 //use io.h and direct.h to read files, this is the windows-version
 #include <io.h>
@@ -301,7 +301,7 @@ int findFileWithBase(const char * base, const char * fileName, char * outputPath
     return 0;
 }//void findFileWithBase
 
-#elif defined (WIN32) || defined (__WIN32)
+#elif defined (WIN32) || defined (__WIN32) || defined (WIN64) || defined (__WIN64)
 //windows functions here
 //checks to see if we are currently in the directory to search for
 int checkWorkingDirName(const char * path, const char * target)

@@ -175,7 +175,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="mkdir ..\bin\win64\Debug&#x0D;&#x0A;copy lib\cutil64D.dll ..\bin\win64\Debug&#x0D;&#x0A;mkdir ..\bin\win64\EmuDebug&#x0D;&#x0A;copy lib\cutil64D.dll ..\bin\win64\EmuDebug&#x0D;&#x0A;"
+				CommandLine="mkdir ..\bin\$(PlatformName)\Debug&#x0D;&#x0A;copy lib\cutil64D.dll ..\bin\$(PlatformName)\Debug&#x0D;&#x0A;mkdir ..\bin\$(PlatformName)\EmuDebug&#x0D;&#x0A;copy lib\cutil64D.dll ..\bin\$(PlatformName)\EmuDebug&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -331,7 +331,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="mkdir ..\bin\win64\Release&#x0D;&#x0A;copy lib\cutil64.dll ..\bin\win64\Release&#x0D;&#x0A;mkdir ..\bin\win64\EmuRelease&#x0D;&#x0A;copy lib\cutil64.dll ..\bin\win64\EmuRelease&#x0D;&#x0A;"
+				CommandLine="mkdir ..\bin\$(PlatformName)\Release&#x0D;&#x0A;copy lib\cutil64.dll ..\bin\$(PlatformName)\Release&#x0D;&#x0A;mkdir ..\bin\$(PlatformName)\EmuRelease&#x0D;&#x0A;copy lib\cutil64.dll ..\bin\$(PlatformName)\EmuRelease&#x0D;&#x0A;"
 			/>
 		</Configuration>
 	</Configurations>

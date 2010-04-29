@@ -25,7 +25,7 @@
     Press '+' and '-' to increment and decrement blur radius
 */
 
-#ifdef _WIN32
+#if defined(_WIN32) || defined(WIN32)
 #pragma warning(disable:4996)
 #  define WINDOWS_LEAN_AND_MEAN
 #  define NOMINMAX
@@ -37,6 +37,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
+
 
 // includes, GL
 #include <GL/glew.h>
@@ -337,7 +338,7 @@ initGL() {
     unsigned char* img = NULL;
     unsigned int w = 512, h = 512;
     char path[100];
-    CUT_SAFE_CALL(cutFindFile(path, "cudpp", "cedfence.ppm"));
+    CUT_SAFE_CALL(cutFindFile(path, "apps", "cedfence.ppm"));
     CUT_SAFE_CALL(cutLoadPPMub( path, &img, &w, &h));
 
     glGenTextures(1, &texWood);

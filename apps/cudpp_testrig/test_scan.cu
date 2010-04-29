@@ -676,7 +676,7 @@ int testMultiSumScan(int argc, const char **argv)
     }
 
     size_t myPitch = numElements * sizeof(float);
-    unsigned int hmemSize = numRows * myPitch;
+    size_t hmemSize = numRows * myPitch;
  
     // allocate host memory to store the input data
     float* i_data = (float*) malloc( hmemSize);

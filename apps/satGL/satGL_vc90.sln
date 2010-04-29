@@ -1,24 +1,36 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "satGL", "satGL_vc90.vcproj", "{95561772-BB95-4A97-976B-DD24A00B2E66}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "satGL_vc90", "satGL_vc90.vcproj", "{5D3BA9F7-A2A2-48CA-A6C9-1641820DBEC3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
+		Debug|x64 = Debug|x64
 		EmuDebug|Win32 = EmuDebug|Win32
+		EmuDebug|x64 = EmuDebug|x64
 		EmuRelease|Win32 = EmuRelease|Win32
+		EmuRelease|x64 = EmuRelease|x64
 		Release|Win32 = Release|Win32
+		Release|x64 = Release|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{95561772-BB95-4A97-976B-DD24A00B2E66}.Debug|Win32.ActiveCfg = Debug|Win32
-		{95561772-BB95-4A97-976B-DD24A00B2E66}.Debug|Win32.Build.0 = Debug|Win32
-		{95561772-BB95-4A97-976B-DD24A00B2E66}.EmuDebug|Win32.ActiveCfg = EmuDebug|Win32
-		{95561772-BB95-4A97-976B-DD24A00B2E66}.EmuDebug|Win32.Build.0 = EmuDebug|Win32
-		{95561772-BB95-4A97-976B-DD24A00B2E66}.EmuRelease|Win32.ActiveCfg = EmuRelease|Win32
-		{95561772-BB95-4A97-976B-DD24A00B2E66}.EmuRelease|Win32.Build.0 = EmuRelease|Win32
-		{95561772-BB95-4A97-976B-DD24A00B2E66}.Release|Win32.ActiveCfg = Release|Win32
-		{95561772-BB95-4A97-976B-DD24A00B2E66}.Release|Win32.Build.0 = Release|Win32
+		{5D3BA9F7-A2A2-48CA-A6C9-1641820DBEC3}.Debug|Win32.ActiveCfg = Debug|Win32
+		{5D3BA9F7-A2A2-48CA-A6C9-1641820DBEC3}.Debug|Win32.Build.0 = Debug|Win32
+		{5D3BA9F7-A2A2-48CA-A6C9-1641820DBEC3}.Debug|x64.ActiveCfg = Debug|x64
+		{5D3BA9F7-A2A2-48CA-A6C9-1641820DBEC3}.Debug|x64.Build.0 = Debug|x64
+		{5D3BA9F7-A2A2-48CA-A6C9-1641820DBEC3}.EmuDebug|Win32.ActiveCfg = EmuDebug|Win32
+		{5D3BA9F7-A2A2-48CA-A6C9-1641820DBEC3}.EmuDebug|Win32.Build.0 = EmuDebug|Win32
+		{5D3BA9F7-A2A2-48CA-A6C9-1641820DBEC3}.EmuDebug|x64.ActiveCfg = EmuDebug|x64
+		{5D3BA9F7-A2A2-48CA-A6C9-1641820DBEC3}.EmuDebug|x64.Build.0 = EmuDebug|x64
+		{5D3BA9F7-A2A2-48CA-A6C9-1641820DBEC3}.EmuRelease|Win32.ActiveCfg = EmuRelease|Win32
+		{5D3BA9F7-A2A2-48CA-A6C9-1641820DBEC3}.EmuRelease|Win32.Build.0 = EmuRelease|Win32
+		{5D3BA9F7-A2A2-48CA-A6C9-1641820DBEC3}.EmuRelease|x64.ActiveCfg = EmuRelease|x64
+		{5D3BA9F7-A2A2-48CA-A6C9-1641820DBEC3}.EmuRelease|x64.Build.0 = EmuRelease|x64
+		{5D3BA9F7-A2A2-48CA-A6C9-1641820DBEC3}.Release|Win32.ActiveCfg = Release|Win32
+		{5D3BA9F7-A2A2-48CA-A6C9-1641820DBEC3}.Release|Win32.Build.0 = Release|Win32
+		{5D3BA9F7-A2A2-48CA-A6C9-1641820DBEC3}.Release|x64.ActiveCfg = Release|x64
+		{5D3BA9F7-A2A2-48CA-A6C9-1641820DBEC3}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -15,7 +15,7 @@
 #include "cudpp.h"
 #include "cutil.h"
 
-#ifdef _WIN32
+#if defined(_WIN32) || defined(WIN32)
 #  define WINDOWS_LEAN_AND_MEAN
 #  include <windows.h>
 #endif
@@ -24,6 +24,7 @@
 
 int width = 0;
 int height = 0;
+
 size_t d_satPitch = 0;
 size_t d_satPitchInElements = 0;
 CUDPPConfiguration config = { CUDPP_SCAN, 

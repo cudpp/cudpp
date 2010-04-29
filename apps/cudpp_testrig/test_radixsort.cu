@@ -119,7 +119,7 @@ int SortSupport<float>::verifySort(float *keysSorted, unsigned int *valuesSorted
 
 template <typename T>
 int radixSortTest(CUDPPHandle plan, CUDPPConfiguration config, size_t *tests, 
-                  unsigned int numTests, unsigned int numElements, unsigned int keybits,
+                  unsigned int numTests, size_t numElements, unsigned int keybits,
                   testrigOptions testOptions, bool quiet)
 {
     int retval = 0;

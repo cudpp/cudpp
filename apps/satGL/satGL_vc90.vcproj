@@ -2,8 +2,8 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="satGL"
-	ProjectGUID="{95561772-BB95-4A97-976B-DD24A00B2E66}"
+	Name="satGL_vc90"
+	ProjectGUID="{5D3BA9F7-A2A2-48CA-A6C9-1641820DBEC3}"
 	RootNamespace="satGL"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="131072"
@@ -11,6 +11,9 @@
 	<Platforms>
 		<Platform
 			Name="Win32"
+		/>
+		<Platform
+			Name="x64"
 		/>
 	</Platforms>
 	<ToolFiles>
@@ -21,7 +24,7 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="$(ConfigurationName)"
+			OutputDirectory="../../bin/$(PlatformName)/$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
@@ -35,6 +38,11 @@
 			/>
 			<Tool
 				Name="CUDA Build Rule"
+				Include="./;../../common/inc;../../cudpp/include"
+				Debug="true"
+				ExtraNvccOptions="-m32"
+				Optimization="0"
+				Runtime="1"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -48,15 +56,15 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="$(CUDA_INC_PATH);./;../../common/inc"
-				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
+				AdditionalIncludeDirectories="../../cudpp/include;../../common/inc;$(CUDA_INC_PATH)"
+				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="true"
-				DebugInformationFormat="3"
+				DebugInformationFormat="4"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -69,12 +77,12 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="cudart.lib cutil32D.lib glew32.lib cudpp32D.lib"
-				OutputFile="../../bin/win32/$(ConfigurationName)/satGL.exe"
-				LinkIncremental="1"
-				AdditionalLibraryDirectories="$(CUDA_LIB_PATH);../../common/lib;../../cudpp/lib"
+				AdditionalDependencies="cudart.lib cutil32D.lib cudpp32d.lib glew32.lib"
+				OutputFile="$(OutDir)/satGL.exe"
+				LinkIncremental="2"
+				AdditionalLibraryDirectories="&quot;$(CUDA_LIB_PATH)&quot;/../lib;../../cudpp/lib;../../common/lib"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile="$(OutDir)/satGL.pdb"
+				ProgramDatabaseFile="$(OutDir)/$(ProjectName).pdb"
 				SubSystem="1"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
@@ -100,12 +108,100 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="IF EXIST cg_variables.h move cg_variables.h $(ConfigurationName)\"
+			/>
+		</Configuration>
+		<Configuration
+			Name="Debug|x64"
+			OutputDirectory="../../bin/$(PlatformName)/$(ConfigurationName)"
+			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
+			ConfigurationType="1"
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
+			CharacterSet="2"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="CUDA Build Rule"
+				Include="./;../../common/inc;../../cudpp/include"
+				Debug="true"
+				ExtraNvccOptions="-m64"
+				Optimization="0"
+				Runtime="1"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				TargetEnvironment="3"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="0"
+				AdditionalIncludeDirectories="../../cudpp/include;../../common/inc;$(CUDA_INC_PATH)"
+				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;"
+				MinimalRebuild="true"
+				BasicRuntimeChecks="3"
+				RuntimeLibrary="1"
+				UsePrecompiledHeader="0"
+				WarningLevel="3"
+				Detect64BitPortabilityProblems="true"
+				DebugInformationFormat="3"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLinkerTool"
+				AdditionalDependencies="cudart.lib cutil64D.lib cudpp64d.lib glew64.lib glut64.lib"
+				OutputFile="$(OutDir)/satGL.exe"
+				LinkIncremental="2"
+				AdditionalLibraryDirectories="&quot;$(CUDA_LIB_PATH)&quot;/../lib64;../../cudpp/lib;../../common/lib"
+				GenerateDebugInformation="true"
+				ProgramDatabaseFile="$(OutDir)/$(ProjectName).pdb"
+				SubSystem="1"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
+				TargetMachine="17"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
 			/>
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="$(ConfigurationName)"
+			OutputDirectory="../../bin/$(PlatformName)/$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
@@ -119,6 +215,8 @@
 			/>
 			<Tool
 				Name="CUDA Build Rule"
+				Include="./;../../common/inc;../../cudpp/include"
+				ExtraNvccOptions="-m32"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -131,13 +229,13 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="$(CUDA_INC_PATH);./;../../common/inc;../../cudpp/include"
-				PreprocessorDefinitions="WIN32;_CONSOLE"
+				AdditionalIncludeDirectories="../../cudpp/include;../../common/inc; $(CUDA_INC_PATH)"
+				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				RuntimeLibrary="0"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="true"
-				DebugInformationFormat="0"
+				DebugInformationFormat="3"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -150,14 +248,16 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="cudart.lib cutil32.lib glew32.lib cudpp32.lib"
-				OutputFile="../../bin/win32/$(ConfigurationName)/satGL.exe"
+				AdditionalOptions="&#x0D;&#x0A;&#x0D;&#x0A;"
+				AdditionalDependencies="cudart.lib cutil32.lib cudpp32.lib glew32.lib"
+				OutputFile="$(OutDir)/satGL.exe"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="$(CUDA_LIB_PATH);../../common/lib;../../cudpp/lib"
-				GenerateDebugInformation="false"
+				AdditionalLibraryDirectories="&quot;$(CUDA_LIB_PATH)&quot;;../../cudpp/lib;../../common/lib"
+				GenerateDebugInformation="true"
+				ProgramDatabaseFile="$(OutDir)/$(ProjectName).pdb"
 				SubSystem="1"
 				OptimizeReferences="2"
-				EnableCOMDATFolding="1"
+				EnableCOMDATFolding="2"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
 				TargetMachine="1"
@@ -182,12 +282,97 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="IF EXIST cg_variables.h move cg_variables.h $(ConfigurationName)\"
+			/>
+		</Configuration>
+		<Configuration
+			Name="Release|x64"
+			OutputDirectory="../../bin/$(PlatformName)/$(ConfigurationName)"
+			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
+			ConfigurationType="1"
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
+			CharacterSet="2"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="CUDA Build Rule"
+				Include="./;../../common/inc;../../cudpp/include"
+				ExtraNvccOptions="-m64"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				TargetEnvironment="3"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				AdditionalIncludeDirectories="../../cudpp/include;../../common/inc; $(CUDA_INC_PATH)"
+				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
+				RuntimeLibrary="0"
+				UsePrecompiledHeader="0"
+				WarningLevel="3"
+				Detect64BitPortabilityProblems="true"
+				DebugInformationFormat="3"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLinkerTool"
+				AdditionalOptions="&#x0D;&#x0A;&#x0D;&#x0A;"
+				AdditionalDependencies="cudart.lib cutil64.lib cudpp64.lib glew64.lib glut64.lib"
+				OutputFile="$(OutDir)/satGL.exe"
+				LinkIncremental="1"
+				AdditionalLibraryDirectories="&quot;$(CUDA_LIB_PATH)&quot;;../../cudpp/lib;../../common/lib"
+				GenerateDebugInformation="true"
+				ProgramDatabaseFile="$(OutDir)/$(ProjectName).pdb"
+				SubSystem="1"
+				OptimizeReferences="2"
+				EnableCOMDATFolding="2"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
+				TargetMachine="17"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
 			/>
 		</Configuration>
 		<Configuration
 			Name="EmuDebug|Win32"
-			OutputDirectory="$(ConfigurationName)"
+			OutputDirectory="../../bin/$(PlatformName)/$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
@@ -201,6 +386,12 @@
 			/>
 			<Tool
 				Name="CUDA Build Rule"
+				Include="./;../../common/inc;../../cudpp/include"
+				Debug="true"
+				Emulation="true"
+				ExtraNvccOptions="-m32"
+				Optimization="0"
+				Runtime="1"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -214,7 +405,97 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="$(CUDA_INC_PATH);./;../../common/inc"
+				AdditionalIncludeDirectories="../../cudpp/include;../../common/inc; $(CUDA_INC_PATH)"
+				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
+				MinimalRebuild="true"
+				BasicRuntimeChecks="3"
+				RuntimeLibrary="1"
+				UsePrecompiledHeader="0"
+				WarningLevel="3"
+				Detect64BitPortabilityProblems="true"
+				DebugInformationFormat="4"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLinkerTool"
+				AdditionalDependencies="cudart.lib cutil32D.lib cudpp32d_emu.lib glew32.lib"
+				OutputFile="$(OutDir)/satGL.exe"
+				LinkIncremental="2"
+				AdditionalLibraryDirectories="&quot;$(CUDA_LIB_PATH)&quot;;../../cudpp/lib;../../common/lib"
+				GenerateDebugInformation="true"
+				ProgramDatabaseFile="$(OutDir)/$(ProjectName).pdb"
+				SubSystem="1"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
+				TargetMachine="1"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
+		<Configuration
+			Name="EmuDebug|x64"
+			OutputDirectory="../../bin/$(PlatformName)/$(ConfigurationName)"
+			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
+			ConfigurationType="1"
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
+			CharacterSet="2"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="CUDA Build Rule"
+				Include="./;../../common/inc;../../cudpp/include"
+				Debug="true"
+				Emulation="true"
+				ExtraNvccOptions="-m64"
+				Optimization="0"
+				Runtime="1"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				TargetEnvironment="3"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="0"
+				AdditionalIncludeDirectories="../../cudpp/include;../../common/inc; $(CUDA_INC_PATH)"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -235,16 +516,16 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="cudart.lib cutil32D.lib glew32.lib cudpp32D_emu.lib"
-				OutputFile="../../bin/win32/$(ConfigurationName)/satGL.exe"
-				LinkIncremental="1"
-				AdditionalLibraryDirectories="$(CUDA_LIB_PATH);../../common/lib;../../cudpp/lib"
+				AdditionalDependencies="cudart.lib cutil64D.lib cudpp64d_emu.lib glew64.lib glut64.lib"
+				OutputFile="$(OutDir)/satGL.exe"
+				LinkIncremental="2"
+				AdditionalLibraryDirectories="&quot;$(CUDA_LIB_PATH)&quot;;../../cudpp/lib;../../common/lib"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile="$(OutDir)/satGL.pdb"
+				ProgramDatabaseFile="$(OutDir)/$(ProjectName).pdb"
 				SubSystem="1"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
-				TargetMachine="1"
+				TargetMachine="17"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -266,12 +547,11 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="IF EXIST cg_variables.h move cg_variables.h $(ConfigurationName)\"
 			/>
 		</Configuration>
 		<Configuration
 			Name="EmuRelease|Win32"
-			OutputDirectory="$(ConfigurationName)"
+			OutputDirectory="../../bin/$(PlatformName)/$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
@@ -285,6 +565,9 @@
 			/>
 			<Tool
 				Name="CUDA Build Rule"
+				Include="./;../../common/inc;../../cudpp/include"
+				Emulation="true"
+				ExtraNvccOptions="-m32"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -297,9 +580,9 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="0"
-				AdditionalIncludeDirectories="$(CUDA_INC_PATH);./;../../common/inc"
-				PreprocessorDefinitions="WIN32;_CONSOLE"
+				AdditionalOptions="-o satGL.exe&#x0D;&#x0A;"
+				AdditionalIncludeDirectories="../../cudpp/include;../../common/inc;$(CUDA_INC_PATH)"
+				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				RuntimeLibrary="0"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
@@ -317,14 +600,16 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="cudart.lib cutil32.lib glew32.lib cudpp32_emu.lib"
-				OutputFile="../../bin/win32/$(ConfigurationName)/satGL.exe"
+				AdditionalDependencies="cudart.lib cutil32.lib cudpp32_emu.lib glew32.lib"
+				ShowProgress="0"
+				OutputFile="$(OutDir)/satGL.exe"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="$(CUDA_LIB_PATH);../../common/lib;../../cudpp/lib;"
+				AdditionalLibraryDirectories="&quot;$(CUDA_LIB_PATH)&quot;;../../cudpp/lib;../../common/lib"
 				GenerateDebugInformation="true"
+				ProgramDatabaseFile="$(OutDir)/$(ProjectName).pdb"
 				SubSystem="1"
 				OptimizeReferences="2"
-				EnableCOMDATFolding="1"
+				EnableCOMDATFolding="2"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
 				TargetMachine="1"
@@ -349,67 +634,112 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="IF EXIST cg_variables.h move cg_variables.h $(ConfigurationName)\"
+			/>
+		</Configuration>
+		<Configuration
+			Name="EmuRelease|x64"
+			OutputDirectory="../../bin/$(PlatformName)/$(ConfigurationName)"
+			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
+			ConfigurationType="1"
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
+			CharacterSet="2"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="CUDA Build Rule"
+				Include="./;../../common/inc;../../cudpp/include"
+				Emulation="true"
+				ExtraNvccOptions="-m64"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				TargetEnvironment="3"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				AdditionalOptions="-o satGL.exe&#x0D;&#x0A;"
+				AdditionalIncludeDirectories="../../cudpp/include;../../common/inc;$(CUDA_INC_PATH)"
+				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
+				RuntimeLibrary="0"
+				UsePrecompiledHeader="0"
+				WarningLevel="3"
+				Detect64BitPortabilityProblems="true"
+				DebugInformationFormat="3"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLinkerTool"
+				AdditionalDependencies="cudart.lib cutil64.lib cudpp64_emu.lib glew64.lib glut64.lib"
+				ShowProgress="0"
+				OutputFile="$(OutDir)/satGL.exe"
+				LinkIncremental="1"
+				AdditionalLibraryDirectories="&quot;$(CUDA_LIB_PATH)&quot;;../../cudpp/lib;../../common/lib"
+				GenerateDebugInformation="true"
+				ProgramDatabaseFile="$(OutDir)/$(ProjectName).pdb"
+				SubSystem="1"
+				OptimizeReferences="2"
+				EnableCOMDATFolding="2"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
+				TargetMachine="17"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
 			/>
 		</Configuration>
 	</Configurations>
 	<References>
 	</References>
 	<Files>
-		<Filter
-			Name="src"
-			Filter="cu;cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx"
-			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
+		<File
+			RelativePath=".\main.cpp"
 			>
-			<File
-				RelativePath=".\main.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\satGL.cu"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="CUDA Build Rule"
-						Include="./;../../common/inc;../../cudpp/include "
-						Debug="true"
-						Optimization="0"
-						Runtime="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="CUDA Build Rule"
-						Include="./;../../common/inc;../../cudpp/include "
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="EmuDebug|Win32"
-					>
-					<Tool
-						Name="CUDA Build Rule"
-						Include="./;../../common/inc;../../cudpp/include "
-						Debug="true"
-						Emulation="true"
-						Optimization="0"
-						Runtime="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="EmuRelease|Win32"
-					>
-					<Tool
-						Name="CUDA Build Rule"
-						Include="./;../../common/inc;../../cudpp/include "
-						Emulation="true"
-					/>
-				</FileConfiguration>
-			</File>
-		</Filter>
+		</File>
+		<File
+			RelativePath=".\satGL.cu"
+			>
+		</File>
+		<File
+			RelativePath="..\cudpp_testrig\scan_gold.cpp"
+			>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>
