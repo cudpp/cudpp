@@ -1313,18 +1313,6 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\src\cudpp_manager.cpp"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						GeneratePreprocessedFile="0"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
 				RelativePath=".\src\cudpp_maximal_launch.cpp"
 				>
 				<FileConfiguration
@@ -1365,6 +1353,18 @@
 					/>
 				</FileConfiguration>
 			</File>
+			<File
+				RelativePath=".\src\cudpp_plan_manager.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						GeneratePreprocessedFile="0"
+					/>
+				</FileConfiguration>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -1384,15 +1384,15 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\cudpp_manager.h"
-				>
-			</File>
-			<File
 				RelativePath=".\src\cudpp_maximal_launch.h"
 				>
 			</File>
 			<File
 				RelativePath=".\src\cudpp_plan.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\cudpp_plan_manager.h"
 				>
 			</File>
 			<File
@@ -1417,10 +1417,6 @@
 			</File>
 			<File
 				RelativePath=".\src\cudpp_spmvmult.h"
-				>
-			</File>
-			<File
-				RelativePath=".\src\cudpp_tune.h"
 				>
 			</File>
 			<File
@@ -1541,7 +1537,6 @@
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
-					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="CUDA Build Rule"
@@ -2038,30 +2033,6 @@
 			<File
 				RelativePath=".\src\kernel\reduce_kernel.cu"
 				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="CUDA Build Rule"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="CUDA Build Rule"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="EmuDebug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="CUDA Build Rule"
-					/>
-				</FileConfiguration>
 				<FileConfiguration
 					Name="EmuRelease|Win32"
 					ExcludedFromBuild="true"

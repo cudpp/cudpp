@@ -8,7 +8,7 @@
 # SOURCE VARS
 CCFILES := 	src/cudpp.cpp \
 		src/cudpp_plan.cpp \
-		src/cudpp_manager.cpp \
+		src/cudpp_plan_manager.cpp \
 		src/cudpp_maximal_launch.cpp
 CUFILES :=	src/app/compact_app.cu \
 		src/app/scan_app.cu \
