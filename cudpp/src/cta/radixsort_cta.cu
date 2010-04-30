@@ -17,6 +17,13 @@
 #include <math.h>
 #include "sharedmem.h"
 
+
+#ifdef __DEVICE_EMULATION__
+#define __EMUSYNC __syncthreads()
+#else
+#define __EMUSYNC
+#endif
+
 /**
  * @file
  * sort_cta.cu
@@ -31,6 +38,7 @@
 /** @name Radix Sort Functions
 * @{
 */
+
 
 typedef unsigned int uint;
 
@@ -96,10 +104,10 @@ __device__ T scanwarp(T val, volatile T* sData)
     int idx = 2 * threadIdx.x - (threadIdx.x & (WARP_SIZE - 1));
     sData[idx] = 0;
     idx += WARP_SIZE;
-    sData[idx] = val;          __EMUSYNC;
+    T t = sData[idx] = val;          __EMUSYNC;
 
 #ifdef __DEVICE_EMULATION__             
-        T t = sData[idx -  1]; __EMUSYNC; 
+        t = sData[idx -  1]; __EMUSYNC; 
         sData[idx] += t;       __EMUSYNC;
         t = sData[idx -  2];   __EMUSYNC; 
         sData[idx] += t;       __EMUSYNC;
@@ -110,11 +118,11 @@ __device__ T scanwarp(T val, volatile T* sData)
         t = sData[idx - 16];   __EMUSYNC; 
         sData[idx] += t;       __EMUSYNC;
 #else
-        if (0 <= maxlevel) { sData[idx] += sData[idx - 1]; } __EMUSYNC;
-        if (1 <= maxlevel) { sData[idx] += sData[idx - 2]; } __EMUSYNC;
-        if (2 <= maxlevel) { sData[idx] += sData[idx - 4]; } __EMUSYNC;
-        if (3 <= maxlevel) { sData[idx] += sData[idx - 8]; } __EMUSYNC;
-        if (4 <= maxlevel) { sData[idx] += sData[idx -16]; } __EMUSYNC;
+        if (0 <= maxlevel) { sData[idx] = t = t + sData[idx - 1]; } __EMUSYNC;
+        if (1 <= maxlevel) { sData[idx] = t = t + sData[idx - 2]; } __EMUSYNC;
+        if (2 <= maxlevel) { sData[idx] = t = t + sData[idx - 4]; } __EMUSYNC;
+        if (3 <= maxlevel) { sData[idx] = t = t + sData[idx - 8]; } __EMUSYNC;
+        if (4 <= maxlevel) { sData[idx] = t = t + sData[idx -16]; } __EMUSYNC;
 #endif          
         return sData[idx] - val;  // convert inclusive -> exclusive
 }

@@ -44,7 +44,7 @@
   * @param fullBlock True if all blocks in this scan are full (CTA_SIZE * SCAN_ELEMENTS_PER_THREAD elements)
   * @param exclusivity True for exclusive scans, false for inclusive scans
 */
-template <typename T, class Oper, bool backward, bool exclusivity, 
+template <class T, CUDPPOperator oper, bool backward, bool exclusivity, 
           bool doShiftFlags, bool fullBlock, bool sums, bool sm12OrBetter>
 class SegmentedScanTraits
 {
@@ -63,7 +63,15 @@ public:
     //! Returns true if we are sm12 or better hardware
     static __device__ bool isSM12OrBetter() { return sm12OrBetter; }
 
-    typedef Oper Op; //!< The operator functor used for segmented scan
+
+    //! The operator function used for segmented scan
+    static __device__ T op(const T a, const T b)
+    {
+        return Operator<T, oper>::op(a, b);
+    }  
+
+    //! The identity value used by segmented scan
+    static __device__ T identity() { return Operator<T, oper>::identity(); }
 };
 
 /**
@@ -247,10 +255,6 @@ loadForSegmentedScanSharedChunkFromMem4(
     threadFlag |= (tempFlag.y << 1);
     threadFlag |= (tempFlag.z << 2);
     threadFlag |= (tempFlag.w << 3);
-
-    // instantiate operator functor
-    typename traits::Op op;
-
 #ifdef __DEVICE_EMULATION__
     if (traits::isFullBlock() || (gIndex+3) < numElements)
     {
@@ -258,10 +262,10 @@ loadForSegmentedScanSharedChunkFromMem4(
     }
     else
     {
-        tempData.x = (gIndex < numElements) ? d_idata[gIndex] : op.identity();
-        tempData.y = ((gIndex+1) < numElements) ? d_idata[gIndex+1] : op.identity();
-        tempData.z = ((gIndex+2) < numElements) ? d_idata[gIndex+2] : op.identity();
-        tempData.w = op.identity();        
+        tempData.x = (gIndex < numElements) ? d_idata[gIndex] : traits::identity();
+        tempData.y = ((gIndex+1) < numElements) ? d_idata[gIndex+1] : traits::identity();
+        tempData.z = ((gIndex+2) < numElements) ? d_idata[gIndex+2] : traits::identity();
+        tempData.w = traits::identity();        
     }
 #else
     // Read 4 data
@@ -269,10 +273,10 @@ loadForSegmentedScanSharedChunkFromMem4(
     tempData = iData[aiDev];
     if (isLastBlock && !traits::isFullBlock())
     {
-        if (gIndex     >= numElements) tempData.x = op.identity();
-        if ((gIndex+1) >= numElements) tempData.y = op.identity();
-        if ((gIndex+2) >= numElements) tempData.z = op.identity();
-        if ((gIndex+3) >= numElements) tempData.w = op.identity();
+        if (gIndex     >= numElements) tempData.x = traits::identity();
+        if ((gIndex+1) >= numElements) tempData.y = traits::identity();
+        if ((gIndex+2) >= numElements) tempData.z = traits::identity();
+        if ((gIndex+3) >= numElements) tempData.w = traits::identity();
     }
 #endif
 
@@ -282,21 +286,21 @@ loadForSegmentedScanSharedChunkFromMem4(
     {
         threadScan0[3] = tempData.w;
         threadScan0[2] = 
-            op(tempData.z, tempFlag.z ? op.identity() : threadScan0[3]);
+            traits::op(tempData.z, tempFlag.z ? traits::identity() : threadScan0[3]);
         threadScan0[1] = 
-            op(tempData.y, tempFlag.y ? op.identity() : threadScan0[2]);
+            traits::op(tempData.y, tempFlag.y ? traits::identity() : threadScan0[2]);
         threadScan0[0] = s_odata[ai] = 
-            op(tempData.x, tempFlag.x ? op.identity() : threadScan0[1]);
+            traits::op(tempData.x, tempFlag.x ? traits::identity() : threadScan0[1]);
     }
     else
     {
         threadScan0[0] = tempData.x;
         threadScan0[1] = 
-            op(tempData.y, tempFlag.y ? op.identity() : threadScan0[0]);
+            traits::op(tempData.y, tempFlag.y ? traits::identity() : threadScan0[0]);
         threadScan0[2] = 
-            op(tempData.z, tempFlag.z ? op.identity() : threadScan0[1]);
+            traits::op(tempData.z, tempFlag.z ? traits::identity() : threadScan0[1]);
         threadScan0[3] = s_odata[ai] =
-            op(tempData.w, tempFlag.w ? op.identity() : threadScan0[2]);
+            traits::op(tempData.w, tempFlag.w ? traits::identity() : threadScan0[2]);
     }
 
     unsigned int indexVec[4];
@@ -485,10 +489,10 @@ loadForSegmentedScanSharedChunkFromMem4(
     }
     else
     {
-        tempData.x = (gIndex < numElements) ? d_idata[gIndex] : op.identity();
-        tempData.y = ((gIndex+1) < numElements) ? d_idata[gIndex+1] : op.identity();
-        tempData.z = ((gIndex+2) < numElements) ? d_idata[gIndex+2] : op.identity();
-        tempData.w = op.identity();
+        tempData.x = (gIndex < numElements) ? d_idata[gIndex] : traits::identity();
+        tempData.y = ((gIndex+1) < numElements) ? d_idata[gIndex+1] : traits::identity();
+        tempData.z = ((gIndex+2) < numElements) ? d_idata[gIndex+2] : traits::identity();
+        tempData.w = traits::identity();
     }
 #else
     // Read 4 data
@@ -498,10 +502,10 @@ loadForSegmentedScanSharedChunkFromMem4(
     // Pad values beyond numElements with identity elements 
     if (isLastBlock && !traits::isFullBlock())
     {
-        if (gIndex     >= numElements) tempData.x = op.identity();
-        if ((gIndex+1) >= numElements) tempData.y = op.identity();
-        if ((gIndex+2) >= numElements) tempData.z = op.identity();
-        if ((gIndex+3) >= numElements) tempData.w = op.identity();
+        if (gIndex     >= numElements) tempData.x = traits::identity();
+        if ((gIndex+1) >= numElements) tempData.y = traits::identity();
+        if ((gIndex+2) >= numElements) tempData.z = traits::identity();
+        if ((gIndex+3) >= numElements) tempData.w = traits::identity();
     }
 #endif
 
@@ -511,21 +515,21 @@ loadForSegmentedScanSharedChunkFromMem4(
     {
         threadScan1[3] = tempData.w;
         threadScan1[2] = 
-            op(tempData.z, tempFlag.z ? op.identity() : threadScan1[3]);
+            traits::op(tempData.z, tempFlag.z ? traits::identity() : threadScan1[3]);
         threadScan1[1] = 
-            op(tempData.y, tempFlag.y ? op.identity() : threadScan1[2]);
+            traits::op(tempData.y, tempFlag.y ? traits::identity() : threadScan1[2]);
         threadScan1[0] = s_odata[bi] = 
-            op(tempData.x, tempFlag.x ? op.identity() : threadScan1[1]);
+            traits::op(tempData.x, tempFlag.x ? traits::identity() : threadScan1[1]);
     }
     else
     {
         threadScan1[0] = tempData.x;
         threadScan1[1] = 
-            op(tempData.y, tempFlag.y ? op.identity() : threadScan1[0]);
+            traits::op(tempData.y, tempFlag.y ? traits::identity() : threadScan1[0]);
         threadScan1[2] = 
-            op(tempData.z, tempFlag.z ? op.identity() : threadScan1[1]);
+            traits::op(tempData.z, tempFlag.z ? traits::identity() : threadScan1[1]);
         threadScan1[3] = s_odata[bi] = 
-            op(tempData.w, tempFlag.w ? op.identity() : threadScan1[2]);
+            traits::op(tempData.w, tempFlag.w ? traits::identity() : threadScan1[2]);
     }
 
     if (traits::isBackward())
@@ -654,9 +658,6 @@ void storeForSegmentedScanSharedChunkToMem4(T *d_odata,
                                             int biDev
                                             )
 {
-    // instantiate operator functor
-    typename traits::Op op;
-
     bool isLastBlock = (blockIdx.x == (gridDim.x-1));
 
     // Convert to 4-vector
@@ -672,7 +673,7 @@ void storeForSegmentedScanSharedChunkToMem4(T *d_odata,
     else
     {
         if (ai == 0)
-            temp = op.identity(); 
+            temp = traits::identity(); 
         else
             temp = s_idata[ai-1]; 
     }
@@ -684,45 +685,45 @@ void storeForSegmentedScanSharedChunkToMem4(T *d_odata,
         if (traits::isBackward())
         {
             tempData.x = 
-                op(((threadFlag >> 8) & 1) ? op.identity() : temp,
-                       ((threadFlag >> 0) & 1) ? op.identity() : threadScan0[1]);
+                traits::op(((threadFlag >> 8) & 1) ? traits::identity() : temp,
+                       ((threadFlag >> 0) & 1) ? traits::identity() : threadScan0[1]);
             tempData.y = 
-                op(((threadFlag >> 9) & 1) ? op.identity() : temp,
-                       ((threadFlag >> 1) & 1) ? op.identity() : threadScan0[2]); 
+                traits::op(((threadFlag >> 9) & 1) ? traits::identity() : temp,
+                       ((threadFlag >> 1) & 1) ? traits::identity() : threadScan0[2]); 
             tempData.z = 
-                op(((threadFlag >> 10) & 1) ? op.identity() : temp,
-                       ((threadFlag >> 2) & 1) ? op.identity() : threadScan0[3]); 
+                traits::op(((threadFlag >> 10) & 1) ? traits::identity() : temp,
+                       ((threadFlag >> 2) & 1) ? traits::identity() : threadScan0[3]); 
             tempData.w = 
-                ((threadFlag >> 11) & 1) ? op.identity() : temp;
+                ((threadFlag >> 11) & 1) ? traits::identity() : temp;
         }
         else
         {
             tempData.x = 
-                ((threadFlag >> 8) & 1) ? op.identity() : temp;
+                ((threadFlag >> 8) & 1) ? traits::identity() : temp;
             tempData.y = 
-                op(((threadFlag >> 9) & 1) ? op.identity() : temp,
-                       ((threadFlag >> 1) & 1) ? op.identity() : threadScan0[0]); 
+                traits::op(((threadFlag >> 9) & 1) ? traits::identity() : temp,
+                       ((threadFlag >> 1) & 1) ? traits::identity() : threadScan0[0]); 
             tempData.z = 
-                op(((threadFlag >> 10) & 1) ? op.identity() : temp,
-                       ((threadFlag >> 2) & 1) ? op.identity() : threadScan0[1]); 
+                traits::op(((threadFlag >> 10) & 1) ? traits::identity() : temp,
+                       ((threadFlag >> 2) & 1) ? traits::identity() : threadScan0[1]); 
             tempData.w = 
-                op(((threadFlag >> 11) & 1) ? op.identity() : temp,
-                       ((threadFlag >> 3) & 1) ? op.identity() : threadScan0[2]);
+                traits::op(((threadFlag >> 11) & 1) ? traits::identity() : temp,
+                       ((threadFlag >> 3) & 1) ? traits::identity() : threadScan0[2]);
         }
     }
     else
     {
             tempData.x =
-                op(((threadFlag >> 8) & 1) ? op.identity() : temp, 
+                traits::op(((threadFlag >> 8) & 1) ? traits::identity() : temp, 
                        threadScan0[0]);
             tempData.y = 
-                op(((threadFlag >> 9) & 1) ? op.identity() : temp, 
+                traits::op(((threadFlag >> 9) & 1) ? traits::identity() : temp, 
                        threadScan0[1]);
             tempData.z =
-                op(((threadFlag >> 10) & 1) ? op.identity() : temp, 
+                traits::op(((threadFlag >> 10) & 1) ? traits::identity() : temp, 
                        threadScan0[2]);
             tempData.w =
-                op(((threadFlag >> 11) & 1) ? op.identity() : temp, 
+                traits::op(((threadFlag >> 11) & 1) ? traits::identity() : temp, 
                        threadScan0[3]);
     }
 
@@ -744,7 +745,7 @@ void storeForSegmentedScanSharedChunkToMem4(T *d_odata,
     if (traits::isBackward())
     {
         if (bi == ((blockDim.x<<1)-1))
-            temp = op.identity(); 
+            temp = traits::identity(); 
         else
             temp = s_idata[bi+1]; 
     }
@@ -760,41 +761,41 @@ void storeForSegmentedScanSharedChunkToMem4(T *d_odata,
         if (traits::isBackward())
         {
             tempData.x = 
-                op(((threadFlag >> 12) & 1) ? op.identity() : temp,
-                       ((threadFlag >>  4) & 1) ? op.identity() : threadScan1[1]);
+                traits::op(((threadFlag >> 12) & 1) ? traits::identity() : temp,
+                       ((threadFlag >>  4) & 1) ? traits::identity() : threadScan1[1]);
             tempData.y = 
-                op(((threadFlag >> 13) & 1) ? op.identity() : temp,
-                       ((threadFlag >>  5) & 1) ? op.identity() : threadScan1[2]);
+                traits::op(((threadFlag >> 13) & 1) ? traits::identity() : temp,
+                       ((threadFlag >>  5) & 1) ? traits::identity() : threadScan1[2]);
             tempData.z = 
-                op(((threadFlag >> 14) & 1) ? op.identity() : temp,
-                       ((threadFlag >>  6) & 1) ? op.identity() : threadScan1[3]);
-            tempData.w = ((threadFlag >> 15) & 1) ? op.identity() : temp;
+                traits::op(((threadFlag >> 14) & 1) ? traits::identity() : temp,
+                       ((threadFlag >>  6) & 1) ? traits::identity() : threadScan1[3]);
+            tempData.w = ((threadFlag >> 15) & 1) ? traits::identity() : temp;
         }
         else
         {
             tempData.x = 
-                ((threadFlag >> 12) & 1) ? op.identity() : temp;
+                ((threadFlag >> 12) & 1) ? traits::identity() : temp;
             tempData.y = 
-                op(((threadFlag >> 13) & 1) ? op.identity() : temp,
-                       ((threadFlag >>  5) & 1) ? op.identity() : threadScan1[0]);
+                traits::op(((threadFlag >> 13) & 1) ? traits::identity() : temp,
+                       ((threadFlag >>  5) & 1) ? traits::identity() : threadScan1[0]);
             tempData.z = 
-                op(((threadFlag >> 14) & 1) ? op.identity() : temp,
-                       ((threadFlag >>  6) & 1) ? op.identity() : threadScan1[1]);
+                traits::op(((threadFlag >> 14) & 1) ? traits::identity() : temp,
+                       ((threadFlag >>  6) & 1) ? traits::identity() : threadScan1[1]);
             tempData.w =
-                op(((threadFlag >> 15) & 1) ? op.identity() : temp,
-                       ((threadFlag >>  7) & 1) ? op.identity() : threadScan1[2]);
+                traits::op(((threadFlag >> 15) & 1) ? traits::identity() : temp,
+                       ((threadFlag >>  7) & 1) ? traits::identity() : threadScan1[2]);
         }
     }
     else
     {
         tempData.x = 
-            op(((threadFlag >> 12) & 1) ? op.identity() : temp, threadScan1[0]);    
+            traits::op(((threadFlag >> 12) & 1) ? traits::identity() : temp, threadScan1[0]);    
         tempData.y =
-            op(((threadFlag >> 13) & 1) ? op.identity() : temp, threadScan1[1]);    
+            traits::op(((threadFlag >> 13) & 1) ? traits::identity() : temp, threadScan1[1]);    
         tempData.z =
-            op(((threadFlag >> 14) & 1) ? op.identity() : temp, threadScan1[2]);    
+            traits::op(((threadFlag >> 14) & 1) ? traits::identity() : temp, threadScan1[2]);    
         tempData.w =
-            op(((threadFlag >> 15) & 1) ? op.identity() : temp, threadScan1[3]);    
+            traits::op(((threadFlag >> 15) & 1) ? traits::identity() : temp, threadScan1[3]);    
     }
 
     // write results to global memory
@@ -815,30 +816,28 @@ void storeForSegmentedScanSharedChunkToMem4(T *d_odata,
 
 template <class T, class traits, unsigned int blockSize>
 __device__ T
-reduceCTA(T *s_data)
+reduceCTA(volatile T *s_data)
 {
-    // instantiate operator functor
-    typename traits::Op op;
-
     // perform first level of reduction,
     // reading from global memory, writing to shared memory
     unsigned int tid = threadIdx.x;
+    T t = s_data[tid];
 
     // do reduction in shared mem
-    if (blockSize >= 512) { if (tid < 256) { s_data[tid] = op(s_data[tid], s_data[tid + 256]); } __syncthreads(); }
-    if (blockSize >= 256) { if (tid < 128) { s_data[tid] = op(s_data[tid], s_data[tid + 128]); } __syncthreads(); }
-    if (blockSize >= 128) { if (tid <  64) { s_data[tid] = op(s_data[tid], s_data[tid +  64]); } __syncthreads(); }
+    if (blockSize >= 512) { if (tid < 256) { s_data[tid] = t = traits::op(t, s_data[tid + 256]); } __syncthreads(); }
+    if (blockSize >= 256) { if (tid < 128) { s_data[tid] = t = traits::op(t, s_data[tid + 128]); } __syncthreads(); }
+    if (blockSize >= 128) { if (tid <  64) { s_data[tid] = t = traits::op(t, s_data[tid +  64]); } __syncthreads(); }
     
 #ifndef __DEVICE_EMULATION__
     if (tid < 32)
 #endif
     {
-        if (blockSize >=  64) { s_data[tid] = op(s_data[tid], s_data[tid + 32]); __EMUSYNC; }
-        if (blockSize >=  32) { s_data[tid] = op(s_data[tid], s_data[tid + 16]); __EMUSYNC; }
-        if (blockSize >=  16) { s_data[tid] = op(s_data[tid], s_data[tid +  8]); __EMUSYNC; }
-        if (blockSize >=   8) { s_data[tid] = op(s_data[tid], s_data[tid +  4]); __EMUSYNC; }
-        if (blockSize >=   4) { s_data[tid] = op(s_data[tid], s_data[tid +  2]); __EMUSYNC; }
-        if (blockSize >=   2) { s_data[tid] = op(s_data[tid], s_data[tid +  1]); __EMUSYNC; }
+        if (blockSize >=  64) { s_data[tid] = t = traits::op(t, s_data[tid + 32]); __EMUSYNC; }
+        if (blockSize >=  32) { s_data[tid] = t = traits::op(t, s_data[tid + 16]); __EMUSYNC; }
+        if (blockSize >=  16) { s_data[tid] = t = traits::op(t, s_data[tid +  8]); __EMUSYNC; }
+        if (blockSize >=   8) { s_data[tid] = t = traits::op(t, s_data[tid +  4]); __EMUSYNC; }
+        if (blockSize >=   4) { s_data[tid] = t = traits::op(t, s_data[tid +  2]); __EMUSYNC; }
+        if (blockSize >=   2) { s_data[tid] = t = traits::op(t, s_data[tid +  1]); __EMUSYNC; }
     }
     
     // write result for this block to global mem 
@@ -853,9 +852,6 @@ __device__ void warpSegScan(T val,
                             T& oVal,
                             unsigned int& oFlag)
 {
-    // instantiate operator functor
-    typename traits::Op op;
-
     int idx;
     if (traits::isBackward())
     {
@@ -866,7 +862,7 @@ __device__ void warpSegScan(T val,
         idx = 2 * threadIdx.x - (threadIdx.x & (WARP_SIZE-1));
     }
 
-    s_data[idx] = op.identity(); s_flags[idx] = 0; __EMUSYNC;
+    s_data[idx] = traits::identity(); s_flags[idx] = 0; __EMUSYNC;
 
     if (traits::isBackward())
     {
@@ -877,12 +873,12 @@ __device__ void warpSegScan(T val,
         idx += WARP_SIZE;
     }
 
-    s_data[idx] = val; s_flags[idx] = flag;
+    T t = s_data[idx] = val; unsigned int f = s_flags[idx] = flag;
 
     __EMUSYNC;
 
 #ifdef __DEVICE_EMULATION__
-    T t; unsigned int f;
+    //T t; unsigned int f;
     if (traits::isBackward())
     {
         t = s_data[idx +  1]; f = s_flags[idx +  1]; 
@@ -893,7 +889,7 @@ __device__ void warpSegScan(T val,
     }
     
     __EMUSYNC; 
-    s_data[idx] = s_flags[idx] ? s_data[idx] : op((const T&)s_data[idx],t); 
+    s_data[idx] = s_flags[idx] ? s_data[idx] : traits::op(s_data[idx],t); 
     s_flags[idx] = f | s_flags[idx];  __EMUSYNC;
 
     if (traits::isBackward())
@@ -906,7 +902,7 @@ __device__ void warpSegScan(T val,
     }
     
     __EMUSYNC; 
-    s_data[idx] = s_flags[idx] ? s_data[idx] : op((const T&)s_data[idx],t); 
+    s_data[idx] = s_flags[idx] ? s_data[idx] : traits::op(s_data[idx],t); 
     s_flags[idx] = f | s_flags[idx]; __EMUSYNC;
     
     if (traits::isBackward())
@@ -919,7 +915,7 @@ __device__ void warpSegScan(T val,
     }
     
     __EMUSYNC; 
-    s_data[idx] = s_flags[idx] ? s_data[idx] : op((const T&)s_data[idx],t); 
+    s_data[idx] = s_flags[idx] ? s_data[idx] : traits::op(s_data[idx],t); 
     s_flags[idx] = f | s_flags[idx]; __EMUSYNC;
 
     if (traits::isBackward())
@@ -932,7 +928,7 @@ __device__ void warpSegScan(T val,
     }
     
     __EMUSYNC; 
-    s_data[idx] = s_flags[idx] ? s_data[idx] : op((const T&)s_data[idx],t); 
+    s_data[idx] = s_flags[idx] ? s_data[idx] : traits::op(s_data[idx],t); 
     s_flags[idx] = f | s_flags[idx]; __EMUSYNC;
 
     if (traits::isBackward())
@@ -945,7 +941,7 @@ __device__ void warpSegScan(T val,
     }
     
     __EMUSYNC; 
-    s_data[idx] = s_flags[idx] ? s_data[idx] : op((const T&)s_data[idx],t); 
+    s_data[idx] = s_flags[idx] ? s_data[idx] : traits::op(s_data[idx],t); 
     s_flags[idx] = f | s_flags[idx]; __EMUSYNC;
 
 #else
@@ -953,78 +949,78 @@ __device__ void warpSegScan(T val,
     {
         if (traits::isBackward())
         {
-            s_data[idx] = s_flags[idx] ? s_data[idx] : op((const T&)s_data[idx +  1] , (const T&)s_data[idx]);
-            s_flags[idx] = s_flags[idx +  1] | s_flags[idx];
+            s_data[idx]  = t = f ? t : traits::op(s_data[idx + 1] , t);
+            s_flags[idx] = f = s_flags[idx + 1] | f;
         }
         else
         {
-            s_data[idx] = s_flags[idx] ? s_data[idx] : op((const T&)s_data[idx -  1] , (const T&)s_data[idx]);
-            s_flags[idx] = s_flags[idx -  1] | s_flags[idx];
+            s_data[idx]  = t = f ? t : traits::op(s_data[idx - 1] , t);
+            s_flags[idx] = f = s_flags[idx - 1] | f;
         }
     }
     if (1 <= maxlevel)
     {
         if (traits::isBackward())
         {
-            s_data[idx] = s_flags[idx] ? s_data[idx] : op((const T&)s_data[idx +  2] , (const T&)s_data[idx]);
-            s_flags[idx] = s_flags[idx +  2] | s_flags[idx];
+            s_data[idx]  = t = f ? t : traits::op(s_data[idx + 2] , t);
+            s_flags[idx] = f = s_flags[idx + 2] | f;
         }
         else
         {
-            s_data[idx] = s_flags[idx] ? s_data[idx] : op((const T&)s_data[idx -  2] , (const T&)s_data[idx]);
-            s_flags[idx] = s_flags[idx -  2] | s_flags[idx];
+            s_data[idx]  = t = f ? t : traits::op(s_data[idx - 2] , t);
+            s_flags[idx] = f = s_flags[idx - 2] | f;
         }
     }
     if (2 <= maxlevel)
     {
         if (traits::isBackward())
         {
-            s_data[idx] = s_flags[idx] ? s_data[idx] : op((const T&)s_data[idx +  4] , (const T&)s_data[idx]);
-            s_flags[idx] = s_flags[idx +  4] | s_flags[idx];
+            s_data[idx]  = t = f ? t : traits::op(s_data[idx + 4] , t);
+            s_flags[idx] = f = s_flags[idx + 4] | f;
         }
         else
         {
-            s_data[idx] = s_flags[idx] ? s_data[idx] : op((const T&)s_data[idx -  4] , (const T&)s_data[idx]);
-            s_flags[idx] = s_flags[idx -  4] | s_flags[idx];
+            s_data[idx]  = t = f ? t : traits::op(s_data[idx - 4] , t);
+            s_flags[idx] = f = s_flags[idx - 4] | f;
         }
     }
     if (3 <= maxlevel)
     {
         if (traits::isBackward())
         {
-            s_data[idx] = s_flags[idx] ? s_data[idx] : op((const T&)s_data[idx +  8] , (const T&)s_data[idx]);
-            s_flags[idx] = s_flags[idx +  8] | s_flags[idx];
+            s_data[idx]  = t = f ? t : traits::op(s_data[idx + 8] , t);
+            s_flags[idx] = f = s_flags[idx + 8] | f;
         }
         else
         {
-            s_data[idx] = s_flags[idx] ? s_data[idx] : op((const T&)s_data[idx -  8] , (const T&)s_data[idx]);
-            s_flags[idx] = s_flags[idx -  8] | s_flags[idx];
+            s_data[idx]  = t = f ? t : traits::op(s_data[idx - 8] , t);
+            s_flags[idx] = f = s_flags[idx - 8] | f;
         }
     }
     if (4 <= maxlevel)
     {
         if (traits::isBackward())
         {
-            s_data[idx] = s_flags[idx] ? s_data[idx] : op((const T&)s_data[idx + 16] , (const T&)s_data[idx]);
-            s_flags[idx] = s_flags[idx + 16] | s_flags[idx];
+            s_data[idx]  = t = f ? t : traits::op(s_data[idx + 16] , t);
+            s_flags[idx] = f = s_flags[idx + 16] | f;
         }
         else
         {
-            s_data[idx] = s_flags[idx] ? s_data[idx] : op((const T&)s_data[idx - 16] , (const T&)s_data[idx]);
-            s_flags[idx] = s_flags[idx - 16] | s_flags[idx];
+            s_data[idx]  = t = f ? t : traits::op(s_data[idx - 16] , t);
+            s_flags[idx] = f = s_flags[idx - 16] | f;
         }
     }
 #endif
 
     if( isExclusive ) 
         if (traits::isBackward())
-            oVal = (!flag) ? s_data[idx+1] : op.identity();
+            oVal = (!flag) ? s_data[idx+1] : traits::identity();
         else
-            oVal = (!flag) ? s_data[idx-1] : op.identity();
+            oVal = (!flag) ? s_data[idx-1] : traits::identity();
     else
-        oVal =  s_data[idx];
+        oVal =  t;
 
-    oFlag = s_flags[idx];
+    oFlag = f;
 }
 
 
@@ -1036,9 +1032,6 @@ __device__ void segmentedScanWarps(T val1,
                                    T *s_data, 
                                    unsigned int *s_flags)
 {
-    // instantiate operator functor
-    typename traits::Op op;
-
     const unsigned int idx = threadIdx.x;
 
     // Phase 1: Intra-warp prefix sums
@@ -1110,7 +1103,7 @@ __device__ void segmentedScanWarps(T val1,
     //    if ( warpid==0 )   
     //#endif
     {
-        warpSegScan<T, traits, false, (LOG_SCAN_CTA_SIZE-LOG_WARP_SIZE+1)>
+        warpSegScan<T, traits, false, (LOG_CTA_SIZE-LOG_WARP_SIZE+1)>
             (tdata, tflag, s_data, s_flags, oVal3, oFlag3);
     }
     __syncthreads(); // This looks unnecessary but won't work without it
@@ -1126,15 +1119,15 @@ __device__ void segmentedScanWarps(T val1,
         const unsigned int num_warps = ((blockDim.x << 1) >> LOG_WARP_SIZE);
         const unsigned int offset = blockDim.x - num_warps;
 
-        oVal1 = oFlag1 ? oVal1 : op(s_data[offset+warpid+1], oVal1);
+        oVal1 = oFlag1 ? oVal1 : traits::op(s_data[offset+warpid+1], oVal1);
 
-        if (warpid2 < (num_warps-1)) oVal2 = oFlag2 ? oVal2 : op(s_data[offset+warpid2+1], oVal2);
+        if (warpid2 < (num_warps-1)) oVal2 = oFlag2 ? oVal2 : traits::op(s_data[offset+warpid2+1], oVal2);
     }
     else
     {
-        if (warpid > 0) oVal1 = oFlag1 ? oVal1 : op(s_data[warpid-1], oVal1);
+        if (warpid > 0) oVal1 = oFlag1 ? oVal1 : traits::op(s_data[warpid-1], oVal1);
 
-        oVal2 = oFlag2 ? oVal2 : op(s_data[warpid2-1], oVal2);
+        oVal2 = oFlag2 ? oVal2 : traits::op(s_data[warpid2-1], oVal2);
     }
     __syncthreads(); // This looks unnecessary
 
@@ -1202,7 +1195,7 @@ void segmentedScanCTA(T            *s_data,
         if (traits::writeSums() && (threadIdx.x == blockDim.x - 1))
         {
             d_blockSums[blockIdx.x] = s_data[threadIdx.x + blockDim.x];
-            d_blockFlags[blockIdx.x] = cta_is_closed || (s_flags[(1 << (LOG_SCAN_CTA_SIZE-LOG_WARP_SIZE+1))-1] != 0);
+            d_blockFlags[blockIdx.x] = cta_is_closed || (s_flags[(1 << (LOG_CTA_SIZE-LOG_WARP_SIZE+1))-1] != 0);
         }
     }
 
@@ -1213,14 +1206,14 @@ void segmentedScanCTA(T            *s_data,
         if (traits::isBackward())
         {
             mIndex = 
-                reduceCTA<unsigned int, ScanTraits<unsigned int, OperatorMax<unsigned int>, false, false, false, false, true>,
-                      (2 * SCAN_CTA_SIZE)>(s_indices);
+                reduceCTA<unsigned int, ScanTraits<unsigned int, CUDPP_MAX, false, false, false, false, true>,
+                      (2 * CTA_SIZE)>(s_indices);
         }
         else
         {
             mIndex =
-                reduceCTA<unsigned int, ScanTraits<unsigned int, OperatorMin<unsigned int>, false, false, false, false, true>,
-                      (2 * SCAN_CTA_SIZE)>(s_indices);
+                reduceCTA<unsigned int, ScanTraits<unsigned int, CUDPP_MIN, false, false, false, false, true>,
+                      (2 * CTA_SIZE)>(s_indices);
         }
     }
 
