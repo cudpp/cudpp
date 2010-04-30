@@ -80,8 +80,8 @@
  * 
  * \section opSys Operating System Support
  * 
- * This release (1.1) has been thoroughly tested on the following OSes.
- * - Windows XP (32-bit) (CUDA 2.2)
+ * This release (1.1.1) has been thoroughly tested on the following OSes.
+ * - Windows XP (32-bit) (CUDA 2.2, 3.0)
  * - Windows Vista (32-bit) (CUDA 2.2)
  * - Redhat Enterprise Linux 5 (64-bit) (CUDA 2.2)
  * - Ubuntu Linux 8.04 (32-bit and 64-bit) (CUDA 2.2)
@@ -409,7 +409,6 @@ struct CUDPPConfiguration
 #define CUDPP_INVALID_HANDLE 0xC0DABAD1
 typedef size_t CUDPPHandle;
 
-
 struct CUDPPTuneConfig
 {
   //For reduction only now TODO: make more flexible
@@ -440,18 +439,10 @@ struct CUDPPTuneConfig
     #endif
 #endif
 
-// CUDPP Initialization
-CUDPP_DLL
-CUDPPResult cudppCreate(CUDPPHandle* theCudpp);
-
-// CUDPP Destruction
-CUDPP_DLL
-CUDPPResult cudppDestroy(CUDPPHandle theCudpp);
-
 // Plan allocation (for scan, sort, and compact)
+
 CUDPP_DLL
-CUDPPResult cudppPlan(const CUDPPHandle  cudppHandle,
-                      CUDPPHandle        *planHandle, 
+CUDPPResult cudppPlan(CUDPPHandle        *planHandle, 
                       CUDPPConfiguration config, 
                       size_t             n, 
                       size_t             rows, 
@@ -467,27 +458,27 @@ CUDPPResult cudppTune(const CUDPPHandle plan, CUDPPTuneConfig config);
 // Scan and sort algorithms
 
 CUDPP_DLL
-CUDPPResult cudppScan(const CUDPPHandle planHandle,
+CUDPPResult cudppScan(CUDPPHandle planHandle,
                       void        *d_out, 
                       const void  *d_in, 
                       size_t      numElements);
 
 CUDPP_DLL
-CUDPPResult cudppMultiScan(const CUDPPHandle planHandle,
+CUDPPResult cudppMultiScan(CUDPPHandle planHandle,
                            void        *d_out, 
                            const void  *d_in, 
                            size_t      numElements,
                            size_t      numRows);
 
 CUDPP_DLL
-CUDPPResult cudppSegmentedScan(const CUDPPHandle  planHandle,
+CUDPPResult cudppSegmentedScan(CUDPPHandle        planHandle,
                                void               *d_out, 
                                const void         *d_idata,
                                const unsigned int *d_iflags,
                                size_t             numElements);
 
 CUDPP_DLL
-CUDPPResult cudppCompact(const CUDPPHandle  planHandle,
+CUDPPResult cudppCompact(CUDPPHandle        planHandle,
                          void               *d_out, 
                          size_t             *d_numValidElements,
                          const void         *d_in, 
@@ -500,17 +491,18 @@ CUDPPResult cudppReduce(const CUDPPHandle planHandle,
                         const void        *d_in,
                         size_t            numElements);
 
+
 CUDPP_DLL
-CUDPPResult cudppSort(const CUDPPHandle planHandle,
-                      void              *d_keys,                                          
-                      void              *d_values,                                                                       
-                      int               keybits,
-                      size_t            numElements);
+CUDPPResult cudppSort(CUDPPHandle planHandle,
+                      void        *d_keys,                                          
+                      void        *d_values,                                                                       
+                      int         keybits,
+                      size_t      numElements);
+
 // Sparse matrix allocation
 
 CUDPP_DLL
-CUDPPResult cudppSparseMatrix(const CUDPPHandle  cudppHandle,
-                              CUDPPHandle        *sparseMatrixHandle, 
+CUDPPResult cudppSparseMatrix(CUDPPHandle        *sparseMatrixHandle, 
                               CUDPPConfiguration config, 
                               size_t             n, 
                               size_t             rows, 
@@ -524,19 +516,16 @@ CUDPPResult cudppDestroySparseMatrix(CUDPPHandle sparseMatrixHandle);
 // Sparse matrix-vector algorithms
 
 CUDPP_DLL
-CUDPPResult cudppSparseMatrixVectorMultiply(const CUDPPHandle sparseMatrixHandle,
+CUDPPResult cudppSparseMatrixVectorMultiply(CUDPPHandle sparseMatrixHandle,
                                             void        *d_y,
                                             const void  *d_x);
 
 // random number generation algorithms
 CUDPP_DLL
-CUDPPResult cudppRand(const CUDPPHandle planHandle,
-                      void *      d_out, 
-                      size_t      numElements);
+CUDPPResult cudppRand(CUDPPHandle planHandle,void * d_out, size_t numElements);
 
 CUDPP_DLL
-CUDPPResult cudppRandSeed(const CUDPPHandle planHandle, 
-                          unsigned int      seed);
+CUDPPResult cudppRandSeed(const CUDPPHandle planHandle, unsigned int seed);
 
 #ifdef __cplusplus
 }
