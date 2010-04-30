@@ -209,9 +209,6 @@ break;
 case CUDPP_FLOAT:
 cudaMalloc(&plan->m_blockSums, blocks * sizeof(float));
 break;
-case CUDPP_DOUBLE:
-cudaMalloc(&plan->m_blockSums, blocks * sizeof(double));
-break;
 default:
 break;
 }
@@ -253,81 +250,62 @@ void cudppReduceDispatch(void *d_odata, const void *d_idata, size_t numElements,
 {
 switch (plan->m_config.datatype)
 {
-case CUDPP_INT:
-switch (plan->m_config.op)
-{
-case CUDPP_ADD:
-default:
-reduceArray< OperatorAdd<int> >((int*)d_odata, (int*)d_idata, numElements, plan);
-break;
-case CUDPP_MULTIPLY:
-reduceArray< OperatorMultiply<int> >((int*)d_odata, (int*)d_idata, numElements, plan);
-break;
-case CUDPP_MAX:
-reduceArray< OperatorMax<int> >((int*)d_odata, (int*)d_idata, numElements, plan);
-break;
-case CUDPP_MIN:
-reduceArray< OperatorMin<int> >((int*)d_odata, (int*)d_idata, numElements, plan);
-break;
-}
-break;
-case CUDPP_UINT:
-switch (plan->m_config.op)
-{
-case CUDPP_ADD:
-default:
-reduceArray< OperatorAdd<unsigned int> >((unsigned int*)d_odata, (unsigned int*)d_idata, numElements, plan);
-break;
-case CUDPP_MULTIPLY:
-reduceArray< OperatorMultiply<unsigned int> >((unsigned int*)d_odata, (unsigned int*)d_idata, numElements, plan);
-break;
-case CUDPP_MAX:
-reduceArray< OperatorMax<unsigned int> >((unsigned int*)d_odata, (unsigned int*)d_idata, numElements, plan);
-break;
-case CUDPP_MIN:
-reduceArray< OperatorMin<unsigned int> >((unsigned int*)d_odata, (unsigned int*)d_idata, numElements, plan);
-break;
-}
-break;
-case CUDPP_FLOAT:
-switch (plan->m_config.op)
-{
-case CUDPP_ADD:
-default:
-reduceArray< OperatorAdd<float> >((float*)d_odata, (float*)d_idata, numElements, plan);
-break;
-case CUDPP_MULTIPLY:
-reduceArray< OperatorMultiply<float> >((float*)d_odata, (float*)d_idata, numElements, plan);
-break;
-case CUDPP_MAX:
-reduceArray< OperatorMax<float> >((float*)d_odata, (float*)d_idata, numElements, plan);
-break;
-case CUDPP_MIN:
-reduceArray< OperatorMin<float> >((float*)d_odata, (float*)d_idata, numElements, plan);
-break;
-}
-break;
-case CUDPP_DOUBLE:
-switch (plan->m_config.op)
-{
-case CUDPP_ADD:
-default:
-reduceArray< OperatorAdd<double> >((double*)d_odata, (double*)d_idata, numElements, plan);
-break;
-case CUDPP_MULTIPLY:
-reduceArray< OperatorMultiply<double> >((double*)d_odata, (double*)d_idata, numElements, plan);
-break;
-case CUDPP_MAX:
-reduceArray< OperatorMax<double> >((double*)d_odata, (double*)d_idata, numElements, plan);
-break;
-case CUDPP_MIN:
-reduceArray< OperatorMin<double> >((double*)d_odata, (double*)d_idata, numElements, plan);
-break;
-}
-break;
-default:
-break;
-}
+    case CUDPP_INT:
+        switch (plan->m_config.op)
+        {
+            case CUDPP_ADD:
+            default:
+                reduceArray< Operator<int,CUDPP_ADD>, int >((int*)d_odata, (int*)d_idata, numElements, plan);
+                break;
+            case CUDPP_MULTIPLY:
+                reduceArray< Operator<int,CUDPP_MULTIPLY>, int >((int*)d_odata, (int*)d_idata, numElements, plan);
+            break;
+            case CUDPP_MAX:
+                reduceArray< Operator<int,CUDPP_MAX>, int >((int*)d_odata, (int*)d_idata, numElements, plan);
+                break;
+            case CUDPP_MIN:
+                reduceArray< Operator<int,CUDPP_MIN>, int >((int*)d_odata, (int*)d_idata, numElements, plan);
+                break;
+        }
+        break;
+    case CUDPP_UINT:
+        switch (plan->m_config.op)
+        {
+            case CUDPP_ADD:
+            default:
+                reduceArray< Operator<unsigned int,CUDPP_ADD>, unsigned int >((unsigned int*)d_odata, (unsigned int*)d_idata, numElements, plan);
+                break;
+            case CUDPP_MULTIPLY:
+                reduceArray< Operator<unsigned int,CUDPP_MULTIPLY>, unsigned int >((unsigned int*)d_odata, (unsigned int*)d_idata, numElements, plan);
+                break;
+            case CUDPP_MAX:
+                reduceArray< Operator<unsigned int,CUDPP_MAX>, unsigned int >((unsigned int*)d_odata, (unsigned int*)d_idata, numElements, plan);
+                break;
+            case CUDPP_MIN:
+                reduceArray< Operator<unsigned int,CUDPP_MIN>, unsigned int >((unsigned int*)d_odata, (unsigned int*)d_idata, numElements, plan);
+            break;
+        }
+        break;
+    case CUDPP_FLOAT:
+        switch (plan->m_config.op)
+        {
+            case CUDPP_ADD:
+            default:
+                reduceArray< Operator<float,CUDPP_ADD>, float >((float*)d_odata, (float*)d_idata, numElements, plan);
+                break;
+            case CUDPP_MULTIPLY:
+                reduceArray< Operator<float,CUDPP_MULTIPLY>, float >((float*)d_odata, (float*)d_idata, numElements, plan);
+                break;
+            case CUDPP_MAX:
+                reduceArray< Operator<float,CUDPP_MAX>, float >((float*)d_odata, (float*)d_idata, numElements, plan);
+                break;
+            case CUDPP_MIN:
+                reduceArray< Operator<float,CUDPP_MIN> , float >((float*)d_odata, (float*)d_idata, numElements, plan);
+                break;
+        }
+        break;
+    
+    }
 }
 
 

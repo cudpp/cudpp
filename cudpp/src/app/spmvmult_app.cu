@@ -15,8 +15,14 @@
  * @brief CUDPP application-level scan routines
  */
 
-/** \addtogroup cudpp_app
-  *
+/** \defgroup cudpp_app CUDPP Application-Level API
+  * The CUDPP Application-Level API contains functions
+  * that run on the host CPU and invoke GPU routines in 
+  * the CUDPP \link cudpp_kernel Kernel-Level API\endlink. 
+  * Application-Level API functions are used by
+  * CUDPP \link publicInterface Public Interface\endlink
+  * functions to implement CUDPP's core functionality.
+  * @{
   */
 
 #include "cudpp.h"
@@ -79,13 +85,13 @@ void sparseMatrixVectorMultiply(
 {
     unsigned int numEltsBlocks = 
         max(1, (int)ceil((double)plan->m_numNonZeroElements / 
-                         ((double)SEGSCAN_ELTS_PER_THREAD * SCAN_CTA_SIZE)));
+                         ((double)SEGSCAN_ELTS_PER_THREAD * CTA_SIZE)));
     
     bool fullBlock = 
-        (plan->m_numNonZeroElements == (numEltsBlocks * SEGSCAN_ELTS_PER_THREAD * SCAN_CTA_SIZE));  
+        (plan->m_numNonZeroElements == (numEltsBlocks * SEGSCAN_ELTS_PER_THREAD * CTA_SIZE));  
 
     dim3  gridElts(max(1, numEltsBlocks), 1, 1);
-    dim3  threads(SCAN_CTA_SIZE, 1, 1);
+    dim3  threads(CTA_SIZE, 1, 1);
 
     if (fullBlock)
         sparseMatrixVectorFetchAndMultiply<T, true><<<gridElts, threads>>>
@@ -96,7 +102,7 @@ void sparseMatrixVectorMultiply(
 
     unsigned int numRowBlocks = 
         max(1, (int)ceil((double)plan->m_numRows / 
-                         ((double)SEGSCAN_ELTS_PER_THREAD * SCAN_CTA_SIZE)));
+                         ((double)SEGSCAN_ELTS_PER_THREAD * CTA_SIZE)));
 
     dim3  gridRows(max(1, numRowBlocks), 1, 1);
 

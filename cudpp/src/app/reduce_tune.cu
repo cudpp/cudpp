@@ -24,6 +24,8 @@
 #include <stdio.h>
 #include <cutil.h>
 #include "cudpp_reduce.h"
+
+
 #define DEBUG 0
  
 /** @brief Perform tuning for the reduction primitive.
@@ -50,7 +52,7 @@ void tuneReduce(CUDPPReducePlan *plan, CUDPPTuneConfig *tuneConfig)
     struct cudaDeviceProp deviceProp;
     float time1, nTslope;
     unsigned int maxElements = 30000000; //very large default maximum elements for test runs (should always be less than threshold maxElements)
-    int switchPoint, minThreads, maxThreads;
+    unsigned int switchPoint, minThreads, maxThreads;
 
     CUT_SAFE_CALL(cutCreateTimer(&timer));    
     cudaEvent_t startEvent, stopEvent;
@@ -70,8 +72,9 @@ void tuneReduce(CUDPPReducePlan *plan, CUDPPTuneConfig *tuneConfig)
         fscanf(grabParameters,"%d ", &minThreads);
         fscanf(grabParameters,"%d ", &maxThreads);
         fscanf(grabParameters,"%d ", &maxElements);
-        
+#if DEBUG
         printf("%f %d %d %d %d\n", nTslope, switchPoint, minThreads, maxThreads, maxElements);
+#endif
         if(tuneConfig->numElements >= maxElements)
         {
             plan->m_threadsPerBlock = 128;            
@@ -87,8 +90,10 @@ void tuneReduce(CUDPPReducePlan *plan, CUDPPTuneConfig *tuneConfig)
             plan->m_threadsPerBlock = 128;
             nThreads = minThreads + int(nTslope*float(tuneConfig->numElements-switchPoint));
         }
-        plan->m_maxBlocks = unsigned int(ceil(float(nThreads)/float(plan->m_threadsPerBlock)));                
+        plan->m_maxBlocks = unsigned int(ceil(float(nThreads)/float(plan->m_threadsPerBlock)));              
+#if DEBUG
         printf("Selected %d maxBlocks and %d threadsPerBlock\n", plan->m_maxBlocks, plan->m_threadsPerBlock);
+#endif
         
         fclose(grabParameters);
         return;
@@ -151,6 +156,7 @@ void tuneReduce(CUDPPReducePlan *plan, CUDPPTuneConfig *tuneConfig)
             
 #endif
 
+    printf("Beginning tuning process\n");
     int testPoint = 64*deviceProp.multiProcessorCount;
 
     CUDA_SAFE_CALL(cudaMemcpy(d_idata, datain, sizeof(float)*maxElements, cudaMemcpyHostToDevice)); 
@@ -208,7 +214,9 @@ void tuneReduce(CUDPPReducePlan *plan, CUDPPTuneConfig *tuneConfig)
 
         }	    
         cpuResult = h_result[0];
+#if DEBUG
         printf("%d elements CPU time: %f \n" , x, tTime + cpuTime); 
+#endif
        
         //note: on one machine, the time reporting for the CPU Time was incredibly flawed, works on others
         //TODO, find out what caused such a bug.
@@ -237,27 +245,27 @@ void tuneReduce(CUDPPReducePlan *plan, CUDPPTuneConfig *tuneConfig)
                            
                             case 32:
                                 if(isPow2)
-                                    reduce<float, OperatorAdd<float>, 32, true><<<numBlocks, threadCount, smemSize>>>(d_out, d_idata, (x-15+z));
+                                    reduce<float, Operator<float, CUDPP_ADD>, 32, true><<<numBlocks, threadCount, smemSize>>>(d_out, d_idata, (x-15+z));
                                 else
-                                    reduce<float, OperatorAdd<float>, 32, false><<<numBlocks, threadCount, smemSize>>>(d_out, d_idata, (x-15+z));
+                                    reduce<float, Operator<float, CUDPP_ADD>, 32, false><<<numBlocks, threadCount, smemSize>>>(d_out, d_idata, (x-15+z));
                                 break;
                             case 64:
                                 if(isPow2)
-                                    reduce<float, OperatorAdd<float>, 64, true><<<numBlocks, threadCount, smemSize>>>(d_out, d_idata, (x-15+z));
+                                    reduce<float,Operator<float, CUDPP_ADD>, 64, true><<<numBlocks, threadCount, smemSize>>>(d_out, d_idata, (x-15+z));
                                 else
-                                    reduce<float, OperatorAdd<float>, 64, false><<<numBlocks, threadCount, smemSize>>>(d_out, d_idata, (x-15+z));
+                                    reduce<float, Operator<float, CUDPP_ADD>, 64, false><<<numBlocks, threadCount, smemSize>>>(d_out, d_idata, (x-15+z));
                                 break;
                             case 128:
                                 if(isPow2)
-                                    reduce<float, OperatorAdd<float>, 128, true><<<numBlocks, threadCount, smemSize>>>(d_out, d_idata, (x-15+z));
+                                    reduce<float, Operator<float, CUDPP_ADD>, 128, true><<<numBlocks, threadCount, smemSize>>>(d_out, d_idata, (x-15+z));
                                 else
-                                    reduce<float, OperatorAdd<float>, 128, false><<<numBlocks, threadCount, smemSize>>>(d_out, d_idata, (x-15+z));
+                                    reduce<float, Operator<float, CUDPP_ADD>, 128, false><<<numBlocks, threadCount, smemSize>>>(d_out, d_idata, (x-15+z));
                                 break;
                             case 256:
                                if(isPow2)
-                                    reduce<float, OperatorAdd<float>, 256, true><<<numBlocks, threadCount, smemSize>>>(d_out, d_idata, (x-15+z));
+                                    reduce<float, Operator<float, CUDPP_ADD>, 256, true><<<numBlocks, threadCount, smemSize>>>(d_out, d_idata, (x-15+z));
                                 else
-                                    reduce<float, OperatorAdd<float>, 256, false><<<numBlocks, threadCount, smemSize>>>(d_out, d_idata, (x-15+z));
+                                    reduce<float, Operator<float, CUDPP_ADD>, 256, false><<<numBlocks, threadCount, smemSize>>>(d_out, d_idata, (x-15+z));
                                 break;                           
                         }
                         CUDA_SAFE_CALL(cudaMemcpy(h_result, d_out, sizeof(float)*numBlocks, cudaMemcpyDeviceToHost));                        
@@ -330,17 +338,17 @@ void tuneReduce(CUDPPReducePlan *plan, CUDPPTuneConfig *tuneConfig)
         isPow2 = isPowerOfTwo(maxElements);
         numBlocks = int(ceil(float(maxThreads)/128.));
         if(isPow2)
-            reduce<float, OperatorAdd<float>, 128, true><<<numBlocks, threadCount, smemSize>>>(d_out, d_idata, (maxElements));
+            reduce<float, Operator<float, CUDPP_ADD>, 128, true> <<<numBlocks, threadCount, smemSize>>>(d_out, d_idata, (maxElements));
         else
-            reduce<float, OperatorAdd<float>, 128, false><<<numBlocks, threadCount, smemSize>>>(d_out, d_idata, (maxElements));  
+            reduce<float, Operator<float, CUDPP_ADD>, 128, false> <<<numBlocks, threadCount, smemSize>>>(d_out, d_idata, (maxElements));  
 
         CUDA_SAFE_CALL( cudaEventRecord(startEvent, 0) );
         for(i=0;i<numIterations;i++)
         {                
            if(isPow2)
-               reduce<float, OperatorAdd<float>, 128, true><<<numBlocks, threadCount, smemSize>>>(d_out, d_idata, (maxElements));
+               reduce<float, Operator<float, CUDPP_ADD>, 128, true> <<<numBlocks, threadCount, smemSize>>>(d_out, d_idata, (maxElements));
            else
-               reduce<float, OperatorAdd<float>, 128, false><<<numBlocks, threadCount, smemSize>>>(d_out, d_idata, (maxElements));                  
+               reduce<float, Operator<float, CUDPP_ADD>, 128, false> <<<numBlocks, threadCount, smemSize>>>(d_out, d_idata, (maxElements));                  
            CUDA_SAFE_CALL(cudaMemcpy(h_result, d_out, sizeof(float)*numBlocks, cudaMemcpyDeviceToHost));
            for(j = 1;j<numBlocks;j++)
                h_result[0] += h_result[j];
@@ -389,17 +397,17 @@ void tuneReduce(CUDPPReducePlan *plan, CUDPPTuneConfig *tuneConfig)
         {    
         
             if(isPow2)
-                reduce<float, OperatorAdd<float>, 128, true><<<numBlocks, threadsperBlock, smem>>>(d_out, d_idata, testPoint);	 
+                reduce<float, Operator<float, CUDPP_ADD>, 128, true> <<<numBlocks, threadsperBlock, smem>>>(d_out, d_idata, testPoint);	 
             else
-                reduce<float, OperatorAdd<float>, 128, false><<<numBlocks, threadsperBlock, smem>>>(d_out, d_idata, testPoint);	 
+                reduce<float, Operator<float, CUDPP_ADD>, 128, false> <<<numBlocks, threadsperBlock, smem>>>(d_out, d_idata, testPoint);	 
 
             CUDA_SAFE_CALL( cudaEventRecord(startEvent, 0) );
             for(i=0;i<numIterations;i++)
             {                 
                 if(isPow2)
-                    reduce<float, OperatorAdd<float>, 128, true><<<numBlocks, threadsperBlock, smem>>>(d_out, d_idata, testPoint); 
+                    reduce<float, Operator<float, CUDPP_ADD>, 128, true> <<<numBlocks, threadsperBlock, smem>>>(d_out, d_idata, testPoint); 
                 else
-                    reduce<float, OperatorAdd<float>, 128, false><<<numBlocks, threadsperBlock, smem>>>(d_out, d_idata, testPoint); 	 
+                    reduce<float, Operator<float, CUDPP_ADD>, 128, false> <<<numBlocks, threadsperBlock, smem>>>(d_out, d_idata, testPoint); 	 
                 CUDA_SAFE_CALL(cudaMemcpy(h_result, d_out, sizeof(float)*numBlocks, cudaMemcpyDeviceToHost));	   	  	  
                 for(j=1;j<numBlocks;j++)
                     h_result[0] += h_result[j];
@@ -419,17 +427,17 @@ void tuneReduce(CUDPPReducePlan *plan, CUDPPTuneConfig *tuneConfig)
             }	
             isPow2 = isPowerOfTwo(x);
             if(isPow2)
-                reduce<float, OperatorAdd<float>, 128, true><<<maxBlocks, threadsperBlock, smem>>>(d_out, d_idata, x);	 
+                reduce<float, Operator<float, CUDPP_ADD>, 128, true><<<maxBlocks, threadsperBlock, smem>>>(d_out, d_idata, x);	 
             else
-                reduce<float, OperatorAdd<float>, 128, false><<<maxBlocks, threadsperBlock, smem>>>(d_out, d_idata, x);	 
+                reduce<float, Operator<float, CUDPP_ADD>, 128, false><<<maxBlocks, threadsperBlock, smem>>>(d_out, d_idata, x);	 
             CUDA_SAFE_CALL( cudaEventRecord(startEvent, 0) );	  
             for(i=0;i<numIterations;i++)
             {    
                 isPow2 = isPowerOfTwo(x - numIterations/2 + 1);
                 if(isPow2)
-                    reduce<float, OperatorAdd<float>, 128, true><<<maxBlocks, threadsperBlock, smem>>>(d_out, d_idata, x-numIterations/2 + i); //smooth out noisy cases	 
+                    reduce<float, Operator<float, CUDPP_ADD>, 128, true><<<maxBlocks, threadsperBlock, smem>>>(d_out, d_idata, x-numIterations/2 + i); //smooth out noisy cases	 
                 else 
-                    reduce<float, OperatorAdd<float>, 128, false><<<maxBlocks, threadsperBlock, smem>>>(d_out, d_idata, x-numIterations/2 + i); //smooth out noisy cases	 
+                    reduce<float, Operator<float, CUDPP_ADD>, 128, false><<<maxBlocks, threadsperBlock, smem>>>(d_out, d_idata, x-numIterations/2 + i); //smooth out noisy cases	 
                 CUDA_SAFE_CALL(cudaMemcpy(h_result, d_out, sizeof(float)*numBlocks, cudaMemcpyDeviceToHost));	   	  	  
                 for(j=1;j<numBlocks;j++)
                     h_result[0] += h_result[j];
@@ -494,13 +502,13 @@ void tuneReduce(CUDPPReducePlan *plan, CUDPPTuneConfig *tuneConfig)
                 printf("Test on %d\n", x);
 
               
-                reduce<int, 128, isPow2><<<numBlocks, threadsperBlock, smem>>>(d_idata, d_out, x);	 //get GPU warmed up.
+                reduce<float,Operator<float, CUDPP_ADD>, 128, isPow2><<<numBlocks, threadsperBlock, smem>>>(d_idata, d_out, x);	 //get GPU warmed up.
                 cudaThreadSynchronize();
                 cutResetTimer(timer);	
                 cutStartTimer(timer);	  
                 for(i=0;i<numIterations;i++)
                 {    
-                    reduce<int, 128, isPow2><<<numBlocks, threadsperBlock, smem>>>(d_idata, d_out, x-numIterations/2+i);	 
+                    reduce<float, Operator<float, CUDPP_ADD>, 128, isPow2><<<numBlocks, threadsperBlock, smem>>>(d_idata, d_out, x-numIterations/2+i);	 
                     CUDA_SAFE_CALL(cudaMemcpy(h_result, d_out, sizeof(float)*numBlocks, cudaMemcpyDeviceToHost));	   	  	  
                     for(j=1;j<numBlocks;j++) //grab leftoverblocks
                         h_result[0] += h_result[j];
