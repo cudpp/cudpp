@@ -22,9 +22,19 @@
 #include <windows.h>
 #endif
 
+#include <cuda.h>
 #include <cudpp.h>
 #include <limits.h>
 #include <float.h>
+
+#if (CUDA_VERSION >= 3000)
+#define LAUNCH_BOUNDS(x) __launch_bounds__((x))
+#define LAUNCH_BOUNDS_MINBLOCKs(x, y) __launch_bounds__((x),(y))
+#else
+#define LAUNCH_BOUNDS(x)
+#define LAUNCH_BOUNDS_MINBLOCKS(x, y)
+#endif
+
 
 /** @brief Determine if \a n is a power of two.
   * @param n Value to be checked to see if it is a power of two
@@ -50,30 +60,36 @@ isMultiple(int n, int f)
         return (n%f==0);
 }
 
-/** @brief Compute the smallest power of two larger than \a x.
-  * @param x Input value
-  * @returns The smallest power f two larger than \a x
+/** @brief Compute the smallest power of two larger than \a n.
+  * @param n Input value
+  * @returns The smallest power f two larger than \a n
   */
-inline unsigned int 
-ceilPow2( unsigned int x ) 
+inline int 
+ceilPow2(int n) 
 {
-    --x;
-    x |= x >> 1;
-    x |= x >> 2;
-    x |= x >> 4;
-    x |= x >> 8;
-    x |= x >> 16;
-    return ++x;
+        double log2n = log2((double)n);
+        if (isPowerOfTwo(n))
+                return n;
+        else
+                return 1 << (int)ceil(log2n);
 }
 
-/** @brief Compute the largest power of two smaller than or equal to \a x.
-  * @param x Input value
-  * @returns The largest power of two smaller than or equal to \a x.
+/** @brief Compute the largest power of two smaller than \a n.
+  * @param n Input value
+  * @returns The largest power of two smaller than \a n.
   */
-inline unsigned int 
-floorPow2(unsigned int x)
+inline int 
+floorPow2(int n)
 {
-    return ceilPow2(x) >> 1;
+#ifdef WIN32
+    // method 2
+    return 1 << (int)_logb((float)n);
+#else
+    // method 3
+    int exp;
+    frexp((float)n, &exp);
+    return 1 << (exp - 1);
+#endif
 }
 
 /** @brief Returns the maximum value for type \a T.
@@ -185,55 +201,158 @@ struct typeToVector<float, 2>
     typedef float2 Result;
 };
 
-template <typename T>
-class OperatorAdd
+/** @brief Templatized operator class used by scan and segmented scan
+  * 
+  * This Operator class is used to allow generic support of binary 
+  * associative operators in scan.  It defines two member functions, 
+  * op() and identity(), that are used in place of + and 0 (for 
+  * example) in the scan and  segmented scan code. Because this is 
+  * template code, all decisions in the code are made at compile 
+  * time, resulting in optimal operator code. Currently the operators 
+  * CUDPP_ADD, CUDPP_MULTIPLY, CUDPP_MIN, and CUDPP_MAX are supported. 
+  * Operator is implemented using template specialization for the 
+  * types \c int, \c unsigned int, and \c float.
+  */
+template <typename T, CUDPPOperator oper>
+class Operator
 {
 public:
-    __device__ T operator()(const T a, const T b) { return a + b; }
-    __device__ T identity() { return (T)0; }
+    /** Applies the operator to operands \a a and \a b.
+      * @param a First operand
+      * @param b Second operand
+      * @returns a OP b, where OP is defined by ::CUDPPOperator \a oper.
+      */
+    static __device__ T op(const T a, const T b)
+    {
+        switch (oper)
+        {
+        case CUDPP_ADD: 
+            return a + b;
+        case CUDPP_MULTIPLY:
+            return a * b;
+        case CUDPP_MIN:
+            return min(a, b);
+        case CUDPP_MAX: 
+            return max(a, b);
+        }         
+    }
+
+    /** Returns the identity element defined for type \a T */
+    static __device__ T identity() { return 0; }
 };
 
-template <typename T>
-class OperatorMultiply
+// specializations for different types
+template <CUDPPOperator oper>
+class Operator <int, oper>
 {
 public:
-    __device__ T operator()(const T a, const T b) { return a * b; }
-    __device__ T identity() { return (T)1; }
+    static __device__ int op(const int a, const int b)
+    {
+        switch (oper)
+        {
+        default:
+        case CUDPP_ADD: 
+            return a + b;
+        case CUDPP_MULTIPLY:
+            return a * b;
+        case CUDPP_MIN:
+            return min(a, b);
+        case CUDPP_MAX: 
+            return max(a, b);
+        }         
+    }
+
+    static __device__ int identity()
+    {
+        switch (oper)
+        {
+        default:
+        case CUDPP_ADD:
+            return 0;
+        case CUDPP_MULTIPLY:
+            return 1;
+        case CUDPP_MIN:
+            return INT_MAX;
+        case CUDPP_MAX:
+            return INT_MIN;
+        }
+    }
 };
 
-template <typename T>
-class OperatorMax
+template <CUDPPOperator oper>
+class Operator <unsigned int, oper>
 {
 public:
-    __device__ T operator() (const T a, const T b) const { return max(a, b); }
-    __device__ T identity() const { return (T)0; }
+    static __device__ unsigned int op(const unsigned int a, const unsigned int b)
+    {
+        switch (oper)
+        {
+        default:
+        case CUDPP_ADD: 
+            return a + b;
+        case CUDPP_MULTIPLY:
+            return a * b;
+        case CUDPP_MIN:
+            return min(a, b);
+        case CUDPP_MAX: 
+            return max(a, b);
+        }         
+    }
+
+    static __device__ unsigned int identity()
+    {
+        switch (oper)
+        {
+        default:
+        case CUDPP_ADD:
+            return 0;
+        case CUDPP_MULTIPLY:
+            return 1;
+        case CUDPP_MIN:
+            return UINT_MAX;
+        case CUDPP_MAX:
+            return 0;
+        }
+    }
 };
 
-template <>
-__device__ int OperatorMax<int>::identity() const { return INT_MIN; }
-template <>
-__device__ unsigned int OperatorMax<unsigned int>::identity() const { return 0; }
-template <>
-__device__ float OperatorMax<float>::identity() const { return -FLT_MAX; }
-template <>
-__device__ double OperatorMax<double>::identity() const { return -DBL_MAX; }
 
-template <typename T>
-class OperatorMin
+template <CUDPPOperator oper>
+class Operator <float, oper>
 {
 public:
-    __device__ T operator() (const T a, const T b) const { return min(a, b); }
-    __device__ T identity() const { return (T)0; }
-};
+    static __device__ float op(const float a, const float b)
+    {
+        switch (oper)
+        {
+        default:
+        case CUDPP_ADD: 
+            return a + b;
+        case CUDPP_MULTIPLY:
+            return a * b;
+        case CUDPP_MIN:
+            return min(a, b);
+        case CUDPP_MAX: 
+            return max(a, b);
+        }         
+    }
 
-template <>
-__device__ int OperatorMin<int>::identity() const { return INT_MAX; }
-template <>
-__device__ unsigned int OperatorMin<unsigned int>::identity() const { return UINT_MAX; }
-template <>
-__device__ float OperatorMin<float>::identity() const { return FLT_MAX; }
-template <>
-__device__ double OperatorMin<double>::identity() const { return DBL_MAX; }
+    static __device__ float identity()
+    {
+        switch (oper)
+        {
+        default:
+        case CUDPP_ADD:
+            return 0.0f;
+        case CUDPP_MULTIPLY:
+            return 1.0f;
+        case CUDPP_MIN:
+            return FLT_MAX;
+        case CUDPP_MAX:
+            return -FLT_MAX;
+        }
+    }
+};
 
 #endif // __CUDPP_UTIL_H__
 
