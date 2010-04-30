@@ -1,8 +1,8 @@
 // -------------------------------------------------------------
 // cuDPP -- CUDA Data Parallel Primitives library
 // -------------------------------------------------------------
-//  $Revision: 5636 $
-//  $Date: 2009-07-02 13:39:38 +1000 (Thu, 02 Jul 2009) $
+//  $Revision: 5633 $
+//  $Date: 2009-07-01 15:02:51 +1000 (Wed, 01 Jul 2009) $
 // ------------------------------------------------------------- 
 // This source code is distributed under the terms of license.txt 
 // in the root directory of this source distribution.
@@ -76,18 +76,14 @@ __global__ void scan4(T            *d_out,
     T* temp = smem.getPointer();
 
     int devOffset, ai, bi, aiDev, biDev;
-    //T threadScan0[4], threadScan1[4];
-#if 0
-    T threadScan[2][2];
-#else
-    T threadScan[2][4];
-#endif
+    T threadScan0[4], threadScan1[4];
 
     unsigned int blockN = numElements;
     unsigned int blockSumIndex = blockIdx.x;
 
     if (traits::isMultiRow())
     {
+        //int width = __mul24(gridDim.x, blockDim.x) << 1;
         int yIndex     = __umul24(blockDim.y, blockIdx.y) + threadIdx.y;
         devOffset      = __umul24(dataRowPitch, yIndex);
         blockN        += (devOffset << 2);
@@ -96,28 +92,20 @@ __global__ void scan4(T            *d_out,
     }
     else
     {
-        devOffset = blockIdx.x * (blockDim.x << 1);
+        devOffset = __umul24(blockIdx.x, (blockDim.x << 1));
     }
     
     // load data into shared memory
-#if 0
-    loadSharedChunkFromMem2<T, traits>
-        (temp, threadScan, d_in, blockN, devOffset, ai, bi, aiDev, biDev);
-#else
     loadSharedChunkFromMem4<T, traits>
-        (temp, threadScan, d_in, blockN, devOffset, ai, bi, aiDev, biDev);
-#endif
+        (temp, threadScan0, threadScan1, d_in,
+         blockN, devOffset, ai, bi, aiDev, biDev);
 
     scanCTA<T, traits>(temp, d_blockSums, blockSumIndex);
     
     // write results to device memory
-#if 0
-    storeSharedChunkToMem2<T, traits>
-        (d_out, threadScan, temp, blockN, devOffset, ai, bi, aiDev, biDev);
-#else
     storeSharedChunkToMem4<T, traits>
-        (d_out, threadScan, temp, blockN, devOffset, ai, bi, aiDev, biDev);
-#endif
+        (d_out, threadScan0, threadScan1, temp, 
+         blockN, devOffset, ai, bi, aiDev, biDev);
 
 }
 

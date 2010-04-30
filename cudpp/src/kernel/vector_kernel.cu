@@ -1,8 +1,8 @@
 // -------------------------------------------------------------
 // CUDPP -- CUDA Data Parallel Primitives library
 // -------------------------------------------------------------
-//  $Revision: 5636 $
-//  $Date: 2009-07-02 13:39:38 +1000 (Thu, 02 Jul 2009) $
+//  $Revision: 5632 $
+//  $Date: 2009-07-01 14:36:01 +1000 (Wed, 01 Jul 2009) $
 // ------------------------------------------------------------- 
 // This source code is distributed under the terms of license.txt in
 // the root directory of this source distribution.
@@ -114,36 +114,6 @@ __global__ void vectorAddUniform(T       *d_vector,
     if (threadIdx.x + blockDim.x < numElements) d_vector[address + blockDim.x] += uni;
 }
 
-template <typename T>
-__global__ void vectorAddUniform2(T *g_data, 
-                                  T *uniforms, 
-                                  int n, 
-                                  int eltsPerBlock)
-{
-    __shared__ T uni;
-    if (threadIdx.x == 0)
-        uni = uniforms[blockIdx.x];
-
-    unsigned int address = blockIdx.x * eltsPerBlock + threadIdx.x; 
-
-    __syncthreads();
-
-    typename typeToVector<T, 2>::Result *g_data2 = (typename typeToVector<T, 2>::Result*)g_data;
-
-    // note two adds per thread
-    typename typeToVector<T, 2>::Result temp =  g_data2[address];
-    temp.x += uni;
-    temp.y += uni;
-    g_data2[address]              = temp;
-    if (threadIdx.x + 2*blockDim.x < n )
-    {
-        temp =  g_data2[address + blockDim.x];
-        temp.x += uni;
-        temp.y += uni;
-        g_data2[address + blockDim.x] = temp;
-    }
-}
-
 
 /** @brief Add a uniform value to each data element of an array (vec4 version)
   *
@@ -163,7 +133,7 @@ __global__ void vectorAddUniform2(T *g_data,
   * @param[in] baseIndex an optional offset to the beginning of the array 
   * within \a d_vector.
   */
-template <class T, class Oper, int elementsPerThread, bool fullBlocks>
+template <class T, CUDPPOperator op, int elementsPerThread>
 __global__ void vectorAddUniform4(T       *d_vector, 
                                   const T *d_uniforms, 
                                   int      numElements,             
@@ -191,23 +161,42 @@ __global__ void vectorAddUniform4(T       *d_vector,
 
     __syncthreads();
 
-    // create the operator functor
-    Oper op;
-#if 0
-    for (int i = 0; i < elementsPerThread && address < numElements; i++)
+    switch (op)
     {
-        d_vector[address] = op(d_vector[address], uni);
-        address += blockDim.x;
-    }
-#else
-    for (int i = 0; i < elementsPerThread; i++)
-    {
-        if (!fullBlocks && address >= numElements) return;
+    case CUDPP_ADD:
+        for (int i = 0; i < elementsPerThread && address < numElements; i++)
+        {
+            d_vector[address] += uni;
+            address += blockDim.x;
+        }
+        break;
 
-        d_vector[address] = op(d_vector[address], uni);
-        address += blockDim.x;
-    }
-#endif
+    case CUDPP_MULTIPLY:
+        for (int i = 0; i < elementsPerThread && address < numElements; i++)
+        {
+            d_vector[address] *= uni;
+            address += blockDim.x;
+        }
+        break;
+
+    case CUDPP_MAX:
+        for (int i = 0; i < elementsPerThread && address < numElements; i++)
+        {
+            d_vector[address] = max(d_vector[address], uni);
+            address += blockDim.x;
+        }
+        break;
+
+    case CUDPP_MIN:
+        for (int i = 0; i < elementsPerThread && address < numElements; i++)
+        {
+            d_vector[address] = min(d_vector[address], uni);
+            address += blockDim.x;
+        }
+        break;
+    default:
+        break;
+    }    
 }
 
 /** @brief Adds together two vectors
@@ -258,7 +247,7 @@ __global__ void vectorAddVector(T       *d_vectorA,        // A += B
   * @param[in] baseIndex an optional offset to the beginning of the array 
   * within \a d_vector.
   */
-template <class T, class Oper, bool isLastBlockFull>
+template <class T, CUDPPOperator oper, bool isLastBlockFull>
 __global__ void vectorSegmentedAddUniform4(T                  *d_vector, 
                                            const T            *d_uniforms, 
                                            const unsigned int *d_maxIndices,
@@ -275,16 +264,13 @@ __global__ void vectorSegmentedAddUniform4(T                  *d_vector,
     // We store it in shared memory so that the hardware's shared memory 
     // broadcast capability can be used to share among all threads in each warp
     // in a single cycle
-
-    // instantiate operator functor
-    Oper op;
     
     if (threadIdx.x == 0)
     {
         if (blockAddress > 0)
             uni[0] = d_uniforms[blockAddress-1];
         else
-            uni[0] = op.identity(); 
+            uni[0] = Operator<T, oper>::identity(); 
         
         // Tacit assumption that T is four-byte wide
         uni[1] = (T)(d_maxIndices[blockAddress]);
@@ -315,7 +301,7 @@ __global__ void vectorSegmentedAddUniform4(T                  *d_vector,
             {
                 for (unsigned int i = 0; i < 8; ++i)
                     d_vector[address + i * blockDim.x] = 
-                        op(d_vector[address + i * blockDim.x], uni[0]);
+                        Operator<T, oper>::op(d_vector[address + i * blockDim.x], uni[0]);
             }
             else
             {
@@ -323,7 +309,7 @@ __global__ void vectorSegmentedAddUniform4(T                  *d_vector,
                 {
                     if (address < maxIndex)
                         d_vector[address] = 
-                            op(d_vector[address], uni[0]);
+                            Operator<T, oper>::op(d_vector[address], uni[0]);
 
                     address += blockDim.x;
                 }
@@ -338,7 +324,7 @@ __global__ void vectorSegmentedAddUniform4(T                  *d_vector,
             {
                 if (address < numElements)
                     d_vector[address] = 
-                        op(d_vector[address], uni[0]);
+                        Operator<T, oper>::op(d_vector[address], uni[0]);
                 
                 address += blockDim.x;
             }
@@ -348,7 +334,7 @@ __global__ void vectorSegmentedAddUniform4(T                  *d_vector,
             for (unsigned int i=0; i<8; ++i)
             {
                 d_vector[address] = 
-                    op(d_vector[address], uni[0]);
+                    Operator<T, oper>::op(d_vector[address], uni[0]);
                 
                 address += blockDim.x;
             }            
@@ -382,7 +368,7 @@ __global__ void vectorSegmentedAddUniform4(T                  *d_vector,
   * within \a d_vector.
   *
   */
-template <class T, class Oper, bool isLastBlockFull>
+template <class T, CUDPPOperator oper, bool isLastBlockFull>
 __global__ void vectorSegmentedAddUniformToRight4(T                  *d_vector, 
                                                   const T            *d_uniforms, 
                                                   const unsigned int *d_minIndices,
@@ -394,9 +380,6 @@ __global__ void vectorSegmentedAddUniformToRight4(T                  *d_vector,
 
     unsigned int blockAddress = 
         blockIdx.x + __mul24(gridDim.x, blockIdx.y) + blockOffset;
-
-    // instantiate operator functor
-    Oper op;
 
     // Get this block's uniform value from the uniform array in device memory
     // We store it in shared memory so that the hardware's shared memory 
@@ -410,7 +393,7 @@ __global__ void vectorSegmentedAddUniformToRight4(T                  *d_vector,
         if (blockAddress < (gridDim.x-1))
             uni[0] = d_uniforms[blockAddress+1];
         else
-            uni[0] = op.identity(); 
+            uni[0] = Operator<T, oper>::identity(); 
         
         // Tacit assumption that T is four-byte wide
         uni[1] = (T)(d_minIndices[blockAddress]);
@@ -441,7 +424,7 @@ __global__ void vectorSegmentedAddUniformToRight4(T                  *d_vector,
             {
                 for (unsigned int i = 0; i < 8; ++i)
                     d_vector[address + i * blockDim.x] = 
-                        op(d_vector[address + i * blockDim.x], uni[0]);
+                        Operator<T, oper>::op(d_vector[address + i * blockDim.x], uni[0]);
             }
             else
             {
@@ -449,7 +432,7 @@ __global__ void vectorSegmentedAddUniformToRight4(T                  *d_vector,
                 {
                     if (address > minIndex)
                         d_vector[address] = 
-                            op(d_vector[address], uni[0]);
+                            Operator<T, oper>::op(d_vector[address], uni[0]);
 
                     address += blockDim.x;
                 }
@@ -464,7 +447,7 @@ __global__ void vectorSegmentedAddUniformToRight4(T                  *d_vector,
             {
                 if (address < numElements)
                     d_vector[address] = 
-                        op(d_vector[address], uni[0]);
+                        Operator<T, oper>::op(d_vector[address], uni[0]);
                 
                 address += blockDim.x;
             }
@@ -474,7 +457,7 @@ __global__ void vectorSegmentedAddUniformToRight4(T                  *d_vector,
             for (unsigned int i=0; i<8; ++i)
             {
                 d_vector[address] = 
-                    op(d_vector[address], uni[0]);
+                    Operator<T, oper>::op(d_vector[address], uni[0]);
                 
                 address += blockDim.x;
             }            
