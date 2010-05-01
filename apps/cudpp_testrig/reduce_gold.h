@@ -8,27 +8,61 @@
 // in the root directory of this source distribution.
 // ------------------------------------------------------------- 
 
-#ifndef __REDUCE_GOLD_H__
-#define __REDUCE_GOLD_H__
-
 #include <cudpp.h>
 #include <stdio.h>
 #include <limits.h>
 #include <float.h>
 #include <algorithm>
-#include "cudpp_testrig_utils.h"
 
-template <class Oper, typename T>
-void computeReduceGold( T* out, const T* idata, const unsigned int len)
+
+extern "C" 
+void computeSumReduceGold( float out, const float* idata, const unsigned int len)
 {
-    Oper op;
-    T sum = op.identity();
+    float sum = 0;
     
     for (unsigned int i = 0; i < len; i++)
     {
-        sum = op(sum, idata[i]);
+        sum = sum + idata[i];
     }
-    *out = sum;
+    out = sum;
 }
 
-#endif // __REDUCE_GOLD_H__
+extern "C" 
+void computeMultiplyReduceGold( float out, const float* idata, const unsigned int len)
+{
+    
+    float prod = 1;
+    
+    for (unsigned int i = 0; i < len; i++)
+    {
+        prod = prod *idata[i];
+    }
+    out = prod;
+}
+
+
+extern "C" 
+void computeMaxReduceGold( float out, const float* idata, const unsigned int len)
+{
+    float maxi = FLT_MIN;
+    
+    for (unsigned int i = 0; i < len; i++)
+    {
+        maxi = max(maxi, idata[i]);
+    }
+    out = maxi;
+}
+
+
+extern "C" 
+void computeMinReduceGold( float out, const float* idata, const unsigned int len)
+{
+    float mini = FLT_MAX;
+    
+    for (unsigned int i = 0; i < len; i++)
+    {
+        mini = min(mini,idata[i]);
+    }
+    out = mini;
+}
+

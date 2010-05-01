@@ -407,6 +407,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\reduce_gold.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\scan_gold.cpp"
 				>
 			</File>
@@ -519,6 +523,18 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\test_reduce.cu"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
 					/>
 				</FileConfiguration>
 			</File>
