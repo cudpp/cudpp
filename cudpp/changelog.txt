@@ -1,38 +1,64 @@
 CUDPP Change Log
 
+Release: 1.1.1 (Bugfix release)
+29 April 2010
+- Fix scan, segmented scan, and radix sort correctness on Fermi (sm_20) 
+  architecture GPUs(proper use of "volatile" keyword)
+- Some initial small optimizations for radix sort and scan on Fermi 
+  (sm_20) architecture
+- Fix emulation mode radix sort of very small arrays
+- Fix radix sort on 64-bit OSes by using __launch_bounds__ in CUDA 3.0
+- Minor efficiency improvement to radix sort test in cudpp_testrig
+- Fixed incorrect identity for min operator
+- Fixes for unix and Mac OS X Snow Leopard builds
+- Fixes for 64-bit windows builds
+- Bibliography updates
+- Minor documentation fixes
+
 Release: 1.1
 1 July 2009
 - Switched to pure BSD license.
-- Added new radix sort implementation under cudppSort() (based on Satish et al. IPDPS '09 paper).  All previous sorts have been removed.
-- Added cudppRand() pseudorandom number generation (based on Tzeng and Wei I3D 08 paper).
+- Added new radix sort implementation under cudppSort() (based on Satish et al. 
+  IPDPS '09 paper).  All previous sorts have been removed.
+- Added cudppRand() pseudorandom number generation (based on Tzeng and Wei I3D 08 
+  paper).
 - Added support for backward segmented scan.
 - Fixed satGL example to run in a native window on OS X, rather than an X11 window.
-- Removed Visual Studio 7.1 (2003) project files.  CUDA 2.1 and later dropped support for VS7.1.
+- Removed Visual Studio 7.1 (2003) project files.  CUDA 2.1 and later dropped 
+  support for VS7.1.
 - Miscellaneous bug fixes.
-- In docs, Added list of publications that use CUDPP, including both text and bibtex citation format.
+- In docs, Added list of publications that use CUDPP, including both text and 
+  bibtex citation format.
 - In docs, Updated list of publications of algorithms includedin CUDPP.
 - Miscellaneous Documentation improvements.
 
 Release: 1.0 alpha
 20 April 2008
 - Implemented new public interface based on plan objects
-- Changed the interface for cudppCompact so that it takes a user-defined isValid flags array rather than 
+- Changed the interface for cudppCompact so that it takes a user-defined isValid 
+  flags array rather than 
   computing it based on the values in the input array.
-- Fixed various bugs in cudppCompact, and made backwards compact (aka reverse-and-compact) work correctly.
-- Fixed emudebug memory fault with global radix sorts of non-block-aligned sizes (change was in setFlagBit)
+- Fixed various bugs in cudppCompact, and made backwards compact (aka reverse-and-
+  compact) work correctly.
+- Fixed emudebug memory fault with global radix sorts of non-block-aligned sizes 
+  (change was in setFlagBit)
 - Added segmented scan - works with add, multiply, min, max operators
 - Added support for inclusive scans and segmented scans
 - Scan now supports operators add, multiply, min, and max
-- Replaced tree-based "Blelloch" scan algorithm with new "warp scan" algorithm.  About 10% faster on 
-  current GPUs and far simpler code (no need for bank conflict avoidance code, hacky #defines in inner loop,
-  etc.).
-- Added typename keyword in front of "TypeToVector::Result" so that CUDPP compiles with CUDA 2.0.
+- Replaced tree-based "Blelloch" scan algorithm with new "warp scan" algorithm.  
+  About 10% faster on current GPUs and far simpler code (no need for bank conflict 
+  avoidance code, hacky #defines in inner loop, etc.).
+- Added typename keyword in front of "TypeToVector::Result" so that CUDPP compiles 
+  with CUDA 2.0.
 
 Release: cudpp_gems3-2
 19 November 2007
-- Fixed performance regression in cudppScan introduced by CUDA 1.1.  Improves performance of scan in CUDA 1.1 by up to 16%.
-- Scans with MAX operator now function correctly for signed floats (float MAX identity is now -FLT_MAX, was FLT_MIN)
-- Added a 64-bit (windows XP) configuration to cudpp.vcproj (64-bit windows currently only minimally tested)
+- Fixed performance regression in cudppScan introduced by CUDA 1.1.  Improves 
+  performance of scan in CUDA 1.1 by up to 16%.
+- Scans with MAX operator now function correctly for signed floats (float MAX 
+  identity is now -FLT_MAX, was FLT_MIN)
+- Added a 64-bit (windows XP) configuration to cudpp.vcproj (64-bit windows 
+  currently only minimally tested)
 - Changed Makefile to add "64" to the libcudpp names in 64-bit linux.
 - Added changelog
 

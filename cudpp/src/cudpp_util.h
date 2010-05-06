@@ -22,9 +22,19 @@
 #include <windows.h>
 #endif
 
+#include <cuda.h>
 #include <cudpp.h>
 #include <limits.h>
 #include <float.h>
+
+#if (CUDA_VERSION >= 3000)
+#define LAUNCH_BOUNDS(x) __launch_bounds__((x))
+#define LAUNCH_BOUNDS_MINBLOCKs(x, y) __launch_bounds__((x),(y))
+#else
+#define LAUNCH_BOUNDS(x)
+#define LAUNCH_BOUNDS_MINBLOCKS(x, y)
+#endif
+
 
 /** @brief Determine if \a n is a power of two.
   * @param n Value to be checked to see if it is a power of two

@@ -2,7 +2,7 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="simpleCUDPP_vc90"
+	Name="simpleCUDPP"
 	ProjectGUID="{95561772-BB95-4A97-976B-DD24A00B2E66}"
 	RootNamespace="simpleCUDPP"
 	Keyword="Win32Proj"

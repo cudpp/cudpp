@@ -6,16 +6,30 @@
 
 .SUFFIXES : .cu .cu_dbg_o .c_dbg_o .cpp_dbg_o .cu_rel_o .c_rel_o .cpp_rel_o .cubin
 
+CUDA_VERSION := $(shell nvcc --version | sed -n -e '/release/!d' -e 's/Cuda compilation tools, release \([0-9].[0-9]\), V[0-9].[0-9]*.[0-9]*/\1/p')
+
+threeplus := 3.0
+CUDA_VERSION_3PLUS := $(filter $(threeplus), $(firstword $(sort $(CUDA_VERSION) $(threeplus))))
+
 CUDA_INSTALL_PATH ?= /usr/local/cuda
 
 ifdef cuda-install
 	CUDA_INSTALL_PATH := $(cuda-install)
 endif
 
+# detect OS
 OSUPPER = $(shell uname -s 2>/dev/null | tr [:lower:] [:upper:])
 OSLOWER = $(shell uname -s 2>/dev/null | tr [:upper:] [:lower:])
+
 # 'linux' is output for Linux system, 'darwin' for OS X
 DARWIN = $(strip $(findstring DARWIN, $(OSUPPER)))
+ifneq ($(DARWIN),)
+   SNOWLEOPARD = $(strip $(findstring 10.6, $(shell egrep "<string>10\.6" /System/Library/CoreServices/SystemVersion.plist)))
+endif
+
+# detect 32-bit or 64-bit platform
+HP_64 = $(shell uname -m | grep 64)
+OSARCH= $(shell uname -m)
 
 # Basic directory setup for SDK
 # (override directories only if they are not already defined)
@@ -47,9 +61,12 @@ ifneq ($(DARWIN),)
 	INCLUDES += -I$(MACPORTSDIR)/include
 endif
 
-# Libs
 # standard
-LIB       += -L$(CUDA_INSTALL_PATH)/lib -L$(LIBDIR) -L$(COMMONDIR)/lib -lcuda -lcudart ${OPENGLLIB}
+ifneq ($(DARWIN),)
+        LIB      += -L$(CUDA_INSTALL_PATH)/lib -L$(LIBDIR) -L$(COMMONDIR)/lib -L$(COMMONDIR)/lib/darwin -lcuda -lcudart ${OPENGLLIB}
+else
+        LIB      += -L$(CUDA_INSTALL_PATH)/lib -L$(LIBDIR) -L$(COMMONDIR)/lib -L$(COMMONDIR)/lib/linux  -lcuda -lcudart ${OPENGLLIB}
+endif
 
 # There's no standard installation place for glut on Mac. Default I'm
 # using is the macports install.
@@ -83,14 +100,46 @@ CWARN_FLAGS := $(CXXWARN_FLAGS) \
 
 # Compiler-specific flags
 # for CUDA 2.0, need this to compile on all platforms
-NVCCFLAGS := --host-compilation=C
-
-#ifneq ($(DARWIN),)
-#	NVCCFLAGS += --host-compilation=C
-#endif
+#NVCCFLAGS := --host-compilation=C
 
 CXXFLAGS  := $(CXXWARN_FLAGS)
 CFLAGS    := $(CWARN_FLAGS)
+LIB_ARCH  := $(OSARCH)
+
+# Determining the necessary Cross-Compilation Flags
+# 32-bit OS, but we target 64-bit cross compilation
+ifeq ($(x86_64),1)
+    NVCCFLAGS += -m64
+    LIB_ARCH = x86_64
+
+    ifneq ($(DARWIN),)
+         CXX_ARCH_FLAGS += -arch x86_64
+    else
+         CXX_ARCH_FLAGS += -m64
+    endif
+else
+# 64-bit OS, and we target 32-bit cross compilation
+    ifeq ($(i386),1)
+        NVCCFLAGS += -m32
+        LIB_ARCH = i386
+        ifneq ($(DARWIN),)
+             CXX_ARCH_FLAGS += -arch i386
+        else
+             CXX_ARCH_FLAGS += -m32
+        endif
+    else
+        ifneq ($(SNOWLEOPARD),)
+             NVCCFLAGS += -m32
+             CXX_ARCH_FLAGS += -arch i386 -m32
+             LIB_ARCH  = i386
+        endif
+    endif
+endif
+
+# Compiler-specific flags
+CXXFLAGS  := $(CXXWARN_FLAGS) $(CXX_ARCH_FLAGS)
+CFLAGS    := $(CWARN_FLAGS) $(CXX_ARCH_FLAGS)
+LINK      += $(CXX_ARCH_FLAGS)
 
 # Common flags
 COMMONFLAGS += $(INCLUDES) -DUNIX
@@ -99,10 +148,12 @@ COMMONFLAGS += $(INCLUDES) -DUNIX
 ifeq ($(dbg),1)
 	COMMONFLAGS += -g
 	NVCCFLAGS   += -D_DEBUG
+        CXXFLAGS    += -D_DEBUG
+        CFLAGS      += -D_DEBUG
 	BINSUBDIR   := debug
 	LIBSUFFIX   := D
 else 
-	COMMONFLAGS += -O3 
+	COMMONFLAGS += -O2 
 	BINSUBDIR   := release
 	LIBSUFFIX   :=
 	NVCCFLAGS   += --compiler-options -fno-strict-aliasing
@@ -115,7 +166,13 @@ ifeq ($(boost),1)
 endif
 
 # append optional arch/SM version flags (such as -arch sm_11)
-NVCCFLAGS += $(SMVERSIONFLAGS)
+NVCCFLAGS += $(SMVERSIONFLAGS) 
+NVCCFLAGS += -gencode=arch=compute_10,code=sm_10 
+
+ifneq ($(CUDA_VERSION_3PLUS),)
+	NVCCFLAGS += -gencode=arch=compute_20,code=sm_20 
+endif
+
 
 # architecture flag for cubin build
 CUBIN_ARCH_FLAG := -m32
@@ -129,7 +186,6 @@ endif
 
 # OpenGL is used or not (if it is used, then it is necessary to include GLEW)
 ifeq ($(USEGLLIB),1)
-
 	ifneq ($(DARWIN),)
 		OPENGLLIB := -L/System/Library/Frameworks/OpenGL.framework/Libraries -lGL -lGLU -lGLEW
 	else
@@ -154,20 +210,14 @@ ifeq ($(USEGLUT),1)
 endif
 
 ifeq ($(USEPARAMGL),1)
-	PARAMGLLIB := -lparamgl$(LIBSUFFIX)
+	PARAMGLLIB := -lparamgl_$(LIB_ARCH)$(LIBSUFFIX)
 endif
 
 ifeq ($(USECUDPP), 1)
 	# detect if 32 bit or 64 bit system
 	HP_64 =	$(shell uname -m | grep 64)
 
-	ifeq "$(strip $(HP_64))" ""
-		CUDPPLIB := -lcudpp
-	else
-		CUDPPLIB := -lcudpp64
-	endif
-
-	CUDPPLIB := $(CUDPPLIB)$(LIBSUFFIX)
+	CUDPPLIB := -lcudpp_$(LIB_ARCH)$(LIBSUFFIX)
 
 	ifeq ($(emu), 1)
 		CUDPPLIB := $(CUDPPLIB)_emu
@@ -184,7 +234,7 @@ ifneq ($(STATIC_LIB),)
 		NVCCFLAGS   += -deviceemu
 		CUDACCFLAGS +=
 		BINSUBDIR   := emu$(BINSUBDIR)
-		LIBSUFFIX   := $(LIBSUFFIX)_emu
+		LIBSUFFIX   := _$(LIB_ARCH)$(LIBSUFFIX)_emu
 		# consistency, makes developing easier
 		CXXFLAGS    += -D__DEVICE_EMULATION__
 		CFLAGS	    += -D__DEVICE_EMULATION__		
@@ -213,23 +263,24 @@ ifneq ($(CUDPP_STATIC_LIB),)
 	ifeq ($(emu), 1)
 		NVCCFLAGS   += -deviceemu
 		CUDACCFLAGS +=
-		LIBSUFFIX   := $(LIBSUFFIX)_emu
+		LIBSUFFIX   := _$(LIB_ARCH)$(LIBSUFFIX)_emu
 		# consistency, makes developing easier
 		CXXFLAGS    += -D__DEVICE_EMULATION__
 		CFLAGS	    += -D__DEVICE_EMULATION__		
+        else
+		LIBSUFFIX   := _$(LIB_ARCH)$(LIBSUFFIX)
 	endif
 	TARGETDIR := $(LIBDIR)
 
 	# detect if 32 bit or 64 bit system
 	HP_64 =	$(shell uname -m | grep 64)
 
-	ifeq "$(strip $(HP_64))" ""
-		TARGET   := $(subst .a,$(LIBSUFFIX).a,$(LIBDIR)/$(CUDPP_STATIC_LIB))	
-	else
-		TARGET   := $(subst .a,64$(LIBSUFFIX).a,$(LIBDIR)/$(CUDPP_STATIC_LIB))	
-	endif
+	TARGET   := $(subst .a,$(LIBSUFFIX).a,$(LIBDIR)/$(CUDPP_STATIC_LIB))	
 
 	LINKLINE  = ar qv $(TARGET) $(OBJS); ranlib $(TARGET)
+else
+	# position independent code
+	NVCCFLAGS += -Xcompiler -fPIC
 endif
 
 # check if verbose 
@@ -255,6 +306,10 @@ ifdef maxregisters
 	NVCCFLAGS += -maxrregcount $(maxregisters)
 endif
 
+ifdef verboseptxas
+	NVCCFLAGS += --ptxas-options=-v
+endif
+
 # Add cudacc flags
 NVCCFLAGS += $(CUDACCFLAGS)
 
@@ -271,7 +326,7 @@ endif
 ################################################################################
 # Set up object files
 ################################################################################
-OBJDIR := $(ROOTOBJDIR)/$(BINSUBDIR)
+OBJDIR := $(ROOTOBJDIR)/$(LIB_ARCH)/$(BINSUBDIR)
 OBJS +=  $(patsubst %.cpp,$(OBJDIR)/%.cpp_o,$(notdir $(CCFILES)))
 OBJS +=  $(patsubst %.c,$(OBJDIR)/%.c_o,$(notdir $(CFILES)))
 OBJS +=  $(patsubst %.cu,$(OBJDIR)/%.cu_o,$(notdir $(CUFILES)))

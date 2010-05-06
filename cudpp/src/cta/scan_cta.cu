@@ -815,21 +815,21 @@ __device__ T warpscan(T val, volatile T* s_data)
     // work.
 #ifdef __DEVICE_EMULATION__
     t = s_data[idx -  1]; __EMUSYNC; 
-    s_data[idx] = op((const T&)s_data[idx],t); __EMUSYNC;
+    s_data[idx] = op(s_data[idx],t); __EMUSYNC;
     t = s_data[idx -  2]; __EMUSYNC; 
-    s_data[idx] = op((const T&)s_data[idx],t); __EMUSYNC;
+    s_data[idx] = op(s_data[idx],t); __EMUSYNC;
     t = s_data[idx -  4]; __EMUSYNC; 
-    s_data[idx] = op((const T&)s_data[idx],t); __EMUSYNC;
+    s_data[idx] = op(s_data[idx],t); __EMUSYNC;
     t = s_data[idx -  8]; __EMUSYNC; 
-    s_data[idx] = op((const T&)s_data[idx],t); __EMUSYNC;
+    s_data[idx] = op(s_data[idx],t); __EMUSYNC;
     t = s_data[idx - 16]; __EMUSYNC; 
-    s_data[idx] = op((const T&)s_data[idx],t); __EMUSYNC;
+    s_data[idx] = op(s_data[idx],t); __EMUSYNC;
 #else
-    if (0 <= maxlevel) { s_data[idx] = t = op(t, (const T)s_data[idx - 1]); }
-    if (1 <= maxlevel) { s_data[idx] = t = op(t, (const T)s_data[idx - 2]); }
-    if (2 <= maxlevel) { s_data[idx] = t = op(t, (const T)s_data[idx - 4]); }
-    if (3 <= maxlevel) { s_data[idx] = t = op(t, (const T)s_data[idx - 8]); }
-    if (4 <= maxlevel) { s_data[idx] = t = op(t, (const T)s_data[idx -16]); }
+    if (0 <= maxlevel) { s_data[idx] = t = op(t, s_data[idx - 1]); }
+    if (1 <= maxlevel) { s_data[idx] = t = op(t, s_data[idx - 2]); }
+    if (2 <= maxlevel) { s_data[idx] = t = op(t, s_data[idx - 4]); }
+    if (3 <= maxlevel) { s_data[idx] = t = op(t, s_data[idx - 8]); }
+    if (4 <= maxlevel) { s_data[idx] = t = op(t, s_data[idx -16]); }
 #endif
 
     return s_data[idx-1];      // convert inclusive -> exclusive

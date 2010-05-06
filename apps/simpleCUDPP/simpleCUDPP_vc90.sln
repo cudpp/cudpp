@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "simpleCUDPP_vc90", "simpleCUDPP_vc90.vcproj", "{95561772-BB95-4A97-976B-DD24A00B2E66}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "simpleCUDPP", "simpleCUDPP_vc90.vcproj", "{95561772-BB95-4A97-976B-DD24A00B2E66}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

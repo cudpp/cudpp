@@ -1,8 +1,8 @@
 // -------------------------------------------------------------
-// cuDPP -- CUDA Data Parallel Primitives library
+// CUDPP -- CUDA Data Parallel Primitives library
 // -------------------------------------------------------------
-// $Revision: 3572$
-// $Date: 2009-07-02 13:39:38 +1000 (Thu, 02 Jul 2009) $
+// $Revision:$
+// $Date:$
 // ------------------------------------------------------------- 
 // This source code is distributed under the terms of license.txt in
 // the root directory of this source distribution.
@@ -41,7 +41,7 @@
  * <a href="http://cudpp.googlecode.com/svn/trunk/cudpp/doc/CUDPP_slides.pdf">CUDPP Presentation</a>.
  *
  * \section homepage Homepage
- * Homepage for CUDPP: http://www.gpgpu.org/developer/cudpp/
+ * Homepage for CUDPP: http://code.google.com/p/cudpp
  * 
  * Announcements and discussion of CUDPP are hosted on the
  * <a href="http://groups.google.com/group/cudpp?hl=en">CUDPP Google Group</a>.
@@ -77,30 +77,37 @@
  * \section release-notes Release Notes
  *
  * For specific release details see the \ref changelog "Change Log".
+ *
+ * This release (1.1.1) is a bugfix release to CUDPP 1.1 that includes
+ * fixes to support CUDA 3.0 and the new NVIDIA Fermi architecture, 
+ * including GeForce 400 series and Tesla 20 series GPUs.  It also has
+ * bug fixes for 64-bit OSes.
  * 
  * \section opSys Operating System Support
  * 
- * This release (1.1) has been thoroughly tested on the following OSes.
- * - Windows XP (32-bit) (CUDA 2.2)
- * - Windows Vista (32-bit) (CUDA 2.2)
- * - Redhat Enterprise Linux 5 (64-bit) (CUDA 2.2)
- * - Ubuntu Linux 8.04 (32-bit and 64-bit) (CUDA 2.2)
- * - and Mac OS X 10.5.7 (Leopard, 32-bit) (CUDA 2.2)
+ * This release (1.1.1) has been thoroughly tested on the following OSes.
+ * - Windows XP (32-bit) (CUDA 2.2, 3.0)
+ * - Windows 7 (64-bit) (CUDA 3.0)
+ * - Redhat Enterprise Linux 5 (64-bit) (CUDA 3.0)
+ * - and Mac OS X 10.6 (Snow Leopard, 64-bit) (CUDA 3.0)
  *
- * We expect CUDPP to build and run correctly on other flavors of Linux, but these
- * are not actively tested by the developers at this time.
+ * We expect CUDPP to build and run correctly on other flavors of Linux 
+ * and Windows, but these are not actively tested by the developers at 
+ * this time.
  *
- * Note: CUDPP is not compatible with CUDA 2.1.  A compiler bug in 2.1 causes the 
- * compiler to crash.
+ * Notes: CUDPP is not compatible with CUDA 2.1.  A compiler bug in 2.1 
+ * causes the compiler to crash.  Also, starting with CUDPP 1.1.1, we are 
+ * no longer testing CUDA device emulation, because it is deprecated in 
+ * CUDA 3.0 and will be removed from future CUDA versions.  
  *
  * \section cuda CUDA
  * CUDPP is implemented in
- * <a href="http://developer.nvidia.com/cuda">C for CUDA</a>. It requires the 
+ * <a href="http://developer.nvidia.com/cuda">CUDA C/C++</a>. It requires the 
  * CUDA Toolkit version 2.2 or later.  Please see the NVIDIA 
  * <a href="http://developer.nvidia.com/cuda">CUDA</a> homepage to download 
  * CUDA as well as the CUDA Programming Guide and CUDA SDK, which includes many 
- * CUDA code examples.  Two of the samples in the CUDA SDK ("marchingCubes" and
- * "lineOfSight") also use CUDPP.
+ * CUDA code examples.  Some of the samples in the CUDA SDK (including 
+ * "marchingCubes", "lineOfSight", and radixSort) also use CUDPP.
  *
  * \section design-goals Design Goals
  * Design goals for CUDPP include:
@@ -164,39 +171,39 @@
  *
  * Many researchers are using CUDPP in their work, and there are many publications 
  * that have used it \ref cudpp_refs "(references)". If your work uses CUDPP, please 
- * let us know by sending us a BibTeX reference to your work.
+ * let us know by sending us a reference (preferably in BibTeX format) to your work.
  * 
  * \section citing Citing CUDPP
  *
  * If you make use of CUDPP primitives in your work and want to cite
- * CUDPP (thanks!), we would prefer if you would cite the appropriate 
+ * CUDPP (thanks!), we would prefer for you to cite the appropriate 
  * papers above, since they form the core of CUDPP. To be more specific, 
- * the GPU Gems paper describes (unsegmented) scan and multi-scan for 
- * summed-area tables. The NVIDIA technical report describes the current
- * scan and segmented scan algorithms used in the library, and the 
- * Graphics Hardware paper describes an earlier implementation of 
- * segmented scan, quicksort, and sparse matrix-vector multiply. The IPDPS
- * paper describes the radix sort used in CUDPP, and the I3D paper 
- * describes the random number generation algorithm.
+ * the GPU Gems paper describes (unsegmented) scan, multi-scan for 
+ * summed-area tables, and stream compaction. The NVIDIA technical report 
+ * describes the current scan and segmented scan algorithms used in the 
+ * library, and the Graphics Hardware paper describes an earlier 
+ * implementation of segmented scan, quicksort, and sparse matrix-vector 
+ * multiply. The IPDPS paper describes the radix sort used in CUDPP, and 
+ * the I3D paper describes the random number generation algorithm.
  *
  * \section credits Credits
  * \subsection developers CUDPP Developers
  * - <a href="http://www.markmark.net">Mark Harris</a>, NVIDIA Corporation
  * - <a href="http://www.ece.ucdavis.edu/~jowens/">John D. Owens</a>, University of California, Davis
  * - <a href="http://graphics.cs.ucdavis.edu/~shubho/">Shubho Sengupta</a>, University of California, Davis
- * - Stanley Tseng,   University of California, Davis
- * - Yao Zhang,       University of California, Davis
- * - Andrew Davidson, University of California, Davis (formerly Louisiana State University)
+ * - Stanley Tzeng,   University of California, Davis
+ * - <a href="http://www.ece.ucdavis.edu/~yaozhang/">Yao Zhang</a>,       University of California, Davis
+ * - <a href="http://www.ece.ucdavis.edu/~aaldavid/">Andrew Davidson</a>, University of California, Davis (formerly Louisiana State University)
  * 
  * \subsection contributors Other CUDPP Contributors
  * - <a href="http://www.eecs.berkeley.edu/~nrsatish/">Nadatur Satish</a>,  University of California, Berkeley
  *
  * \subsection acknowledgments Acknowledgments
  *
- * Thanks to Jim Ahrens, Timo Aila, Ian Buck, Guy Blelloch, Jeff Bolz, 
- * Michael Garland, Jeff Inman, Eric Lengyel, Samuli Laine, David Luebke, 
- * Pat McCormick, and Richard Vuduc for their contributions during the 
- * development of this library. 
+ * Thanks to Jim Ahrens, Timo Aila, Nathan Bell, Ian Buck, Guy Blelloch, 
+ * Jeff Bolz, Michael Garland, Jeff Inman, Eric Lengyel, Samuli Laine, 
+ * David Luebke, Pat McCormick, and Richard Vuduc for their contributions 
+ * during the development of this library. 
  * 
  * CUDPP Developers from UC Davis thank their funding agencies:
  * - Department of Energy Early Career Principal Investigator Award

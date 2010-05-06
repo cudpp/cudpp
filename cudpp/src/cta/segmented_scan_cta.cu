@@ -823,22 +823,23 @@ reduceCTA(volatile T *s_data)
     // perform first level of reduction,
     // reading from global memory, writing to shared memory
     unsigned int tid = threadIdx.x;
+    T t = s_data[tid];
 
     // do reduction in shared mem
-    if (blockSize >= 512) { if (tid < 256) { s_data[tid] = op(s_data[tid], s_data[tid + 256]); } __syncthreads(); }
-    if (blockSize >= 256) { if (tid < 128) { s_data[tid] = op(s_data[tid], s_data[tid + 128]); } __syncthreads(); }
-    if (blockSize >= 128) { if (tid <  64) { s_data[tid] = op(s_data[tid], s_data[tid +  64]); } __syncthreads(); }
+    if (blockSize >= 512) { if (tid < 256) { s_data[tid] = t = op(t, s_data[tid + 256]); } __syncthreads(); }
+    if (blockSize >= 256) { if (tid < 128) { s_data[tid] = t = op(t, s_data[tid + 128]); } __syncthreads(); }
+    if (blockSize >= 128) { if (tid <  64) { s_data[tid] = t = op(t, s_data[tid +  64]); } __syncthreads(); }
     
 #ifndef __DEVICE_EMULATION__
     if (tid < 32)
 #endif
     {
-        if (blockSize >=  64) { s_data[tid] = op(s_data[tid], s_data[tid + 32]); __EMUSYNC; }
-        if (blockSize >=  32) { s_data[tid] = op(s_data[tid], s_data[tid + 16]); __EMUSYNC; }
-        if (blockSize >=  16) { s_data[tid] = op(s_data[tid], s_data[tid +  8]); __EMUSYNC; }
-        if (blockSize >=   8) { s_data[tid] = op(s_data[tid], s_data[tid +  4]); __EMUSYNC; }
-        if (blockSize >=   4) { s_data[tid] = op(s_data[tid], s_data[tid +  2]); __EMUSYNC; }
-        if (blockSize >=   2) { s_data[tid] = op(s_data[tid], s_data[tid +  1]); __EMUSYNC; }
+        if (blockSize >=  64) { s_data[tid] = t = op(t, s_data[tid + 32]); __EMUSYNC; }
+        if (blockSize >=  32) { s_data[tid] = t = op(t, s_data[tid + 16]); __EMUSYNC; }
+        if (blockSize >=  16) { s_data[tid] = t = op(t, s_data[tid +  8]); __EMUSYNC; }
+        if (blockSize >=   8) { s_data[tid] = t = op(t, s_data[tid +  4]); __EMUSYNC; }
+        if (blockSize >=   4) { s_data[tid] = t = op(t, s_data[tid +  2]); __EMUSYNC; }
+        if (blockSize >=   2) { s_data[tid] = t = op(t, s_data[tid +  1]); __EMUSYNC; }
     }
     
     // write result for this block to global mem 
@@ -877,12 +878,13 @@ __device__ void warpSegScan(T val,
         idx += WARP_SIZE;
     }
 
-    s_data[idx] = val; s_flags[idx] = flag;
+    T t = s_data[idx] = val; 
+    unsigned int f = s_flags[idx] = flag;
 
     __EMUSYNC;
 
 #ifdef __DEVICE_EMULATION__
-    T t; unsigned int f;
+    //T t; unsigned int f;
     if (traits::isBackward())
     {
         t = s_data[idx +  1]; f = s_flags[idx +  1]; 
@@ -953,65 +955,65 @@ __device__ void warpSegScan(T val,
     {
         if (traits::isBackward())
         {
-            s_data[idx] = s_flags[idx] ? s_data[idx] : op((const T)s_data[idx +  1] , (const T)s_data[idx]);
-            s_flags[idx] = s_flags[idx +  1] | s_flags[idx];
+            s_data[idx]  = t = f ? t : op(s_data[idx +  1] , t);
+            s_flags[idx] = f = s_flags[idx +  1] | f;
         }
         else
         {
-            s_data[idx] = s_flags[idx] ? s_data[idx] : op((const T)s_data[idx -  1] , (const T)s_data[idx]);
-            s_flags[idx] = s_flags[idx -  1] | s_flags[idx];
+            s_data[idx]  = t = f ? t : op(s_data[idx -  1] , t);
+            s_flags[idx] = f = s_flags[idx -  1] | f;
         }
     }
     if (1 <= maxlevel)
     {
         if (traits::isBackward())
         {
-            s_data[idx] = s_flags[idx] ? s_data[idx] : op((const T)s_data[idx +  2] , (const T)s_data[idx]);
-            s_flags[idx] = s_flags[idx +  2] | s_flags[idx];
+            s_data[idx]  = t = f ? t : op(s_data[idx +  2] , t);
+            s_flags[idx] = f = s_flags[idx +  2] | f;
         }
         else
         {
-            s_data[idx] = s_flags[idx] ? s_data[idx] : op((const T)s_data[idx -  2] , (const T)s_data[idx]);
-            s_flags[idx] = s_flags[idx -  2] | s_flags[idx];
+            s_data[idx]  = t = f ? t : op(s_data[idx -  2] , t);
+            s_flags[idx] = f = s_flags[idx -  2] | f;
         }
     }
     if (2 <= maxlevel)
     {
         if (traits::isBackward())
         {
-            s_data[idx] = s_flags[idx] ? s_data[idx] : op((const T)s_data[idx +  4] , (const T)s_data[idx]);
-            s_flags[idx] = s_flags[idx +  4] | s_flags[idx];
+            s_data[idx]  = t = f ? t : op(s_data[idx +  4] , t);
+            s_flags[idx] = f = s_flags[idx +  4] | f;
         }
         else
         {
-            s_data[idx] = s_flags[idx] ? s_data[idx] : op((const T)s_data[idx -  4] , (const T)s_data[idx]);
-            s_flags[idx] = s_flags[idx -  4] | s_flags[idx];
+            s_data[idx]  = t = f ? t : op(s_data[idx -  4] , t);
+            s_flags[idx] = f = s_flags[idx -  4] | f;
         }
     }
     if (3 <= maxlevel)
     {
         if (traits::isBackward())
         {
-            s_data[idx] = s_flags[idx] ? s_data[idx] : op((const T)s_data[idx +  8] , (const T)s_data[idx]);
-            s_flags[idx] = s_flags[idx +  8] | s_flags[idx];
+            s_data[idx]  = t = f ? t : op(s_data[idx +  8] , t);
+            s_flags[idx] = f = s_flags[idx +  8] | f;
         }
         else
         {
-            s_data[idx] = s_flags[idx] ? s_data[idx] : op((const T)s_data[idx -  8] , (const T)s_data[idx]);
-            s_flags[idx] = s_flags[idx -  8] | s_flags[idx];
+            s_data[idx]  = t = f ? t : op(s_data[idx -  8] , t);
+            s_flags[idx] = f = s_flags[idx -  8] | f;
         }
     }
     if (4 <= maxlevel)
     {
         if (traits::isBackward())
         {
-            s_data[idx] = s_flags[idx] ? s_data[idx] : op((const T)s_data[idx + 16] , (const T)s_data[idx]);
-            s_flags[idx] = s_flags[idx + 16] | s_flags[idx];
+            s_data[idx]  = t = f ? t : op(s_data[idx + 16] , t);
+            s_flags[idx] = f = s_flags[idx + 16] | f;
         }
         else
         {
-            s_data[idx] = s_flags[idx] ? s_data[idx] : op((const T)s_data[idx - 16] , (const T)s_data[idx]);
-            s_flags[idx] = s_flags[idx - 16] | s_flags[idx];
+            s_data[idx]  = t = f ? t : op(s_data[idx - 16] , t);
+            s_flags[idx] = f = s_flags[idx - 16] | f;
         }
     }
 #endif
@@ -1022,9 +1024,9 @@ __device__ void warpSegScan(T val,
         else
             oVal = (!flag) ? s_data[idx-1] : op.identity();
     else
-        oVal =  s_data[idx];
+        oVal =  t;
 
-    oFlag = s_flags[idx];
+    oFlag = f;
 }
 
 
@@ -1033,8 +1035,8 @@ __device__ void segmentedScanWarps(T val1,
                                    unsigned int flag1,
                                    T val2,
                                    unsigned int flag2,
-                                   volatile T *s_data, 
-                                   volatile unsigned int *s_flags)
+                                   T *s_data, 
+                                   unsigned int *s_flags)
 {
     // instantiate operator functor
     typename traits::Op op;

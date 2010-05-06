@@ -2,7 +2,7 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="cudpp_vc90"
+	Name="cudpp"
 	ProjectGUID="{94BAC654-4582-4107-86FE-D9B347AFA5AA}"
 	RootNamespace="cudpp"
 	Keyword="Win32Proj"
@@ -25,7 +25,7 @@
 		<Configuration
 			Name="Debug|Win32"
 			OutputDirectory="lib"
-			IntermediateDirectory="$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)\$(PlatformName)"
 			ConfigurationType="2"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
 			CharacterSet="2"
@@ -40,6 +40,7 @@
 				Name="CUDA Build Rule"
 				Include="$(CUDA_INC_PATH);./;../common/inc;./src;./include"
 				Debug="true"
+				ExtraNvccOptions="-m32 –gencode=arch=compute_20,code=sm_20 –gencode=arch=compute_10,code=sm_10"
 				Optimization="0"
 				Runtime="1"
 			/>
@@ -57,7 +58,7 @@
 				Optimization="0"
 				AdditionalIncludeDirectories="./src;./include;$(CUDA_INC_PATH)"
 				PreprocessorDefinitions="WIN32;_WINDOWS;BUILD_DLL;_USRDLL;_DEBUG"
-				GeneratePreprocessedFile="1"
+				GeneratePreprocessedFile="0"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -81,7 +82,7 @@
 				ShowProgress="0"
 				OutputFile="lib/cudpp32d.dll"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="$(CUDA_LIB_PATH),../common/lib"
+				AdditionalLibraryDirectories="$(CUDA_LIB_PATH)/../lib,../common/lib"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile="$(OutDir)\$(TargetName).pdb"
 				SubSystem="2"
@@ -117,7 +118,7 @@
 		<Configuration
 			Name="Debug|x64"
 			OutputDirectory="lib"
-			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)\$(PlatformName)"
 			ConfigurationType="2"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
 			CharacterSet="2"
@@ -130,6 +131,11 @@
 			/>
 			<Tool
 				Name="CUDA Build Rule"
+				Include="$(CUDA_INC_PATH);./;../common/inc;./src;./include"
+				Debug="true"
+				ExtraNvccOptions="-m64 –gencode=arch=compute_20,code=sm_20 –gencode=arch=compute_10,code=sm_10"
+				Optimization="0"
+				Runtime="1"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -144,9 +150,9 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="./src,./include"
+				AdditionalIncludeDirectories="./src,./include,$(CUDA_INC_PATH)"
 				PreprocessorDefinitions="WIN64;_WINDOWS;BUILD_DLL;_USRDLL"
-				GeneratePreprocessedFile="1"
+				GeneratePreprocessedFile="0"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -170,7 +176,7 @@
 				ShowProgress="0"
 				OutputFile="lib/cudpp64d.dll"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="$(CUDA_LIB_PATH),../common/lib"
+				AdditionalLibraryDirectories="$(CUDA_LIB_PATH)/../lib64,../common/lib"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile="$(OutDir)\$(TargetName).pdb"
 				SubSystem="2"
@@ -199,8 +205,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="Copying $(OutDir)\$(TargetFileName) to ..\bin\win64\$(ConfigurationName)\$(TargetFileName)"
-				CommandLine="copy $(OutDir)\$(TargetFileName) ..\bin\win64\$(ConfigurationName)\$(TargetFileName)"
+				Description="copy $(OutDir)\$(TargetFileName) ..\bin\$(PlatformName)\$(ConfigurationName)\$(TargetFileName)"
+				CommandLine="copy $(OutDir)\$(TargetFileName) ..\bin\$(PlatformName)\$(ConfigurationName)\$(TargetFileName)"
 			/>
 		</Configuration>
 		<Configuration
@@ -237,7 +243,7 @@
 				RuntimeLibrary="0"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
-				Detect64BitPortabilityProblems="true"
+				Detect64BitPortabilityProblems="false"
 				DebugInformationFormat="3"
 			/>
 			<Tool
@@ -254,7 +260,7 @@
 				AdditionalDependencies="cudart.lib cutil32.lib"
 				OutputFile="lib/cudpp32.dll"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="$(CUDA_LIB_PATH),../common/lib"
+				AdditionalLibraryDirectories="$(CUDA_LIB_PATH)/../lib,../common/lib"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile="$(OutDir)\$(TargetName).pdb"
 				SubSystem="2"
@@ -305,6 +311,8 @@
 			/>
 			<Tool
 				Name="CUDA Build Rule"
+				Include="$(CUDA_INC_PATH);./;../common/inc;./src;./include"
+				ExtraNvccOptions="-m64 –gencode=arch=compute_20,code=sm_20 –gencode=arch=compute_10,code=sm_10"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -318,7 +326,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="./src,./include"
+				AdditionalIncludeDirectories="./src,./include,$(CUDA_INC_PATH)"
 				PreprocessorDefinitions="WIN64;_WINDOWS;BUILD_DLL;_USRDLL"
 				RuntimeLibrary="0"
 				UsePrecompiledHeader="0"
@@ -340,7 +348,7 @@
 				AdditionalDependencies="cudart.lib cutil64.lib"
 				OutputFile="lib/cudpp64.dll"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="$(CUDA_LIB_PATH),../common/lib"
+				AdditionalLibraryDirectories="$(CUDA_LIB_PATH)/../lib64,../common/lib"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile="$(OutDir)\$(TargetName).pdb"
 				SubSystem="2"
@@ -371,8 +379,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="Copying $(OutDir)\$(TargetFileName) to ..\bin\win64\$(ConfigurationName)\$(TargetFileName)"
-				CommandLine="copy $(OutDir)\$(TargetFileName) ..\bin\win64\$(ConfigurationName)\$(TargetFileName)"
+				Description="copy $(OutDir)\$(TargetFileName) ..\bin\$(PlatformName)\$(ConfigurationName)\$(TargetFileName)"
+				CommandLine="copy $(OutDir)\$(TargetFileName) ..\bin\$(PlatformName)\$(ConfigurationName)\$(TargetFileName)"
 			/>
 		</Configuration>
 		<Configuration
@@ -416,7 +424,7 @@
 				RuntimeLibrary="1"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
-				Detect64BitPortabilityProblems="true"
+				Detect64BitPortabilityProblems="false"
 				DebugInformationFormat="4"
 				DisableSpecificWarnings="4090"
 			/>
@@ -431,10 +439,10 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="cudartemu.lib cutil32D.lib"
+				AdditionalDependencies="cudart.lib cutil32D.lib"
 				OutputFile="lib/cudpp32d_emu.dll"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="$(CUDA_LIB_PATH),../common/lib"
+				AdditionalLibraryDirectories="$(CUDA_LIB_PATH)/../lib,../common/lib"
 				DelayLoadDLLs=""
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile="$(OutDir)\$(TargetName).pdb"
@@ -484,6 +492,12 @@
 			/>
 			<Tool
 				Name="CUDA Build Rule"
+				Include="$(CUDA_INC_PATH);./;../common/inc;./src;./include"
+				Debug="true"
+				Emulation="true"
+				ExtraNvccOptions="-m64"
+				Optimization="0"
+				Runtime="1"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -498,7 +512,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="./src,./include"
+				AdditionalIncludeDirectories="./src,./include,$(CUDA_INC_PATH)"
 				PreprocessorDefinitions="BUILD_DLL"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -523,7 +537,7 @@
 				AdditionalDependencies="cudart.lib cutil64D.lib"
 				OutputFile="lib/cudpp64d_emu.dll"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="$(CUDA_LIB_PATH),../common/lib"
+				AdditionalLibraryDirectories="$(CUDA_LIB_PATH)/../lib64,../common/lib"
 				DelayLoadDLLs=""
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile="$(OutDir)\$(TargetName).pdb"
@@ -553,8 +567,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="Copying $(OutDir)\$(TargetFileName) to ..\bin\win64\$(ConfigurationName)\$(TargetFileName)"
-				CommandLine="copy $(OutDir)\$(TargetFileName) ..\bin\win64\$(ConfigurationName)\$(TargetFileName)"
+				Description="copy $(OutDir)\$(TargetFileName) ..\bin\$(PlatformName)\$(ConfigurationName)\$(TargetFileName)"
+				CommandLine="copy $(OutDir)\$(TargetFileName) ..\bin\$(PlatformName)\$(ConfigurationName)\$(TargetFileName)"
 			/>
 		</Configuration>
 		<Configuration
@@ -593,7 +607,7 @@
 				RuntimeLibrary="0"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
-				Detect64BitPortabilityProblems="true"
+				Detect64BitPortabilityProblems="false"
 				DebugInformationFormat="3"
 			/>
 			<Tool
@@ -607,10 +621,10 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="cudartemu.lib cutil32.lib"
+				AdditionalDependencies="cudart.lib cutil32.lib"
 				OutputFile="lib/cudpp32_emu.dll"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="$(CUDA_LIB_PATH),../common/lib"
+				AdditionalLibraryDirectories="$(CUDA_LIB_PATH)/../lib,../common/lib"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile="$(OutDir)\$(TargetName).pdb"
 				SubSystem="2"
@@ -661,6 +675,9 @@
 			/>
 			<Tool
 				Name="CUDA Build Rule"
+				Include="$(CUDA_INC_PATH);./;../common/inc;./src;./include"
+				Emulation="true"
+				ExtraNvccOptions="-m64"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -674,7 +691,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="./src,./include"
+				AdditionalIncludeDirectories="./src,./include,$(CUDA_INC_PATH)"
 				PreprocessorDefinitions="BUILD_DLL"
 				RuntimeLibrary="0"
 				UsePrecompiledHeader="0"
@@ -696,7 +713,7 @@
 				AdditionalDependencies="cudart.lib cutil64.lib"
 				OutputFile="lib/cudpp64_emu.dll"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="$(CUDA_LIB_PATH),../common/lib"
+				AdditionalLibraryDirectories="$(CUDA_LIB_PATH)/../lib64,../common/lib"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile="$(OutDir)\$(TargetName).pdb"
 				SubSystem="2"
@@ -727,8 +744,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="Copying $(OutDir)\$(TargetFileName) to ..\bin\win64\$(ConfigurationName)\$(TargetFileName)"
-				CommandLine="copy $(OutDir)\$(TargetFileName) ..\bin\win64\$(ConfigurationName)\$(TargetFileName)"
+				Description="copy $(OutDir)\$(TargetFileName) ..\bin\$(PlatformName)\$(ConfigurationName)\$(TargetFileName)"
+				CommandLine="copy $(OutDir)\$(TargetFileName) ..\bin\$(PlatformName)\$(ConfigurationName)\$(TargetFileName)"
 			/>
 		</Configuration>
 		<Configuration
@@ -769,7 +786,7 @@
 				RuntimeLibrary="1"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
-				Detect64BitPortabilityProblems="true"
+				Detect64BitPortabilityProblems="false"
 				DebugInformationFormat="4"
 			/>
 			<Tool
@@ -815,6 +832,10 @@
 			/>
 			<Tool
 				Name="CUDA Build Rule"
+				Include="$(CUDA_INC_PATH);./;../common/inc;./src;./include"
+				Debug="true"
+				ExtraNvccOptions="-m64"
+				Optimization="0"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -827,6 +848,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalIncludeDirectories="./src,./include,$(CUDA_INC_PATH)"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -839,6 +861,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalLibraryDirectories="$(CUDA_LIB_PATH)/../lib64,../common/lib"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
 			/>
@@ -898,7 +921,7 @@
 				RuntimeLibrary="0"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
-				Detect64BitPortabilityProblems="true"
+				Detect64BitPortabilityProblems="false"
 				DebugInformationFormat="3"
 			/>
 			<Tool
@@ -946,6 +969,8 @@
 			/>
 			<Tool
 				Name="CUDA Build Rule"
+				Include="$(CUDA_INC_PATH);./;../common/inc;./src;./include"
+				ExtraNvccOptions="-m64"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -958,6 +983,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalIncludeDirectories="./src,./include,$(CUDA_INC_PATH)"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -970,6 +996,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalLibraryDirectories="$(CUDA_LIB_PATH)/../lib64,../common/lib"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
 			/>
@@ -1032,7 +1059,7 @@
 				RuntimeLibrary="1"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
-				Detect64BitPortabilityProblems="true"
+				Detect64BitPortabilityProblems="false"
 				DebugInformationFormat="4"
 				DisableSpecificWarnings="4090"
 			/>
@@ -1081,6 +1108,11 @@
 			/>
 			<Tool
 				Name="CUDA Build Rule"
+				Include="$(CUDA_INC_PATH);./;../common/inc;./src;./include"
+				Debug="true"
+				Emulation="true"
+				ExtraNvccOptions="-m64"
+				Optimization="0"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -1093,6 +1125,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalIncludeDirectories="./src,./include,$(CUDA_INC_PATH)"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -1105,6 +1138,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalLibraryDirectories="$(CUDA_LIB_PATH)/../lib64,../common/lib"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
 			/>
@@ -1164,7 +1198,7 @@
 				RuntimeLibrary="0"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
-				Detect64BitPortabilityProblems="true"
+				Detect64BitPortabilityProblems="false"
 				DebugInformationFormat="3"
 			/>
 			<Tool
@@ -1212,6 +1246,9 @@
 			/>
 			<Tool
 				Name="CUDA Build Rule"
+				Include="$(CUDA_INC_PATH);./;../common/inc;./src;./include"
+				Emulation="true"
+				ExtraNvccOptions="-m64"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -1224,6 +1261,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalIncludeDirectories="./src,./include,$(CUDA_INC_PATH)"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -1236,6 +1274,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalLibraryDirectories="$(CUDA_LIB_PATH)/../lib64,../common/lib"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
 			/>
@@ -1304,14 +1343,6 @@
 			<File
 				RelativePath=".\src\cudpp_manager.cpp"
 				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						GeneratePreprocessedFile="0"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\src\cudpp_maximal_launch.cpp"
@@ -1323,6 +1354,14 @@
 						Name="VCCLCompilerTool"
 						GeneratePreprocessedFile="0"
 						ObjectFile="$(IntDir)\"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						GeneratePreprocessedFile="0"
 					/>
 				</FileConfiguration>
 			</File>
@@ -1393,10 +1432,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\cudpp_reduce.h"
-				>
-			</File>
-			<File
 				RelativePath=".\src\cudpp_scan.h"
 				>
 			</File>
@@ -1437,11 +1472,8 @@
 					Name="Debug|x64"
 					>
 					<Tool
-						Name="VCCustomBuildTool"
-						Description="CUDA is compiling $(InputFileName)..."
-						CommandLine="$(CUDA_BIN_PATH)/nvcc.exe -ccbin &quot;$(VSInstallDir)\VC\bin&quot; -m64 -D_DEBUG -I&quot;$(CUDA_INC_PATH)&quot; -I./ -I../common/inc -I&quot;$(VCInstallDir)/include&quot;  -I&quot;$(VCInstallDir)/PlatformSDK/include&quot; -I./src -I./include -o $(ConfigurationName)/compact_app.obj -c -g ./src/app/compact_app.cu&#x0D;&#x0A;"
-						AdditionalDependencies="compact_app.cu compact_kernel.cu"
-						Outputs="$(ConfigurationName)\compact_app.obj"
+						Name="CUDA Build Rule"
+						Runtime="1"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1453,22 +1485,11 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|x64"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-						Description="CUDA is compiling $(InputFileName)..."
-						CommandLine="$(CUDA_BIN_PATH)/nvcc.exe -ccbin &quot;$(VCInstallDir)bin&quot; -I&quot;$(CUDA_INC_PATH)&quot; -I./ -I../common/inc -I&quot;$(VCInstallDir)/include&quot;  -I&quot;$(VCInstallDir)/PlatformSDK/include&quot; -I./src -I./include -o $(ConfigurationName)/compact_app.obj -c ./src/app/compact_app.cu&#x0D;&#x0A;"
-						AdditionalDependencies="compact_app.cu compact_kernel.cu"
-						Outputs="$(ConfigurationName)\compact_app.obj"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
 					Name="EmuDebug|Win32"
 					>
 					<Tool
 						Name="CUDA Build Rule"
-						ExtraNvccOptions="-m32"
+						ExtraNvccOptions="-m32 "
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1487,7 +1508,7 @@
 					>
 					<Tool
 						Name="CUDA Build Rule"
-						ExtraNvccOptions="-m32"
+						ExtraNvccOptions="-m32 "
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1513,6 +1534,14 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="StaticLib_Debug|x64"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+						ExtraNvccOptions="-m64"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="StaticLib_Release|Win32"
 					>
 					<Tool
@@ -1521,6 +1550,14 @@
 						CommandLine="$(CUDA_BIN_PATH)/nvcc.exe -ccbin &quot;$(VCInstallDir)bin&quot; -I&quot;$(CUDA_INC_PATH)&quot; -I./ -I../common/inc -I&quot;$(VCInstallDir)/include&quot;  -I&quot;$(VCInstallDir)/PlatformSDK/include&quot; -I./src -I./include -o $(ConfigurationName)/compact_app.obj -c ./src/app/compact_app.cu&#x0D;&#x0A;"
 						AdditionalDependencies="compact_app.cu; compact_kernel.cu"
 						Outputs="$(ConfigurationName)\compact_app.obj"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="StaticLib_Release|x64"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+						ExtraNvccOptions="-m64"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1623,11 +1660,27 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="StaticLib_Debug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="StaticLib_Release|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="StaticLib_Release|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1639,11 +1692,27 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="StaticLib_EmuDebug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="StaticLib_EmuRelease|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="StaticLib_EmuRelease|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
 					/>
 				</FileConfiguration>
 			</File>
@@ -1672,7 +1741,7 @@
 					>
 					<Tool
 						Name="CUDA Build Rule"
-						ExtraNvccOptions="-m32"
+						ExtraNvccOptions="-m32 "
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1680,7 +1749,7 @@
 					>
 					<Tool
 						Name="CUDA Build Rule"
-						ExtraNvccOptions="-m32"
+						ExtraNvccOptions="-m32 "
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1695,6 +1764,14 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="StaticLib_Debug|x64"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+						ExtraNvccOptions="-m64"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="StaticLib_Release|Win32"
 					>
 					<Tool
@@ -1703,6 +1780,14 @@
 						CommandLine="$(CUDA_BIN_PATH)/nvcc.exe -ccbin &quot;$(VCInstallDir)bin&quot; --host-compilation=C -I&quot;$(CUDA_INC_PATH)&quot; -I./ -I../common/inc -I&quot;$(VCInstallDir)/include&quot;  -I&quot;$(VCInstallDir)/PlatformSDK/include&quot; -I./src -I./include -o $(ConfigurationName)/radixsort_app.obj -c ./src/app/radixsort_app.cu&#x0D;&#x0A;"
 						AdditionalDependencies="radixsort_app.cu radixsort_kernel.cu radixsort_cta.cu"
 						Outputs="$(ConfigurationName)\radixsort_app.obj"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="StaticLib_Release|x64"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+						ExtraNvccOptions="-m64"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1741,11 +1826,27 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="Debug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="Release|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1757,11 +1858,27 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="EmuDebug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="EmuRelease|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="EmuRelease|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1773,11 +1890,27 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="StaticLib_Debug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="StaticLib_Release|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="StaticLib_Release|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1789,11 +1922,27 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="StaticLib_EmuDebug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="StaticLib_EmuRelease|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="StaticLib_EmuRelease|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
 					/>
 				</FileConfiguration>
 			</File>
@@ -1810,11 +1959,27 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="Debug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="Release|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1826,11 +1991,27 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="EmuDebug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="EmuRelease|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="EmuRelease|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1842,11 +2023,27 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="StaticLib_Debug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="StaticLib_Release|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="StaticLib_Release|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1858,11 +2055,27 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="StaticLib_EmuDebug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="StaticLib_EmuRelease|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="StaticLib_EmuRelease|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
 					/>
 				</FileConfiguration>
 			</File>
@@ -1891,7 +2104,7 @@
 					>
 					<Tool
 						Name="CUDA Build Rule"
-						ExtraNvccOptions="-m32"
+						ExtraNvccOptions="-m32 "
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1899,7 +2112,7 @@
 					>
 					<Tool
 						Name="CUDA Build Rule"
-						ExtraNvccOptions="-m32"
+						ExtraNvccOptions="-m32 "
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1914,6 +2127,14 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="StaticLib_Debug|x64"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+						ExtraNvccOptions="-m64"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="StaticLib_Release|Win32"
 					>
 					<Tool
@@ -1922,6 +2143,14 @@
 						CommandLine="$(CUDA_BIN_PATH)/nvcc.exe -ccbin &quot;$(VCInstallDir)bin&quot; -I&quot;$(CUDA_INC_PATH)&quot; -I./ -I../common/inc -I&quot;$(VCInstallDir)/include&quot;  -I&quot;$(VCInstallDir)/PlatformSDK/include&quot; -I./src -I./include -o $(ConfigurationName)/rand_app.obj -c ./src/app/rand_app.cu&#x0D;&#x0A;"
 						AdditionalDependencies="rand_app.cu rand_cta.cu rand_kernel.cu"
 						Outputs="$(ConfigurationName)\rand_app.obj"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="StaticLib_Release|x64"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+						ExtraNvccOptions="-m64"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1959,11 +2188,27 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="Debug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="Release|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1975,11 +2220,27 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="EmuDebug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="EmuRelease|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="EmuRelease|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1991,11 +2252,27 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="StaticLib_Debug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="StaticLib_Release|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="StaticLib_Release|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -2007,11 +2284,27 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="StaticLib_EmuDebug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="StaticLib_EmuRelease|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="StaticLib_EmuRelease|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
 					/>
 				</FileConfiguration>
 			</File>
@@ -2027,11 +2320,27 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="Debug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="Release|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -2043,11 +2352,27 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="EmuDebug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="EmuRelease|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="EmuRelease|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -2059,11 +2384,27 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="StaticLib_Debug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="StaticLib_Release|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="StaticLib_Release|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -2075,6 +2416,14 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="StaticLib_EmuDebug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="StaticLib_EmuRelease|Win32"
 					ExcludedFromBuild="true"
 					>
@@ -2082,27 +2431,18 @@
 						Name="VCCustomBuildTool"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="StaticLib_EmuRelease|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\src\app\reduce_app.cu"
 				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="CUDA Build Rule"
-						ExtraNvccOptions="-m32 -gencode=arch=compute_10,code=sm_10 -gencode=arch=compute_13,code=sm_13 -gencode=arch=compute_20,code=sm_20"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="CUDA Build Rule"
-						PtxAsOptionV="true"
-						ExtraNvccOptions="-m32 -gencode=arch=compute_10,code=sm_10 -gencode=arch=compute_13,code=sm_13  -gencode=arch=compute_20,code=sm_20"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\src\kernel\reduce_kernel.cu"
@@ -2116,16 +2456,39 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="Debug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="Release|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="CUDA Build Rule"
-						ExtraNvccOptions="-m32 -gencode=arch=compute_10,code=sm_10 -gencode=arch=compute_13,code=sm_13"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
 					Name="EmuDebug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="EmuDebug|x64"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -2141,7 +2504,23 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="EmuRelease|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="StaticLib_Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="StaticLib_Debug|x64"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -2157,6 +2536,14 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="StaticLib_Release|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="StaticLib_EmuDebug|Win32"
 					ExcludedFromBuild="true"
 					>
@@ -2165,7 +2552,23 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="StaticLib_EmuDebug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="StaticLib_EmuRelease|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="StaticLib_EmuRelease|x64"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -2186,17 +2589,6 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|x64"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-						Description="CUDA is compiling $(InputFileName)..."
-						CommandLine="$(CUDA_BIN_PATH)/nvcc.exe -ccbin &quot;$(VCInstallDir)bin&quot; --host-compilation=C -D_DEBUG -I&quot;$(CUDA_INC_PATH)&quot; -I./ -I../common/inc -I&quot;$(VCInstallDir)/include&quot;  -I&quot;$(VCInstallDir)/PlatformSDK/include&quot; -I./src -I./include -o $(ConfigurationName)/scan_app.obj -c -g ./src/app/scan_app.cu&#x0D;&#x0A;"
-						AdditionalDependencies="scan_app.cu scan_kernel.cu scan_cta.cu"
-						Outputs="$(ConfigurationName)\scan_app.obj"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
 					Name="Release|Win32"
 					>
 					<Tool
@@ -2205,22 +2597,11 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|x64"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-						Description="CUDA is compiling $(InputFileName)..."
-						CommandLine="$(CUDA_BIN_PATH)/nvcc.exe -ccbin &quot;$(VCInstallDir)bin&quot; --host-compilation=C -I&quot;$(CUDA_INC_PATH)&quot; -I./ -I../common/inc -I&quot;$(VCInstallDir)/include&quot;  -I&quot;$(VCInstallDir)/PlatformSDK/include&quot; -I./src -I./include -o $(ConfigurationName)/scan_app.obj -c ./src/app/scan_app.cu&#x0D;&#x0A;"
-						AdditionalDependencies="scan_app.cu scan_kernel.cu scan_cta.cu"
-						Outputs="$(ConfigurationName)\scan_app.obj"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
 					Name="EmuDebug|Win32"
 					>
 					<Tool
 						Name="CUDA Build Rule"
-						ExtraNvccOptions="-m32"
+						ExtraNvccOptions="-m32 "
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -2239,7 +2620,7 @@
 					>
 					<Tool
 						Name="CUDA Build Rule"
-						ExtraNvccOptions="-m32"
+						ExtraNvccOptions="-m32 "
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -2265,6 +2646,14 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="StaticLib_Debug|x64"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+						ExtraNvccOptions="-m64"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="StaticLib_Release|Win32"
 					>
 					<Tool
@@ -2273,6 +2662,14 @@
 						CommandLine="$(CUDA_BIN_PATH)/nvcc.exe -ccbin &quot;$(VCInstallDir)bin&quot; --host-compilation=C -I&quot;$(CUDA_INC_PATH)&quot; -I./ -I../common/inc -I&quot;$(VCInstallDir)/include&quot;  -I&quot;$(VCInstallDir)/PlatformSDK/include&quot; -I./src -I./include -o $(ConfigurationName)/scan_app.obj -c ./src/app/scan_app.cu&#x0D;&#x0A;"
 						AdditionalDependencies="scan_app.cu scan_kernel.cu scan_cta.cu"
 						Outputs="$(ConfigurationName)\scan_app.obj"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="StaticLib_Release|x64"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+						ExtraNvccOptions="-m64"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -2401,6 +2798,14 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="StaticLib_Debug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="StaticLib_Release|Win32"
 					ExcludedFromBuild="true"
 					>
@@ -2409,6 +2814,14 @@
 						Description=" "
 						CommandLine="&#x0D;&#x0A;"
 						Outputs=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="StaticLib_Release|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -2423,6 +2836,14 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="StaticLib_EmuDebug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="StaticLib_EmuRelease|Win32"
 					ExcludedFromBuild="true"
 					>
@@ -2431,6 +2852,14 @@
 						Description=" "
 						CommandLine="&#x0D;&#x0A;"
 						Outputs=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="StaticLib_EmuRelease|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
 					/>
 				</FileConfiguration>
 			</File>
@@ -2546,6 +2975,14 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="StaticLib_Debug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="StaticLib_Release|Win32"
 					ExcludedFromBuild="true"
 					>
@@ -2555,6 +2992,14 @@
 						CommandLine="&#x0D;&#x0A;"
 						AdditionalDependencies=" "
 						Outputs=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="StaticLib_Release|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -2570,6 +3015,14 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="StaticLib_EmuDebug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="StaticLib_EmuRelease|Win32"
 					ExcludedFromBuild="true"
 					>
@@ -2579,6 +3032,14 @@
 						CommandLine="&#x0D;&#x0A;"
 						AdditionalDependencies=" "
 						Outputs=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="StaticLib_EmuRelease|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
 					/>
 				</FileConfiguration>
 			</File>
@@ -2595,17 +3056,6 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|x64"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-						Description="CUDA is compiling $(InputFileName)..."
-						CommandLine="$(CUDA_BIN_PATH)/nvcc.exe -ccbin &quot;$(VCInstallDir)bin&quot; --host-compilation=C -D_DEBUG -I&quot;$(CUDA_INC_PATH)&quot; -I./ -I../common/inc -I&quot;$(VCInstallDir)/include&quot;  -I&quot;$(VCInstallDir)/PlatformSDK/include&quot; -I./src -I./include -o $(ConfigurationName)/segmented_scan_app.obj -c -g ./src/app/segmented_scan_app.cu&#x0D;&#x0A;"
-						AdditionalDependencies="segmented_scan_app.cu segmented_scan_kernel.cu segmented_scan_cta.cu"
-						Outputs="$(ConfigurationName)\segmented_scan_app.obj"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
 					Name="Release|Win32"
 					>
 					<Tool
@@ -2614,22 +3064,11 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|x64"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-						Description="CUDA is compiling $(InputFileName)..."
-						CommandLine="$(CUDA_BIN_PATH)/nvcc.exe -ccbin &quot;$(VCInstallDir)bin&quot; --host-compilation=C -I&quot;$(CUDA_INC_PATH)&quot; -I./ -I../common/inc -I&quot;$(VCInstallDir)/include&quot;  -I&quot;$(VCInstallDir)/PlatformSDK/include&quot; -I./src -I./include -o $(ConfigurationName)/segmented_scan_app.obj -c ./src/app/segmented_scan_app.cu&#x0D;&#x0A;"
-						AdditionalDependencies="segmented_scan_app.cu segmented_scan_kernel.cu segmented_scan_cta.cu"
-						Outputs="$(ConfigurationName)\segmented_scan_app.obj"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
 					Name="EmuDebug|Win32"
 					>
 					<Tool
 						Name="CUDA Build Rule"
-						ExtraNvccOptions="-m32"
+						ExtraNvccOptions="-m32 "
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -2648,7 +3087,7 @@
 					>
 					<Tool
 						Name="CUDA Build Rule"
-						ExtraNvccOptions="-m32"
+						ExtraNvccOptions="-m32 "
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -2674,6 +3113,14 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="StaticLib_Debug|x64"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+						ExtraNvccOptions="-m64"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="StaticLib_Release|Win32"
 					>
 					<Tool
@@ -2682,6 +3129,14 @@
 						CommandLine="$(CUDA_BIN_PATH)/nvcc.exe -ccbin &quot;$(VCInstallDir)bin&quot; --host-compilation=C -I&quot;$(CUDA_INC_PATH)&quot; -I./ -I../common/inc -I&quot;$(VCInstallDir)/include&quot;  -I&quot;$(VCInstallDir)/PlatformSDK/include&quot; -I./src -I./include -o $(ConfigurationName)/segmented_scan_app.obj -c ./src/app/segmented_scan_app.cu&#x0D;&#x0A;"
 						AdditionalDependencies="segmented_scan_app.cu segmented_scan_kernel.cu segmented_scan_cta.cu"
 						Outputs="$(ConfigurationName)\segmented_scan_app.obj"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="StaticLib_Release|x64"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+						ExtraNvccOptions="-m64"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -2719,11 +3174,27 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="Debug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="Release|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -2735,11 +3206,27 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="EmuDebug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="EmuRelease|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="EmuRelease|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -2751,11 +3238,27 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="StaticLib_Debug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="StaticLib_Release|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="StaticLib_Release|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -2767,11 +3270,27 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="StaticLib_EmuDebug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="StaticLib_EmuRelease|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="StaticLib_EmuRelease|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
 					/>
 				</FileConfiguration>
 			</File>
@@ -2787,11 +3306,27 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="Debug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="Release|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -2803,11 +3338,27 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="EmuDebug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="EmuRelease|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="EmuRelease|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -2819,11 +3370,27 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="StaticLib_Debug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="StaticLib_Release|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="StaticLib_Release|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -2835,11 +3402,27 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="StaticLib_EmuDebug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="StaticLib_EmuRelease|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="StaticLib_EmuRelease|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
 					/>
 				</FileConfiguration>
 			</File>
@@ -2856,17 +3439,6 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|x64"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-						Description="CUDA is compiling $(InputFileName)..."
-						CommandLine="$(CUDA_BIN_PATH)/nvcc.exe -ccbin &quot;$(VCInstallDir)bin&quot; --host-compilation=C -D_DEBUG -I&quot;$(CUDA_INC_PATH)&quot; -I./ -I../common/inc -I&quot;$(VCInstallDir)/include&quot;  -I&quot;$(VCInstallDir)/PlatformSDK/include&quot; -I./src -I./include -o $(ConfigurationName)/spmvmult_app.obj -c -g ./src/app/spmvmult_app.cu&#x0D;&#x0A;"
-						AdditionalDependencies="spmvmult_app.cu spmvmult_kernel.cu"
-						Outputs="$(ConfigurationName)\spmvmult_app.obj"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
 					Name="Release|Win32"
 					>
 					<Tool
@@ -2875,22 +3447,11 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|x64"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-						Description="CUDA is compiling $(InputFileName)..."
-						CommandLine="$(CUDA_BIN_PATH)/nvcc.exe -ccbin &quot;$(VCInstallDir)bin&quot; -I&quot;$(CUDA_INC_PATH)&quot; -I./ -I../common/inc -I&quot;$(VCInstallDir)/include&quot;  -I&quot;$(VCInstallDir)/PlatformSDK/include&quot; -I./src -I./include -o $(ConfigurationName)/spmvmult_app.obj -c ./src/app/spmvmult_app.cu&#x0D;&#x0A;"
-						AdditionalDependencies="spmvmult_app.cu spmvmult_kernel.cu"
-						Outputs="$(ConfigurationName)\spmvmult_app.obj"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
 					Name="EmuDebug|Win32"
 					>
 					<Tool
 						Name="CUDA Build Rule"
-						ExtraNvccOptions="-m32"
+						ExtraNvccOptions="-m32 "
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -2909,7 +3470,7 @@
 					>
 					<Tool
 						Name="CUDA Build Rule"
-						ExtraNvccOptions="-m32"
+						ExtraNvccOptions="-m32 "
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -2935,6 +3496,14 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="StaticLib_Debug|x64"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+						ExtraNvccOptions="-m64"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="StaticLib_Release|Win32"
 					>
 					<Tool
@@ -2943,6 +3512,14 @@
 						CommandLine="$(CUDA_BIN_PATH)/nvcc.exe -ccbin &quot;$(VCInstallDir)bin&quot; -I&quot;$(CUDA_INC_PATH)&quot; -I./ -I../common/inc -I&quot;$(VCInstallDir)/include&quot;  -I&quot;$(VCInstallDir)/PlatformSDK/include&quot; -I./src -I./include -o $(ConfigurationName)/spmvmult_app.obj -c ./src/app/spmvmult_app.cu&#x0D;&#x0A;"
 						AdditionalDependencies="spmvmult_app.cu spmvmult_kernel.cu"
 						Outputs="$(ConfigurationName)\spmvmult_app.obj"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="StaticLib_Release|x64"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+						ExtraNvccOptions="-m64"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -2980,11 +3557,27 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="Debug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="Release|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -2996,11 +3589,27 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="EmuDebug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="EmuRelease|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="EmuRelease|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -3012,11 +3621,27 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="StaticLib_Debug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="StaticLib_Release|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="StaticLib_Release|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -3028,11 +3653,27 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="StaticLib_EmuDebug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="StaticLib_EmuRelease|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="StaticLib_EmuRelease|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
 					/>
 				</FileConfiguration>
 			</File>
@@ -3112,11 +3753,27 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="StaticLib_Debug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="StaticLib_Release|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="StaticLib_Release|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -3128,11 +3785,27 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="StaticLib_EmuDebug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="StaticLib_EmuRelease|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="StaticLib_EmuRelease|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
 					/>
 				</FileConfiguration>
 			</File>

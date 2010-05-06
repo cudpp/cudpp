@@ -15,13 +15,10 @@
 #include "cudpp_plan.h"
 
 
-extern "C"
 void allocRadixSortStorage(CUDPPRadixSortPlan* plan);
 
-extern "C"
 void freeRadixSortStorage(CUDPPRadixSortPlan* plan);
 
-extern "C"
 void cudppRadixSortDispatch(void    *keys,
                             void    *values,
                             size_t  numElements,

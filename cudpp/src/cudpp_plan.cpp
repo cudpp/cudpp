@@ -117,13 +117,11 @@ CUDPPResult cudppPlan(const CUDPPHandle  cudppHandle,
             break;
         }
     default:
-        //! @todo: implement cudppReduce()
         return CUDPP_ERROR_ILLEGAL_CONFIGURATION; 
         break;
     }
 
-    //CUDPPHandle handle = mgr->AddPlan(plan);
-    if (!plan)//CUDPP_INVALID_HANDLE == handle)
+    if (!plan)
         return CUDPP_ERROR_UNKNOWN;
     else
     {
@@ -180,7 +178,6 @@ CUDPPResult cudppDestroyPlan(CUDPPHandle planHandle)
             break;
         }
     default:
-        //! @todo: implement cudppReduce()
         return CUDPP_ERROR_ILLEGAL_CONFIGURATION; 
         break;
     }

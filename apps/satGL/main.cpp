@@ -146,18 +146,6 @@ int
 main( int argc, char** argv) {
 
     CUT_DEVICE_INIT(argc, argv);
-
-    runTest( argc, argv);
-
-    return EXIT_SUCCESS;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-//! Run a simple test for CUDA
-////////////////////////////////////////////////////////////////////////////////
-void
-runTest( int argc, char** argv) {
-
     // Create GL context
     glutInit( &argc, argv);
     if (argc > 2)
@@ -173,7 +161,7 @@ runTest( int argc, char** argv) {
 
     // initialize GL
     if( CUTFalse == initGL()) {
-        return;
+        return EXIT_FAILURE;
     }
 
     // register callbacks
@@ -206,7 +194,7 @@ runTest( int argc, char** argv) {
     createFBO( &fbo, &tex_distance, &depth_rb);
     // create texture for blitting onto the screen
     createTexture( &tex_screen, image_width, image_height, true, false);
-   
+
 
     CUT_CHECK_ERROR_GL();
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
@@ -219,6 +207,8 @@ runTest( int argc, char** argv) {
     glutMainLoop();
 
     finalize();
+    
+    return EXIT_SUCCESS;
 }
 
 const char vsSATSrc[] = 
