@@ -17,9 +17,22 @@
 #ifndef __CUDPP_TESTRIG_UTILS_H__
 #define __CUDPP_TESTRIG_UTILS_H__
 
+
 #include <math.h>
 #include <cstdio>
+#include <string.h>
 #include <limits>
+#include <algorithm>
+
+using namespace std;
+
+#ifndef FLT_MAX
+#define FLT_MAX 3.40282347e+38F
+#endif
+
+#ifndef DBL_MAX
+#define DBL_MAX 1.7976931348623157e+308F
+#endif
 
 template <typename T>
 class OperatorAdd

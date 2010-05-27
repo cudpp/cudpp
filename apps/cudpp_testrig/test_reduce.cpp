@@ -15,12 +15,16 @@
  * @brief Host testrig routines to exercise cudpp's reduction functionality.
  */
 
+
+#include <stdio.h>
+#include <math.h>
+#include <cutil.h>
+
 #include "cudpp.h"
 #include "cudpp_testrig_options.h"
 #include "cudpp_testrig_utils.h"
-#include "reduce_gold.h"
-#include <iostream>
 
+#include "reduce_gold.h"
 template <typename T>
 int reduceTest(int argc, const char **argv, const CUDPPConfiguration &config, testrigOptions &testOptions)
 {
@@ -148,7 +152,7 @@ int reduceTest(int argc, const char **argv, const CUDPPConfiguration &config, te
         {
             printf("Running a %s-reduction of %d %s elements\n", 
                    op, test[k], dt);
-            fflush(stdout);
+          //  fflush(stdout);
         }
 
         if (config.op == CUDPP_ADD)
@@ -184,7 +188,7 @@ int reduceTest(int argc, const char **argv, const CUDPPConfiguration &config, te
         CUDA_SAFE_CALL(cudaMemcpy( &o_data, d_odata, sizeof(T), cudaMemcpyDeviceToHost));
 
         double threshold = (config.op == CUDPP_MULTIPLY && config.datatype == CUDPP_FLOAT) ? 1 : test[k] * 5e-6;
-        bool correct = (abs((double)reference - (double)o_data) < threshold);
+        bool correct = (fabs((double)(reference - o_data)) < threshold);
 
         // correct result?
         retval += (correct) ? 0 : 1;

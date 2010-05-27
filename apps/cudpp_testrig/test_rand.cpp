@@ -16,6 +16,7 @@
  */
 
 #include <cstdio>
+#include <string.h>
 #include "cudpp_testrig_options.h"
 
 //windows uses \ as the path, so we must adjust our original path for this
