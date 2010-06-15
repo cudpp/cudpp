@@ -19,9 +19,10 @@
 
 #include <math.h>
 #include <cstdio>
-#include <limits>
+#include <climits>
 #include <float.h>
 #include <algorithm>
+
 
 // template specializations defined below after class definitions
 
@@ -29,8 +30,8 @@ template <typename T>
 class VectorSupport
 {
 public:
-	static void fillVector(T *a, size_t numElements, unsigned int keybits, T range);
-	static int  verifySort(T *keysSorted, unsigned int *valuesSorted, T *keysUnsorted, size_t len);
+    static void fillVector(T *a, size_t numElements, unsigned int keybits, T range);
+    static int  verifySort(T *keysSorted, unsigned int *valuesSorted, T *keysUnsorted, size_t len);
 };
 
 template <typename T>
@@ -83,10 +84,17 @@ void VectorSupport<unsigned int>::fillVector(unsigned int *a,
                                              unsigned int keybits, 
                                              unsigned int range);
 
+template<>
+void VectorSupport<int>::fillVector(int *a, 
+                                    size_t numElements, 
+                                    unsigned int keybits, 
+                                    int range);
+
 template<> void VectorSupport<float>::fillVector(float *a, 
-		   								         size_t numElements, 
+                                                 size_t numElements, 
                                                  unsigned int keybits, 
                                                  float range);
+
 template<> void VectorSupport<double>::fillVector(double *a, 
                                                   size_t numElements, 
                                                   unsigned int keybits, 
@@ -96,12 +104,12 @@ template<> void VectorSupport<double>::fillVector(double *a,
 // checking correct order of values
 template<> int VectorSupport<unsigned int>::verifySort(unsigned int *keysSorted, 
                                                        unsigned int *valuesSorted, 
-											           unsigned int *keysUnsorted, 
-											           size_t len);
+                                                       unsigned int *keysUnsorted, 
+                                                       size_t len);
 
 template<> int VectorSupport<float>::verifySort(float *keysSorted, 
                                                 unsigned int *valuesSorted, 
-										        float *keysUnsorted, 
-										        size_t len);
+                                                float *keysUnsorted, 
+                                                size_t len);
 
 #endif // __CUDPP_TESTRIG_UTILS_H__

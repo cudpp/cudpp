@@ -20,6 +20,13 @@ template <>
 double OperatorMin<double>::identity() const { return DBL_MAX; }
 
 template<>
+void VectorSupport<int>::fillVector(int *a, size_t numElements, unsigned int keybits, int range)
+{
+    VectorSupport<unsigned int>::fillVector((unsigned int *)a, numElements, 
+                                            keybits, (unsigned int)range);
+}
+
+template<>
 void VectorSupport<unsigned int>::fillVector(unsigned int *a, size_t numElements, unsigned int keybits, unsigned int range)
 {
     // Fill up with some random data
