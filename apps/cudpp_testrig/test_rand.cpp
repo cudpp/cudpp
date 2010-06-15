@@ -16,6 +16,7 @@
  */
 
 #include <cstdio>
+#include <cstring>
 #include "cudpp_testrig_options.h"
 
 //windows uses \ as the path, so we must adjust our original path for this
@@ -51,7 +52,7 @@ bool file_exists(const char * filename)
 }
 
 //this function makes the proper path file name
-void constructFileName(char * fileName, testrigOptions & testOptions, unsigned int size, bool quiet, char * path)
+void constructFileName(char * fileName, testrigOptions & testOptions, unsigned int size, const char * path)
 {
     //check first to see if user has inputted a string name
     if(testOptions.dir == NULL)
@@ -82,7 +83,7 @@ bool searchForFile(unsigned int numElements, FILE ** randFile, char * path, test
 
     sprintf(fileName,"md5_regression_%u.dat", numElements);
 
-    constructFileName(fullFileName, testOptions, numElements, quiet, MD5_DEFAULT_PATH);
+    constructFileName(fullFileName, testOptions, numElements, MD5_DEFAULT_PATH);
     strcpy(path, fullFileName);
 
     //search and see which one of them exists
@@ -116,7 +117,7 @@ bool searchForFile(unsigned int numElements, FILE ** randFile, char * path, test
     if (CUTTrue != cutFindDir(dataPath, "cudpp", "data") )
         return false;
 
-    constructFileName(fullFileName, testOptions, numElements, quiet, dataPath);
+    constructFileName(fullFileName, testOptions, numElements, dataPath);
     if(file_exists(fullFileName))
     {
         if(!quiet) 

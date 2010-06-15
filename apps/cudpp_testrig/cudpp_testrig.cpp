@@ -32,19 +32,10 @@
 
 #include "cudpp.h"
 
-#ifndef __linux__
-extern "C"
-{
-#endif
-    
-#ifndef __linux__
-}
-#endif
-#include "arraycompare.h"
 
 int testScan(int argc, const char ** argv, const CUDPPConfiguration *config);
 int testSegmentedScan(int argc, const char ** argv, const CUDPPConfiguration *config);
-int testMultiSumScan(int argc, const char ** argv);
+int testMultiSumScan(int argc, const char **argv);
 int testCompact(int argc, const char ** argv, const CUDPPConfiguration *config);
 int testRadixSort(int argc, const char ** argv, const CUDPPConfiguration *config);
 int testSparseMatrixVectorMultiply(int argc, const char ** argv);
@@ -80,8 +71,8 @@ int main(int argc, const char** argv)
 #endif
 
         printf("%s; global mem: %dB; compute v%d.%d; clock: %d kHz\n",
-               prop.name, prop.totalGlobalMem, prop.major, prop.minor,
-               prop.clockRate);
+               prop.name, (int)prop.totalGlobalMem, (int)prop.major, (int)prop.minor,
+               (int)prop.clockRate);
     }
 
     int retval = 0;

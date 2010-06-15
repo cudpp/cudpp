@@ -18,8 +18,10 @@
 #include "cudpp.h"
 #include "cudpp_testrig_options.h"
 #include "cudpp_testrig_utils.h"
-#include "reduce_gold.h"
 #include <iostream>
+
+template <class Oper, typename T>
+void computeReduceGold( T* out, const T* idata, const unsigned int len);
 
 template <typename T>
 int reduceTest(int argc, const char **argv, const CUDPPConfiguration &config, testrigOptions &testOptions)

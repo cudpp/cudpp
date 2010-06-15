@@ -17,7 +17,7 @@
 #include "cudpp_testrig_utils.h"
 
 template <typename T>
-int radixSortTest(CUDPPHandle theCudpp, CUDPPHandle plan, CUDPPConfiguration config, size_t *tests, 
+int radixSortTest(CUDPPHandle plan, CUDPPConfiguration config, size_t *tests, 
                   unsigned int numTests, unsigned int numElements, unsigned int keybits,
                   testrigOptions testOptions, bool quiet)
 {
@@ -65,7 +65,7 @@ int radixSortTest(CUDPPHandle theCudpp, CUDPPHandle plan, CUDPPConfiguration con
             tests[0] = numElements;			  			
 
         if(!quiet)
-            printf("Running a sort of %d %s\n", tests[k], outString);        
+            printf("Running a sort of %ld %s\n", tests[k], outString);        
 
         float totalTime = 0;
 
@@ -115,7 +115,7 @@ int radixSortTest(CUDPPHandle theCudpp, CUDPPHandle plan, CUDPPConfiguration con
         }
         else
         {
-            printf("\t%10d\t%0.4f\n", tests[k], totalTime / testOptions.numIterations);
+            printf("\t%10ld\t%0.4f\n", tests[k], totalTime / testOptions.numIterations);
         }
     }
     printf("\n");
@@ -189,7 +189,7 @@ int testRadixSort(int argc, const char **argv, const CUDPPConfiguration *configP
     }
 
     bool keysOnly = (cutCheckCmdLineFlag(argc, (const char**)argv, "keysonly") == CUTTrue);	
-    bool keyValue = (cutCheckCmdLineFlag(argc, (const char**)argv, "keyval") == CUTTrue);
+    //bool keyValue = (cutCheckCmdLineFlag(argc, (const char**)argv, "keyval") == CUTTrue);
     quiet = (cutCheckCmdLineFlag(argc, (const char**)argv, "quiet") == CUTTrue);	
     
     if( cutCheckCmdLineFlag(argc, (const char**)argv, "float") )
@@ -250,10 +250,12 @@ int testRadixSort(int argc, const char **argv, const CUDPPConfiguration *configP
     switch(config.datatype)
     {        
     case CUDPP_UINT:
-        retval = radixSortTest<unsigned int>(theCudpp, plan, config, test, numTests, numElements, keybits, testOptions, quiet);
+        retval = radixSortTest<unsigned int>(plan, config, test, numTests, numElements, keybits, testOptions, quiet);
         break;
     case CUDPP_FLOAT:	
-        retval = radixSortTest<float>(theCudpp, plan, config, test, numTests, numElements, keybits, testOptions, quiet);
+        retval = radixSortTest<float>(plan, config, test, numTests, numElements, keybits, testOptions, quiet);
+        break;
+	default:
         break;
     }
 

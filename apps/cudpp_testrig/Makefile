@@ -8,9 +8,11 @@
 # SOURCE VARS
 EXECUTABLE	:= cudpp_testrig
 
-CCFILES :=	scan_gold.cpp compact_gold.cpp spmvmult_gold.cpp \
-		cudpp_testrig_options.cpp
-CUFILES :=	cudpp_testrig.cu
+CCFILES :=	cudpp_testrig.cpp cudpp_testrig_options.cpp cudpp_testrig_utils.cpp \
+		scan_gold.cpp compact_gold.cpp spmvmult_gold.cpp rand_gold.cpp \
+		reduce_gold.cpp \
+		test_radixsort.cpp test_rand.cpp test_reduce.cpp test_scan.cpp \
+		test_scan.cpp test_spmvmult.cpp
 
 INCLUDES := -I../../cudpp/include -I../../common/inc
 

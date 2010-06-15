@@ -19,6 +19,7 @@
 #include <cutil.h>
 #include <time.h>
 #include <limits.h>
+#include <cstring>
 
 #include "cudpp.h"
 

@@ -25,7 +25,7 @@ INCLUDES := -I./ -I./include/ -Isrc/ -Isrc/app/ -Isrc/kernel/ -Isrc/cta/
 
 ROOTDIR := .
 
-CUDPP_STATIC_LIB := libcudpp.a
+STATIC_LIB := libcudpp.a
 
 include ../linux_build/common.mk
 
