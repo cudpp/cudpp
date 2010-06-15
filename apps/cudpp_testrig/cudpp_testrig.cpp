@@ -53,8 +53,9 @@ int testReduce(int argc, const char ** argv, const CUDPPConfiguration *config);
  * - --compact calls the compact regression routine
  * - --sort calls the sort regression routine
  * - --spmvmult calls the sparse matrix-vector routine
+ * - --reduce calls the reduce regression routine
  * - --n=# sets the size of the dataset
- * - --numIterations=# sets the number of iterations to run
+ * - --iterations=# sets the number of iterations to run
  */ 
 int main(int argc, const char** argv)
 {
@@ -71,9 +72,12 @@ int main(int argc, const char** argv)
 #endif
 
         printf("%s; global mem: %dB; compute v%d.%d; clock: %d kHz\n",
-               prop.name, (int)prop.totalGlobalMem, (int)prop.major, (int)prop.minor,
-               (int)prop.clockRate);
+               prop.name, (int)prop.totalGlobalMem, (int)prop.major, 
+               (int)prop.minor, (int)prop.clockRate);
     }
+
+    bool supportsDouble = (((int) prop.major == 1) && ((int) prop.minor >= 3) ||
+                           ((int) prop.major > 1));
 
     int retval = 0;
 
@@ -87,6 +91,7 @@ int main(int argc, const char** argv)
         printf("multiscan: Run multi-row scan test(s)\n");
         printf("sort: Run sort test(s)\n");
         printf("compact: Run compact test(s)\n\n");
+        printf("reduce: Run reduce test(s)\n\n");
         printf("rand: Run random number generator test(s)\n\n");
         printf("--- Global Options ---\n");
         printf("iterations=<N>: Number of times to run each test\n");
@@ -299,8 +304,11 @@ int main(int argc, const char** argv)
             retval += testReduce(argc, argv, &config);
             config.datatype = CUDPP_UINT;
             retval += testReduce(argc, argv, &config);
-            config.datatype = CUDPP_DOUBLE;
-            retval += testReduce(argc, argv, &config);
+            if (supportsDouble)
+            {
+                config.datatype = CUDPP_DOUBLE;
+                retval += testReduce(argc, argv, &config);
+            }
 
             config.op = CUDPP_MULTIPLY;
             config.datatype = CUDPP_FLOAT;
@@ -309,8 +317,11 @@ int main(int argc, const char** argv)
             retval += testReduce(argc, argv, &config);
             config.datatype = CUDPP_UINT;
             retval += testReduce(argc, argv, &config);
-            config.datatype = CUDPP_DOUBLE;
-            retval += testReduce(argc, argv, &config);
+            if (supportsDouble)
+            {
+                config.datatype = CUDPP_DOUBLE;
+                retval += testReduce(argc, argv, &config);
+            }
 
             config.op = CUDPP_MIN;
             config.datatype = CUDPP_FLOAT;
@@ -319,8 +330,11 @@ int main(int argc, const char** argv)
             retval += testReduce(argc, argv, &config);
             config.datatype = CUDPP_UINT;
             retval += testReduce(argc, argv, &config);
-            config.datatype = CUDPP_DOUBLE;
-            retval += testReduce(argc, argv, &config);
+            if (supportsDouble)
+            {
+                config.datatype = CUDPP_DOUBLE;
+                retval += testReduce(argc, argv, &config);
+            }
 
             config.op = CUDPP_MAX;
             config.datatype = CUDPP_FLOAT;
@@ -329,11 +343,16 @@ int main(int argc, const char** argv)
             retval += testReduce(argc, argv, &config);
             config.datatype = CUDPP_UINT;
             retval += testReduce(argc, argv, &config);
-            config.datatype = CUDPP_DOUBLE;
-            retval += testReduce(argc, argv, &config);
+            if (supportsDouble)
+            {
+                config.datatype = CUDPP_DOUBLE;
+                retval += testReduce(argc, argv, &config);
+            }
         }
         else
+        {
             retval += testReduce(argc, argv, NULL);
+        }
     }
 
     if (testAll || (CUTTrue == cutCheckCmdLineFlag(argc, argv, "sort")))
@@ -381,3 +400,10 @@ int main(int argc, const char** argv)
     }
     return 0;//retval;
 }
+
+
+// Leave this at the end of the file
+// Local Variables:
+// mode:c++
+// c-file-style: "NVIDIA"
+// End:
