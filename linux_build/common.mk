@@ -61,13 +61,6 @@ ifneq ($(DARWIN),)
 	INCLUDES += -I$(MACPORTSDIR)/include
 endif
 
-# standard
-ifneq ($(DARWIN),)
-        LIB      += -L$(CUDA_INSTALL_PATH)/lib -L$(LIBDIR) -L$(COMMONDIR)/lib -L$(COMMONDIR)/lib/darwin -lcuda -lcudart ${OPENGLLIB}
-else
-        LIB      += -L$(CUDA_INSTALL_PATH)/lib -L$(LIBDIR) -L$(COMMONDIR)/lib -L$(COMMONDIR)/lib/linux  -lcuda -lcudart ${OPENGLLIB}
-endif
-
 # There's no standard installation place for glut on Mac. Default I'm
 # using is the macports install.
 ifneq ($(DARWIN),)
@@ -167,7 +160,7 @@ endif
 
 # append optional arch/SM version flags (such as -arch sm_11)
 NVCCFLAGS += $(SMVERSIONFLAGS) 
-NVCCFLAGS += -gencode=arch=compute_10,code=sm_10 
+NVCCFLAGS += -gencode=arch=compute_10,code=sm_10
 
 ifneq ($(CUDA_VERSION_3PLUS),)
 	NVCCFLAGS += -gencode=arch=compute_20,code=sm_20 
@@ -217,7 +210,7 @@ ifeq ($(USECUDPP), 1)
 	# detect if 32 bit or 64 bit system
 	HP_64 =	$(shell uname -m | grep 64)
 
-	CUDPPLIB := -lcudpp_$(LIB_ARCH)$(LIBSUFFIX)
+	CUDPPLIB := -lcudpp$(LIBSUFFIX)
 
 	ifeq ($(emu), 1)
 		CUDPPLIB := $(CUDPPLIB)_emu
@@ -225,7 +218,16 @@ ifeq ($(USECUDPP), 1)
 endif
 
 # Libs
-LIB       := -L$(CUDA_INSTALL_PATH)/lib -L$(LIBDIR) -L$(COMMONDIR)/lib -lcuda -lcudart ${OPENGLLIB} $(PARAMGLLIB) $(CUDPPLIB) ${LIB}
+ifneq ($(DARWIN),)
+        LIB      += -L$(CUDA_INSTALL_PATH)/lib -L$(LIBDIR) -L$(COMMONDIR)/lib -lcuda -lcudart ${OPENGLLIB} $(PARAMGLLIB) $(CUDPPLIB)
+else
+        ifneq ($(HP_64), )
+            CUDA_LIB_PATH := $(CUDA_INSTALL_PATH)/lib64
+        else
+            CUDA_LIB_PATH := $(CUDA_INSTALL_PATH)/lib
+        endif
+        LIB      += -L$(CUDA_LIB_PATH) -L$(LIBDIR) -L$(COMMONDIR)/lib -lcudart ${OPENGLLIB} $(PARAMGLLIB) $(CUDPPLIB)
+endif
 
 
 # Lib/exe configuration
