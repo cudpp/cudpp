@@ -25,7 +25,7 @@ template <class Oper, typename T>
 void computeReduceGold( T* out, const T* idata, const unsigned int len)
 {
     Oper op;
-        T sum = 0;//op.identity();
+        T sum = op.identity();
 
     for (unsigned int i = 0; i < len; i++)
     {
