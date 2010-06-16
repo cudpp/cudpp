@@ -739,6 +739,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\cudpp_testrig_utils.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\rand_gold.cpp"
 				>
 			</File>

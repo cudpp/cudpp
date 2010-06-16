@@ -103,7 +103,7 @@ bool searchForFile(unsigned int numElements, FILE ** randFile, char * path, test
     this part added for windows: path in Visual Studio and command line is different!  
     */
 #if defined(_WIN32) || defined(WIN32)
-    constructFileName(fullFileName, testOptions, numElements, quiet, MD5_DEFAULT_PATH2);
+    constructFileName(fullFileName, testOptions, numElements, MD5_DEFAULT_PATH2);
     strcpy(path, fullFileName);
     if(file_exists(fullFileName))
     {

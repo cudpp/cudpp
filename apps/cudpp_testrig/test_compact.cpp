@@ -204,7 +204,7 @@ int testCompact(int argc, const char **argv, const CUDPPConfiguration *configPtr
         // check if the result is equivalent to the expected soluion
         if (!quiet)
             printf("numValidElements: %d\n", *numValidElements);
-        CUTBoolean result = cutComparefe( reference, o_data, *numValidElements, 0.001f);
+        CUTBoolean result = cutComparefe( reference, o_data, (unsigned int)*numValidElements, 0.001f);
 
         free(o_data);
 

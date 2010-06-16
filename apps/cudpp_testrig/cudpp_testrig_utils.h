@@ -17,6 +17,7 @@
 #ifndef __CUDPP_TESTRIG_UTILS_H__
 #define __CUDPP_TESTRIG_UTILS_H__
 
+#define NO_MINMAX
 #include <math.h>
 #include <cstdio>
 #include <climits>
@@ -54,7 +55,7 @@ template <typename T>
 class OperatorMax
 {
 public:
-    T operator() (const T& a, const T& b) const { return std::max(a, b); }
+    T operator() (const T& a, const T& b) const { return std::max<T>(a, b); }
     T identity() const { return (T)0; }
 };
 
@@ -62,7 +63,7 @@ template <typename T>
 class OperatorMin
 {
 public:
-    T operator() (const T& a, const T& b) const { return std::min(a, b); }
+    T operator() (const T& a, const T& b) const { return std::min<T>(a, b); }
     T identity() const { return (T)0; }
 };
 
@@ -111,5 +112,15 @@ template<> int VectorSupport<float>::verifySort(float *keysSorted,
                                                 unsigned int *valuesSorted, 
                                                 float *keysUnsorted, 
                                                 size_t len);
+
+template<> int VectorSupport<int>::verifySort(int *keysSorted, 
+                                              unsigned int *valuesSorted, 
+                                              int *keysUnsorted, 
+                                              size_t len);
+
+template<> int VectorSupport<double>::verifySort(double *keysSorted, 
+                                                 unsigned int *valuesSorted, 
+                                                 double *keysUnsorted, 
+                                                 size_t len);
 
 #endif // __CUDPP_TESTRIG_UTILS_H__

@@ -76,8 +76,8 @@ int main(int argc, const char** argv)
                (int)prop.minor, (int)prop.clockRate);
     }
 
-    bool supportsDouble = (((int) prop.major == 1) && ((int) prop.minor >= 3) ||
-                           ((int) prop.major > 1));
+    int computeVersion = prop.major * 10 + prop.minor;
+    bool supportsDouble = (computeVersion >= 13);
 
     int retval = 0;
 
