@@ -46,7 +46,7 @@ int radixSortTest(CUDPPHandle plan, CUDPPConfiguration config, size_t *tests,
     }																	
 
     // Fill up with some random data   
-    VectorSupport<T>::fillVector(h_keys, numElements, keybits, (T)(1 << keybits));		
+    VectorSupport<T>::fillVector(h_keys, numElements, keybits);		
 
     CUDA_SAFE_CALL(cudaMalloc((void **)&d_keys, numElements*sizeof(T)));
     if (config.options & CUDPP_OPTION_KEY_VALUE_PAIRS)

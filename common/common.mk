@@ -41,6 +41,16 @@ ifdef cuda-install
 	CUDA_INSTALL_PATH := $(cuda-install)
 endif
 
+# detect OS
+OSUPPER = $(shell uname -s 2>/dev/null | tr [:lower:] [:upper:])
+OSLOWER = $(shell uname -s 2>/dev/null | tr [:upper:] [:lower:])
+
+# 'linux' is output for Linux system, 'darwin' for OS X
+DARWIN = $(strip $(findstring DARWIN, $(OSUPPER)))
+ifneq ($(DARWIN),)
+   SNOWLEOPARD = $(strip $(findstring 10.6, $(shell egrep "<string>10\.6" /System/Library/CoreServices/SystemVersion.plist)))
+endif
+
 # Basic directory setup for SDK
 # (override directories only if they are not already defined)
 SRCDIR     ?= 
@@ -106,9 +116,49 @@ CWARN_FLAGS := $(CXXWARN_FLAGS) \
 	-Wmain \
 
 # Compiler-specific flags
-NVCCFLAGS := --host-compilation=C
+# for CUDA 2.0, need this to compile on all platforms
+#NVCCFLAGS := --host-compilation=C
+
 CXXFLAGS  := $(CXXWARN_FLAGS)
 CFLAGS    := $(CWARN_FLAGS)
+LIB_ARCH  := $(OSARCH)
+
+# Determining the necessary Cross-Compilation Flags
+# 32-bit OS, but we target 64-bit cross compilation
+ifeq ($(x86_64),1)
+    NVCCFLAGS += -m64
+    LIB_ARCH = x86_64
+
+    ifneq ($(DARWIN),)
+         CXX_ARCH_FLAGS += -arch x86_64
+    else
+         CXX_ARCH_FLAGS += -m64
+    endif
+else
+	# 64-bit OS, and we target 32-bit cross compilation
+    ifeq ($(i386),1)
+        NVCCFLAGS += -m32
+        LIB_ARCH = i386
+        ifneq ($(DARWIN),)
+             CXX_ARCH_FLAGS += -arch i386
+        else
+             CXX_ARCH_FLAGS += -m32
+        endif
+    else
+		# snow leopard defaults to 64-bit compilation, 
+		# but CUDA is still 32-bit...
+        ifneq ($(SNOWLEOPARD),)
+             NVCCFLAGS += -m32
+             CXX_ARCH_FLAGS += -arch i386 -m32
+             LIB_ARCH  = i386
+        endif
+    endif
+endif
+
+# Compiler-specific flags
+CXXFLAGS  := $(CXXWARN_FLAGS) $(CXX_ARCH_FLAGS)
+CFLAGS    := $(CWARN_FLAGS) $(CXX_ARCH_FLAGS)
+LINK      += $(CXX_ARCH_FLAGS)
 
 # Common flags
 COMMONFLAGS += $(INCLUDES) -DUNIX
@@ -259,8 +309,8 @@ makedirectories:
 
 
 tidy :
-	@find | egrep "#" | xargs rm -f
-	@find | egrep "\~" | xargs rm -f
+	@find . | egrep "#" | xargs rm -f
+	@find . | egrep "\~" | xargs rm -f
 
 clean : tidy
 	$(VERBOSE)rm -f $(OBJS)

@@ -98,9 +98,10 @@ int reduceTest(int argc, const char **argv, const CUDPPConfiguration &config, te
         else                                range = 2;
     }
     
-    
-
-    VectorSupport<T>::fillVector(i_data, numElements, sizeof(T) * 8, range);
+    if (config.datatype != CUDPP_FLOAT && config.datatype != CUDPP_DOUBLE)
+        range = sizeof(T)*8;
+        
+    VectorSupport<T>::fillVector(i_data, numElements, range);
     
     T reference = 0;
 

@@ -31,7 +31,7 @@ template <typename T>
 class VectorSupport
 {
 public:
-    static void fillVector(T *a, size_t numElements, unsigned int keybits, T range);
+    static void fillVector(T *a, size_t numElements, T info);
     static int  verifySort(T *keysSorted, unsigned int *valuesSorted, T *keysUnsorted, size_t len);
 };
 
@@ -87,8 +87,9 @@ template <> inline
 double OperatorMin<double>::identity() const { return DBL_MAX; }
     
 
+// "info" is the number of key bits
 template<> inline
-void VectorSupport<unsigned int>::fillVector(unsigned int *a, size_t numElements, unsigned int keybits, unsigned int range)
+void VectorSupport<unsigned int>::fillVector(unsigned int *a, size_t numElements, unsigned int keybits)
 {
     // Fill up with some random data
     int keyshiftmask = 0;
@@ -103,26 +104,29 @@ void VectorSupport<unsigned int>::fillVector(unsigned int *a, size_t numElements
     }
 }
 
+// "info" is the number of key bits
 template<> inline
-void VectorSupport<int>::fillVector(int *a, size_t numElements, unsigned int keybits, int range)
+void VectorSupport<int>::fillVector(int *a, size_t numElements,int keybits)
 {
-    VectorSupport<unsigned int>::fillVector((unsigned int *)a, numElements, 
-        keybits, (unsigned int)range);
+    VectorSupport<unsigned int>::fillVector((unsigned int *)a, 
+                                            numElements, 
+                                            keybits);
 }
 
+// "info" is the range
 template<> inline
-void VectorSupport<float>::fillVector(float *a, size_t numElements, unsigned int keybits, float range)
+void VectorSupport<float>::fillVector(float *a, size_t numElements, float range)
 {
     srand(95123);
     for(unsigned int j = 0; j < numElements; j++)
     {
-        //a[j] = pow(-1,(float)j)*(float)((rand()<<16) | rand());          
         a[j] = pow(-1, (float)j) * (range * (rand() / (float)RAND_MAX));
     }
 }
 
+// "info" is the range
 template<> inline
-void VectorSupport<double>::fillVector(double *a, size_t numElements, unsigned int keybits, double range)
+void VectorSupport<double>::fillVector(double *a, size_t numElements, double range)
 {
     srand(95123);
     for(unsigned int j = 0; j < numElements; j++)
