@@ -361,8 +361,10 @@ enum CUDPPDatatype
     CUDPP_UCHAR,    //!< Unsigned character (byte) type (C unsigned char)
     CUDPP_INT,      //!< Integer type (C int)
     CUDPP_UINT,     //!< Unsigned integer type (C unsigned int)
-    CUDPP_FLOAT,     //!< Float type (C float)
-    CUDPP_DOUBLE    //!< Double type (C double)
+    CUDPP_FLOAT,    //!< Float type (C float)
+    CUDPP_DOUBLE,   //!< Double type (C double)
+    CUDPP_LONGLONG, //!< 64-bit integer type (C long long)
+    CUDPP_ULONGLONG,//!< 64-bit unsigned integer type (C unsigned long long)
 };
 
 /** 

@@ -94,8 +94,9 @@ int reduceTest(int argc, const char **argv, const CUDPPConfiguration &config, te
     if (config.op == CUDPP_MULTIPLY)
     {
 
-        if (config.datatype == CUDPP_FLOAT) range = 1;
-        else                                range = 2;
+        if ((config.datatype == CUDPP_FLOAT) ||
+            (config.datatype == CUDPP_DOUBLE))   range = 1;
+        else                                     range = 2;
     }
     
     if (config.datatype != CUDPP_FLOAT && config.datatype != CUDPP_DOUBLE)
@@ -156,6 +157,12 @@ int reduceTest(int argc, const char **argv, const CUDPPConfiguration &config, te
         case CUDPP_DOUBLE:
             strcpy(dt, "double");
             break;
+        case CUDPP_LONGLONG:
+            strcpy(dt, "longlong");
+            break;
+        case CUDPP_ULONGLONG:
+            strcpy(dt, "ulonglong");
+            break;
         }
 
         if (!quiet)
@@ -197,7 +204,7 @@ int reduceTest(int argc, const char **argv, const CUDPPConfiguration &config, te
         // copy result from device to host
         CUDA_SAFE_CALL(cudaMemcpy( &o_data, d_odata, sizeof(T), cudaMemcpyDeviceToHost));
 
-        double threshold = (config.op == CUDPP_MULTIPLY && config.datatype == CUDPP_FLOAT) ? 1 : test[k] * 5e-6;
+        double threshold = (config.op == CUDPP_MULTIPLY && (config.datatype == CUDPP_FLOAT || config.datatype == CUDPP_DOUBLE)) ? 1 : test[k] * 5e-6;
         bool correct = (abs((double)reference - (double)o_data) < threshold);
 
         // correct result?
@@ -208,7 +215,8 @@ int reduceTest(int argc, const char **argv, const CUDPPConfiguration &config, te
             printf("%s test %s\n", testOptions.runMode,
                    (correct) ? "PASSED" : "FAILED");
             if (!correct)
-                std::cout << o_data << " != " << reference << std::endl;
+                std::cout << o_data << " != " << reference << " (ref)" 
+                          << std::endl;
             printf("Average execution time: %f ms, ", time);
             printf(": %0.4f GB/s\n", bandwidth);
         }
@@ -221,7 +229,7 @@ int reduceTest(int argc, const char **argv, const CUDPPConfiguration &config, te
     result = cudppDestroyPlan(plan);
 
     if (result != CUDPP_SUCCESS)
-    {	
+    {   
         printf("Error destroying CUDPPPlan for Scan\n");
         retval = numTests;
     }
@@ -229,7 +237,7 @@ int reduceTest(int argc, const char **argv, const CUDPPConfiguration &config, te
     result = cudppDestroy(theCudpp);
 
     if (result != CUDPP_SUCCESS)
-    {	
+    {   
         printf("Error shutting down CUDPP Library.\n");
         retval = numTests;
     }
@@ -290,6 +298,14 @@ int testReduce(int argc, const char **argv, const CUDPPConfiguration *configPtr)
         {        
             config.datatype = CUDPP_INT;
         }
+        else if( cutCheckCmdLineFlag(argc, (const char**)argv, "longlong") )
+        {        
+            config.datatype = CUDPP_LONGLONG;
+        }
+        else if( cutCheckCmdLineFlag(argc, (const char**)argv, "ulonglong") )
+        {        
+            config.datatype = CUDPP_ULONGLONG;
+        }
     }
 
     switch(config.datatype)
@@ -305,6 +321,12 @@ int testReduce(int argc, const char **argv, const CUDPPConfiguration *configPtr)
         break;
     case CUDPP_DOUBLE:
         return reduceTest<double>(argc, argv, config, testOptions);
+        break;
+    case CUDPP_LONGLONG:
+        return reduceTest<long long>(argc, argv, config, testOptions);
+        break;
+    case CUDPP_ULONGLONG:
+        return reduceTest<unsigned long long>(argc, argv, config, testOptions);
         break;
     default:
         return 0;

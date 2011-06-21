@@ -309,6 +309,10 @@ int main(int argc, const char** argv)
                 config.datatype = CUDPP_DOUBLE;
                 retval += testReduce(argc, argv, &config);
             }
+            config.datatype = CUDPP_LONGLONG;
+            retval += testReduce(argc, argv, &config);
+            config.datatype = CUDPP_ULONGLONG;
+            retval += testReduce(argc, argv, &config);
 
             config.op = CUDPP_MULTIPLY;
             config.datatype = CUDPP_FLOAT;
@@ -322,6 +326,10 @@ int main(int argc, const char** argv)
                 config.datatype = CUDPP_DOUBLE;
                 retval += testReduce(argc, argv, &config);
             }
+            config.datatype = CUDPP_LONGLONG;
+            retval += testReduce(argc, argv, &config);
+            config.datatype = CUDPP_ULONGLONG;
+            retval += testReduce(argc, argv, &config);
 
             config.op = CUDPP_MIN;
             config.datatype = CUDPP_FLOAT;
@@ -335,6 +343,10 @@ int main(int argc, const char** argv)
                 config.datatype = CUDPP_DOUBLE;
                 retval += testReduce(argc, argv, &config);
             }
+            config.datatype = CUDPP_LONGLONG;
+            retval += testReduce(argc, argv, &config);
+            config.datatype = CUDPP_ULONGLONG;
+            retval += testReduce(argc, argv, &config);
 
             config.op = CUDPP_MAX;
             config.datatype = CUDPP_FLOAT;
@@ -348,6 +360,10 @@ int main(int argc, const char** argv)
                 config.datatype = CUDPP_DOUBLE;
                 retval += testReduce(argc, argv, &config);
             }
+            config.datatype = CUDPP_LONGLONG;
+            retval += testReduce(argc, argv, &config);
+            config.datatype = CUDPP_ULONGLONG;
+            retval += testReduce(argc, argv, &config);
         }
         else
         {

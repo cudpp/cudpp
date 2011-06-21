@@ -32,6 +32,7 @@ class VectorSupport
 {
 public:
     static void fillVector(T *a, size_t numElements, T info);
+    //! @todo should this really be T info? instead unsigned int or float? 
     static int  verifySort(T *keysSorted, unsigned int *valuesSorted, T *keysUnsorted, size_t len);
 };
 
@@ -76,6 +77,10 @@ template <> inline
 float OperatorMax<float>::identity() const { return -FLT_MAX; }
 template <> inline
 double OperatorMax<double>::identity() const { return -DBL_MAX; }
+template <> inline
+long long OperatorMax<long long>::identity() const { return LLONG_MIN; }
+template <> inline
+unsigned long long OperatorMax<unsigned long long>::identity() const { return 0; }
 
 template <> inline
 int OperatorMin<int>::identity() const { return INT_MAX; }
@@ -85,6 +90,10 @@ template <> inline
 float OperatorMin<float>::identity() const { return FLT_MAX; }
 template <> inline
 double OperatorMin<double>::identity() const { return DBL_MAX; }
+template <> inline
+long long OperatorMin<long long>::identity() const { return LLONG_MAX; }
+template <> inline
+unsigned long long OperatorMin<unsigned long long>::identity() const { return ULLONG_MAX; }
     
 
 // "info" is the number of key bits
@@ -95,7 +104,7 @@ void VectorSupport<unsigned int>::fillVector(unsigned int *a, size_t numElements
     int keyshiftmask = 0;
     if (keybits > 16) keyshiftmask = (1 << (keybits - 16)) - 1;
     int keymask = 0xffff;
-    if (keybits < 16) keymask = (1 << keybits) - 1;            
+    if (keybits < 16) keymask = (1 << keybits) - 1;
 
     srand(95123);
     for(unsigned int i=0; i < numElements; ++i)   
@@ -106,11 +115,45 @@ void VectorSupport<unsigned int>::fillVector(unsigned int *a, size_t numElements
 
 // "info" is the number of key bits
 template<> inline
+void VectorSupport<unsigned long long>::fillVector(unsigned long long *a, size_t numElements, unsigned long long keybits)
+{
+    // Fill up with some random data
+    unsigned long long keyshiftmask16 = 0;
+    if (keybits > 16) keyshiftmask16 = ((1 << (keybits - 16)) - 1) & 0xffff;
+    unsigned long long keyshiftmask32 = 0;
+    if (keybits > 32) keyshiftmask32 = ((1 << (keybits - 32)) - 1) & 0xffff;
+    unsigned long long keyshiftmask48 = 0;
+    if (keybits > 48) keyshiftmask48 = ((1 << (keybits - 48)) - 1) & 0xffff;
+    unsigned long long keymask = 0xffff;
+    if (keybits < 16) keymask = (1 << keybits) - 1;
+
+    srand(95123);
+    for(unsigned int i=0; i < numElements; ++i)   
+    { 
+        a[i] =
+          ((rand() & keyshiftmask48)<<48) |
+          ((rand() & keyshiftmask32)<<32) |
+          ((rand() & keyshiftmask16)<<16) |
+          (rand() & keymask); 
+    }
+}
+
+// "info" is the number of key bits
+template<> inline
 void VectorSupport<int>::fillVector(int *a, size_t numElements,int keybits)
 {
     VectorSupport<unsigned int>::fillVector((unsigned int *)a, 
                                             numElements, 
                                             keybits);
+}
+
+// "info" is the number of key bits
+template<> inline
+void VectorSupport<long long>::fillVector(long long *a, size_t numElements,long long keybits)
+{
+    VectorSupport<unsigned long long>::fillVector((unsigned long long *)a, 
+                                                  numElements, 
+                                                  keybits);
 }
 
 // "info" is the range
@@ -144,13 +187,13 @@ int VectorSupport<unsigned int>::verifySort(unsigned int *keysSorted, unsigned i
     int retval = 0;
 
     for(unsigned int i=0; i<len-1; ++i)
-    {	   
+    {      
         if( (keysSorted[i])>(keysSorted[i+1]) )
         {
             printf("Unordered key[%u]:%u > key[%u]:%u\n", i, keysSorted[i], i+1, keysSorted[i+1]);
             retval = 1;
             break;
-        }		
+        }               
     }
 
     if (valuesSorted)
@@ -177,13 +220,13 @@ int VectorSupport<float>::verifySort(float *keysSorted, unsigned int *valuesSort
     int retval = 0;
 
     for(unsigned int i=0; i<len-1; ++i)
-    {	   
+    {      
         if( (keysSorted[i])>(keysSorted[i+1]) )
         {
             printf("Unordered key[%u]:%f > key[%u]:%f\n", i, keysSorted[i], i+1, keysSorted[i+1]);
             retval = 1;
             break;
-        }		
+        }               
     }
 
     if (valuesSorted)
@@ -212,13 +255,13 @@ int VectorSupport<int>::verifySort(int *keysSorted, unsigned int *valuesSorted,
     int retval = 0;
 
     for(unsigned int i=0; i<len-1; ++i)
-    {	   
+    {      
         if( (keysSorted[i])>(keysSorted[i+1]) )
         {
             printf("Unordered key[%u]:%d > key[%u]:%d\n", i, keysSorted[i], i+1, keysSorted[i+1]);
             retval = 1;
             break;
-        }		
+        }               
     }
 
     if (valuesSorted)
@@ -245,13 +288,13 @@ int VectorSupport<double>::verifySort(double *keysSorted, unsigned int *valuesSo
     int retval = 0;
 
     for(unsigned int i=0; i<len-1; ++i)
-    {	   
+    {      
         if( (keysSorted[i])>(keysSorted[i+1]) )
         {
             printf("Unordered key[%u]:%f > key[%u]:%f\n", i, keysSorted[i], i+1, keysSorted[i+1]);
             retval = 1;
             break;
-        }		
+        }               
     }
 
     if (valuesSorted)

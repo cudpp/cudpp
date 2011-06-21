@@ -171,7 +171,14 @@ void allocReduceStorage(CUDPPReducePlan *plan)
     case CUDPP_DOUBLE:
         cudaMalloc(&plan->m_blockSums, blocks * sizeof(double));
         break;
+    case CUDPP_LONGLONG:
+        cudaMalloc(&plan->m_blockSums, blocks * sizeof(long long));
+        break;
+    case CUDPP_ULONGLONG:
+        cudaMalloc(&plan->m_blockSums, blocks * sizeof(unsigned long long));
+        break;
     default:
+        //! @todo should this flag an error? 
         break;
     }
    
@@ -280,6 +287,42 @@ void cudppReduceDispatch(void *d_odata, const void *d_idata, size_t numElements,
             break;
         case CUDPP_MIN:
             reduceArray< OperatorMin<double> >((double*)d_odata, (double*)d_idata, numElements, plan);
+            break;
+        }
+        break;
+    case CUDPP_LONGLONG:
+        switch (plan->m_config.op)
+        {
+        case CUDPP_ADD:
+        default:
+            reduceArray< OperatorAdd<long long> >((long long*)d_odata, (long long*)d_idata, numElements, plan);
+            break;
+        case CUDPP_MULTIPLY:
+            reduceArray< OperatorMultiply<long long> >((long long*)d_odata, (long long*)d_idata, numElements, plan);
+            break;
+        case CUDPP_MAX:
+            reduceArray< OperatorMax<long long> >((long long*)d_odata, (long long*)d_idata, numElements, plan);
+            break;
+        case CUDPP_MIN:
+            reduceArray< OperatorMin<long long> >((long long*)d_odata, (long long*)d_idata, numElements, plan);
+            break;
+        }
+        break;
+    case CUDPP_ULONGLONG:
+        switch (plan->m_config.op)
+        {
+        case CUDPP_ADD:
+        default:
+            reduceArray< OperatorAdd<unsigned long long> >((unsigned long long*)d_odata, (unsigned long long*)d_idata, numElements, plan);
+            break;
+        case CUDPP_MULTIPLY:
+            reduceArray< OperatorMultiply<unsigned long long> >((unsigned long long*)d_odata, (unsigned long long*)d_idata, numElements, plan);
+            break;
+        case CUDPP_MAX:
+            reduceArray< OperatorMax<unsigned long long> >((unsigned long long*)d_odata, (unsigned long long*)d_idata, numElements, plan);
+            break;
+        case CUDPP_MIN:
+            reduceArray< OperatorMin<unsigned long long> >((unsigned long long*)d_odata, (unsigned long long*)d_idata, numElements, plan);
             break;
         }
         break;

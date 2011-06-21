@@ -133,6 +133,18 @@ struct SharedMemory <unsigned long>
 };
 
 template <>
+struct SharedMemory <long long>
+{
+    __device__ long long* getPointer() { extern __shared__ long long s_longlong[]; return s_longlong; }    
+};
+
+template <>
+struct SharedMemory <unsigned long long>
+{
+    __device__ unsigned long long* getPointer() { extern __shared__ unsigned long long s_ulonglong[]; return s_ulonglong; }    
+};
+
+template <>
 struct SharedMemory <bool>
 {
     __device__ bool* getPointer() { extern __shared__ bool s_bool[]; return s_bool; }    
