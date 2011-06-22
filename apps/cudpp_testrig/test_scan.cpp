@@ -26,7 +26,7 @@
 #include "cudpp_testrig_utils.h"
 #include "arraycompare.h"
 
-#include "scan_gold.cpp" // all templates now, have to be included
+#include "scan_gold.cpp" // this file is all templates now; must be included
 
 /**
  * testScan exercises cudpp's unsegmented scan functionality.
@@ -66,7 +66,7 @@ int scanTest(int argc, const char **argv, const CUDPPConfiguration &config,
     }
 
     unsigned int test[] = {39, 128, 256, 512, 1000, 1024, 1025, 32768, 45537, 65536, 131072,
-        262144, 500001, 524288, 1048577, 1048576, 1048581, 2097152, 4194304, 8388608};
+                           262144, 500001, 524288, 1048577, 1048576, 1048581, 2097152, 4194304, 8388608};
 
     int numTests = sizeof(test) / sizeof(test[0]);
     if (oneTest)
@@ -217,6 +217,7 @@ int scanTest(int argc, const char **argv, const CUDPPConfiguration &config,
         }
         if (testOptions.debug)
         {
+            printArray(i_data, numElements);
             printArray(o_data, numElements);
         }
      
@@ -339,7 +340,7 @@ int testSegmentedScan(int argc, const char **argv, const CUDPPConfiguration *con
     }
 
     unsigned int test[] = {32, 128, 256, 512, 1024, 1025, 32768, 45537, 65536, 131072,
-        262144, 500001, 524288, 1048577, 1048576, 1048581, 2097152, 4194304, 8388608};
+                           262144, 500001, 524288, 1048577, 1048576, 1048581, 2097152, 4194304, 8388608};
 
     int numTests = sizeof(test) / sizeof(test[0]);
     if (oneTest)
@@ -423,15 +424,15 @@ int testSegmentedScan(int argc, const char **argv, const CUDPPConfiguration *con
             // The flag at the first position is implicitly set
             // so try to generate non-zero positions
             while((idx = (unsigned int)
-                           ((test[k] - 1) * (rand() / (float)RAND_MAX))) 
-                          == 0)
+                   ((test[k] - 1) * (rand() / (float)RAND_MAX))) 
+                  == 0)
             {
             }
             
             // printf("Setting flag at pos %d\n", idx);
             i_flags[idx] = 1;
         }
-                // i_flags[5]=1;
+        // i_flags[5]=1;
         // Copy flags to GPU
         CUDA_SAFE_CALL( cudaMemcpy(d_iflags, i_flags, 
                                    sizeof(unsigned int) * test[k],
@@ -457,7 +458,7 @@ int testSegmentedScan(int argc, const char **argv, const CUDPPConfiguration *con
             break;
         }
 
-                if (!quiet)
+        if (!quiet)
         {
             printf("Running a%s%s %s-segmented scan of %d elements\n",               
                    (config.options & CUDPP_OPTION_BACKWARD) ? " backward" : "",
@@ -527,11 +528,11 @@ int testSegmentedScan(int argc, const char **argv, const CUDPPConfiguration *con
         {
             for (unsigned int i = 0; i < test[k]; ++i)
             {
-                                if (reference[i] != o_data[i]) printf("%d %f %f\n", i, o_data[i], reference[i]);
+                if (reference[i] != o_data[i]) printf("%d %f %f\n", i, o_data[i], reference[i]);
                 // printf("%f %f\n", reference[i], o_data[i]);
             }
             // printf("\n");
-                        // for (unsigned int i = 0; i < test[k]; ++i)
+            // for (unsigned int i = 0; i < test[k]; ++i)
             // {
             //    printf("%f ", reference[i]);
             //}
@@ -610,12 +611,12 @@ int testMultiSumScan(int argc, const char **argv)
     if (CUTTrue == cutGetCmdLineArgumenti(argc, (const char**) argv, "n",
                                           &numElements))
     {
-     //   oneTest = true;
+        //   oneTest = true;
     }
     if (CUTTrue == cutGetCmdLineArgumenti(argc, (const char**) argv, "r",
                                           &numRows))
     {
-     //   oneTest = true;
+        //   oneTest = true;
     }
 
     size_t myPitch = numElements * sizeof(float);
@@ -758,7 +759,7 @@ int testScan(int argc, const char **argv, const CUDPPConfiguration *configPtr)
 
         //default sum scan
         config.op = CUDPP_ADD;
-        config.datatype = CUDPP_FLOAT;
+        config.datatype = getDatatypeFromArgv(argc, argv);
 
         if (testOptions.op && !strcmp(testOptions.op, "max"))
         {
@@ -816,3 +817,9 @@ int testScan(int argc, const char **argv, const CUDPPConfiguration *configPtr)
         break;
     }
 }
+
+// Leave this at the end of the file
+// Local Variables:
+// mode:c++
+// c-file-style: "NVIDIA"
+// End:

@@ -31,6 +31,7 @@
 #include <cstdio>
 
 #include "cudpp.h"
+#include "cudpp_testrig_utils.h"
 
 
 int testScan(int argc, const char ** argv, const CUDPPConfiguration *config);

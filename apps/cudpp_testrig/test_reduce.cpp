@@ -281,32 +281,7 @@ int testReduce(int argc, const char **argv, const CUDPPConfiguration *configPtr)
         }
 
         // default float
-        config.datatype = CUDPP_FLOAT;
-
-        if( cutCheckCmdLineFlag(argc, (const char**)argv, "float") )
-        {     
-            config.datatype = CUDPP_FLOAT;
-        }
-        if( cutCheckCmdLineFlag(argc, (const char**)argv, "double") )
-        {     
-            config.datatype = CUDPP_DOUBLE;
-        }
-        else if( cutCheckCmdLineFlag(argc, (const char**)argv, "uint") )
-        {        
-            config.datatype = CUDPP_UINT;
-        }
-        else if( cutCheckCmdLineFlag(argc, (const char**)argv, "int") )
-        {        
-            config.datatype = CUDPP_INT;
-        }
-        else if( cutCheckCmdLineFlag(argc, (const char**)argv, "longlong") )
-        {        
-            config.datatype = CUDPP_LONGLONG;
-        }
-        else if( cutCheckCmdLineFlag(argc, (const char**)argv, "ulonglong") )
-        {        
-            config.datatype = CUDPP_ULONGLONG;
-        }
+        config.datatype = getDatatypeFromArgv(argc, argv);
     }
 
     switch(config.datatype)

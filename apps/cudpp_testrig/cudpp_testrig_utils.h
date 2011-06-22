@@ -360,6 +360,36 @@ void printArray(const T * vector, unsigned int len)
     printf("\n");
 }
 
+inline CUDPPDatatype getDatatypeFromArgv(int argc, const char ** argv)
+{
+    if( cutCheckCmdLineFlag(argc, (const char**)argv, "float") )
+    {     
+        return CUDPP_FLOAT;
+    }
+    else if( cutCheckCmdLineFlag(argc, (const char**)argv, "double") )
+    {     
+        return CUDPP_DOUBLE;
+    }
+    else if( cutCheckCmdLineFlag(argc, (const char**)argv, "uint") )
+    {        
+        return CUDPP_UINT;
+    }
+    else if( cutCheckCmdLineFlag(argc, (const char**)argv, "int") )
+    {        
+        return CUDPP_INT;
+    }
+    else if( cutCheckCmdLineFlag(argc, (const char**)argv, "longlong") )
+    {        
+        return CUDPP_LONGLONG;
+    }
+    else if( cutCheckCmdLineFlag(argc, (const char**)argv, "ulonglong") )
+    {        
+        return CUDPP_ULONGLONG;
+    }
+    return CUDPP_FLOAT;
+}
+
+
 #endif // __CUDPP_TESTRIG_UTILS_H__
 
 
