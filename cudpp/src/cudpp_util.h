@@ -103,14 +103,20 @@ __host__ __device__ inline T getMin() { return 0; }
 template <> __host__ __device__ inline int getMax() { return INT_MAX; }
 template <> __host__ __device__ inline unsigned int getMax() { return INT_MAX; }
 template <> __host__ __device__ inline float getMax() { return FLT_MAX; }
+template <> __host__ __device__ inline double getMax() { return DBL_MAX; }
 template <> __host__ __device__ inline char getMax() { return (char)INT_MAX; }
 template <> __host__ __device__ inline unsigned char getMax() { return (unsigned char)INT_MAX; }
+template <> __host__ __device__ inline long long getMax() { return LLONG_MAX; }
+template <> __host__ __device__ inline unsigned long long getMax() { return ULLONG_MAX; }
 // getMin
 template <> __host__ __device__ inline int getMin() { return INT_MIN; }
 template <> __host__ __device__ inline unsigned int getMin() { return 0; }
 template <> __host__ __device__ inline float getMin() { return -FLT_MAX; }
+template <> __host__ __device__ inline double getMin() { return -DBL_MAX; }
 template <> __host__ __device__ inline char getMin() { return (char)INT_MIN; }
 template <> __host__ __device__ inline unsigned char getMin() { return (unsigned char)0; }
+template <> __host__ __device__ inline long long getMin() { return LLONG_MIN; }
+template <> __host__ __device__ inline unsigned long long getMin() { return 0; }
 
 /** @brief Returns the maximum of three values. 
   * @param a First value. 
@@ -165,6 +171,21 @@ struct typeToVector<float, 4>
     typedef float4 Result;
 };
 template<>
+struct typeToVector<double, 4>
+{
+    typedef double4 Result;
+};
+template<>
+struct typeToVector<long long, 4>
+{
+    typedef longlong4 Result;
+};
+template<>
+struct typeToVector<unsigned long long, 4>
+{
+    typedef ulonglong4 Result;
+};
+template<>
 struct typeToVector<int, 3>
 {
     typedef int3 Result;
@@ -180,6 +201,16 @@ struct typeToVector<float, 3>
     typedef float3 Result;
 };
 template<>
+struct typeToVector<long long, 3>
+{
+    typedef longlong3 Result;
+};
+template<>
+struct typeToVector<unsigned long long, 3>
+{
+    typedef ulonglong3 Result;
+};
+template<>
 struct typeToVector<int, 2>
 {
     typedef int2 Result;
@@ -193,6 +224,16 @@ template<>
 struct typeToVector<float, 2>
 {
     typedef float2 Result;
+};
+template<>
+struct typeToVector<long long, 2>
+{
+    typedef longlong2 Result;
+};
+template<>
+struct typeToVector<unsigned long long, 2>
+{
+    typedef ulonglong2 Result;
 };
 
 template <typename T>
@@ -227,6 +268,10 @@ template <>
 __device__ float OperatorMax<float>::identity() const { return -FLT_MAX; }
 template <>
 __device__ double OperatorMax<double>::identity() const { return -DBL_MAX; }
+template <>
+__device__ long long OperatorMax<long long>::identity() const { return LLONG_MIN; }
+template <>
+__device__ unsigned long long OperatorMax<unsigned long long>::identity() const { return 0; }
 
 template <typename T>
 class OperatorMin
@@ -244,6 +289,10 @@ template <>
 __device__ float OperatorMin<float>::identity() const { return FLT_MAX; }
 template <>
 __device__ double OperatorMin<double>::identity() const { return DBL_MAX; }
+template <>
+__device__ long long OperatorMin<long long>::identity() const { return LLONG_MAX; }
+template <>
+__device__ unsigned long long OperatorMin<unsigned long long>::identity() const { return ULLONG_MAX; }
 
 #endif // __CUDPP_UTIL_H__
 

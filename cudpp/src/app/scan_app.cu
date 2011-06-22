@@ -240,6 +240,18 @@ void allocScanStorage(CUDPPScanPlan *plan)
         plan->m_blockSums = (void**) malloc(level * sizeof(float*));
         elementSize = sizeof(float);
         break;
+    case CUDPP_DOUBLE:
+        plan->m_blockSums = (void**) malloc(level * sizeof(double*));
+        elementSize = sizeof(double);
+        break;
+    case CUDPP_LONGLONG:
+        plan->m_blockSums = (void**) malloc(level * sizeof(long long*));
+        elementSize = sizeof(long long);
+        break;
+    case CUDPP_ULONGLONG:
+        plan->m_blockSums = (void**) malloc(level * sizeof(unsigned long long*));
+        elementSize = sizeof(unsigned long long);
+        break;
     default:
         break;
     }
@@ -364,19 +376,40 @@ void cudppScanDispatchType(void                *d_out,
     switch(plan->m_config.datatype)
     {
     case CUDPP_INT:
-        cudppScanDispatchOperator<int, isBackward, isExclusive>(d_out, d_in, 
-                                                                numElements, 
-                                                                numRows, plan);
+        cudppScanDispatchOperator<int, 
+                                  isBackward, 
+                                  isExclusive>(d_out, d_in, numElements, 
+                                               numRows, plan);
         break;
     case CUDPP_UINT:
-        cudppScanDispatchOperator<unsigned int, isBackward, isExclusive>(d_out, d_in, 
-                                                                         numElements, 
-                                                                         numRows, plan);
+        cudppScanDispatchOperator<unsigned int, 
+                                  isBackward, 
+                                  isExclusive>(d_out, d_in, numElements, 
+                                               numRows, plan);
         break;
     case CUDPP_FLOAT:
-        cudppScanDispatchOperator<float, isBackward, isExclusive>(d_out, d_in, 
-                                                                  numElements, 
-                                                                  numRows, plan);
+        cudppScanDispatchOperator<float, 
+                                  isBackward, 
+                                  isExclusive>(d_out, d_in, numElements, 
+                                               numRows, plan);
+        break;
+    case CUDPP_DOUBLE:
+        cudppScanDispatchOperator<double, 
+                                  isBackward,
+                                  isExclusive>(d_out, d_in, numElements, 
+                                               numRows, plan);
+        break;
+    case CUDPP_LONGLONG:
+        cudppScanDispatchOperator<long long, 
+                                  isBackward, 
+                                  isExclusive>(d_out, d_in, numElements, 
+                                               numRows, plan);
+        break;
+    case CUDPP_ULONGLONG:
+        cudppScanDispatchOperator<unsigned long long,
+                                  isBackward, 
+                                  isExclusive>(d_out, d_in, numElements, 
+                                               numRows, plan);
         break;
     default:
         break;
@@ -412,22 +445,26 @@ void cudppScanDispatch(void                *d_out,
     {
         if (CUDPP_OPTION_BACKWARD & plan->m_config.options)
         {
-            cudppScanDispatchType<true, true>(d_out, d_in, numElements, numRows, plan);
+            cudppScanDispatchType<true, true>(d_out, d_in, numElements, 
+                                              numRows, plan);
         }
         else
         {
-            cudppScanDispatchType<false, true>(d_out, d_in, numElements, numRows, plan);
+            cudppScanDispatchType<false, true>(d_out, d_in, numElements, 
+                                               numRows, plan);
         }
     }
     else
     {
         if (CUDPP_OPTION_BACKWARD & plan->m_config.options)
         {
-            cudppScanDispatchType<true, false>(d_out, d_in, numElements, numRows, plan);
+            cudppScanDispatchType<true, false>(d_out, d_in, numElements, 
+                                               numRows, plan);
         }
         else
         {
-            cudppScanDispatchType<false, false>(d_out, d_in, numElements, numRows, plan);
+            cudppScanDispatchType<false, false>(d_out, d_in, numElements, 
+                                                numRows, plan);
         }
     }
 }

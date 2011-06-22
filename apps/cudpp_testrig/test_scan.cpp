@@ -22,61 +22,11 @@
 #include <cstring>
 
 #include "cudpp.h"
-
 #include "cudpp_testrig_options.h"
+#include "cudpp_testrig_utils.h"
+#include "arraycompare.h"
 
-extern "C"
-void computeSumScanGold(float *reference, const float *idata,
-                        const unsigned int len,
-                        const CUDPPConfiguration &config);
-
-extern "C"
-void computeMultiplyScanGold(float *reference, const float *idata,
-                        const unsigned int len,
-                        const CUDPPConfiguration &config);
-
-extern "C"
-void computeMultiRowSumScanGold(float *reference, const float *idata,
-                                const unsigned int len,
-                                const unsigned int rows,
-                                const CUDPPConfiguration &config);
-
-extern "C"
-void computeMaxScanGold( float *reference, const float *idata,
-                         const unsigned int len,
-                         const CUDPPConfiguration &config);
-
-extern "C"
-void computeMinScanGold( float *reference, const float *idata,
-                        const unsigned int len,
-                        const CUDPPConfiguration &config);
-
-extern "C"
-void computeSumSegmentedScanGold(float *reference, const float *idata,
-                                 const unsigned int* iflags,
-                                 const unsigned int len,
-                                 const CUDPPConfiguration &config);
-
-extern "C"
-void
-computeMaxSegmentedScanGold(float* reference, const float* idata, 
-                            const unsigned int *iflag,
-                            const unsigned int len,
-                            const CUDPPConfiguration & config); 
-
-extern "C"
-void
-computeMultiplySegmentedScanGold(float* reference, const float* idata, 
-                                 const unsigned int *iflag,
-                                 const unsigned int len,
-                                 const CUDPPConfiguration & config);
-
-extern "C"
-void
-computeMinSegmentedScanGold(float* reference, const float* idata, 
-                            const unsigned int *iflag,
-                            const unsigned int len,
-                            const CUDPPConfiguration & config);
+#include "scan_gold.cpp" // all templates now, have to be included
 
 /**
  * testScan exercises cudpp's unsegmented scan functionality.
@@ -94,65 +44,16 @@ computeMinSegmentedScanGold(float* reference, const float* idata,
  * @return Number of tests that failed regression (0 for all pass)
  * @see CUDPPConfiguration, setOptions, cudppScan
  */
-int testScan(int argc, const char **argv, const CUDPPConfiguration *configPtr)
+template <typename T>
+int scanTest(int argc, const char **argv, const CUDPPConfiguration &config, 
+             const testrigOptions &testOptions)
 {
     int retval = 0;
-
-    testrigOptions testOptions;
-    setOptions(argc, argv, testOptions);
 
     unsigned int timer;
 
     CUT_SAFE_CALL(cutCreateTimer(&timer));
 
-    CUDPPConfiguration config;
-    config.algorithm = CUDPP_SCAN;
-
-    if (configPtr != NULL)
-    {
-        config = *configPtr;
-    }
-    else
-    {
-        CUDPPOption direction = CUDPP_OPTION_FORWARD;
-        CUDPPOption inclusivity = CUDPP_OPTION_EXCLUSIVE;
-
-        //default sum scan
-        config.op = CUDPP_ADD;
-        config.datatype = CUDPP_FLOAT;
-
-        if (testOptions.op && !strcmp(testOptions.op, "max"))
-        {
-            config.op = CUDPP_MAX;
-        }
-        else if (testOptions.op && !strcmp(testOptions.op, "min"))
-        {
-            config.op = CUDPP_MIN;
-        }
-        else if (testOptions.op && !strcmp(testOptions.op, "multiply"))
-        {
-            config.op = CUDPP_MULTIPLY;
-        }
-
-        if (CUTTrue == cutCheckCmdLineFlag(argc, argv, "backward"))
-        {
-            direction = CUDPP_OPTION_BACKWARD;
-        }
-     
-        if (CUTTrue == cutCheckCmdLineFlag(argc, argv, "exclusive"))
-        {
-            inclusivity = CUDPP_OPTION_EXCLUSIVE;
-        }
-
-        if (CUTTrue == cutCheckCmdLineFlag(argc, argv, "inclusive"))
-        {
-            inclusivity = CUDPP_OPTION_INCLUSIVE;
-        }
-     
-        config.options = direction | inclusivity;
-    }
-
- 
     int numElements = 8388608; // maximum test size
 
     bool quiet = (CUTTrue == cutCheckCmdLineFlag(argc, (const char**) argv, "quiet"));
@@ -196,13 +97,13 @@ int testScan(int argc, const char **argv, const CUDPPConfiguration *configPtr)
         return retval;
     }
  
-    unsigned int memSize = sizeof(float) * numElements;
+    unsigned int memSize = sizeof(T) * numElements;
  
     // allocate host memory to store the input data
-    float* i_data = (float*) malloc( memSize);
+    T* i_data = (T*) malloc( memSize);
  
     // allocate host memory to store the output data
-    float* o_data = (float*) malloc( memSize);
+    T* o_data = (T*) malloc( memSize);
  
     // host memory to store input flags
   
@@ -213,11 +114,11 @@ int testScan(int argc, const char **argv, const CUDPPConfiguration *configPtr)
     }
 
     // allocate and compute reference solution
-    float* reference = (float*) malloc( memSize);
+    T* reference = (T*) malloc( memSize);
  
     // allocate device memory input and output arrays
-    float* d_idata     = NULL;
-    float* d_odata     = NULL;
+    T* d_idata     = NULL;
+    T* d_odata     = NULL;
 
     CUDA_SAFE_CALL( cudaMalloc( (void**) &d_idata, memSize));
     CUDA_SAFE_CALL( cudaMalloc( (void**) &d_odata, memSize));
@@ -246,14 +147,18 @@ int testScan(int argc, const char **argv, const CUDPPConfiguration *configPtr)
         case CUDPP_MIN:
             strcpy(op, "min");
             break;
+        case CUDPP_OPERATOR_INVALID:
+            fprintf(stderr, "testScan called with invalid operator\n");
+            break;
         }
         if (!quiet)
         {
-            printf("Running a%s%s %s-scan of %d elements\n",               
+            printf("Running a%s%s %s-scan of %d %s elements\n",
                    (config.options & CUDPP_OPTION_BACKWARD) ? " backward" : "",
                    (config.options & CUDPP_OPTION_INCLUSIVE) ? " inclusive" : "",
                    op,
-                   test[k]);
+                   test[k],
+                   datatype_to_string[(int) config.datatype]);
             fflush(stdout);
         }
 
@@ -290,11 +195,13 @@ int testScan(int argc, const char **argv, const CUDPPConfiguration *configPtr)
         cutStopTimer(timer);
      
         // copy result from device to host
-        CUDA_SAFE_CALL(cudaMemcpy( o_data, d_odata, sizeof(float) * test[k],
+        CUDA_SAFE_CALL(cudaMemcpy( o_data, d_odata, sizeof(T) * test[k],
                                    cudaMemcpyDeviceToHost));
           
-        // check if the result is equivalent to the expected soluion
-        CUTBoolean result = cutComparefe( reference, o_data, test[k], 0.001f);
+        // check if the result is equivalent to the expected solution
+        ArrayComparator<T> compare;
+        CUTBoolean result = compare.compare_e( reference, o_data, 
+                                               test[k], 0.001f);
 
         retval += (CUTTrue == result) ? 0 : 1;
         if (!quiet)
@@ -310,11 +217,7 @@ int testScan(int argc, const char **argv, const CUDPPConfiguration *configPtr)
         }
         if (testOptions.debug)
         {
-            for (int i = 0; i < numElements; ++i)
-            {
-                printf("%f ", o_data[i]);
-            }
-            printf("\n");
+            printArray(o_data, numElements);
         }
      
         cutResetTimer(timer); 
@@ -405,7 +308,7 @@ int testSegmentedScan(int argc, const char **argv, const CUDPPConfiguration *con
             config.op = CUDPP_MIN;
         }
 
-		if (CUTTrue == cutCheckCmdLineFlag(argc, argv, "backward"))
+        if (CUTTrue == cutCheckCmdLineFlag(argc, argv, "backward"))
         {
             direction = CUDPP_OPTION_BACKWARD;
         }
@@ -528,7 +431,7 @@ int testSegmentedScan(int argc, const char **argv, const CUDPPConfiguration *con
             // printf("Setting flag at pos %d\n", idx);
             i_flags[idx] = 1;
         }
-		// i_flags[5]=1;
+                // i_flags[5]=1;
         // Copy flags to GPU
         CUDA_SAFE_CALL( cudaMemcpy(d_iflags, i_flags, 
                                    sizeof(unsigned int) * test[k],
@@ -549,9 +452,12 @@ int testSegmentedScan(int argc, const char **argv, const CUDPPConfiguration *con
         case CUDPP_MIN:
             strcpy(op, "min");
             break;
+        case CUDPP_OPERATOR_INVALID:
+            fprintf(stderr, "testSegmentedScan called with invalid operator\n");
+            break;
         }
 
-		if (!quiet)
+                if (!quiet)
         {
             printf("Running a%s%s %s-segmented scan of %d elements\n",               
                    (config.options & CUDPP_OPTION_BACKWARD) ? " backward" : "",
@@ -621,11 +527,11 @@ int testSegmentedScan(int argc, const char **argv, const CUDPPConfiguration *con
         {
             for (unsigned int i = 0; i < test[k]; ++i)
             {
-				if (reference[i] != o_data[i]) printf("%d %f %f\n", i, o_data[i], reference[i]);
+                                if (reference[i] != o_data[i]) printf("%d %f %f\n", i, o_data[i], reference[i]);
                 // printf("%f %f\n", reference[i], o_data[i]);
             }
             // printf("\n");
-			// for (unsigned int i = 0; i < test[k]; ++i)
+                        // for (unsigned int i = 0; i < test[k]; ++i)
             // {
             //    printf("%f ", reference[i]);
             //}
@@ -673,6 +579,7 @@ int testSegmentedScan(int argc, const char **argv, const CUDPPConfiguration *con
  * @return Number of tests that failed regression (0 for all pass)
  * @see cudppMultiScan
  */
+// template<class T>
 int testMultiSumScan(int argc, const char **argv)
 {
     int retval = 0;
@@ -795,9 +702,12 @@ int testMultiSumScan(int argc, const char **argv)
     CUDA_SAFE_CALL(cudaMemcpy2D( o_data, myPitch, d_odata, d_opitch,
                                  myPitch, numRows, cudaMemcpyDeviceToHost));
      
-    // check if the result is equivalent to the expected soluion
-    CUTBoolean result = cutComparefe( reference, o_data, numElements*numRows,
-                                      0.001f);
+    // check if the result is equivalent to the expected solution
+    // ArrayComparator<T> compare;
+    // CUTBoolean result = compare.compare_e( reference, o_data, 
+    // numElements*numRows, 0.001f);
+    CUTBoolean result = cutComparefe( reference, o_data, 
+                                      numElements*numRows, 0.001f);
     retval += (CUTTrue == result) ? 0 : 1;
     printf("%s test %s\n", testOptions.runMode,
            (CUTTrue == result) ? "PASSED" : "FAILED");
@@ -827,4 +737,82 @@ int testMultiSumScan(int argc, const char **argv)
     cudaFree( d_odata);
     cudaFree( d_idata);
     return retval;
+}
+
+int testScan(int argc, const char **argv, const CUDPPConfiguration *configPtr)
+{
+    testrigOptions testOptions;
+    setOptions(argc, argv, testOptions);
+
+    CUDPPConfiguration config;
+    config.algorithm = CUDPP_SCAN;
+
+    if (configPtr != NULL)
+    {
+        config = *configPtr;
+    }
+    else
+    {
+        CUDPPOption direction = CUDPP_OPTION_FORWARD;
+        CUDPPOption inclusivity = CUDPP_OPTION_EXCLUSIVE;
+
+        //default sum scan
+        config.op = CUDPP_ADD;
+        config.datatype = CUDPP_FLOAT;
+
+        if (testOptions.op && !strcmp(testOptions.op, "max"))
+        {
+            config.op = CUDPP_MAX;
+        }
+        else if (testOptions.op && !strcmp(testOptions.op, "min"))
+        {
+            config.op = CUDPP_MIN;
+        }
+        else if (testOptions.op && !strcmp(testOptions.op, "multiply"))
+        {
+            config.op = CUDPP_MULTIPLY;
+        }
+
+        if (CUTTrue == cutCheckCmdLineFlag(argc, argv, "backward"))
+        {
+            direction = CUDPP_OPTION_BACKWARD;
+        }
+     
+        if (CUTTrue == cutCheckCmdLineFlag(argc, argv, "exclusive"))
+        {
+            inclusivity = CUDPP_OPTION_EXCLUSIVE;
+        }
+
+        if (CUTTrue == cutCheckCmdLineFlag(argc, argv, "inclusive"))
+        {
+            inclusivity = CUDPP_OPTION_INCLUSIVE;
+        }
+     
+        config.options = direction | inclusivity;
+    }
+
+    switch(config.datatype)
+    {
+    case CUDPP_INT:
+        return scanTest<int>(argc, argv, config, testOptions);
+        break;
+    case CUDPP_UINT:
+        return scanTest<unsigned int>(argc, argv, config, testOptions);
+        break;
+    case CUDPP_FLOAT:
+        return scanTest<float>(argc, argv, config, testOptions);
+        break;
+    case CUDPP_DOUBLE:
+        return scanTest<double>(argc, argv, config, testOptions);
+        break;
+    case CUDPP_LONGLONG:
+        return scanTest<long long>(argc, argv, config, testOptions);
+        break;
+    case CUDPP_ULONGLONG:
+        return scanTest<unsigned long long>(argc, argv, config, testOptions);
+        break;
+    default:
+        return 0;
+        break;
+    }
 }

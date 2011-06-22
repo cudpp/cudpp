@@ -24,6 +24,8 @@
 #include <float.h>
 #include <algorithm>
 
+// declared in cudpp.cpp (in cudpp library)
+extern const char * datatype_to_string[];
 
 // template specializations defined below after class definitions
 
@@ -314,6 +316,55 @@ int VectorSupport<double>::verifySort(double *keysSorted, unsigned int *valuesSo
     return retval;
 }
 
+template<class T> inline
+void printItem(T item, const char * sep)
+{
+    item = item;                // avoid compiler error
+    printf("?%s", sep);
+}
 
+inline void printItem(float item, const char * sep)
+{
+    printf("%f%s", item, sep);
+}
+
+inline void printItem(int item, const char * sep)
+{
+    printf("%d%s", item, sep);
+}
+
+inline void printItem(double item, const char * sep)
+{
+    printf("%g%s", item, sep);
+}
+
+// http://stackoverflow.com/questions/2844/how-do-you-printf-an-unsigned-long-long-int
+inline void printItem(long long item, const char * sep)
+{
+    printf("%lld%s", item, sep);
+}
+
+inline void printItem(unsigned long long item, const char * sep)
+{
+    printf("%llu%s", item, sep);
+}
+
+
+template<class T>
+void printArray(const T * vector, unsigned int len)
+{
+    for (unsigned int i = 0; i < len; i++)
+    { 
+        printItem(vector[i], " ");
+    }
+    printf("\n");
+}
 
 #endif // __CUDPP_TESTRIG_UTILS_H__
+
+
+// Leave this at the end of the file
+// Local Variables:
+// mode:c++
+// c-file-style: "NVIDIA"
+// End:

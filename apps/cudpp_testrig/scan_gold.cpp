@@ -12,57 +12,59 @@
 #include <limits.h>
 #include <float.h>
 #include <algorithm>
+#include "cudpp_testrig_utils.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-// export C interface
-extern "C" 
-void computeSumScanGold( float* reference, const float* idata, 
+
+template<typename T>
+void computeSumScanGold(T *reference, const T *idata,
+                        const unsigned int len,
+                        const CUDPPConfiguration &config);
+
+template<typename T>
+void computeMultiplyScanGold(T *reference, const T *idata,
+                             const unsigned int len,
+                             const CUDPPConfiguration &config);
+
+template<typename T>
+void computeMultiRowSumScanGold(T *reference, const T *idata,
+                                const unsigned int len,
+                                const unsigned int rows,
+                                const CUDPPConfiguration &config);
+
+template<typename T>
+void computeMaxScanGold( T *reference, const T *idata,
                          const unsigned int len,
                          const CUDPPConfiguration &config);
 
-extern "C" 
-void computeMultiplyScanGold( float* reference, const float* idata, 
-                              const unsigned int len,
-                              const CUDPPConfiguration &config);
+template<typename T>
+void computeMinScanGold( T *reference, const T *idata,
+                        const unsigned int len,
+                        const CUDPPConfiguration &config);
 
-extern "C"
-void
-computeSumSegmentedScanGold(float* reference, const float* idata, 
-                            const unsigned int *iflag,
-                            const unsigned int len,
-                            const CUDPPConfiguration & config); 
-
-extern "C" 
-void computeMultiRowSumScanGold( float* reference, const float* idata, 
+template<typename T>
+void computeSumSegmentedScanGold(T *reference, const T *idata,
+                                 const unsigned int* iflags,
                                  const unsigned int len,
-                                 const unsigned int rows,
                                  const CUDPPConfiguration &config);
 
-extern "C" 
-void computeMaxScanGold( float *reference, const float *idata, 
-                         const unsigned int len, const CUDPPConfiguration &config);
-
-extern "C" 
-void computeMinScanGold( float *reference, const float *idata, 
-                        const unsigned int len, const CUDPPConfiguration &config);
-
-extern "C"
+template<typename T>
 void
-computeMaxSegmentedScanGold(float* reference, const float* idata, 
+computeMaxSegmentedScanGold(T* reference, const T* idata, 
                             const unsigned int *iflag,
                             const unsigned int len,
                             const CUDPPConfiguration & config); 
 
-extern "C"
+template<typename T>
 void
-computeMultiplySegmentedScanGold(float* reference, const float* idata, 
+computeMultiplySegmentedScanGold(T* reference, const T* idata, 
                                  const unsigned int *iflag,
                                  const unsigned int len,
-                                 const CUDPPConfiguration & config); 
+                                 const CUDPPConfiguration & config);
 
-extern "C"
+template<typename T>
 void
-computeMinSegmentedScanGold(float* reference, const float* idata, 
+computeMinSegmentedScanGold(T* reference, const T* idata, 
                             const unsigned int *iflag,
                             const unsigned int len,
                             const CUDPPConfiguration & config);
@@ -75,8 +77,9 @@ computeMinSegmentedScanGold(float* reference, const float* idata,
 //! @param len        number of elements in reference / idata
 //! @param config     Options for the scan
 ////////////////////////////////////////////////////////////////////////////////
+template<typename T>
 void
-computeSumScanGold( float *reference, const float *idata, 
+computeSumScanGold( T *reference, const T *idata, 
                     const unsigned int len,
                     const CUDPPConfiguration &config) 
 {
@@ -125,9 +128,12 @@ computeSumScanGold( float *reference, const float *idata,
 
     if (total_sum != reference[stopIdx - increment])
     {
-        printf("Warning: exceeding single-precision accuracy.  Scan will be inaccurate.\n");
-        printf("total sum %f\n", total_sum);
-        printf("reference %f\n", reference[stopIdx - increment]);
+        printf("Warning: exceeding single-precision accuracy. "
+               "Scan will be inaccurate.\n");
+        printf("total sum ");
+        printItem(total_sum, "\n");
+        printf("reference ");
+        printItem(reference[stopIdx - increment], "\n");
     }   
 }
 
@@ -139,8 +145,10 @@ computeSumScanGold( float *reference, const float *idata,
 //! @param len        number of elements in reference / idata
 //! @param config     Options for the scan
 ////////////////////////////////////////////////////////////////////////////////
+
+template<typename T>
 void
-computeMultiplyScanGold( float *reference, const float *idata, 
+computeMultiplyScanGold( T *reference, const T *idata, 
                          const unsigned int len,
                          const CUDPPConfiguration &config) 
 {
@@ -189,15 +197,19 @@ computeMultiplyScanGold( float *reference, const float *idata,
 
     if (totalProduct != reference[stopIdx - increment])
     {
-        printf("Warning: exceeding single-precision accuracy.  Scan will be inaccurate.\n");
-        printf("total product %f\n", totalProduct);
-        printf("reference %f\n", reference[stopIdx - increment]);
+        printf("Warning: exceeding single-precision accuracy. "
+               "Scan will be inaccurate.\n");
+        printf("total product ");
+        printItem(totalProduct, "\n");
+        printf("reference ");
+        printItem(reference[stopIdx - increment], "\n");
     }   
 }
 
 
+template<typename T>
 void
-computeSumSegmentedScanGold(float* reference, const float* idata, 
+computeSumSegmentedScanGold(T* reference, const T* idata, 
                             const unsigned int *iflag,
                             const unsigned int len,
                             const CUDPPConfiguration & config) 
@@ -263,14 +275,18 @@ computeSumSegmentedScanGold(float* reference, const float* idata,
 
     if (total_sum != reference[stopIdx - increment])
     {
-        printf("Warning: exceeding single-precision accuracy.  Scan will be inaccurate.\n");
-        printf("total sum %f\n", total_sum);
-        printf("reference %f\n", reference[stopIdx - increment]);
+        printf("Warning: exceeding single-precision accuracy. "
+               "Scan will be inaccurate.\n");
+        printf("total sum ");
+        printItem(total_sum, "\n");
+        printf("reference ");
+        printItem(reference[stopIdx - increment], "\n");
     }   
 }
 
+template<typename T>
 void
-computeMaxSegmentedScanGold(float* reference, const float* idata, 
+computeMaxSegmentedScanGold(T* reference, const T* idata, 
                             const unsigned int *iflag,
                             const unsigned int len,
                             const CUDPPConfiguration & config) 
@@ -337,14 +353,18 @@ computeMaxSegmentedScanGold(float* reference, const float* idata,
 
     if (total_max != reference[stopIdx - increment])
     {
-        printf("Warning: exceeding single-precision accuracy.  Scan will be inaccurate.\n");
-        printf("total max %f\n", total_max);
-        printf("reference %f\n", reference[stopIdx - increment]);
+        printf("Warning: exceeding single-precision accuracy. "
+               "Scan will be inaccurate.\n");
+        printf("total max ");
+        printItem(total_max, "\n");
+        printf("reference ");
+        printItem(reference[stopIdx - increment], "\n");
     }   
 }
 
+template<typename T>
 void
-computeMultiplySegmentedScanGold(float* reference, const float* idata, 
+computeMultiplySegmentedScanGold(T* reference, const T* idata, 
                                  const unsigned int *iflag,
                                  const unsigned int len,
                                  const CUDPPConfiguration & config) 
@@ -410,14 +430,18 @@ computeMultiplySegmentedScanGold(float* reference, const float* idata,
 
     if (total_multi != reference[stopIdx - increment])
     {
-        printf("Warning: exceeding single-precision accuracy.  Scan will be inaccurate.\n");
-        printf("total multi %f\n", total_multi);
-        printf("reference %f\n", reference[stopIdx - increment]);
+        printf("Warning: exceeding single-precision accuracy. "
+               "Scan will be inaccurate.\n");
+        printf("total multi ");
+        printItem(total_multi, "\n");
+        printf("reference ");
+        printItem(reference[stopIdx - increment], "\n");
     }   
 }
 
+template<typename T>
 void
-computeMinSegmentedScanGold(float* reference, const float* idata, 
+computeMinSegmentedScanGold(T* reference, const T* idata, 
                             const unsigned int *iflag,
                             const unsigned int len,
                             const CUDPPConfiguration & config) 
@@ -483,9 +507,12 @@ computeMinSegmentedScanGold(float* reference, const float* idata,
 
     if (total_min != reference[stopIdx - increment])
     {
-        printf("Warning: exceeding single-precision accuracy.  Scan will be inaccurate.\n");
-        printf("total min %f\n", total_min);
-        printf("reference %f\n", reference[stopIdx - increment]);
+        printf("Warning: exceeding single-precision accuracy. "
+               "Scan will be inaccurate.\n");
+        printf("total min ");
+        printItem(total_min, "\n");
+        printf("reference ");
+        printItem(reference[stopIdx - increment], "\n");
     }   
 }
 
@@ -496,8 +523,9 @@ computeMinSegmentedScanGold(float* reference, const float* idata,
 //! @param idata      const input data as provided to device
 //! @param len        number of elements in reference / idata
 ////////////////////////////////////////////////////////////////////////////////
+template<typename T>
 void
-computeMultiRowSumScanGold( float *reference, const float *idata, 
+computeMultiRowSumScanGold( T *reference, const T *idata, 
                             const unsigned int len,
                             const unsigned int rows,
                             const CUDPPConfiguration &config) 
@@ -551,8 +579,10 @@ computeMultiRowSumScanGold( float *reference, const float *idata,
     {
         if (total_sum[r] != reference[stopIdx - increment])
         {
-            printf("Warning: exceeding single-precision accuracy.  Scan will be inaccurate.\n");
-            printf("total sum %f\n", total_sum[r]);
+            printf("Warning: exceeding single-precision accuracy. "
+                   "Scan will be inaccurate.\n");
+            printf("total sum ");
+            printItem(total_sum[r], "\n");
         }  
     }
     free((void*)total_sum);
@@ -571,16 +601,19 @@ int maxi(int a, int b)
 //! @param idata      const input data as provided to device
 //! @param len        number of elements in reference / idata
 ////////////////////////////////////////////////////////////////////////////////
+
+template<typename T>
 void
-computeMaxScanGold(float *reference, const float *idata,   
+computeMaxScanGold(T *reference, const T *idata,   
                    const unsigned int len, const CUDPPConfiguration & config) 
 {
+    OperatorMax<T> mx;
     if(config.options & CUDPP_OPTION_FORWARD)
     {
         int j = 0;
         if (config.options & CUDPP_OPTION_EXCLUSIVE)
         {
-            reference[0] = -FLT_MAX;
+            reference[0] = mx.identity();
         }
         else
         {
@@ -597,7 +630,7 @@ computeMaxScanGold(float *reference, const float *idata,
         int j = len - 1;
         if (config.options & CUDPP_OPTION_EXCLUSIVE)
         {   
-            reference[len-1] = -FLT_MAX;
+            reference[len-1] = mx.identity();
         }
         else
         {
@@ -619,16 +652,18 @@ computeMaxScanGold(float *reference, const float *idata,
 //! @param idata      const input data as provided to device
 //! @param len        number of elements in reference / idata
 ////////////////////////////////////////////////////////////////////////////////
+template<typename T>
 void
-computeMinScanGold(float *reference, const float *idata,   
+computeMinScanGold(T *reference, const T *idata,   
                    const unsigned int len, const CUDPPConfiguration & config) 
 {
+    OperatorMin<T> mn;
     if(config.options & CUDPP_OPTION_FORWARD)
     {
         int j = 0;
         if (config.options & CUDPP_OPTION_EXCLUSIVE)
         {
-            reference[0] = FLT_MAX;
+            reference[0] = mn.identity();
         }
         else
         {
@@ -645,7 +680,7 @@ computeMinScanGold(float *reference, const float *idata,
         int j = len - 1;
         if (config.options & CUDPP_OPTION_EXCLUSIVE)
         {   
-            reference[len-1] = FLT_MAX;
+            reference[len-1] = mn.identity();
         }
         else
         {

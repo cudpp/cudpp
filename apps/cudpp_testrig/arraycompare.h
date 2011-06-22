@@ -29,7 +29,24 @@ class ArrayComparator
 public:
     CUTBoolean compare( const T* reference, T* data, unsigned int len)
     {
-        fprintf(stderr, "Error: no comparison function implemented for this type\n");
+        // get rid of compiler warnings
+        reference = reference;
+        data = data;
+        len = len;
+        fprintf(stderr,
+                "Error: no comparison function implemented for this type\n");
+        return CUTFalse;
+    }
+    CUTBoolean compare_e( const T* reference, T* data, unsigned int len,
+                          float epsilon)
+    {
+        // get rid of compiler warnings
+        reference = reference;
+        data = data;
+        len = len;
+        epsilon = epsilon; 
+        fprintf(stderr,
+                "Error: no comparison function implemented for this type\n");
         return CUTFalse;
     }
 };
@@ -43,6 +60,12 @@ public:
     {
         return cutComparei(reference, data, len);
     }
+    CUTBoolean compare_e( const int* reference, int* data, unsigned int len,
+                          float epsilon)
+    {
+        epsilon = epsilon;
+        return cutComparei(reference, data, len);
+    }
 };
 
 // Here's the specialization for floats:
@@ -53,6 +76,11 @@ public:
     CUTBoolean compare( const float* reference, float* data, unsigned int len)
     {
         return cutComparef(reference, data, len);
+    }
+    CUTBoolean compare_e( const float* reference, float* data, unsigned int len,
+                          float epsilon)
+    {
+        return cutComparefe(reference, data, len, epsilon);
     }
 };
 
@@ -75,6 +103,7 @@ class ArrayFileWriter<int>
 public:
     CUTBoolean write(const char* filename, int* data, unsigned int len, float epsilon)
     {
+        epsilon = epsilon;
         return cutWriteFilei(filename, data, len);
     }
 };

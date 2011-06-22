@@ -35,7 +35,8 @@ void computeReduceGold( T* out, const T* idata, const unsigned int len)
 }
 
 template <typename T>
-int reduceTest(int argc, const char **argv, const CUDPPConfiguration &config, testrigOptions &testOptions)
+int reduceTest(int argc, const char **argv, const CUDPPConfiguration &config,
+               const testrigOptions &testOptions)
 {
     int retval = 0;
 
