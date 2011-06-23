@@ -20,6 +20,7 @@
 #include <time.h>
 #include <limits.h>
 #include <cstring>
+#include <cuda_runtime_api.h>
 
 #include "cudpp.h"
 #include "cudpp_testrig_options.h"

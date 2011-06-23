@@ -17,7 +17,9 @@
 
 #include <cstdio>
 #include <cstring>
+#include <cuda_runtime_api.h>
 #include "cudpp_testrig_options.h"
+#include "findFile.h"
 
 //windows uses \ as the path, so we must adjust our original path for this
 //also if you're using Visual Studio, the path is only two directories up rather than three
@@ -36,7 +38,7 @@
 
 ///////////////////////////////////////////////////////////////////////
 //globals
-char regDir[100];	//a string holding the directory name of the regression data
+char regDir[100];       //a string holding the directory name of the regression data
 
 ///////////////////////////////////////////////////////////////////////
 //declaration forward
@@ -74,6 +76,11 @@ void constructFileName(char * fileName, testrigOptions & testOptions, unsigned i
     }
 } //end constructFileName
 
+CUTBoolean
+cutFindDir(char * outputPath, const char * startDir, const char * dirName)
+{
+    return (0 != findDir(startDir, dirName, outputPath)) ? CUTTrue : CUTFalse;
+}
 
 bool searchForFile(unsigned int numElements, FILE ** randFile, char * path, testrigOptions & testOptions, bool quiet)
 {

@@ -9,7 +9,7 @@
 EXECUTABLE	:= cudpp_testrig
 
 CCFILES :=	cudpp_testrig.cpp cudpp_testrig_options.cpp \
-		compact_gold.cpp spmvmult_gold.cpp rand_gold.cpp \
+		findFile.cpp compact_gold.cpp spmvmult_gold.cpp rand_gold.cpp \
 		test_radixsort.cpp test_rand.cpp test_reduce.cpp \
 		test_scan.cpp test_spmvmult.cpp test_compact.cpp
 

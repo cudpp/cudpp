@@ -19,6 +19,7 @@
 #include <cutil.h>
 #include <time.h>
 #include <limits.h>
+#include <cuda_runtime_api.h>
 
 #include "cudpp.h"
 #include "sparse.h"

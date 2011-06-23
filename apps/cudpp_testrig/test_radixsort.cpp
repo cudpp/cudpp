@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <cutil.h>
 #include <math.h>
+#include <cuda_runtime_api.h>
 
 #include "cudpp.h"
 #include "cudpp_testrig_options.h"
@@ -52,9 +53,13 @@ int radixSortTest(CUDPPHandle plan, CUDPPConfiguration config, size_t *tests,
 
     CUDA_SAFE_CALL(cudaMalloc((void **)&d_keys, numElements*sizeof(T)));
     if (config.options & CUDPP_OPTION_KEY_VALUE_PAIRS)
+    {
         CUDA_SAFE_CALL(cudaMalloc((void **)&d_values, numElements*sizeof(unsigned int)));
+    }
     else
+    {
         d_values = 0;
+    }
 
     // run multiple iterations to compute an average sort time
     cudaEvent_t start_event, stop_event;
@@ -281,3 +286,9 @@ int testRadixSort(int argc, const char **argv, const CUDPPConfiguration *configP
                           
     return retval;
 }
+
+// Leave this at the end of the file
+// Local Variables:
+// mode:c++
+// c-file-style: "NVIDIA"
+// End:

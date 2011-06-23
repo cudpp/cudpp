@@ -40,7 +40,7 @@ CCFILES := 	src/bank_checker.cpp    \
 		src/cutil.cpp           \
 		src/stopwatch.cpp       \
 		src/stopwatch_linux.cpp \
-                src/findFile.cpp
+		src/multithreading.cpp  
 
 SRCDIR := src/
 

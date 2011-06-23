@@ -25,11 +25,10 @@
 #include <string.h>
 #include <math.h>
 #include <time.h>
-
-#include <cutil.h>
 #include <cstdlib>
 #include <cstdio>
 
+#include <cuda_runtime_api.h>
 #include "cudpp.h"
 #include "cudpp_testrig_utils.h"
 

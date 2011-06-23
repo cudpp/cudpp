@@ -1,30 +1,23 @@
 /*
-* Copyright 1993-2006 NVIDIA Corporation.  All rights reserved.
+ * Copyright 1993-2010 NVIDIA Corporation.  All rights reserved.
+ *
+ * NVIDIA Corporation and its licensors retain all intellectual property and 
+ * proprietary rights in and to this software and related documentation. 
+ * Any use, reproduction, disclosure, or distribution of this software 
+ * and related documentation without an express license agreement from
+ * NVIDIA Corporation is strictly prohibited.
+ * 
+ */
+ 
+ /*
+* Copyright 1993-2010 NVIDIA Corporation.  All rights reserved.
 *
-* NOTICE TO USER:   
-*
-* This source code is subject to NVIDIA ownership rights under U.S. and 
-* international Copyright laws.  
-*
-* NVIDIA MAKES NO REPRESENTATION ABOUT THE SUITABILITY OF THIS SOURCE 
-* CODE FOR ANY PURPOSE.  IT IS PROVIDED "AS IS" WITHOUT EXPRESS OR 
-* IMPLIED WARRANTY OF ANY KIND.  NVIDIA DISCLAIMS ALL WARRANTIES WITH 
-* REGARD TO THIS SOURCE CODE, INCLUDING ALL IMPLIED WARRANTIES OF 
-* MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE.   
-* IN NO EVENT SHALL NVIDIA BE LIABLE FOR ANY SPECIAL, INDIRECT, INCIDENTAL, 
-* OR CONSEQUENTIAL DAMAGES, OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS 
-* OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE 
-* OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE 
-* OR PERFORMANCE OF THIS SOURCE CODE.  
-*
-* U.S. Government End Users.  This source code is a "commercial item" as 
-* that term is defined at 48 C.F.R. 2.101 (OCT 1995), consisting  of 
-* "commercial computer software" and "commercial computer software 
-* documentation" as such terms are used in 48 C.F.R. 12.212 (SEPT 1995) 
-* and is provided to the U.S. Government only as a commercial end item.  
-* Consistent with 48 C.F.R.12.212 and 48 C.F.R. 227.7202-1 through 
-* 227.7202-4 (JUNE 1995), all U.S. Government End Users acquire the 
-* source code with only those rights set forth herein.
+* NVIDIA Corporation and its licensors retain all intellectual property and 
+* proprietary rights in and to this software and related documentation and 
+* any modifications thereto.  Any use, reproduction, disclosure, or distribution 
+* of this software and related documentation without an express license 
+* agreement from NVIDIA Corporation is strictly prohibited.
+* 
 */
 
 
@@ -33,11 +26,12 @@
 #ifndef _CUTIL_H_
 #define _CUTIL_H_
 
-#include <cuda_runtime.h>
-
 #ifdef _WIN32
 #   pragma warning( disable : 4996 ) // disable deprecated warning 
 #endif
+
+#include <stdio.h>
+#include <stdlib.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -59,7 +53,6 @@ extern "C" {
 #else
     #define CUTIL_API
 #endif
-
 
     ////////////////////////////////////////////////////////////////////////////
     //! CUT bool type
@@ -100,7 +93,7 @@ extern "C" {
                         const char* aname, const int index);
 
     ////////////////////////////////////////////////////////////////////////////
-    //! Find the path for a filename within a hardcoded set of paths
+    //! Find the path for a filename
     //! @return the path if succeeded, otherwise 0
     //! @param filename        name of the file
     //! @param executablePath  optional absolute path of the executable
@@ -108,26 +101,6 @@ extern "C" {
     DLL_MAPPING
     char* CUTIL_API
     cutFindFilePath(const char* filename, const char* executablePath);
-
-    ////////////////////////////////////////////////////////////////////////////
-    //! Find the path for a filename within a specified directory tree
-    //! @return the path if succeeded, otherwise 0
-    //! @param filename        name of the file
-    //! @param executablePath  optional absolute path of the executable
-    ////////////////////////////////////////////////////////////////////////////
-    DLL_MAPPING
-    CUTBoolean CUTIL_API
-    cutFindFile(char * outputPath, const char * startDir, const char * dirName);
-
-    ////////////////////////////////////////////////////////////////////////////
-    //! Find the path for a filename within a specified directory tree
-    //! @return the path if succeeded, otherwise 0
-    //! @param filename        name of the file
-    //! @param executablePath  optional absolute path of the executable
-    ////////////////////////////////////////////////////////////////////////////
-    DLL_MAPPING
-    CUTBoolean CUTIL_API
-    cutFindDir(char * outputPath, const char * startDir, const char * dirName);
 
     ////////////////////////////////////////////////////////////////////////////
     //! Read file \filename containing single precision floating point data
@@ -580,6 +553,20 @@ extern "C" {
     cutComparei( const int* reference, const int* data, 
                  const unsigned int len ); 
 
+    ////////////////////////////////////////////////////////////////////////////////
+    //! Compare two unsigned integer arrays, with epsilon and threshold
+    //! @return  CUTTrue if \a reference and \a data are identical, 
+    //!          otherwise CUTFalse
+    //! @param reference  handle to the reference data / gold image
+    //! @param data       handle to the computed data
+    //! @param len        number of elements in reference and data
+    //! @param threshold  tolerance % # of comparison errors (0.15f = 15%)
+    ////////////////////////////////////////////////////////////////////////////////
+    DLL_MAPPING
+    CUTBoolean CUTIL_API
+    cutCompareuit( const unsigned int* reference, const unsigned int* data,
+                const unsigned int len, const float epsilon, const float threshold );
+
     ////////////////////////////////////////////////////////////////////////////
     //! Compare two unsigned char arrays
     //! @return  CUTTrue if \a reference and \a data are identical, 
@@ -594,6 +581,21 @@ extern "C" {
                   const unsigned int len ); 
 
     ////////////////////////////////////////////////////////////////////////////////
+    //! Compare two integers with a tolernance for # of byte errors
+    //! @return  CUTTrue if \a reference and \a data are identical, 
+    //!          otherwise CUTFalse
+    //! @param reference  handle to the reference data / gold image
+    //! @param data       handle to the computed data
+    //! @param len        number of elements in reference and data
+    //! @param epsilon    epsilon to use for the comparison
+    //! @param threshold  tolerance % # of comparison errors (0.15f = 15%)
+    ////////////////////////////////////////////////////////////////////////////////
+    DLL_MAPPING
+    CUTBoolean CUTIL_API
+    cutCompareubt( const unsigned char* reference, const unsigned char* data,
+                 const unsigned int len, const float epsilon, const float threshold );
+
+    ////////////////////////////////////////////////////////////////////////////////
     //! Compare two integer arrays witha n epsilon tolerance for equality
     //! @return  CUTTrue if \a reference and \a data are identical, 
     //!          otherwise CUTFalse
@@ -605,7 +607,7 @@ extern "C" {
     DLL_MAPPING
     CUTBoolean CUTIL_API
     cutCompareube( const unsigned char* reference, const unsigned char* data,
-                 const unsigned int len, const int epsilon );
+                 const unsigned int len, const float epsilon );
 
     ////////////////////////////////////////////////////////////////////////////
     //! Compare two float arrays with an epsilon tolerance for equality
@@ -621,6 +623,21 @@ extern "C" {
     cutComparefe( const float* reference, const float* data,
                   const unsigned int len, const float epsilon );
 
+    ////////////////////////////////////////////////////////////////////////////////
+    //! Compare two float arrays with an epsilon tolerance for equality and a 
+    //!     threshold for # pixel errors
+    //! @return  CUTTrue if \a reference and \a data are identical, 
+    //!          otherwise CUTFalse
+    //! @param reference  handle to the reference data / gold image
+    //! @param data       handle to the computed data
+    //! @param len        number of elements in reference and data
+    //! @param epsilon    epsilon to use for the comparison
+    ////////////////////////////////////////////////////////////////////////////////
+    DLL_MAPPING
+    CUTBoolean CUTIL_API
+    cutComparefet( const float* reference, const float* data,
+                 const unsigned int len, const float epsilon, const float threshold );
+
     ////////////////////////////////////////////////////////////////////////////
     //! Compare two float arrays using L2-norm with an epsilon tolerance for 
     //! equality
@@ -635,6 +652,21 @@ extern "C" {
     CUTBoolean CUTIL_API 
     cutCompareL2fe( const float* reference, const float* data,
                     const unsigned int len, const float epsilon );
+
+	////////////////////////////////////////////////////////////////////////////////
+    //! Compare two PPM image files with an epsilon tolerance for equality
+    //! @return  CUTTrue if \a reference and \a data are identical, 
+    //!          otherwise CUTFalse
+    //! @param src_file   filename for the image to be compared
+    //! @param data       filename for the reference data / gold image
+    //! @param epsilon    epsilon to use for the comparison
+    //! @param threshold  threshold of pixels that can still mismatch to pass (i.e. 0.15f = 15% must pass)
+    //! $param verboseErrors output details of image mismatch to std::err
+    ////////////////////////////////////////////////////////////////////////////////
+    DLL_MAPPING
+    CUTBoolean CUTIL_API
+	cutComparePPM( const char *src_file, const char *ref_file, const float epsilon, const float threshold, bool verboseErrors = false );
+
 
     ////////////////////////////////////////////////////////////////////////////
     //! Timer functionality
@@ -704,60 +736,64 @@ extern "C" {
     ////////////////////////////////////////////////////////////////////////////
     //! Macros
 
+// This is for the CUTIL bank checker
 #ifdef _DEBUG
-
-#if __DEVICE_EMULATION__
-    // Interface for bank conflict checker
-#define CUT_BANK_CHECKER( array, index)                                      \
-    (cutCheckBankAccess( threadIdx.x, threadIdx.y, threadIdx.z, blockDim.x,  \
-    blockDim.y, blockDim.z,                                                  \
-    __FILE__, __LINE__, #array, index ),                                     \
-    array[index])
+    #if __DEVICE_EMULATION__
+        // Interface for bank conflict checker
+    #define CUT_BANK_CHECKER( array, index)                                      \
+        (cutCheckBankAccess( threadIdx.x, threadIdx.y, threadIdx.z, blockDim.x,  \
+        blockDim.y, blockDim.z,                                                  \
+        __FILE__, __LINE__, #array, index ),                                     \
+        array[index])
+    #else
+    #define CUT_BANK_CHECKER( array, index)  array[index]
+    #endif
 #else
-#define CUT_BANK_CHECKER( array, index)  array[index]
+    #define CUT_BANK_CHECKER( array, index)  array[index]
 #endif
 
-#  define CU_SAFE_CALL_NO_SYNC( call ) do {                                  \
+#  define CU_SAFE_CALL_NO_SYNC( call ) {                                     \
     CUresult err = call;                                                     \
     if( CUDA_SUCCESS != err) {                                               \
         fprintf(stderr, "Cuda driver error %x in file '%s' in line %i.\n",   \
                 err, __FILE__, __LINE__ );                                   \
         exit(EXIT_FAILURE);                                                  \
-    } } while (0)
+    } }
 
-#  define CU_SAFE_CALL( call ) do {                                          \
-    CU_SAFE_CALL_NO_SYNC(call);                                              \
+#  define CU_SAFE_CALL( call )       CU_SAFE_CALL_NO_SYNC(call);
+
+#  define CU_SAFE_CTX_SYNC( ) {                                              \
     CUresult err = cuCtxSynchronize();                                       \
     if( CUDA_SUCCESS != err) {                                               \
         fprintf(stderr, "Cuda driver error %x in file '%s' in line %i.\n",   \
                 err, __FILE__, __LINE__ );                                   \
         exit(EXIT_FAILURE);                                                  \
-    } } while (0)
+    } }
 
-#  define CUDA_SAFE_CALL_NO_SYNC( call) do {                                 \
+#  define CUDA_SAFE_CALL_NO_SYNC( call) {                                    \
     cudaError err = call;                                                    \
     if( cudaSuccess != err) {                                                \
         fprintf(stderr, "Cuda error in file '%s' in line %i : %s.\n",        \
                 __FILE__, __LINE__, cudaGetErrorString( err) );              \
         exit(EXIT_FAILURE);                                                  \
-    } } while (0)
+    } }
 
-#  define CUDA_SAFE_CALL( call) do {                                         \
-    CUDA_SAFE_CALL_NO_SYNC(call);                                            \
+#  define CUDA_SAFE_CALL( call)     CUDA_SAFE_CALL_NO_SYNC(call);                                            \
+
+#  define CUDA_SAFE_THREAD_SYNC( ) {                                         \
     cudaError err = cudaThreadSynchronize();                                 \
-    if( cudaSuccess != err) {                                                \
+    if ( cudaSuccess != err) {                                               \
         fprintf(stderr, "Cuda error in file '%s' in line %i : %s.\n",        \
                 __FILE__, __LINE__, cudaGetErrorString( err) );              \
-        exit(EXIT_FAILURE);                                                  \
-    } } while (0)
+    } }
 
-#  define CUFFT_SAFE_CALL( call) do {                                        \
+#  define CUFFT_SAFE_CALL( call) {                                           \
     cufftResult err = call;                                                  \
     if( CUFFT_SUCCESS != err) {                                              \
         fprintf(stderr, "CUFFT error in file '%s' in line %i.\n",            \
                 __FILE__, __LINE__);                                         \
         exit(EXIT_FAILURE);                                                  \
-    } } while (0)
+    } }
 
 #  define CUT_SAFE_CALL( call)                                               \
     if( CUTTrue != call) {                                                   \
@@ -767,7 +803,8 @@ extern "C" {
     } 
 
     //! Check for CUDA error
-#  define CUT_CHECK_ERROR(errorMessage) do {                                 \
+#ifdef _DEBUG
+#  define CUT_CHECK_ERROR(errorMessage) {                                    \
     cudaError_t err = cudaGetLastError();                                    \
     if( cudaSuccess != err) {                                                \
         fprintf(stderr, "Cuda error: %s in file '%s' in line %i : %s.\n",    \
@@ -779,10 +816,21 @@ extern "C" {
         fprintf(stderr, "Cuda error: %s in file '%s' in line %i : %s.\n",    \
                 errorMessage, __FILE__, __LINE__, cudaGetErrorString( err) );\
         exit(EXIT_FAILURE);                                                  \
-    } } while (0)
+    }                                                                        \
+    }
+#else
+#  define CUT_CHECK_ERROR(errorMessage) {                                    \
+    cudaError_t err = cudaGetLastError();                                    \
+    if( cudaSuccess != err) {                                                \
+        fprintf(stderr, "Cuda error: %s in file '%s' in line %i : %s.\n",    \
+                errorMessage, __FILE__, __LINE__, cudaGetErrorString( err) );\
+        exit(EXIT_FAILURE);                                                  \
+    }                                                                        \
+    }
+#endif
 
     //! Check for malloc error
-#  define CUT_SAFE_MALLOC( mallocCall ) do{                                  \
+#  define CUT_SAFE_MALLOC( mallocCall ) {                                    \
     if( !(mallocCall)) {                                                     \
         fprintf(stderr, "Host malloc failure in file '%s' in line %i\n",     \
                 __FILE__, __LINE__);                                         \
@@ -794,24 +842,6 @@ extern "C" {
     if( CUTFalse == cutCheckCondition( val, __FILE__, __LINE__)) {           \
         exit(EXIT_FAILURE);                                                  \
     }
-
-#else  // not DEBUG
-
-#define CUT_BANK_CHECKER( array, index)  array[index]
-
-    // void macros for performance reasons
-#  define CUT_CHECK_ERROR(errorMessage)
-#  define CUT_CHECK_ERROR_GL()
-#  define CUT_CONDITION( val) 
-#  define CU_SAFE_CALL_NO_SYNC( call) call
-#  define CU_SAFE_CALL( call) call
-#  define CUDA_SAFE_CALL_NO_SYNC( call) call
-#  define CUDA_SAFE_CALL( call) call
-#  define CUT_SAFE_CALL( call) call
-#  define CUFFT_SAFE_CALL( call) call
-#  define CUT_SAFE_MALLOC( mallocCall ) mallocCall
-
-#endif
 
 #if __DEVICE_EMULATION__
 
@@ -828,6 +858,7 @@ extern "C" {
     }                                                                        \
     int dev = 0;                                                             \
     cutGetCmdLineArgumenti(ARGC, (const char **) ARGV, "device", &dev);      \
+	if (dev < 0) dev = 0;                                                    \
     if (dev > deviceCount-1) dev = deviceCount - 1;                          \
     cudaDeviceProp deviceProp;                                               \
     CUDA_SAFE_CALL_NO_SYNC(cudaGetDeviceProperties(&deviceProp, dev));       \
@@ -839,6 +870,38 @@ extern "C" {
         fprintf(stderr, "Using device %d: %s\n", dev, deviceProp.name);       \
     CUDA_SAFE_CALL(cudaSetDevice(dev));                                      \
 }
+
+
+    //! Check for CUDA context lost
+#  define CUDA_CHECK_CTX_LOST(errorMessage) {                                \
+    cudaError_t err = cudaGetLastError();                                    \
+    if( cudaSuccess != err) {                                                \
+        fprintf(stderr, "Cuda error: %s in file '%s' in line %i : %s.\n",    \
+                errorMessage, __FILE__, __LINE__, cudaGetErrorString( err) );\
+        exit(EXIT_FAILURE);                                                  \
+    }                                                                        \
+    err = cudaThreadSynchronize();                                           \
+    if( cudaSuccess != err) {                                                \
+        fprintf(stderr, "Cuda error: %s in file '%s' in line %i : %s.\n",    \
+                errorMessage, __FILE__, __LINE__, cudaGetErrorString( err) );\
+        exit(EXIT_FAILURE);                                                  \
+    } }
+
+//! Check for CUDA context lost
+#  define CU_CHECK_CTX_LOST(errorMessage) {                                  \
+    cudaError_t err = cudaGetLastError();                                    \
+    if( CUDA_ERROR_INVALID_CONTEXT != err) {                                 \
+        fprintf(stderr, "Cuda error: %s in file '%s' in line %i : %s.\n",    \
+                errorMessage, __FILE__, __LINE__, cudaGetErrorString( err) );\
+        exit(EXIT_FAILURE);                                                  \
+    }                                                                        \
+    err = cudaThreadSynchronize();                                           \
+    if( cudaSuccess != err) {                                                \
+        fprintf(stderr, "Cuda error: %s in file '%s' in line %i : %s.\n",    \
+                errorMessage, __FILE__, __LINE__, cudaGetErrorString( err) );\
+        exit(EXIT_FAILURE);                                                  \
+    } }
+
 
 #endif
 
@@ -854,6 +917,7 @@ extern "C" {
     }                                                                        \
     int dev = 0;                                                             \
     cutGetCmdLineArgumenti(ARGC, (const char **) ARGV, "device", &dev);      \
+	if (dev < 0) dev = 0;                                                    \
     if (dev > deviceCount-1) dev = deviceCount - 1;                          \
     CU_SAFE_CALL_NO_SYNC(cuDeviceGet(&cuDevice, dev));                       \
     char name[100];                                                          \

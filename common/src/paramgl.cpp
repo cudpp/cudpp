@@ -1,4 +1,19 @@
 /*
+ * Copyright 1993-2010 NVIDIA Corporation.  All rights reserved.
+ *
+ * NVIDIA Corporation and its licensors retain all intellectual property and 
+ * proprietary rights in and to this software and related documentation. 
+ * Any use, reproduction, disclosure, or distribution of this software 
+ * and related documentation without an express license agreement from
+ * NVIDIA Corporation is strictly prohibited.
+ *
+ * Please refer to the applicable NVIDIA end user license agreement (EULA) 
+ * associated with this source code for terms and conditions that govern 
+ * your use of this NVIDIA software.
+ * 
+ */
+ 
+ /*
     ParamListGL
     - class derived from ParamList to do simple OpenGL rendering of a parameter list
     sgg 8/2001
@@ -6,204 +21,189 @@
 
 #include <param.h>
 #include <paramgl.h>
+#include <string.h>
 
 void beginWinCoords(void)
 {
-  glMatrixMode(GL_MODELVIEW);
-  glPushMatrix();
-  glLoadIdentity();
-  glTranslatef(0.0, glutGet(GLUT_WINDOW_HEIGHT) - 1, 0.0);
-  glScalef(1.0, -1.0, 1.0);
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+    glTranslatef(0.0, glutGet(GLUT_WINDOW_HEIGHT) - 1, 0.0);
+    glScalef(1.0, -1.0, 1.0);
 
-  glMatrixMode(GL_PROJECTION);
-  glPushMatrix();
-  glLoadIdentity();
-  glOrtho(0, glutGet(GLUT_WINDOW_WIDTH), 0, glutGet(GLUT_WINDOW_HEIGHT), -1, 1);
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    glOrtho(0, glutGet(GLUT_WINDOW_WIDTH), 0, glutGet(GLUT_WINDOW_HEIGHT), -1, 1);
 
-  glMatrixMode(GL_MODELVIEW);
+    glMatrixMode(GL_MODELVIEW);
 }
 
 void endWinCoords(void)
 {
-  glMatrixMode(GL_PROJECTION);
-  glPopMatrix();
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
 
-  glMatrixMode(GL_MODELVIEW);
-  glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+    glPopMatrix();
 }
 
 void glPrint(int x, int y, const char *s, void *font)
 {
-  int i, len;
-
-  glRasterPos2f(x, y);
-  len = (int) strlen(s);
-  for (i = 0; i < len; i++) {
-    glutBitmapCharacter(font, s[i]);
-  }
+    glRasterPos2f(x, y);
+    int len = (int) strlen(s);
+    for (int i = 0; i < len; i++) {
+        glutBitmapCharacter(font, s[i]);
+    }
 }
 
 void glPrintShadowed(int x, int y, const char *s, void *font, float *color)
 {
-  glColor3f(0.0, 0.0, 0.0);
-  glPrint(x-1, y-1, s, font);
+    glColor3f(0.0, 0.0, 0.0);
+    glPrint(x-1, y-1, s, font);
 
-  glColor3fv((GLfloat *) color);
-  glPrint(x, y, s, font);
+    glColor3fv((GLfloat *) color);
+    glPrint(x, y, s, font);
 }
 
 
-ParamListGL::ParamListGL(char *name) : ParamList(name)
+ParamListGL::ParamListGL(const char *name) :
+    ParamList(name),
+    m_text_color_selected(1.0, 1.0, 1.0),
+    m_text_color_unselected(0.75, 0.75, 0.75),
+    m_text_color_shadow(0.0, 0.0, 0.0),
+    m_bar_color_outer(0.25, 0.25, 0.25),
+    m_bar_color_inner(1.0, 1.0, 1.0)
 {
-  font = (void *) GLUT_BITMAP_9_BY_15;
-//    font = (void *) GLUT_BITMAP_8_BY_13;
+    m_font = (void *) GLUT_BITMAP_9_BY_15;
+//    m_font = (void *) GLUT_BITMAP_8_BY_13;
+    m_font_h = 15;
 
-  bar_x = 250;
-  bar_w = 250;
-  bar_h = 10;
-  bar_offset = 5;
-  text_x = 5;
-  separation = 15;
-  value_x = 200;
-  font_h = 15;
-  start_x = 0;
-  start_y = 0;
-  
-  text_col_selected[0] = 1.0;
-  text_col_selected[1] = 1.0;
-  text_col_selected[2] = 1.0;
-
-  text_col_unselected[0] = 0.75;
-  text_col_unselected[1] = 0.75;
-  text_col_unselected[2] = 0.75;
-
-  bar_col_outer[0] = 0.0;
-  bar_col_outer[1] = 0.0;
-  bar_col_outer[2] = 0.0;
-
-  bar_col_inner[0] = 0.0;
-  bar_col_inner[1] = 0.0;
-  bar_col_inner[2] = 0.0;
-
-  text_col_shadow[0] = 0.0;
-  text_col_shadow[1] = 0.0;
-  text_col_shadow[2] = 0.0;
+    m_bar_x = 260;
+    m_bar_w = 250;
+    m_bar_h = 10;
+    m_bar_offset = 5;
+    m_text_x = 5;
+    m_separation = 15;
+    m_value_x = 200;
+    m_start_x = 0;
+    m_start_y = 0;
 }
 
 void
 ParamListGL::Render(int x, int y, bool shadow)
 {
-  beginWinCoords();
+    beginWinCoords();
 
-  start_x = x; start_y = y;
+    m_start_x = x;
+    m_start_y = y;
 
-  for(std::vector<ParamBase *>::const_iterator p = m_params.begin(); p != m_params.end(); ++p) {
-    if ((*p)->IsList()) {
-      ParamListGL *list = (ParamListGL *) (*p);
-      list->Render(x+10, y);
-      y += separation*list->GetSize();
+    for(std::vector<ParamBase *>::const_iterator p = m_params.begin(); p != m_params.end(); ++p) {
+        if ((*p)->IsList()) {
+            ParamListGL *list = (ParamListGL *) (*p);
+            list->Render(x+10, y);
+            y += m_separation*list->GetSize();
 
-    } else {
-      if (p == m_current)
-        glColor3fv(text_col_selected);
-      else
-        glColor3fv(text_col_unselected);
-      
-      if (shadow) {
-        glPrintShadowed(x + text_x, y + font_h, (*p)->GetName()->c_str(), font, (p == m_current) ? text_col_selected : text_col_unselected);
-        glPrintShadowed(x + value_x, y + font_h, (*p)->GetValueString().c_str(), font, (p == m_current) ? text_col_selected : text_col_unselected);
-      }
-      else {
-        glPrint(x + text_x, y + font_h, (*p)->GetName()->c_str(), font);
-        glPrint(x + value_x, y + font_h, (*p)->GetValueString().c_str(), font);
-      } 
+        } else {
+            if (p == m_current)
+                glColor3fv(&m_text_color_selected.r);
+            else
+                glColor3fv(&m_text_color_unselected.r);
 
-//      glColor3fv((GLfloat *) &bar_col_outer);
-      glBegin(GL_LINE_LOOP);
-      glVertex2f(x + bar_x, y + bar_offset);
-      glVertex2f(x + bar_x + bar_w, y + bar_offset);
-      glVertex2f(x + bar_x + bar_w, y + bar_offset + bar_h);
-      glVertex2f(x + bar_x, y + bar_offset + bar_h);
-      glEnd();
+            if (shadow) {
+                glPrintShadowed(x + m_text_x, y + m_font_h, (*p)->GetName().c_str(), m_font, (p == m_current) ? &m_text_color_selected.r : &m_text_color_unselected.r);
+                glPrintShadowed(x + m_value_x, y + m_font_h, (*p)->GetValueString().c_str(), m_font, (p == m_current) ? &m_text_color_selected.r : &m_text_color_unselected.r);
+            } else {
+                glPrint(x + m_text_x, y + m_font_h, (*p)->GetName().c_str(), m_font);
+                glPrint(x + m_value_x, y + m_font_h, (*p)->GetValueString().c_str(), m_font);
+            } 
 
-//      glColor3fv((GLfloat *) &bar_col_inner);
-      glRectf(x + bar_x, y + bar_offset + bar_h, x + bar_x + (bar_w*(*p)->GetPercentage()), y + bar_offset);
+            glColor3fv((GLfloat *) &m_bar_color_outer.r);
+            glBegin(GL_LINE_LOOP);
+            glVertex2f(x + m_bar_x, y + m_bar_offset);
+            glVertex2f(x + m_bar_x + m_bar_w, y + m_bar_offset);
+            glVertex2f(x + m_bar_x + m_bar_w, y + m_bar_offset + m_bar_h);
+            glVertex2f(x + m_bar_x, y + m_bar_offset + m_bar_h);
+            glEnd();
 
-      y += separation;
+            glColor3fv((GLfloat *) &m_bar_color_inner.r);
+            glRectf(x + m_bar_x, y + m_bar_offset + m_bar_h, x + m_bar_x + ((m_bar_w-1)*(*p)->GetPercentage()), y + m_bar_offset + 1);
+
+            y += m_separation;
+        }
+
     }
 
-  }
-
-  endWinCoords();
+    endWinCoords();
 }
 
 
 bool
 ParamListGL::Mouse(int x, int y, int button, int state)
 {
-  if ((y < start_y) || (y > (int)(start_y + (separation * m_params.size()) - 1)))
-    return false;
+    if ((y < m_start_y) || (y > (int)(m_start_y + (m_separation * m_params.size()) - 1)))
+        return false;
 
-  int i = (y - start_y) / separation;
+    int i = (y - m_start_y) / m_separation;
 
-  if ((button==GLUT_LEFT_BUTTON) && (state==GLUT_DOWN)) {
+    if ((button==GLUT_LEFT_BUTTON) && (state==GLUT_DOWN)) {
 #if defined(__GNUC__) && (__GNUC__ < 3)
-    m_current = &m_params[i];
+        m_current = &m_params[i];
 #else
-    // MJH: workaround since the version of vector::at used here is non-standard
-    for (m_current = m_params.begin(); m_current != m_params.end() && i > 0; m_current++, i--);
-    //m_current = (std::vector<ParamBase *>::const_iterator)&m_params.at(i);
+        // MJH: workaround since the version of vector::at used here is non-standard
+        for (m_current = m_params.begin(); m_current != m_params.end() && i > 0; m_current++, i--) ;
+        //m_current = (std::vector<ParamBase *>::const_iterator)&m_params.at(i);
 #endif
 
-    if ((x > bar_x) && (x < bar_x + bar_w)) {
-      Motion(x, y);
+        if ((x > m_bar_x) && (x < m_bar_x + m_bar_w)) {
+            Motion(x, y);
+        }
     }
-  }
-  return true;
+    return true;
 }
 
 bool
 ParamListGL::Motion(int x, int y)
 {
-  if ((y < start_y) || (y > start_y + (separation * (int)m_params.size()) - 1) )
-    return false;
+    if ((y < m_start_y) || (y > m_start_y + (m_separation * (int)m_params.size()) - 1) )
+        return false;
 
-  if (x < bar_x) {
-    (*m_current)->SetPercentage(0.0);
-    return true;
-  }
-    
-  if (x > bar_x + bar_w) {
-    (*m_current)->SetPercentage(1.0);
-    return true;
-  }
+    if (x < m_bar_x) {
+        (*m_current)->SetPercentage(0.0);
+        return true;
+    }
 
-  (*m_current)->SetPercentage((x-bar_x) / (float) bar_w);
-  return true;
+    if (x > m_bar_x + m_bar_w) {
+        (*m_current)->SetPercentage(1.0);
+        return true;
+    }
+
+    (*m_current)->SetPercentage((x-m_bar_x) / (float) m_bar_w);
+    return true;
 }
 
 void
 ParamListGL::Special(int key, int /*x*/, int /*y*/)
 {
-  switch(key) {
-  case GLUT_KEY_DOWN:
-    Increment();
-    break;
-  case GLUT_KEY_UP:
-    Decrement();
-    break;
-  case GLUT_KEY_RIGHT:
-    GetCurrent()->Increment();
-    break;
-  case GLUT_KEY_LEFT:
-    GetCurrent()->Decrement();
-    break;
-  case GLUT_KEY_HOME:
-    GetCurrent()->Reset();
-    break;
-  case GLUT_KEY_END:
-    GetCurrent()->SetPercentage(1.0);
-    break;
-  }
-  glutPostRedisplay();
+    switch(key) {
+    case GLUT_KEY_DOWN:
+        Increment();
+        break;
+    case GLUT_KEY_UP:
+        Decrement();
+        break;
+    case GLUT_KEY_RIGHT:
+        GetCurrent()->Increment();
+        break;
+    case GLUT_KEY_LEFT:
+        GetCurrent()->Decrement();
+        break;
+    case GLUT_KEY_HOME:
+        GetCurrent()->Reset();
+        break;
+    case GLUT_KEY_END:
+        GetCurrent()->SetPercentage(1.0);
+        break;
+    }
+    glutPostRedisplay();
 }

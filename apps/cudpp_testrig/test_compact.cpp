@@ -20,6 +20,7 @@
 #include <time.h>
 #include <limits.h>
 #include <string.h>
+#include <cuda_runtime_api.h>
 
 #include "cudpp.h"
 
@@ -59,7 +60,7 @@ int testCompact(int argc, const char **argv, const CUDPPConfiguration *configPtr
     config.algorithm = CUDPP_COMPACT;
     config.datatype = CUDPP_FLOAT;
 
-    bool quiet = (cutCheckCmdLineFlag(argc, (const char**)argv, "quiet") == CUTTrue);	
+    bool quiet = (cutCheckCmdLineFlag(argc, (const char**)argv, "quiet") == CUTTrue);   
 
     if (configPtr != NULL)
     {

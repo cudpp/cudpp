@@ -18,8 +18,10 @@
 #include "cudpp.h"
 #include "cudpp_testrig_options.h"
 #include "cudpp_testrig_utils.h"
+
 #include <cstring>
 #include <iostream>
+#include <cuda_runtime_api.h>
 
 template <class Oper, typename T>
 void computeReduceGold( T* out, const T* idata, const unsigned int len)
@@ -111,8 +113,8 @@ int reduceTest(int argc, const char **argv, const CUDPPConfiguration &config,
     T* d_idata     = NULL;
     T* d_odata     = NULL;
 
-    CUDA_SAFE_CALL( cudaMalloc( &d_idata, memSize));
-    CUDA_SAFE_CALL( cudaMalloc( &d_odata, sizeof(T)));
+    CUDA_SAFE_CALL( cudaMalloc( (void **) &d_idata, memSize));
+    CUDA_SAFE_CALL( cudaMalloc( (void **) &d_odata, sizeof(T)));
 
     // copy host memory to device input array
     CUDA_SAFE_CALL( cudaMemcpy(d_idata, i_data, memSize, cudaMemcpyHostToDevice) );
