@@ -118,7 +118,7 @@ class CUDPPRadixSortPlan : public CUDPPPlan
 public:
     CUDPPRadixSortPlan(CUDPPManager *mgr, CUDPPConfiguration config, size_t numElements);
     virtual ~CUDPPRadixSortPlan();
-	
+        
     bool           m_bKeysOnly;
     bool           m_bManualCoalesce;
     bool           m_bUsePersistentCTAs;
@@ -126,6 +126,7 @@ public:
     unsigned int   m_persistentCTAThresholdFullBlocks[2];
     CUDPPScanPlan *m_scanPlan;        //!< @internal Sort performs a scan of type unsigned int using this plan
     unsigned int   m_keyBits;
+    CUDPPOption    m_direction;       //!< Designates forward or backward sort
     mutable void  *m_tempKeys;        //!< @internal Intermediate storage for keys
     mutable void  *m_tempValues;      //!< @internal Intermediate storage for values
     unsigned int  *m_counters;        //!< @internal Counter for each radix

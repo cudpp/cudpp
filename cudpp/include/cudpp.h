@@ -504,6 +504,7 @@ CUDPPResult cudppSort(const CUDPPHandle planHandle,
                       void              *d_keys,                                          
                       void              *d_values,                                                                       
                       int               keybits,
+                      CUDPPOption       direction,
                       size_t            numElements);
 
 // Sparse matrix allocation

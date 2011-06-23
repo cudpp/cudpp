@@ -343,6 +343,7 @@ CUDPPResult cudppReduce(const CUDPPHandle planHandle,
  * @param[in] d_values values to be sorted
  * @param[in] keyBits the number of least significant bits in each element 
  *            of d_keys to sort by
+ * @param[in] reverseSort if true, sort in reverse (descending) order
  * @param[in] numElements number of elements in d_keys and d_values
  *
  * @see cudppPlan, CUDPPConfiguration, CUDPPAlgorithm
@@ -352,6 +353,7 @@ CUDPPResult cudppSort(const CUDPPHandle planHandle,
                       void              *d_keys,
                       void              *d_values,                      
                       int               keyBits,
+                      CUDPPOption       direction,
                       size_t            numElements)
 {
     CUDPPRadixSortPlan *plan = 
@@ -359,7 +361,8 @@ CUDPPResult cudppSort(const CUDPPHandle planHandle,
 
     if (plan != NULL)
     {
-        cudppRadixSortDispatch(d_keys, d_values, numElements, keyBits, plan);
+        cudppRadixSortDispatch(d_keys, d_values, numElements, keyBits, 
+                               direction, plan);
         return CUDPP_SUCCESS;
     }
     else

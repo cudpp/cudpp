@@ -100,7 +100,7 @@ int main(int argc, const char** argv)
         printf("r=<N>: Number of rows to scan (--multiscan only)\n\n");
         printf("--- Scan (Segmented and Unsegmented) Options ---\n");
         printf("backward: Run backward scans\n");
-        printf("forward: Run backward scans (default)\n");
+        printf("forward: Run forward scans (default)\n");
         printf("op=<OP>: Set scan operation to OP "
                "(OP=\"sum\", \"max\" \"min\" and \"multiply\"  currently. "
                "Default is sum)\n");
@@ -113,6 +113,8 @@ int main(int argc, const char** argv)
         printf("keysonly: Run radix sort on keys only\n");
         printf("keybits=<# bits>: Run radix sort on specified number "
                "of bits in the key (default is 32)\n");
+        printf("forward: Run forward sorts (default)\n");
+        printf("backward: Run backward sorts (DOES NOT WORK YET)\n");
         printf("--- Sparse Matrix-Vector Multiply Options ---\n");
         printf("mat=<File Name>: File containing sparse matrix in Matrix Market format\n");
         printf("--- Rand Options ---\n");

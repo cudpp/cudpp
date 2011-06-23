@@ -322,6 +322,9 @@ void radixSortSingleBlock(uint *keys,
  * parameters are device pointers.  Uses cudppScan() for the prefix sum of 
  * radix counters.
  * 
+ * While the interface supports forward and backward sorts (via \a plan),
+ * only forward is currently implemented.
+ * 
  * @param[in,out] keys Keys to be sorted.
  * @param[in,out] values Associated values to be sorted (through keys).
  * @param[in] plan Configuration information for RadixSort.
@@ -955,9 +958,11 @@ void cudppRadixSortDispatch(void  *keys,
                             void  *values,
                             size_t numElements,
                             int   keyBits,
+                            CUDPPOption direction,
                             const CUDPPRadixSortPlan *plan)
-{              
-    if(plan->m_bKeysOnly)
+{
+    direction = direction;      // @todo: add capability to backward sort
+    if (plan->m_bKeysOnly)
     {
         switch(plan->m_config.datatype)
         {
@@ -967,7 +972,7 @@ void cudppRadixSortDispatch(void  *keys,
             break;
         case CUDPP_FLOAT:
             radixSortFloatKeysOnly((float*)keys, plan, 
-                                    numElements, true, keyBits);
+                                   numElements, true, keyBits);
         }
     }
     else
