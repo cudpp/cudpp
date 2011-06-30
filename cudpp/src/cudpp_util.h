@@ -261,17 +261,17 @@ public:
 };
 
 template <>
-__device__ int OperatorMax<int>::identity() const { return INT_MIN; }
+__device__ inline int OperatorMax<int>::identity() const { return INT_MIN; }
 template <>
-__device__ unsigned int OperatorMax<unsigned int>::identity() const { return 0; }
+__device__ inline unsigned int OperatorMax<unsigned int>::identity() const { return 0; }
 template <>
-__device__ float OperatorMax<float>::identity() const { return -FLT_MAX; }
+__device__ inline float OperatorMax<float>::identity() const { return -FLT_MAX; }
 template <>
-__device__ double OperatorMax<double>::identity() const { return -DBL_MAX; }
+__device__ inline double OperatorMax<double>::identity() const { return -DBL_MAX; }
 template <>
-__device__ long long OperatorMax<long long>::identity() const { return LLONG_MIN; }
+__device__ inline long long OperatorMax<long long>::identity() const { return LLONG_MIN; }
 template <>
-__device__ unsigned long long OperatorMax<unsigned long long>::identity() const { return 0; }
+__device__ inline unsigned long long OperatorMax<unsigned long long>::identity() const { return 0; }
 
 template <typename T>
 class OperatorMin
@@ -282,17 +282,17 @@ public:
 };
 
 template <>
-__device__ int OperatorMin<int>::identity() const { return INT_MAX; }
+__device__ inline int OperatorMin<int>::identity() const { return INT_MAX; }
 template <>
-__device__ unsigned int OperatorMin<unsigned int>::identity() const { return UINT_MAX; }
+__device__ inline unsigned int OperatorMin<unsigned int>::identity() const { return UINT_MAX; }
 template <>
-__device__ float OperatorMin<float>::identity() const { return FLT_MAX; }
+__device__ inline float OperatorMin<float>::identity() const { return FLT_MAX; }
 template <>
-__device__ double OperatorMin<double>::identity() const { return DBL_MAX; }
+__device__ inline double OperatorMin<double>::identity() const { return DBL_MAX; }
 template <>
-__device__ long long OperatorMin<long long>::identity() const { return LLONG_MAX; }
+__device__ inline long long OperatorMin<long long>::identity() const { return LLONG_MAX; }
 template <>
-__device__ unsigned long long OperatorMin<unsigned long long>::identity() const { return ULLONG_MAX; }
+__device__ inline unsigned long long OperatorMin<unsigned long long>::identity() const { return ULLONG_MAX; }
 
 #endif // __CUDPP_UTIL_H__
 

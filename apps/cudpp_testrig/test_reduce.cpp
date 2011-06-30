@@ -110,8 +110,8 @@ int reduceTest(int argc, const char **argv, const CUDPPConfiguration &config,
     T reference = 0;
 
     // allocate device memory input and output arrays
-    T* d_idata     = NULL;
-    T* d_odata     = NULL;
+    T* d_idata     = (T *) NULL;
+    T* d_odata     = (T *) NULL;
 
     CUDA_SAFE_CALL( cudaMalloc( (void **) &d_idata, memSize));
     CUDA_SAFE_CALL( cudaMalloc( (void **) &d_odata, sizeof(T)));
@@ -208,7 +208,7 @@ int reduceTest(int argc, const char **argv, const CUDPPConfiguration &config,
         CUDA_SAFE_CALL(cudaMemcpy( &o_data, d_odata, sizeof(T), cudaMemcpyDeviceToHost));
 
         double threshold = (config.op == CUDPP_MULTIPLY && (config.datatype == CUDPP_FLOAT || config.datatype == CUDPP_DOUBLE)) ? 1 : test[k] * 5e-6;
-        bool correct = (abs((double)reference - (double)o_data) < threshold);
+        bool correct = (fabs((double)reference - (double)o_data) < threshold);
 
         // correct result?
         retval += (correct) ? 0 : 1;
