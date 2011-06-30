@@ -111,7 +111,8 @@ int scanTest(int argc, const char **argv, const CUDPPConfiguration &config,
     // initialize the input data on the host
     for(int i = 0; i < numElements; ++i)
     {
-        i_data[i] = (float)(rand() & 1);
+        // @TODO: Not thrilled that we're only scanning 0s and 1s --JDO
+        i_data[i] = (T)(rand() & 1);
     }
 
     // allocate and compute reference solution
