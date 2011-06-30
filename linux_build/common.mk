@@ -245,7 +245,7 @@ ifneq ($(STATIC_LIB),)
 	TARGET   := $(subst .a,$(LIBSUFFIX).a,$(LIBDIR)/$(STATIC_LIB))
 	LINKLINE  = ar qv $(TARGET) $(OBJS); ranlib $(TARGET)
 else
-	LIB += -lcutil$(LIBSUFFIX)
+	LIB += -lcutil_$(LIB_ARCH)$(LIBSUFFIX)
 	# Device emulation configuration
 	ifeq ($(emu), 1)
 		NVCCFLAGS   += -deviceemu
