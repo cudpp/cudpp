@@ -221,8 +221,7 @@ int testCompact(int argc, const char **argv, const CUDPPConfiguration *configPtr
             retval += (CUTTrue == result) ? 0 : 1;
             if (!quiet)
             {
-                printf("%s test %s\n", testOptions.runMode,
-                       (CUTTrue == result) ? "PASSED" : "FAILED");
+                printf("test %s\n", (CUTTrue == result) ? "PASSED" : "FAILED");
             }
         }
         if (!quiet)

@@ -206,8 +206,7 @@ int scanTest(int argc, const char **argv, const CUDPPConfiguration &config,
         retval += (CUTTrue == result) ? 0 : 1;
         if (!quiet)
         {
-            printf("%s test %s\n", testOptions.runMode,
-                   (CUTTrue == result) ? "PASSED" : "FAILED");
+            printf("test %s\n", (CUTTrue == result) ? "PASSED" : "FAILED");
             printf("Average execution time: %f ms\n",
                    cutGetTimerValue(timer) / testOptions.numIterations);
         }
@@ -512,8 +511,7 @@ int testSegmentedScan(int argc, const char **argv, const CUDPPConfiguration *con
         retval += (CUTTrue == result) ? 0 : 1;
         if (!quiet)
         {
-            printf("%s test %s\n", testOptions.runMode,
-                   (CUTTrue == result) ? "PASSED" : "FAILED");
+            printf("test %s\n", (CUTTrue == result) ? "PASSED" : "FAILED");
             printf("Average execution time: %f ms\n",
                    cutGetTimerValue(timer) / testOptions.numIterations);
         }
@@ -707,8 +705,7 @@ int testMultiSumScan(int argc, const char **argv)
     CUTBoolean result = cutComparefe( reference, o_data, 
                                       numElements*numRows, 0.001f);
     retval += (CUTTrue == result) ? 0 : 1;
-    printf("%s test %s\n", testOptions.runMode,
-           (CUTTrue == result) ? "PASSED" : "FAILED");
+    printf("test %s\n", (CUTTrue == result) ? "PASSED" : "FAILED");
     printf("Average execution time: %f ms\n",
            cutGetTimerValue(timer) / testOptions.numIterations);
     printf("\n");
