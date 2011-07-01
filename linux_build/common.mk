@@ -129,7 +129,10 @@ else
     endif
 endif
 
-# Compiler-specific flags
+# Compiler-specific flags (by default, we always use sm_10 and sm_20)
+GENCODE_SM10 := -gencode=arch=compute_10,code=\"sm_10,compute_10\"
+GENCODE_SM20 := -gencode=arch=compute_20,code=\"sm_20,compute_20\"
+
 CXXFLAGS  := $(CXXWARN_FLAGS) $(CXX_ARCH_FLAGS)
 CFLAGS    := $(CWARN_FLAGS) $(CXX_ARCH_FLAGS)
 LINK      += $(CXX_ARCH_FLAGS)
@@ -138,11 +141,18 @@ LINK      += $(CXX_ARCH_FLAGS)
 COMMONFLAGS += $(INCLUDES) -DUNIX
 
 # Debug/release configuration
-ifeq ($(dbg),1)
+# dbg=1 enables debug mode
+# devdbg=1 enables device code debugging support (-G)
+ifeq ($(devdbg), 1)
+  NVCCFLAGS += -G
+  dbg = $(devdbg)
+endif
+
+ifeq ($(dbg),1) 
 	COMMONFLAGS += -g
 	NVCCFLAGS   += -D_DEBUG
-        CXXFLAGS    += -D_DEBUG
-        CFLAGS      += -D_DEBUG
+  CXXFLAGS    += -D_DEBUG
+  CFLAGS      += -D_DEBUG
 	BINSUBDIR   := debug
 	LIBSUFFIX   := D
 else 
@@ -154,18 +164,10 @@ else
 	CFLAGS      += -fno-strict-aliasing
 endif
 
+
 ifeq ($(boost),1)
 	COMMONFLAGS += -D_USE_BOOST_
 endif
-
-# append optional arch/SM version flags (such as -arch sm_11)
-NVCCFLAGS += $(SMVERSIONFLAGS) 
-NVCCFLAGS += -gencode=arch=compute_10,code=sm_10
-
-ifneq ($(CUDA_VERSION_3PLUS),)
-	NVCCFLAGS += -gencode=arch=compute_20,code=sm_20 
-endif
-
 
 # architecture flag for cubin build
 CUBIN_ARCH_FLAG := -m32
@@ -349,7 +351,7 @@ $(OBJDIR)/%.cpp_o : $(SRCDIR)%.cpp $(C_DEPS)
 	$(VERBOSE)$(CXX) $(CXXFLAGS) -o $@ -c $<
 
 $(OBJDIR)/%.cu_o : $(CUSRCDIR)%.cu $(CU_DEPS)
-	$(VERBOSE)$(NVCC) -o $@ -c $< $(NVCCFLAGS)
+	$(VERBOSE)$(NVCC) $(GENCODE_SM10) $(GENCODE_ARCH) $(GENCODE_SM20) $(NVCCFLAGS) -o $@ -c $< 
 
 $(CUBINDIR)/%.cubin : $(SRCDIR)%.cu cubindirectory
 	$(VERBOSE)$(NVCC) $(CUBIN_ARCH_FLAG) -o $@ -cubin $< $(NVCCFLAGS)

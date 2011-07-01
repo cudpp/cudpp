@@ -25,13 +25,6 @@
 
 #include <cudpp_globals.h>
 #include "sharedmem.h"
-//#include "cta/radixsort_cta.cu"
-
-#ifdef __DEVICE_EMULATION__
-#define __EMUSYNC  __syncthreads()
-#else
-#define __EMUSYNC
-#endif
 
 /**
   * @brief Main reduction kernel
@@ -82,6 +75,7 @@ __global__ void reduce(T *odata, const T *idata, unsigned int n)
                 mySum = op(mySum, idata[i+blockSize]);  
             i += gridSize;
         } 
+
         sdata[tid] = mySum;
         __syncthreads();
 
@@ -89,17 +83,15 @@ __global__ void reduce(T *odata, const T *idata, unsigned int n)
         if (blockSize >= 512) { if (tid < 256) { sdata[tid] = mySum = op(mySum, sdata[tid + 256]); } __syncthreads(); }
         if (blockSize >= 256) { if (tid < 128) { sdata[tid] = mySum = op(mySum, sdata[tid + 128]); } __syncthreads(); }
         if (blockSize >= 128) { if (tid <  64) { sdata[tid] = mySum = op(mySum, sdata[tid +  64]); } __syncthreads(); }
-
-#ifndef __DEVICE_EMULATION__
+    
         if (tid < 32)
-#endif
         {
-            if (blockSize >=  64) { sdata[tid] = mySum = op(mySum, sdata[tid + 32]); __EMUSYNC; }
-            if (blockSize >=  32) { sdata[tid] = mySum = op(mySum, sdata[tid + 16]); __EMUSYNC; }
-            if (blockSize >=  16) { sdata[tid] = mySum = op(mySum, sdata[tid +  8]); __EMUSYNC; }
-            if (blockSize >=   8) { sdata[tid] = mySum = op(mySum, sdata[tid +  4]); __EMUSYNC; }
-            if (blockSize >=   4) { sdata[tid] = mySum = op(mySum, sdata[tid +  2]); __EMUSYNC; }
-            if (blockSize >=   2) { sdata[tid] = mySum = op(mySum, sdata[tid +  1]); __EMUSYNC; }
+            if (blockSize >=  64) { sdata[tid] = mySum = op(mySum, sdata[tid + 32]); }
+            if (blockSize >=  32) { sdata[tid] = mySum = op(mySum, sdata[tid + 16]); }
+            if (blockSize >=  16) { sdata[tid] = mySum = op(mySum, sdata[tid +  8]); }
+            if (blockSize >=   8) { sdata[tid] = mySum = op(mySum, sdata[tid +  4]); }
+            if (blockSize >=   4) { sdata[tid] = mySum = op(mySum, sdata[tid +  2]); }
+            if (blockSize >=   2) { sdata[tid] = mySum = op(mySum, sdata[tid +  1]); }
         }
 
         // write result for this block to global mem 

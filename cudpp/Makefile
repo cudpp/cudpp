@@ -18,6 +18,8 @@ CUFILES :=	src/app/compact_app.cu \
 		src/app/reduce_app.cu \
 		src/app/rand_app.cu 
 
+GENCODE_ARCH := -gencode=arch=compute_13,code=\"sm_13,compute_13\"
+
 SRCDIR := ./src/
 CUSRCDIR := ./src/app/
 

@@ -186,9 +186,7 @@ int reduceTest(int argc, const char **argv, const CUDPPConfiguration &config,
 
         // Run the reduction
         // run once to avoid timing startup overhead.
-#ifndef __DEVICE_EMULATION__
         cudppReduce(plan, d_odata, d_idata, test[k]);
-#endif
 
         CUDA_SAFE_CALL( cudaEventRecord(startEvent, 0) );
         for (int i = 0; i < testOptions.numIterations; i++)

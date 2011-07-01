@@ -1,5 +1,13 @@
 CUDPP Change Log
 
+Release 2.0
+DATE HERE
+- Revamp public interface to be thread safe -- requires creating a
+  CUDPP instance with cudppCreate, and passing it to all functions
+- Added cudppReduce parallel reductions
+- Added double, long long, and unsigned long long datatypes, implemented
+  in cudppReduce, cudppScan
+
 Release: 1.1.1 (Bugfix release)
 29 April 2010
 - Fix scan, segmented scan, and radix sort correctness on Fermi (sm_20) 
