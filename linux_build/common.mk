@@ -217,7 +217,7 @@ endif
 
 # Libs
 ifneq ($(DARWIN),)
-        LIB      += -L$(CUDA_INSTALL_PATH)/lib -L$(LIBDIR) -L$(COMMONDIR)/lib -lcuda -lcudart ${OPENGLLIB} $(PARAMGLLIB) $(CUDPPLIB)
+        LIB      += -L$(CUDA_INSTALL_PATH)/lib -L$(LIBDIR) -L$(COMMONDIR)/lib -L$(COMMONDIR)/lib/darwin -lcuda -lcudart ${OPENGLLIB} $(PARAMGLLIB) $(CUDPPLIB)
 else
         ifneq ($(HP_64), )
             CUDA_LIB_PATH := $(CUDA_INSTALL_PATH)/lib64

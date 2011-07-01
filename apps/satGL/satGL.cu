@@ -14,7 +14,11 @@
 #include <math.h>
 #include "cudpp.h"
 #include "cutil.h"
+#if defined(__APPLE__) || defined(MACOSX)
+#include <GLUT/glut.h>
+#else
 #include <GL/glut.h>
+#endif
 
 #ifdef _WIN32
 #  define WINDOWS_LEAN_AND_MEAN

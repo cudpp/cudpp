@@ -51,6 +51,8 @@
 #include "cutil_gl_error.h"
 #include <cuda.h>
 #include <cuda_gl_interop.h>
+#include <cuda_runtime_api.h>
+#include "findFile.h"
 
 #if CUDA_VERSION < 3000
 #define USE_CUDA_GRAPHICS_INTEROP 0
@@ -352,7 +354,7 @@ initGL() {
     unsigned char* img = NULL;
     unsigned int w = 512, h = 512;
     char path[100];
-    CUT_SAFE_CALL(cutFindFile(path, "cudpp", "cedfence.ppm"));
+    CUT_SAFE_CALL(findFile("cudpp", "cedfence.ppm", path));
     CUT_SAFE_CALL(cutLoadPPMub( path, &img, &w, &h));
 
     glGenTextures(1, &texWood);

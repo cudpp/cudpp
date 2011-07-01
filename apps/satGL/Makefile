@@ -9,7 +9,7 @@ EXECUTABLE	:= satGL
 # Cuda source files (compiled with cudacc)
 CUFILES		:= satGL.cu
 # C/C++ source files (compiled with gcc / c++)
-CCFILES		:= main.cpp
+CCFILES		:= main.cpp findFile.cpp
 
 INCLUDES	:= -I../../cudpp/include
 
