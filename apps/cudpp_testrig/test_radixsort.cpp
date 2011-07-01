@@ -119,7 +119,7 @@ int radixSortTest(CUDPPHandle plan, CUDPPConfiguration config, size_t *tests,
 
         if(!quiet)
         {                         
-            printf("%s test %s\n", testOptions.runMode, (retval == 0) ? "PASSED" : "FAILED");
+            printf("test %s\n", (retval == 0) ? "PASSED" : "FAILED");
             printf("Average execution time: %f ms\n", totalTime / testOptions.numIterations);
         }
         else

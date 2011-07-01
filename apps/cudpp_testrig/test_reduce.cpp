@@ -213,8 +213,7 @@ int reduceTest(int argc, const char **argv, const CUDPPConfiguration &config,
 
         if (!quiet)
         {
-            printf("%s test %s\n", testOptions.runMode,
-                   (correct) ? "PASSED" : "FAILED");
+            printf("test %s\n", (correct) ? "PASSED" : "FAILED");
             if (!correct)
                 std::cout << o_data << " != " << reference << " (ref)" 
                           << std::endl;
