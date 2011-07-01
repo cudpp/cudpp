@@ -96,26 +96,14 @@ __device__ T scanwarp(T val, volatile T* sData)
     int idx = 2 * threadIdx.x - (threadIdx.x & (WARP_SIZE - 1));
     sData[idx] = 0;
     idx += WARP_SIZE;
-    T t = sData[idx] = val;          __EMUSYNC;
+    T t = sData[idx] = val;
 
-#ifdef __DEVICE_EMULATION__             
-    t = sData[idx -  1]; __EMUSYNC; 
-    sData[idx] += t;       __EMUSYNC;
-    t = sData[idx -  2];   __EMUSYNC; 
-    sData[idx] += t;       __EMUSYNC;
-    t = sData[idx -  4];   __EMUSYNC; 
-    sData[idx] += t;       __EMUSYNC;
-    t = sData[idx -  8];   __EMUSYNC; 
-    sData[idx] += t;       __EMUSYNC;
-    t = sData[idx - 16];   __EMUSYNC; 
-    sData[idx] += t;       __EMUSYNC;
-#else
-    if (0 <= maxlevel) { sData[idx] = t = t + sData[idx - 1]; } __EMUSYNC;
-    if (1 <= maxlevel) { sData[idx] = t = t + sData[idx - 2]; } __EMUSYNC;
-    if (2 <= maxlevel) { sData[idx] = t = t + sData[idx - 4]; } __EMUSYNC;
-    if (3 <= maxlevel) { sData[idx] = t = t + sData[idx - 8]; } __EMUSYNC;
-    if (4 <= maxlevel) { sData[idx] = t = t + sData[idx -16]; } __EMUSYNC;
-#endif          
+    if (0 <= maxlevel) { sData[idx] = t = t + sData[idx - 1]; }
+    if (1 <= maxlevel) { sData[idx] = t = t + sData[idx - 2]; }
+    if (2 <= maxlevel) { sData[idx] = t = t + sData[idx - 4]; }
+    if (3 <= maxlevel) { sData[idx] = t = t + sData[idx - 8]; }
+    if (4 <= maxlevel) { sData[idx] = t = t + sData[idx -16]; }
+
     return sData[idx] - val;  // convert inclusive -> exclusive
 }
 
@@ -150,9 +138,7 @@ __device__ uint4 scan4(uint4 idata)
     }
     __syncthreads();
 
-#ifndef __DEVICE_EMULATION__
     if (idx < WARP_SIZE)
-#endif
     {
         ptr[idx] = scanwarp<uint, 2>(ptr[idx], ptr);
     }

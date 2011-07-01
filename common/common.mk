@@ -238,10 +238,6 @@ endif
 
 ifeq ($(USECUDPP), 1)
     CUDPPLIB := -lcudpp_$(CUDPPLIB_SUFFIX)
-
-    ifeq ($(emu), 1)
-        CUDPPLIB := $(CUDPPLIB)_emu
-    endif
 endif
 
 ifeq ($(USENVCUVID), 1)
@@ -277,29 +273,17 @@ else
   ifeq ($(USEDRVAPI),1)
      LIB += -lcuda   ${OPENGLLIB} $(PARAMGLLIB) $(RENDERCHECKGLLIB) $(CUDPPLIB) ${LIB} 
   else
-     ifeq ($(emu),1) 
-         LIB += -lcudartemu
-     else 
-         LIB += -lcudart
-     endif
+     LIB += -lcudart
      LIB += ${OPENGLLIB} $(PARAMGLLIB) $(RENDERCHECKGLLIB) $(CUDPPLIB) ${LIB}
   endif
 endif
 
 ifeq ($(USECUFFT),1)
-  ifeq ($(emu),1)
-    LIB += -lcufftemu
-  else
-    LIB += -lcufft
-  endif
+  LIB += -lcufft
 endif
 
 ifeq ($(USECUBLAS),1)
-  ifeq ($(emu),1)
-    LIB += -lcublasemu
-  else
-    LIB += -lcublas
-  endif
+  LIB += -lcublas
 endif
 
 ifeq ($(USECURAND),1)
@@ -320,15 +304,6 @@ ifneq ($(STATIC_LIB),)
 else
 	ifneq ($(OMIT_CUTIL_LIB),1)
 		LIB += -lcutil_$(LIB_ARCH)$(LIBSUFFIX) -lshrutil_$(LIB_ARCH)$(LIBSUFFIX)
-	endif
-	# Device emulation configuration
-	ifeq ($(emu), 1)
-		NVCCFLAGS   += -deviceemu
-		CUDACCFLAGS += 
-		BINSUBDIR   := emu$(BINSUBDIR)
-		# consistency, makes developing easier
-		CXXFLAGS		+= -D__DEVICE_EMULATION__
-		CFLAGS			+= -D__DEVICE_EMULATION__
 	endif
 	TARGETDIR := $(BINDIR)/$(BINSUBDIR)
 	TARGET    := $(TARGETDIR)/$(EXECUTABLE)

@@ -36,15 +36,6 @@
 #include <math.h>
 #include <cudpp.h>
 
-/**
- * @brief Macro to insert necessary __syncthreads() in device emulation mode
- */
-#ifdef __DEVICE_EMULATION__
-#define __EMUSYNC __syncthreads()
-#else
-#define __EMUSYNC
-#endif
-
 /** 
   * @brief Template class containing compile-time parameters to the scan functions
   *
@@ -808,29 +799,13 @@ __device__ T warpscan(T val, volatile T* s_data)
     int idx = 2 * threadIdx.x - (threadIdx.x & (WARP_SIZE-1));
     s_data[idx] = op.identity();
     idx += WARP_SIZE;
-    T t = s_data[idx] = val;                   __EMUSYNC;
-
-    // This code is needed because the warp size of device emulation
-    // is only 1 thread, so sync-less cooperation within a warp doesn't 
-    // work.
-#ifdef __DEVICE_EMULATION__
-    t = s_data[idx -  1]; __EMUSYNC; 
-    s_data[idx] = op(s_data[idx],t); __EMUSYNC;
-    t = s_data[idx -  2]; __EMUSYNC; 
-    s_data[idx] = op(s_data[idx],t); __EMUSYNC;
-    t = s_data[idx -  4]; __EMUSYNC; 
-    s_data[idx] = op(s_data[idx],t); __EMUSYNC;
-    t = s_data[idx -  8]; __EMUSYNC; 
-    s_data[idx] = op(s_data[idx],t); __EMUSYNC;
-    t = s_data[idx - 16]; __EMUSYNC; 
-    s_data[idx] = op(s_data[idx],t); __EMUSYNC;
-#else
+    T t = s_data[idx] = val;
+    
     if (0 <= maxlevel) { s_data[idx] = t = op(t, s_data[idx - 1]); }
     if (1 <= maxlevel) { s_data[idx] = t = op(t, s_data[idx - 2]); }
     if (2 <= maxlevel) { s_data[idx] = t = op(t, s_data[idx - 4]); }
     if (3 <= maxlevel) { s_data[idx] = t = op(t, s_data[idx - 8]); }
     if (4 <= maxlevel) { s_data[idx] = t = op(t, s_data[idx -16]); }
-#endif
 
     return s_data[idx-1];      // convert inclusive -> exclusive
 }
@@ -873,9 +848,7 @@ __device__ void scanWarps(T x, T y,
     }
     __syncthreads();
 
-#ifndef __DEVICE_EMULATION__
     if (idx < 32)
-#endif
     {
         s_data[idx] = warpscan<T,traits,(LOG_SCAN_CTA_SIZE-LOG_WARP_SIZE+1)>(s_data[idx], s_data);
     }
@@ -923,14 +896,6 @@ __device__ void scanCTA(T            *s_data,
     {
         d_blockSums[blockSumIndex] = op(val2, s_data[threadIdx.x + blockDim.x]);
     }
-    
-    
-#ifdef __DEVICE_EMULATION__
-    // must sync in emulation mode when doing backward scans, because otherwise the 
-    // shared memory array will get reversed before the block sums are read!
-    if (traits::isBackward())
-        __syncthreads();
-#endif
 }
 
 

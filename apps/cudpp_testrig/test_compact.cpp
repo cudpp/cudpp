@@ -178,9 +178,7 @@ int testCompact(int argc, const char **argv, const CUDPPConfiguration *configPtr
         CUDA_SAFE_CALL( cudaMemset(d_odata, 0, sizeof(float) * test[k]));
 
         // run once to avoid timing startup overhead.
-#ifndef __DEVICE_EMULATION__
         cudppCompact(plan, d_odata, d_numValid, d_idata, d_isValid, test[k]);
-#endif
 
         cutStartTimer(timer);
         for (int i = 0; i < testOptions.numIterations; i++)

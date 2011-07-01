@@ -213,10 +213,6 @@ ifeq ($(USECUDPP), 1)
 	HP_64 =	$(shell uname -m | grep 64)
 
 	CUDPPLIB := -lcudpp$(LIBSUFFIX)
-
-	ifeq ($(emu), 1)
-		CUDPPLIB := $(CUDPPLIB)_emu
-	endif
 endif
 
 # Libs
@@ -234,29 +230,11 @@ endif
 
 # Lib/exe configuration
 ifneq ($(STATIC_LIB),)
-	ifeq ($(emu), 1)
-		NVCCFLAGS   += -deviceemu
-		CUDACCFLAGS +=
-		BINSUBDIR   := emu$(BINSUBDIR)
-		LIBSUFFIX   := _$(LIB_ARCH)$(LIBSUFFIX)_emu
-		# consistency, makes developing easier
-		CXXFLAGS    += -D__DEVICE_EMULATION__
-		CFLAGS	    += -D__DEVICE_EMULATION__		
-	endif
 	TARGETDIR := $(LIBDIR)
 	TARGET   := $(subst .a,$(LIBSUFFIX).a,$(LIBDIR)/$(STATIC_LIB))
 	LINKLINE  = ar qv $(TARGET) $(OBJS); ranlib $(TARGET)
 else
 	LIB += -lcutil_$(LIB_ARCH)$(LIBSUFFIX)
-	# Device emulation configuration
-	ifeq ($(emu), 1)
-		NVCCFLAGS   += -deviceemu
-		CUDACCFLAGS += 
-		BINSUBDIR   := emu$(BINSUBDIR)
-		# consistency, makes developing easier
-		CXXFLAGS    += -D__DEVICE_EMULATION__
-		CFLAGS	    += -D__DEVICE_EMULATION__
-	endif
 	TARGETDIR := $(BINDIR)/$(BINSUBDIR)
 	TARGET    := $(TARGETDIR)/$(EXECUTABLE)
 	LINKLINE  = $(LINK) -o $(TARGET) $(OBJS) $(LIB)
@@ -264,16 +242,7 @@ endif
 
 # Lib/exe configuration
 ifneq ($(CUDPP_STATIC_LIB),)
-	ifeq ($(emu), 1)
-		NVCCFLAGS   += -deviceemu
-		CUDACCFLAGS +=
-		LIBSUFFIX   := _$(LIB_ARCH)$(LIBSUFFIX)_emu
-		# consistency, makes developing easier
-		CXXFLAGS    += -D__DEVICE_EMULATION__
-		CFLAGS	    += -D__DEVICE_EMULATION__		
-        else
-		LIBSUFFIX   := _$(LIB_ARCH)$(LIBSUFFIX)
-	endif
+	LIBSUFFIX   := _$(LIB_ARCH)$(LIBSUFFIX)
 	TARGETDIR := $(LIBDIR)
 
 	# detect if 32 bit or 64 bit system

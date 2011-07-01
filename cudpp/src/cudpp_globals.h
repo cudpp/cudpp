@@ -35,15 +35,6 @@ const int LOG_SIZEOF_FLOAT = 2;                  /**< log_2(sizeof(float)) */
 const int SCAN_ELTS_PER_THREAD = 8;              /**< Number of elements per scan thread */
 const int SEGSCAN_ELTS_PER_THREAD = 8;           /**< Number of elements per segmented scan thread */
 
-/**
-* @brief Macro to insert necessary __syncthreads() in device emulation mode
-*/
-#ifdef __DEVICE_EMULATION__
-#define __EMUSYNC __syncthreads()
-#else
-#define __EMUSYNC
-#endif
-
 #endif // __CUDPP_GLOBALS_H__
 
 // Leave this at the end of the file

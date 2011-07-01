@@ -67,10 +67,6 @@ int main(int argc, const char** argv)
     cudaGetDevice(&dev);
     if (!quiet && cudaGetDeviceProperties(&prop, dev) == 0)
     {
-#ifdef __DEVICE_EMULATION__
-        printf("[EMU] ");
-#endif
-
         printf("%s; global mem: %dB; compute v%d.%d; clock: %d kHz\n",
                prop.name, (int)prop.totalGlobalMem, (int)prop.major, 
                (int)prop.minor, (int)prop.clockRate);

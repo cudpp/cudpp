@@ -184,9 +184,7 @@ int scanTest(int argc, const char **argv, const CUDPPConfiguration &config,
   
         // Run the scan
         // run once to avoid timing startup overhead.
-#ifndef __DEVICE_EMULATION__
         cudppScan(scanPlan, d_odata, d_idata, test[k]);
-#endif
 
         cutStartTimer(timer);
         for (int i = 0; i < testOptions.numIterations; i++)
@@ -494,9 +492,7 @@ int testSegmentedScan(int argc, const char **argv, const CUDPPConfiguration *con
   
         // Run the scan
         // run once to avoid timing startup overhead.
-#ifndef __DEVICE_EMULATION__
         cudppSegmentedScan(segmentedScanPlan, d_odata, d_idata, d_iflags, test[k]);
-#endif
 
         cutStartTimer(timer);
         for (int i = 0; i < testOptions.numIterations; i++)
@@ -689,9 +685,8 @@ int testMultiSumScan(int argc, const char **argv)
     fflush(stdout);
 
     // run once to avoid timing startup overhead.
-#ifndef __DEVICE_EMULATION__
     cudppMultiScan(multiscanPlan, d_odata, d_idata, numElements, numRows);
-#endif
+
     cutStartTimer(timer);
     for (int i = 0; i < testOptions.numIterations; i++)
     {

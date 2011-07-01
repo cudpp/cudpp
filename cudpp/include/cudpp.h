@@ -98,7 +98,8 @@
  * Notes: CUDPP is not compatible with CUDA 2.1.  A compiler bug in 2.1 
  * causes the compiler to crash.  Also, starting with CUDPP 1.1.1, we are 
  * no longer testing CUDA device emulation, because it is deprecated in 
- * CUDA 3.0 and will be removed from future CUDA versions.  
+ * CUDA 3.0 and hase been removed from future CUDA versions.  Device 
+ * emulation support has been removed starting with CUDPP 2.0.
  *
  * \section cuda CUDA
  * CUDPP is implemented in
@@ -266,9 +267,7 @@
  * CUDPP can be built using either or MSVC 8 (2005) or MSVC 9 (2008).  To 
  * build, open cudpp/cudpp.sln. Then you can build the library 
  * using the "build" command as you would with any other workspace. There are 
- * four configurations: debug, release, emudebug, and emurelease.  The first 
- * two are self-explanatory.  The second two are built to use CUDA device 
- * emulation, meaning they will be run (slowly) on the CPU.
+ * two configurations: debug and release.
  *
  * \section build-linux Building CUDPP on Linux and Mac OS X
  *
@@ -279,9 +278,11 @@
  * libcutilD.a.  
  * 
  * The makefile for CUDPP and all sample applications take the optional 
- * arguments "emu=1" and "dbg=1".  The former builds CUDPP for device emulation,
- * and the latter for debugging. The two flags can be combined. "verbose=1"
- * can be used to see all compiler output.
+ * arguments "dbg=1", "devdbg=1" and "verbose=1".  dbg=1 builds CUDPP
+ * for host code debugging, devdbg=1 builds CUDPP with support for host
+ * and device code debugging (using cuda-gdb), and verbose=1 displays 
+ * the progress of the compilation.  These flags can be combined, but 
+ * dbg=1 is implied by devdbg=1.
  *
  * \section build-apps Building CUDPP Sample Applications
  * 

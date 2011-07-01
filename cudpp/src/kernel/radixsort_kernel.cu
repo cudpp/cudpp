@@ -13,12 +13,6 @@
 #include "sharedmem.h"
 #include "cta/radixsort_cta.cu"
 
-#ifdef __DEVICE_EMULATION__
-#define __EMUSYNC  __syncthreads()
-#else
-#define __EMUSYNC
-#endif
-
 /**
  * @file
  * radixsort_kernel.cu
@@ -105,8 +99,6 @@ void radixSortSingleWarp(uint *keys,
     sKeys[threadIdx.x]   = floatFlip<flip>(keys[threadIdx.x]);
     sValues[threadIdx.x] = values[threadIdx.x];
     
-    __EMUSYNC; // emulation only
-
     for(uint i = 1; i < numElements; i++)
     {
         uint key_i = sKeys[i];
@@ -121,12 +113,6 @@ void radixSortSingleWarp(uint *keys,
             tempval = sValues[threadIdx.x];
             sFlags[threadIdx.x] = 1;
 
-#ifdef __DEVICE_EMULATION__
-        }
-        __EMUSYNC;
-        if( (threadIdx.x < i) && (sKeys[threadIdx.x] > key_i) ) 
-        {
-#endif
             sKeys[threadIdx.x + 1] = temp;
             sValues[threadIdx.x + 1] = tempval;
             sFlags[threadIdx.x + 1] = 0;
@@ -138,9 +124,6 @@ void radixSortSingleWarp(uint *keys,
             sKeys[threadIdx.x] = key_i;
             sValues[threadIdx.x] = val_i;
         }
-
-        __EMUSYNC; // emulation only
-
     }
     keys[threadIdx.x]   = floatUnflip<flip>(sKeys[threadIdx.x]);
     values[threadIdx.x] = sValues[threadIdx.x];
@@ -163,8 +146,6 @@ void radixSortSingleWarpKeysOnly(uint *keys,
     volatile __shared__ uint sFlags[WARP_SIZE];
 
     sKeys[threadIdx.x]   = floatFlip<flip>(keys[threadIdx.x]);
-    
-    __EMUSYNC; // emulation only
 
     for(uint i = 1; i < numElements; i++)
     {
@@ -177,12 +158,6 @@ void radixSortSingleWarpKeysOnly(uint *keys,
         {
             temp = sKeys[threadIdx.x];
             sFlags[threadIdx.x] = 1;
-#ifdef __DEVICE_EMULATION__
-        }
-        __EMUSYNC;
-        if( (threadIdx.x < i) && (sKeys[threadIdx.x] > key_i) ) 
-        {
-#endif
             sKeys[threadIdx.x + 1] = temp;
             sFlags[threadIdx.x + 1] = 0;
         }
@@ -190,9 +165,6 @@ void radixSortSingleWarpKeysOnly(uint *keys,
         {
             sKeys[threadIdx.x] = key_i;
         }
-
-        __EMUSYNC; // emulation only
-
     }
     keys[threadIdx.x]   = floatUnflip<flip>(sKeys[threadIdx.x]);
 }

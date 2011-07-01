@@ -10,8 +10,6 @@
 #include "cudpp_testrig_options.h"
 /**
  * Sets "global" options in testOptions given command line 
- * - runMode: set automatically; string that says EMU for emulation
-     mode, GPU for hardware mode
  * - --debug: sets bool <var>debug</var>. Usage is application-dependent.
  * - --op=OP: sets char * <var>op</var> to OP
  * - --iterations=#: sets int <var>numIterations</var> to #
@@ -20,13 +18,6 @@
 extern "C"
 void setOptions(int argc, const char **argv, testrigOptions &testOptions)
 {
-
-#ifdef __DEVICE_EMULATION__
-    testOptions.runMode = (char*)"EMU";
-#else 
-    testOptions.runMode = (char*)"GPU";
-#endif
-
     testOptions.debug = 
         (cutCheckCmdLineFlag(argc, (const char**) argv, "debug") == CUTTrue)
         ? true : false;

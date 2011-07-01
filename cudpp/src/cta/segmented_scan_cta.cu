@@ -135,9 +135,7 @@ loadForSegmentedScanSharedChunkFromMem4(
     ai = thid;
     bi = thid + blockDim.x;
 
-// #ifndef __DEVICE_EMULATION__
     bool isLastBlock = (blockIdx.x == (gridDim.x-1));
-// #endif
 
     // convert to 4-vector
     typename typeToVector<T,4>::Result* iData = (typename typeToVector<T,4>::Result*)d_idata;
@@ -147,40 +145,6 @@ loadForSegmentedScanSharedChunkFromMem4(
     uint4 tempFlag;
 
     unsigned int gIndex = (aiDev) * 4;
-
-#ifdef __DEVICE_EMULATION__
-    if (traits::shiftFlags())
-    {
-        if (traits::isFullBlock() || (gIndex+4) < numElements)
-        {   
-            tempFlag.x = d_iflags[gIndex+1];
-            tempFlag.y = d_iflags[gIndex+2];
-            tempFlag.z = d_iflags[gIndex+3];
-            tempFlag.w = d_iflags[gIndex+4];
-        }    
-        else
-        {
-            tempFlag.x = ((gIndex+1) < numElements) ? d_iflags[gIndex+1] : 0;
-            tempFlag.y = ((gIndex+2) < numElements) ? d_iflags[gIndex+2] : 0;
-            tempFlag.z = ((gIndex+3) < numElements) ? d_iflags[gIndex+3] : 0;
-            tempFlag.w = 0;
-        }   
-    }
-    else
-    {
-        if (traits::isFullBlock() || (gIndex+3) < numElements)
-        {
-            tempFlag = iFlags[aiDev];
-        }
-        else
-        {
-            tempFlag.x = (gIndex < numElements) ? d_iflags[gIndex] : 0;
-            tempFlag.y = ((gIndex+1) < numElements) ? d_iflags[gIndex+1] : 0;
-            tempFlag.z = ((gIndex+2) < numElements) ? d_iflags[gIndex+2] : 0;
-            tempFlag.w = 0;
-        }
-    }
-#else
 
     if (traits::shiftFlags() && traits::isSM12OrBetter())
     {
@@ -213,7 +177,6 @@ loadForSegmentedScanSharedChunkFromMem4(
     }
 
     // Pad values beyond numElements with identity elements 
-
     if (traits::shiftFlags() && !traits::isSM12OrBetter())
     {
         if (ai == 0)
@@ -239,7 +202,6 @@ loadForSegmentedScanSharedChunkFromMem4(
 
         // Do I need a __syncthreads here - I don't think so
     }
-#endif
 
     // Store the first 4 flags in threadFlag[0]...threadFlag[3]
     threadFlag = 0;
@@ -251,19 +213,6 @@ loadForSegmentedScanSharedChunkFromMem4(
     // instantiate operator functor
     typename traits::Op op;
 
-#ifdef __DEVICE_EMULATION__
-    if (traits::isFullBlock() || (gIndex+3) < numElements)
-    {
-        tempData = iData[aiDev];
-    }
-    else
-    {
-        tempData.x = (gIndex < numElements) ? d_idata[gIndex] : op.identity();
-        tempData.y = ((gIndex+1) < numElements) ? d_idata[gIndex+1] : op.identity();
-        tempData.z = ((gIndex+2) < numElements) ? d_idata[gIndex+2] : op.identity();
-        tempData.w = op.identity();        
-    }
-#else
     // Read 4 data
     // Pad values beyond numElements with identity elements
     tempData = iData[aiDev];
@@ -274,7 +223,6 @@ loadForSegmentedScanSharedChunkFromMem4(
         if ((gIndex+2) >= numElements) tempData.z = op.identity();
         if ((gIndex+3) >= numElements) tempData.w = op.identity();
     }
-#endif
 
     // Computed inclusive segmented scan and store result in
     // threadScan0
@@ -374,42 +322,6 @@ loadForSegmentedScanSharedChunkFromMem4(
 
     gIndex = biDev * 4;
 
-#ifdef __DEVICE_EMULATION__ 
-    if (traits::shiftFlags())
-    {
-        if (traits::isFullBlock() || (gIndex+4) < numElements)
-        {   
-            tempFlag.x = d_iflags[gIndex+1];
-            tempFlag.y = d_iflags[gIndex+2];
-            tempFlag.z = d_iflags[gIndex+3];
-            if (isLastBlock && (bi==((blockDim.x<<1)-1)))
-                tempFlag.w = 0;
-            else
-                tempFlag.w = d_iflags[gIndex+4];
-        }    
-        else
-        {
-            tempFlag.x = ((gIndex+1) < numElements) ? d_iflags[gIndex+1] : 0;
-            tempFlag.y = ((gIndex+2) < numElements) ? d_iflags[gIndex+2] : 0;
-            tempFlag.z = ((gIndex+3) < numElements) ? d_iflags[gIndex+3] : 0;
-            tempFlag.w = 0;
-        } 
-    }
-    else
-    { 
-        if (traits::isFullBlock() || (gIndex+3) < numElements)
-        {
-            tempFlag = iFlags[biDev];
-        }
-        else
-        {
-            tempFlag.x = (gIndex < numElements) ? d_iflags[gIndex] : 0;
-            tempFlag.y = ((gIndex+1) < numElements) ? d_iflags[gIndex+1] : 0;
-            tempFlag.z = ((gIndex+2) < numElements) ? d_iflags[gIndex+2] : 0;
-            tempFlag.w = 0;
-        }
-    }
-#else
     // Read 4 flags
     // Pad values beyond numElements with identity elements
     if (traits::shiftFlags() && traits::isSM12OrBetter())
@@ -470,7 +382,6 @@ loadForSegmentedScanSharedChunkFromMem4(
 
         // Do I need a __syncthreads here - I don't think so
     }
-#endif
 
     // Store the first 4 flags in threadFlag[4]...threadFlag[7]
     threadFlag |= (tempFlag.x << 4);
@@ -478,19 +389,6 @@ loadForSegmentedScanSharedChunkFromMem4(
     threadFlag |= (tempFlag.z << 6);
     threadFlag |= (tempFlag.w << 7);
 
-#ifdef __DEVICE_EMULATION__
-    if (traits::isFullBlock() || (gIndex+3) < numElements)
-    {
-        tempData = iData[biDev];
-    }
-    else
-    {
-        tempData.x = (gIndex < numElements) ? d_idata[gIndex] : op.identity();
-        tempData.y = ((gIndex+1) < numElements) ? d_idata[gIndex+1] : op.identity();
-        tempData.z = ((gIndex+2) < numElements) ? d_idata[gIndex+2] : op.identity();
-        tempData.w = op.identity();
-    }
-#else
     // Read 4 data
     // Pad values beyond numElements with identity elements
     tempData = iData[biDev];
@@ -503,7 +401,6 @@ loadForSegmentedScanSharedChunkFromMem4(
         if ((gIndex+2) >= numElements) tempData.z = op.identity();
         if ((gIndex+3) >= numElements) tempData.w = op.identity();
     }
-#endif
 
     // Computed inclusive segmented scan and store result in
     // threadScan1
@@ -830,16 +727,14 @@ reduceCTA(volatile T *s_data)
     if (blockSize >= 256) { if (tid < 128) { s_data[tid] = t = op(t, s_data[tid + 128]); } __syncthreads(); }
     if (blockSize >= 128) { if (tid <  64) { s_data[tid] = t = op(t, s_data[tid +  64]); } __syncthreads(); }
     
-#ifndef __DEVICE_EMULATION__
     if (tid < 32)
-#endif
     {
-        if (blockSize >=  64) { s_data[tid] = t = op(t, s_data[tid + 32]); __EMUSYNC; }
-        if (blockSize >=  32) { s_data[tid] = t = op(t, s_data[tid + 16]); __EMUSYNC; }
-        if (blockSize >=  16) { s_data[tid] = t = op(t, s_data[tid +  8]); __EMUSYNC; }
-        if (blockSize >=   8) { s_data[tid] = t = op(t, s_data[tid +  4]); __EMUSYNC; }
-        if (blockSize >=   4) { s_data[tid] = t = op(t, s_data[tid +  2]); __EMUSYNC; }
-        if (blockSize >=   2) { s_data[tid] = t = op(t, s_data[tid +  1]); __EMUSYNC; }
+        if (blockSize >=  64) { s_data[tid] = t = op(t, s_data[tid + 32]); }
+        if (blockSize >=  32) { s_data[tid] = t = op(t, s_data[tid + 16]); }
+        if (blockSize >=  16) { s_data[tid] = t = op(t, s_data[tid +  8]); }
+        if (blockSize >=   8) { s_data[tid] = t = op(t, s_data[tid +  4]); }
+        if (blockSize >=   4) { s_data[tid] = t = op(t, s_data[tid +  2]); }
+        if (blockSize >=   2) { s_data[tid] = t = op(t, s_data[tid +  1]); }
     }
     
     // write result for this block to global mem 
@@ -867,7 +762,7 @@ __device__ void warpSegScan(T val,
         idx = 2 * threadIdx.x - (threadIdx.x & (WARP_SIZE-1));
     }
 
-    s_data[idx] = op.identity(); s_flags[idx] = 0; __EMUSYNC;
+    s_data[idx] = op.identity(); s_flags[idx] = 0;
 
     if (traits::isBackward())
     {
@@ -881,76 +776,6 @@ __device__ void warpSegScan(T val,
     T t = s_data[idx] = val; 
     unsigned int f = s_flags[idx] = flag;
 
-    __EMUSYNC;
-
-#ifdef __DEVICE_EMULATION__
-    //T t; unsigned int f;
-    if (traits::isBackward())
-    {
-        t = s_data[idx +  1]; f = s_flags[idx +  1]; 
-    }
-    else
-    {
-        t = s_data[idx -  1]; f = s_flags[idx -  1];
-    }
-    
-    __EMUSYNC; 
-    s_data[idx] = s_flags[idx] ? s_data[idx] : op((const T)s_data[idx],t); 
-    s_flags[idx] = f | s_flags[idx];  __EMUSYNC;
-
-    if (traits::isBackward())
-    {
-        t = s_data[idx +  2]; f = s_flags[idx +  2];
-    }
-    else
-    {
-         t = s_data[idx -  2]; f = s_flags[idx -  2]; 
-    }
-    
-    __EMUSYNC; 
-    s_data[idx] = s_flags[idx] ? s_data[idx] : op((const T)s_data[idx],t); 
-    s_flags[idx] = f | s_flags[idx]; __EMUSYNC;
-    
-    if (traits::isBackward())
-    {
-        t = s_data[idx +  4]; f = s_flags[idx +  4];
-    }
-    else
-    {
-        t = s_data[idx -  4]; f = s_flags[idx -  4];
-    }
-    
-    __EMUSYNC; 
-    s_data[idx] = s_flags[idx] ? s_data[idx] : op((const T)s_data[idx],t); 
-    s_flags[idx] = f | s_flags[idx]; __EMUSYNC;
-
-    if (traits::isBackward())
-    {
-        t = s_data[idx +  8]; f = s_flags[idx +  8];
-    }
-    else
-    {
-        t = s_data[idx -  8]; f = s_flags[idx -  8]; 
-    }
-    
-    __EMUSYNC; 
-    s_data[idx] = s_flags[idx] ? s_data[idx] : op((const T)s_data[idx],t); 
-    s_flags[idx] = f | s_flags[idx]; __EMUSYNC;
-
-    if (traits::isBackward())
-    {
-        t = s_data[idx + 16]; f = s_flags[idx + 16];
-    }
-    else
-    {
-        t = s_data[idx - 16]; f = s_flags[idx - 16]; 
-    }
-    
-    __EMUSYNC; 
-    s_data[idx] = s_flags[idx] ? s_data[idx] : op((const T)s_data[idx],t); 
-    s_flags[idx] = f | s_flags[idx]; __EMUSYNC;
-
-#else
     if (0 <= maxlevel)
     {
         if (traits::isBackward())
@@ -1016,7 +841,6 @@ __device__ void warpSegScan(T val,
             s_flags[idx] = f = s_flags[idx - 16] | f;
         }
     }
-#endif
 
     if( isExclusive ) 
         if (traits::isBackward())
@@ -1108,9 +932,7 @@ __device__ void segmentedScanWarps(T val1,
     //  - use 1 warp for prefix sum over them
     // MJH: This optimization saves very little time in practice, and it
     // breaks backward segscans for some reason, so commenting it out.
-    //#ifndef __DEVICE_EMULATION__
     //    if ( warpid==0 )   
-    //#endif
     {
         warpSegScan<T, traits, false, (LOG_SCAN_CTA_SIZE-LOG_WARP_SIZE+1)>
             (tdata, tflag, s_data, s_flags, oVal3, oFlag3);

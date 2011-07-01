@@ -352,9 +352,6 @@ void radixSort(uint *keys,
         CUT_CHECK_ERROR("radixSortSingleWarp");        
         return;
     }
-#ifdef __DEVICE_EMULATION__
-    printf("bits: %d\n", keyBits);
-#endif
     
     if(numElements <= SORT_CTA_SIZE * 4)
     {

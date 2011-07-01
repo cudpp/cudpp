@@ -34,8 +34,6 @@
 /**
  * @brief "Global" testrig options set by command line.
  *
- * @param runMode set automatically; string that says EMU for emulation
-     mode, GPU for hardware mode
  * @param op String containing name of OP (useful in e.g. scan)
  * @param dir String containing the path of the random number regression test files
  * @param numIterations Number of iterations to run
@@ -44,7 +42,6 @@
  */
 struct testrigOptions
 {
-    char *runMode;     //!< Set automatically to "EMU" for emulation, "GPU" for hardware.
     char *op;          //!< String containing name of OP (useful in e.g. scan).
     char *datatype;    //!< String containing data type.
     char *dir;         //!< String containing the path of the random number regression test files
