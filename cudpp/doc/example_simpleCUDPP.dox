@@ -29,7 +29,7 @@
   allocate a device array for the output results, \c d_odata.
   
   \until d_odata
-  \skipline d_odata
+  \until }
   
   \subsection initialization CUDPP Initialization
   
@@ -62,7 +62,7 @@
   want to scan a one-dimensional array.  See the documentation for cudppPlan() 
   for more details on these parameters.
   
-  \until CUDPPResult result = cudppPlan(theCudpp, &scanplan, config, numElements, 1, 0);
+  \until CUDPPResult res = cudppPlan(theCudpp, &scanplan, config, numElements, 1, 0);  
   \until }
   
   We now have a handle to our plan object in \a scanplan. Next, after making 
@@ -72,11 +72,13 @@
   
   \skip Run the scan
   \until cudppScan
+  \until }
   
   Next, we read the results of the scan from d_odata back to the host, compute a reference
   solution on the CPU (\c computeSumScanGold()), and compare the results for correctness.
   
   \until printf
+  \until }
   
   Finally, we tell CUDPP to clean up the memory used for our plan object, using 
   cudppDestroyPlan().  Then we shut down the CUDPP library using cudppDestroy(),
