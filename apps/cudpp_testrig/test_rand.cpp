@@ -19,8 +19,14 @@
 #include <cstring>
 #include <cuda_runtime_api.h>
 #include "cudpp_testrig_options.h"
+#include "cudpp_testrig_utils.h"
+#include "cuda_util.h"
+#include "stopwatch.h"
 #include "findFile.h"
+#include "commandline.h"
 
+using namespace cudpp_app;
+ 
 //windows uses \ as the path, so we must adjust our original path for this
 //also if you're using Visual Studio, the path is only two directories up rather than three
 #if defined (__linux__) || defined (__APPLE__) || defined (MACOSX)
@@ -57,7 +63,7 @@ bool file_exists(const char * filename)
 void constructFileName(char * fileName, testrigOptions & testOptions, unsigned int size, const char * path)
 {
     //check first to see if user has inputted a string name
-    if(testOptions.dir == NULL)
+    if(testOptions.dir == "")
     {
         //use default location for the files
         strcpy(fileName, path);
@@ -71,16 +77,9 @@ void constructFileName(char * fileName, testrigOptions & testOptions, unsigned i
     else
     {
         //use user defined path
-        sprintf(fileName, "%smd5_regression_%u.dat",testOptions.dir, size);
-        printf("path set as: %s\n", testOptions.dir);
+        sprintf(fileName, "%smd5_regression_%u.dat",testOptions.dir.c_str(), size);
     }
 } //end constructFileName
-
-CUTBoolean
-cutFindDir(char * outputPath, const char * startDir, const char * dirName)
-{
-    return (0 != findDir(startDir, dirName, outputPath)) ? CUTTrue : CUTFalse;
-}
 
 bool searchForFile(unsigned int numElements, FILE ** randFile, char * path, testrigOptions & testOptions, bool quiet)
 {
@@ -121,7 +120,7 @@ bool searchForFile(unsigned int numElements, FILE ** randFile, char * path, test
 
     //final desperate attempt, if we can't find it, try to find it via the data directory
     char dataPath[100];
-    if (CUTTrue != cutFindDir(dataPath, "cudpp", "data") )
+    if (!findDir("cudpp", "data", dataPath) )
         return false;
 
     constructFileName(fullFileName, testOptions, numElements, dataPath);
@@ -145,7 +144,7 @@ testRandMD5(int argc, const char** argv)
     testrigOptions testOptions;
     setOptions(argc, argv, testOptions);
 
-    bool quiet = (CUTTrue == cutCheckCmdLineFlag(argc, (const char**) argv, "quiet"));
+    bool quiet = checkCommandLineFlag(argc, (const char**) argv, "quiet");
 
     unsigned int test[] = {39, 128, 256, 512, 1000, 1024, 1025, 32768, 45537, 65536, 131072,
         262144, 500001, 524288, 1048577, 1048576, 1048581, 2097152, 4194304, 8388608};
@@ -156,8 +155,6 @@ testRandMD5(int argc, const char** argv)
 
     unsigned int * md5GPUHost1;
     unsigned int * md5FromFile;
-
-    unsigned int randTimer;
 
     FILE * randFile = NULL;
     char fileName[200] = "";
@@ -181,7 +178,7 @@ testRandMD5(int argc, const char** argv)
         return retval;
     }
 
-    if(!quiet && testOptions.dir == NULL)
+    if(!quiet && testOptions.dir == "")
     {
 #if defined (__linux__) || defined (__APPLE__) || defined (MACOSX)
         printf("MD5 Rand test: no user specified path for rand testing.  Looking in local directory and ");
@@ -196,7 +193,7 @@ testRandMD5(int argc, const char** argv)
 #endif
     }
 
-    CUT_SAFE_CALL(cutCreateTimer(&randTimer));
+    StopWatch timer;
 
     for(int i=0; i<numTests; i++)
     {
@@ -258,19 +255,19 @@ testRandMD5(int argc, const char** argv)
         
         cudppRandSeed(randPlan, seed);
         
-        CUT_SAFE_CALL(cutResetTimer(randTimer));
-        CUT_SAFE_CALL(cutStartTimer(randTimer));
+        timer.reset();
+        timer.start();
         cudppRand(randPlan, md5GPU1, test[i]);
-        CUT_SAFE_CALL(cutStopTimer(randTimer));
+        timer.stop();
         
         if(quiet)
         {
             // print out basic information here
-            printf("\t%10u\t%0.4f%5c\n", test[i], cutGetTimerValue(randTimer),' ');
+            printf("\t%10u\t%0.4f%5c\n", test[i], timer.getTime(),' ');
         }
         else
         {
-            printf("%u pseudorandom numbers generated in %f ms\n", test[i], cutGetTimerValue(randTimer));
+            printf("%u pseudorandom numbers generated in %f ms\n", test[i], timer.getTime());
         }
         // copy the data back
         CUDA_SAFE_CALL(cudaMemcpy(md5GPUHost1, md5GPU1, sizeof(unsigned int) * test[i],cudaMemcpyDeviceToHost));
@@ -360,8 +357,6 @@ testRandMD5(int argc, const char** argv)
 
     if(!quiet)
         printf("%u total tests failed in rand regression test.\n", retval);
-
-    CUT_SAFE_CALL(cutDeleteTimer(randTimer));
 
     return retval;
 }

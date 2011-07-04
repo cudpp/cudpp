@@ -15,13 +15,17 @@
  * @brief Host testrig routines to exercise cudpp's reduction functionality.
  */
 
-#include "cudpp.h"
-#include "cudpp_testrig_options.h"
-#include "cudpp_testrig_utils.h"
-
 #include <cstring>
 #include <iostream>
 #include <cuda_runtime_api.h>
+
+#include "cudpp.h"
+#include "cudpp_testrig_options.h"
+#include "cudpp_testrig_utils.h"
+#include "cuda_util.h"
+#include "commandline.h"
+
+using namespace cudpp_app;
 
 template <class Oper, typename T>
 void computeReduceGold( T* out, const T* idata, const unsigned int len)
@@ -44,11 +48,10 @@ int reduceTest(int argc, const char **argv, const CUDPPConfiguration &config,
 
     int numElements = 8388608; // maximum test size
 
-    bool quiet = (CUTTrue == cutCheckCmdLineFlag(argc, (const char**) argv, "quiet"));
+    bool quiet = checkCommandLineFlag(argc, argv, "quiet");
 
     bool oneTest = false;
-    if (CUTTrue == cutGetCmdLineArgumenti(argc, (const char**) argv, "n",
-        &numElements))
+    if (commandLineArg(numElements, argc, argv, "n"))
     {
         oneTest = true;
     }
@@ -266,16 +269,16 @@ int testReduce(int argc, const char **argv, const CUDPPConfiguration *configPtr)
         //default sum scan
         config.op = CUDPP_ADD;
 
-        if (testOptions.op && !strcmp(testOptions.op, "max"))
+        if (testOptions.op == "max")
         {
             config.op = CUDPP_MAX;
         }
-        else if (testOptions.op && !strcmp(testOptions.op, "min"))
+        else if (testOptions.op == "min")
         {
             config.op = CUDPP_MIN;
         }
-        else if (testOptions.op && !strcmp(testOptions.op, "multiply"))
-        {
+        else if (testOptions.op == "multiply")
+        { 
             config.op = CUDPP_MULTIPLY;
         }
 
@@ -307,4 +310,5 @@ int testReduce(int argc, const char **argv, const CUDPPConfiguration *configPtr)
         return 0;
         break;
     }
+    return 0;
 }

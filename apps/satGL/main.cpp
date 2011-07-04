@@ -37,6 +37,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
+#include <string>
 
 // includes, GL
 #include <GL/glew.h>
@@ -47,17 +48,46 @@
 #include <GL/glut.h>
 #endif
 
-#include "cutil.h"
-#include "cutil_gl_error.h"
-#include <cuda.h>
-#include <cuda_gl_interop.h>
 #include <cuda_runtime_api.h>
-#include "findFile.h"
+#include <cuda_gl_interop.h>
+
+#define CUDPP_APP_COMMON_IMPL
+#include "findfile.h"
+#include "ppm.h"
+//#include "stopwatch.h"
 
 #if CUDA_VERSION < 3000
 #define USE_CUDA_GRAPHICS_INTEROP 0
 #else
 #define USE_CUDA_GRAPHICS_INTEROP 1
+#endif
+
+bool checkErrorGL( const char* file, const int line) 
+{
+	GLenum gl_error = glGetError();
+	if (gl_error != GL_NO_ERROR) 
+	{
+#ifdef _WIN32
+		char tmpStr[512];
+		// NOTE: "%s(%i) : " allows Visual Studio to directly jump to the file at the right line
+		// when the user double clicks on the error line in the Output pane. Like any compile error.
+		sprintf_s(tmpStr, 255, "\n%s(%i) : GL Error : %s\n\n", file, line, gluErrorString(gl_error));
+		OutputDebugString(tmpStr);
+#endif
+		fprintf(stderr, "GL Error in file '%s' in line %d :\n", file, line);
+		fprintf(stderr, "%s\n", gluErrorString(gl_error));
+        return false;
+	}
+    return true;
+}
+
+#ifdef _DEBUG
+#define CHECK_ERROR_GL()                                        \
+	if( !checkErrorGL( __FILE__, __LINE__)) {     \
+	    exit(-1);                                               \
+}
+#else
+#define CHECK_ERROR_GL()
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -96,7 +126,7 @@ GLuint depth_rb;
 GLenum singleChannelFloatIntFormat = GL_LUMINANCE32F_ARB;
 GLenum singleChannelFloatFormat    = GL_LUMINANCE;
 
-unsigned int timer;
+//cudpp_app::StopWatch timer;
 
 float rotate[3] = {0, 135, 0};
 
@@ -119,7 +149,7 @@ extern "C" void initialize(int width, int height);
 extern "C" void finalize();
 
 // GL functionality
-CUTBoolean initGL();
+bool initGL();
 #if USE_CUDA_GRAPHICS_INTEROP
 void createPBO( GLuint* pbo, cudaGraphicsResource *gres, bool bUseFloat);
 void deletePBO( GLuint* pbo, cudaGraphicsResource *gres);
@@ -147,7 +177,33 @@ void mainMenu(int i);
 int
 main( int argc, char** argv) {
 
-    CUT_DEVICE_INIT(argc, argv);
+    int deviceCount;
+    cudaGetDeviceCount(&deviceCount);
+    if (deviceCount == 0) {
+        fprintf(stderr, "error: no devices supporting CUDA.\n");
+        exit(-1);
+    }
+    int dev = 0;
+    if (argc > 1) {
+        std::string arg = argv[1];
+        size_t pos = arg.find("=");
+        if (arg.find("device") && pos != std::string::npos) {
+            dev = atoi(arg.c_str() + (pos + 1));
+        }
+    }
+    if (dev < 0) dev = 0;
+    if (dev > deviceCount-1) dev = deviceCount - 1;
+    cudaSetDevice(dev);
+
+    cudaDeviceProp prop;
+    if (cudaGetDeviceProperties(&prop, dev) == cudaSuccess)
+    {
+        printf("Using device %d:\n", dev);
+        printf("%s; global mem: %dB; compute v%d.%d; clock: %d kHz\n",
+               prop.name, (int)prop.totalGlobalMem, (int)prop.major, 
+               (int)prop.minor, (int)prop.clockRate);
+    }
+    
     // Create GL context
     glutInit( &argc, argv);
     if (argc > 2)
@@ -162,8 +218,8 @@ main( int argc, char** argv) {
     glutCreateWindow( "CUDA OpenGL post-processing");
 
     // initialize GL
-    if( CUTFalse == initGL()) {
-        return EXIT_FAILURE;
+    if( false == initGL()) {
+        return -1;
     }
 
     // register callbacks
@@ -198,10 +254,8 @@ main( int argc, char** argv) {
     createTexture( &tex_screen, image_width, image_height, true, false);
 
 
-    CUT_CHECK_ERROR_GL();
+    CHECK_ERROR_GL();
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
-
-    CUT_SAFE_CALL(cutCreateTimer(&timer));
 
     initialize(image_width, image_height);
 
@@ -270,7 +324,7 @@ const char psColorAndDistanceSrc[] =
 ////////////////////////////////////////////////////////////////////////////////
 //! Initialize GL
 ////////////////////////////////////////////////////////////////////////////////
-CUTBoolean
+bool
 initGL() {
 
     // initialize necessary OpenGL extensions
@@ -283,7 +337,7 @@ initGL() {
     {
         fprintf( stderr, "ERROR: Support for necessary OpenGL extensions missing.");
         fflush( stderr);
-        return CUTFalse;
+        return false;
     }
     
     if (! glewIsSupported("GL_ARB_framebuffer_object"))
@@ -311,7 +365,7 @@ initGL() {
 
     glLinkProgram(glprogramColorAndDistance);
 
-    CUT_CHECK_ERROR_GL();
+    CHECK_ERROR_GL();
 
     // blur program
     vsSAT = glCreateShader(GL_VERTEX_SHADER);
@@ -332,7 +386,7 @@ initGL() {
 
     glLinkProgram(glprogramSAT);
 
-    CUT_CHECK_ERROR_GL();
+    CHECK_ERROR_GL();
 
     // default initialization
     glClearColor( 0, 0, 0, 1.0f);//0.5, 0.5, 0.5, 1.0);
@@ -354,8 +408,13 @@ initGL() {
     unsigned char* img = NULL;
     unsigned int w = 512, h = 512;
     char path[100];
-    CUT_SAFE_CALL(findFile("cudpp", "cedfence.ppm", path));
-    CUT_SAFE_CALL(cutLoadPPMub( path, &img, &w, &h));
+    findFile("cudpp", "cedfence.ppm", path);
+    unsigned int channels;
+    if (!cudpp_app::loadPPM( path, &img, &w, &h, &channels))
+    {
+        printf("Error loading cedfence.ppm");
+        exit(-1);
+    }
 
     glGenTextures(1, &texWood);
     glBindTexture(GL_TEXTURE_2D, texWood);
@@ -382,11 +441,9 @@ initGL() {
 
     glEnable(GL_DEPTH_TEST);
 
-    CUT_CHECK_ERROR_GL();
+    CHECK_ERROR_GL();
 
-
-
-    return CUTTrue;
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -433,7 +490,7 @@ createPBO( GLuint* pbo, bool bUseFloat)
     cudaGLRegisterBufferObject(*pbo);
 #endif
 
-    CUT_CHECK_ERROR_GL();
+    CHECK_ERROR_GL();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -455,7 +512,7 @@ deletePBO( GLuint* pbo)
 
     glBindBuffer( GL_ARRAY_BUFFER, *pbo);
     glDeleteBuffers( 1, pbo);
-    CUT_CHECK_ERROR_GL();
+    CHECK_ERROR_GL();
 
     glBindBuffer( GL_ARRAY_BUFFER, 0);
 
@@ -517,7 +574,7 @@ void renderScene()
     
     glPopMatrix();
 
-    CUT_CHECK_ERROR_GL();
+    CHECK_ERROR_GL();
 }
 
 // copy image and process using CUDA
@@ -531,8 +588,8 @@ void processImage()
 
     glBindBuffer(GL_PIXEL_PACK_BUFFER_ARB, 0);
 
-    //cutResetTimer(timer);
-    //CUT_SAFE_CALL(cutStartTimer(timer));
+    //timer.reset();
+    //timer.start();
 
     // run the Cuda kernel    
 #if USE_CUDA_GRAPHICS_INTEROP
@@ -541,9 +598,9 @@ void processImage()
     process( pbo_source, pbo_dest, image_width, image_height, blur_radius);
 #endif
     
-    //CUT_SAFE_CALL(cutStopTimer(timer));
+    //timer.stop();
 
-    //printf("Process: %0.2f\n", cutGetTimerValue(timer));
+    //printf("Process: %0.2f\n", timer.getTime());
 
 
     // download texture from PBO
@@ -553,7 +610,7 @@ void processImage()
     glBindBuffer( GL_PIXEL_UNPACK_BUFFER_ARB, 0);
 
 
-    CUT_CHECK_ERROR_GL();
+    CHECK_ERROR_GL();
 }
 
 void displayImage()
@@ -620,7 +677,7 @@ void displayImage()
     // re-attach to CUDA
     //pboRegister(pbo_dest);
 
-    CUT_CHECK_ERROR_GL();
+    CHECK_ERROR_GL();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -650,7 +707,7 @@ display()
         glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
         glUseProgram(0);       
         
-        CUT_CHECK_ERROR_GL();
+        CHECK_ERROR_GL();
     }
     
     if (enable_cuda) {
@@ -659,7 +716,7 @@ display()
     }
 
     glutSwapBuffers();
-    CUT_CHECK_ERROR_GL();
+    CHECK_ERROR_GL();
 }
 
 void idle()
@@ -736,7 +793,7 @@ createFBO( GLuint* fbo, GLuint* tex, GLuint* depth_rb = 0) {
     // create a new fbo
     glGenFramebuffersEXT( 1, fbo);
     glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, *fbo);
-    CUT_CHECK_ERROR_GL();
+    CHECK_ERROR_GL();
 
     // check if the fbo is valid
     if( ! glIsFramebufferEXT( *fbo)) {
@@ -749,7 +806,7 @@ createFBO( GLuint* fbo, GLuint* tex, GLuint* depth_rb = 0) {
     // create attachment
     createTexture( tex, image_width, image_height, true, false);
 
-    CUT_CHECK_ERROR_GL();
+    CHECK_ERROR_GL();
 
     if (depth_rb != 0)
     {
@@ -771,12 +828,12 @@ createFBO( GLuint* fbo, GLuint* tex, GLuint* depth_rb = 0) {
         *tex, 
         0);
 
-    CUT_CHECK_ERROR_GL();
+    CHECK_ERROR_GL();
 
     // deactivate offsreen render target
     glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, 0);
 
-    CUT_CHECK_ERROR_GL();
+    CHECK_ERROR_GL();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -786,7 +843,7 @@ void
 deleteFBO( GLuint* fbo, GLuint* tex) {
 
     glDeleteFramebuffersEXT( 1, fbo);
-    CUT_CHECK_ERROR_GL();
+    CHECK_ERROR_GL();
 
     deleteTexture( tex);
 
@@ -800,7 +857,7 @@ void
 deleteTexture( GLuint* tex) {
 
     glDeleteTextures( 1, tex);
-    CUT_CHECK_ERROR_GL();
+    CHECK_ERROR_GL();
 
     *tex = 0;
 }
@@ -836,5 +893,5 @@ createTexture( GLuint* tex_name, unsigned int size_x, unsigned int size_y,
                       singleChannel ? GL_LUMINANCE : GL_RGBA, 
                       GL_UNSIGNED_BYTE, NULL);
 
-    CUT_CHECK_ERROR_GL();
+    CHECK_ERROR_GL();
 }

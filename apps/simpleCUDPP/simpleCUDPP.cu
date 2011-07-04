@@ -19,9 +19,9 @@
 #include <math.h>
 
 // includes, project
-#include "cutil.h"
 #include "cudpp.h"
 
+#include <string>
 
 ////////////////////////////////////////////////////////////////////////////////
 // declaration, forward
@@ -39,8 +39,6 @@ int
 main( int argc, char** argv) 
 {
     runTest( argc, argv);
-
-    CUT_EXIT(argc, argv);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -49,7 +47,32 @@ main( int argc, char** argv)
 void
 runTest( int argc, char** argv) 
 {
-    CUT_DEVICE_INIT(argc, argv);
+    int deviceCount;
+    cudaGetDeviceCount(&deviceCount);
+    if (deviceCount == 0) {
+        fprintf(stderr, "error: no devices supporting CUDA.\n");
+        exit(EXIT_FAILURE);
+    }
+    int dev = 0;
+    if (argc > 1) {
+        std::string arg = argv[1];
+        size_t pos = arg.find("=");
+        if (arg.find("device") && pos != std::string::npos) {
+            dev = atoi(arg.c_str() + (pos + 1));
+        }
+    }
+    if (dev < 0) dev = 0;
+    if (dev > deviceCount-1) dev = deviceCount - 1;
+    cudaSetDevice(dev);
+
+    cudaDeviceProp prop;
+    if (cudaGetDeviceProperties(&prop, dev) == cudaSuccess)
+    {
+        printf("Using device %d:\n", dev);
+        printf("%s; global mem: %dB; compute v%d.%d; clock: %d kHz\n",
+               prop.name, (int)prop.totalGlobalMem, (int)prop.major, 
+               (int)prop.minor, (int)prop.clockRate);
+    }
 
     unsigned int numElements = 32768;
     unsigned int memSize = sizeof( float) * numElements;
@@ -64,14 +87,26 @@ runTest( int argc, char** argv)
 
     // allocate device memory
     float* d_idata;
-    CUDA_SAFE_CALL( cudaMalloc( (void**) &d_idata, memSize));
+    cudaError_t result = cudaMalloc( (void**) &d_idata, memSize);
+    if (result != cudaSuccess) {
+        printf("Error: %s\n", cudaGetErrorString(result));
+        exit(-1);
+    }
+    
     // copy host memory to device
-    CUDA_SAFE_CALL( cudaMemcpy( d_idata, h_idata, memSize,
-                                cudaMemcpyHostToDevice) );
-
+    result = cudaMemcpy( d_idata, h_idata, memSize, cudaMemcpyHostToDevice);
+    if (result != cudaSuccess) {
+        printf("Error: %s\n", cudaGetErrorString(result));
+        exit(-1);
+    }
+     
     // allocate device memory for result
     float* d_odata;
-    CUDA_SAFE_CALL( cudaMalloc( (void**) &d_odata, memSize));
+    result = cudaMalloc( (void**) &d_odata, memSize);
+    if (result != cudaSuccess) {
+        printf("Error: %s\n", cudaGetErrorString(result));
+        exit(-1);
+    }
 
     // Initialize the CUDPP Library
     CUDPPHandle theCudpp;
@@ -84,32 +119,44 @@ runTest( int argc, char** argv)
     config.options = CUDPP_OPTION_FORWARD | CUDPP_OPTION_EXCLUSIVE;
     
     CUDPPHandle scanplan = 0;
-    CUDPPResult result = cudppPlan(theCudpp, &scanplan, config, numElements, 1, 0);  
+    CUDPPResult res = cudppPlan(theCudpp, &scanplan, config, numElements, 1, 0);  
 
-    if (CUDPP_SUCCESS != result)
+    if (CUDPP_SUCCESS != res)
     {
         printf("Error creating CUDPPPlan\n");
         exit(-1);
     }
 
     // Run the scan
-    cudppScan(scanplan, d_odata, d_idata, numElements);
+    res = cudppScan(scanplan, d_odata, d_idata, numElements);
+    if (CUDPP_SUCCESS != res)
+    {
+        printf("Error in cudppScan()\n");
+        exit(-1);
+    }
 
     // allocate mem for the result on host side
     float* h_odata = (float*) malloc( memSize);
     // copy result from device to host
-    CUDA_SAFE_CALL( cudaMemcpy( h_odata, d_odata, memSize,
-                                cudaMemcpyDeviceToHost) );
+    result = cudaMemcpy( h_odata, d_odata, memSize, cudaMemcpyDeviceToHost);
+    if (result != cudaSuccess) {
+        printf("Error: %s\n", cudaGetErrorString(result));
+        exit(-1);
+    }
+    
     // compute reference solution
     float* reference = (float*) malloc( memSize);
     computeSumScanGold( reference, h_idata, numElements, config);
 
     // check result
-    CUTBoolean res = cutComparef( reference, h_odata, numElements);
-    printf( "Test %s\n", (1 == res) ? "PASSED" : "FAILED");
+    bool passed = true;
+    for (int i = 0; i < numElements; i++)
+        if (reference[i] != h_odata[i]) passed = false;
+        
+    printf( "Test %s\n", passed ? "PASSED" : "FAILED");
 
-    result = cudppDestroyPlan(scanplan);
-    if (CUDPP_SUCCESS != result)
+    res = cudppDestroyPlan(scanplan);
+    if (CUDPP_SUCCESS != res)
     {
         printf("Error destroying CUDPPPlan\n");
         exit(-1);
@@ -121,6 +168,6 @@ runTest( int argc, char** argv)
     free( h_idata);
     free( h_odata);
     free( reference);
-    CUDA_SAFE_CALL(cudaFree(d_idata));
-    CUDA_SAFE_CALL(cudaFree(d_odata));
+    cudaFree(d_idata);
+    cudaFree(d_odata);
 }

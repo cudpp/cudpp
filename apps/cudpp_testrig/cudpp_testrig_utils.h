@@ -24,6 +24,10 @@
 #include <float.h>
 #include <algorithm>
 
+#include "commandline.h"
+
+using namespace cudpp_app;
+
 // declared in cudpp.cpp (in cudpp library)
 extern const char * datatype_to_string[];
 
@@ -362,30 +366,32 @@ void printArray(const T * vector, unsigned int len)
 
 inline CUDPPDatatype getDatatypeFromArgv(int argc, const char ** argv)
 {
-    if( cutCheckCmdLineFlag(argc, (const char**)argv, "float") )
-    {     
+    // check if the command line argument exists
+    if( checkCommandLineFlag(argc, argv, "float")) 
+    {
         return CUDPP_FLOAT;
-    }
-    else if( cutCheckCmdLineFlag(argc, (const char**)argv, "double") )
-    {     
+    } 
+    else if( checkCommandLineFlag(argc, argv, "double")) 
+    {
         return CUDPP_DOUBLE;
     }
-    else if( cutCheckCmdLineFlag(argc, (const char**)argv, "uint") )
-    {        
+    if( checkCommandLineFlag(argc, argv, "uint")) 
+    {
         return CUDPP_UINT;
     }
-    else if( cutCheckCmdLineFlag(argc, (const char**)argv, "int") )
-    {        
+    if( checkCommandLineFlag(argc, argv, "int")) 
+    {
         return CUDPP_INT;
     }
-    else if( cutCheckCmdLineFlag(argc, (const char**)argv, "longlong") )
-    {        
+    if( checkCommandLineFlag(argc, argv, "longlong")) 
+    {
         return CUDPP_LONGLONG;
     }
-    else if( cutCheckCmdLineFlag(argc, (const char**)argv, "ulonglong") )
-    {        
+    if( checkCommandLineFlag(argc, argv, "ulonglong")) 
+    {
         return CUDPP_ULONGLONG;
     }
+
     return CUDPP_FLOAT;
 }
 

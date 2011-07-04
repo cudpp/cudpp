@@ -11,25 +11,26 @@
 
 /**
  * @file
- * tools.h
+ * findFile.h
  * 
- * @brief Various utilities that are used in cudpp_testrig
- * 
- * Right now only Directory / File searching functions are inside this 
- * header file.  In the future useful tools across multiple tests will be 
- * added to this file
+ * @brief functions to find files and directories
  */
 
 #ifndef _TOOLS_H_
 #define _TOOLS_H_
 
-//Dir/File searching functions
-//wrapper functions for the whole routine
-extern "C"
-{
-int findDir(const char * startDir, const char * dirName, char * outputPath);
-int findFile(const char * startDir, const char * dirName, char * outputPath);
+namespace cudpp_app {
+
+    //Dir/File searching functions
+    //wrapper functions for the whole routine
+    bool findDir(const char * startDir, const char * dirName, char * outputPath);
+    bool findFile(const char * startDir, const char * dirName, char * outputPath);
+
 }
+
+#ifdef CUDPP_APP_COMMON_IMPL
+#include "findfile.inl"
+#endif
 
 #endif  //#ifndef _TOOLS_H_
 

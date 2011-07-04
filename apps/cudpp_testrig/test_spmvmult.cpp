@@ -16,7 +16,6 @@
  */
 
 #include <stdio.h>
-#include <cutil.h>
 #include <time.h>
 #include <limits.h>
 #include <cuda_runtime_api.h>
@@ -24,15 +23,23 @@
 #include "cudpp.h"
 #include "sparse.h"
 #include "cudpp_testrig_options.h"
+#include "cudpp_testrig_utils.h"
+#include "cuda_util.h"
+#include "comparearrays.h"
+#include "stopwatch.h"
+#include "findfile.h"
+#include "commandline.h"
+
+using namespace cudpp_app;
 
 extern "C" void sparseMatrixVectorMultiplyGold(const MMMatrix * m, const float * x, float * y);
 extern "C" void readMatrixMarket(MMMatrix * m, const char * filename);
 
 /** just plain fopen, but if it doesn't work, lop off subdirectories 
  * until it does */
-const char * findValidFile(const char * fileName)
+/*std::string findValidFile(const std::string &fileName)
 {
-    const char * fileNameTemp = fileName;
+    std::string fileNameTemp = fileName;
     FILE * inpFile;
 
     while (fileNameTemp[0])
@@ -51,12 +58,12 @@ const char * findValidFile(const char * fileName)
                 if (fileNameTemp[0] == '\0')
                 {
                     // didn't find anything
-                    return NULL;
+                    return ;
                 }
         }
     }
     return NULL;    
-}
+}*/
 
 
 /**
@@ -74,27 +81,25 @@ const char * findValidFile(const char * fileName)
 int
 testSparseMatrixVectorMultiply(int argc, const char** argv) 
 {
-    unsigned int timer;
-    CUT_SAFE_CALL(cutCreateTimer(&timer));
+    cudpp_app::StopWatch timer;
 
     int retval = 0;
 
     testrigOptions testOptions;
     setOptions(argc, argv, testOptions);
 
-    char * mfile;
+    std::string mfile = "";
 
-    cutGetCmdLineArgumentstr(argc, (const char**) argv, "mat", &mfile);
-    if (mfile == NULL)
+    if (!commandLineArg(mfile, argc, (const char**) argv, "mat"))
     {
         fprintf(stderr, "Error: Must specify matrix with --mat=MATNAME\n");
         exit(1);
     }
 
-    const char * foundMfile = findValidFile(mfile);
-    if (!foundMfile)
+    char* foundMfile = NULL;
+    if (!findFile("../../", mfile.c_str(), foundMfile) || NULL == foundMfile)
     {
-        fprintf(stderr, "Error: Unable to find file %s\n", mfile);
+        fprintf(stderr, "Error: Unable to find file %s\n", mfile.c_str());
         exit(1);
     }
 
@@ -180,18 +185,18 @@ testSparseMatrixVectorMultiply(int argc, const char** argv)
     {
         CUDA_SAFE_CALL(cudaMemcpy(d_y, y, rows * sizeof(float),
                                   cudaMemcpyHostToDevice));
-        cutStartTimer(timer);
+        timer.start();
         cudppSparseMatrixVectorMultiply(sparseMatrixHandle, d_y, d_x);
         cudaThreadSynchronize();
-        cutStopTimer(timer);
+        timer.stop();
     }
 
     CUDA_SAFE_CALL(cudaMemcpy(y, d_y, rows * sizeof(float),
                               cudaMemcpyDeviceToHost));
 
     // epsilon is 0.001f, answer must be within epsilon
-    CUTBoolean spmv_result = cutComparefe(reference, y, rows, 0.001f);
-    retval += (CUTTrue == spmv_result) ? 0 : 1;
+    bool spmv_result = compareArrays(reference, y, rows, 0.001f);
+    retval += spmv_result ? 0 : 1;
 
     if (testOptions.debug)
     {
@@ -201,10 +206,9 @@ testSparseMatrixVectorMultiply(int argc, const char** argv)
         }
     }
 
-    printf("sparsemv test %s\n", 
-           (CUTTrue == spmv_result) ? "PASSED" : "FAILED");
+    printf("sparsemv test %s\n", spmv_result ? "PASSED" : "FAILED");
     printf("Average execution time: %f ms\n", 
-           cutGetTimerValue(timer) / testOptions.numIterations);
+           timer.getTime() / testOptions.numIterations);
 
     // count FLOPS: y <- y + Mx
     // one flop for each entry in matrix for multiply
@@ -212,8 +216,8 @@ testSparseMatrixVectorMultiply(int argc, const char** argv)
     // adding y to resulting vector is another rows
     // total: 2 * entries
     printf("FLOPS: %f FLOPS\n", 
-           float(2 * entries) * 1000.0f /
-           (cutGetTimerValue(timer) / testOptions.numIterations));
+           float(2 * entries) * 1000.0f / 
+           (timer.getTime() / testOptions.numIterations));
     fflush(stdout);
 
     result = cudppDestroySparseMatrix(sparseMatrixHandle);
@@ -229,8 +233,6 @@ testSparseMatrixVectorMultiply(int argc, const char** argv)
     {
         printf("Error shutting down CUDPP Library.\n");
     }
-
-    cutDeleteTimer(timer);
 
     free(reference);
     free(y);

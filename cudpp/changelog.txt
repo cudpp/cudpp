@@ -7,6 +7,8 @@ DATE HERE
 - Added cudppReduce parallel reductions
 - Added double, long long, and unsigned long long datatypes, implemented
   in cudppReduce, cudppScan
+- Removed all support for device emulation
+- Removed dependencies of apps on CUTIL
 
 Release: 1.1.1 (Bugfix release)
 29 April 2010

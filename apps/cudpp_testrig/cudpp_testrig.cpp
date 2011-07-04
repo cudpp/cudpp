@@ -20,7 +20,6 @@
  * "cudpp_testrig.exe --all".
  */
 
-#include <cutil.h>
 #include <memory.h>
 #include <string.h>
 #include <math.h>
@@ -32,6 +31,12 @@
 #include "cudpp.h"
 #include "cudpp_testrig_utils.h"
 
+#define CUDPP_APP_COMMON_IMPL
+#include "stopwatch.h"
+#include "findfile.h"
+#include "commandline.h"
+
+using namespace cudpp_app;
 
 int testScan(int argc, const char ** argv, const CUDPPConfiguration *config);
 int testSegmentedScan(int argc, const char ** argv, const CUDPPConfiguration *config);
@@ -59,14 +64,24 @@ int testReduce(int argc, const char ** argv, const CUDPPConfiguration *config);
  */ 
 int main(int argc, const char** argv)
 {
-    bool quiet = (CUTTrue == cutCheckCmdLineFlag(argc, argv, "quiet"));
+    bool quiet = checkCommandLineFlag(argc, argv, "quiet"); 
 
-    CUT_DEVICE_INIT(argc, argv);
-    cudaDeviceProp prop;
+    int deviceCount;
+    cudaGetDeviceCount(&deviceCount);
+    if (deviceCount == 0) {
+        fprintf(stderr, "error: no devices supporting CUDA.\n");
+        exit(EXIT_FAILURE);
+    }
     int dev = 0;
-    cudaGetDevice(&dev);
+    commandLineArg(dev, argc, argv, "device");
+    if (dev < 0) dev = 0;
+    if (dev > deviceCount-1) dev = deviceCount - 1;
+    cudaSetDevice(dev);
+
+    cudaDeviceProp prop;
     if (!quiet && cudaGetDeviceProperties(&prop, dev) == 0)
     {
+        printf("Using device %d:\n", dev);
         printf("%s; global mem: %dB; compute v%d.%d; clock: %d kHz\n",
                prop.name, (int)prop.totalGlobalMem, (int)prop.major, 
                (int)prop.minor, (int)prop.clockRate);
@@ -77,7 +92,7 @@ int main(int argc, const char** argv)
 
     int retval = 0;
 
-    if (argc == 1 || (CUTTrue == cutCheckCmdLineFlag(argc, argv, "help")))
+    if (argc == 1 || checkCommandLineFlag(argc, argv, "help"))
     {
         printf("Usage: \"cudpp_testrig -<flag> -<option>=<value>\"\n\n");
         printf("--- Global Flags ---\n");
@@ -116,10 +131,10 @@ int main(int argc, const char** argv)
         printf("dir=<directory>: Directory containing all the random number regression tests\n");
     }
 
-    bool testAll = (CUTTrue == cutCheckCmdLineFlag(argc, argv, "all"));
+    bool testAll = checkCommandLineFlag(argc, argv, "all");
     
 
-    if (testAll || (CUTTrue == cutCheckCmdLineFlag(argc, argv, "scan")))
+    if (testAll || checkCommandLineFlag(argc, argv, "scan"))
     {
         if (testAll)
         {
@@ -193,7 +208,7 @@ int main(int argc, const char** argv)
 
     }
 
-    if (testAll || (CUTTrue == cutCheckCmdLineFlag(argc, argv, "segscan")))
+    if (testAll || checkCommandLineFlag(argc, argv, "segscan"))
     {
         if (testAll)
         {
@@ -266,13 +281,13 @@ int main(int argc, const char** argv)
         }
     }
 
-    if (testAll || (CUTTrue == cutCheckCmdLineFlag(argc, argv, "multiscan")))
+    if (testAll || checkCommandLineFlag(argc, argv, "multiscan"))
     {
         retval += testMultiSumScan(argc, argv);
     }
     
 
-    if (testAll || (CUTTrue == cutCheckCmdLineFlag(argc, argv, "compact")))
+    if (testAll || checkCommandLineFlag(argc, argv, "compact"))
     {
         if (testAll)
         {
@@ -288,7 +303,7 @@ int main(int argc, const char** argv)
             retval += testCompact(argc, argv, NULL);
     }
 
-    if (testAll || (CUTTrue == cutCheckCmdLineFlag(argc, argv, "reduce")))
+    if (testAll || checkCommandLineFlag(argc, argv, "reduce"))
     {
         if (testAll)
         {
@@ -369,7 +384,7 @@ int main(int argc, const char** argv)
         }
     }
 
-    if (testAll || (CUTTrue == cutCheckCmdLineFlag(argc, argv, "sort")))
+    if (testAll || checkCommandLineFlag(argc, argv, "sort"))
     {
         if(testAll)
         {
@@ -391,12 +406,12 @@ int main(int argc, const char** argv)
             retval += testRadixSort(argc, argv, NULL);
     }    
 
-    if ((CUTTrue == cutCheckCmdLineFlag(argc, argv, "spmvmult")))
+    if (checkCommandLineFlag(argc, argv, "spmvmult"))
     {
         retval += testSparseMatrixVectorMultiply(argc, argv);
     }    
 
-    if (testAll ||(CUTTrue == cutCheckCmdLineFlag(argc, argv, "rand")))
+    if (testAll || checkCommandLineFlag(argc, argv, "rand"))
     {
         //in the future we need to add so that it tests other random numbers as well
         retval += testRandMD5(argc, argv);

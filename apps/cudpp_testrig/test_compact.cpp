@@ -16,7 +16,6 @@
  */
 
 #include <stdio.h>
-#include <cutil.h>
 #include <time.h>
 #include <limits.h>
 #include <string.h>
@@ -25,7 +24,13 @@
 #include "cudpp.h"
 
 #include "cudpp_testrig_options.h"
+#include "cudpp_testrig_utils.h"
+#include "cuda_util.h"
+#include "stopwatch.h"
+#include "comparearrays.h"
+#include "commandline.h"
 
+using namespace cudpp_app;
 
 extern "C"
 unsigned int compactGold(float* reference, const float* idata,
@@ -53,14 +58,13 @@ int testCompact(int argc, const char **argv, const CUDPPConfiguration *configPtr
     testrigOptions testOptions;
     setOptions(argc, argv, testOptions);
 
-    unsigned int timer;
-    CUT_SAFE_CALL(cutCreateTimer(&timer));
+    cudpp_app::StopWatch timer;
 
     CUDPPConfiguration config;
     config.algorithm = CUDPP_COMPACT;
     config.datatype = CUDPP_FLOAT;
 
-    bool quiet = (cutCheckCmdLineFlag(argc, (const char**)argv, "quiet") == CUTTrue);   
+    bool quiet = checkCommandLineFlag(argc, (const char**)argv, "quiet");   
 
     if (configPtr != NULL)
     {
@@ -70,19 +74,17 @@ int testCompact(int argc, const char **argv, const CUDPPConfiguration *configPtr
     {
         config.options = CUDPP_OPTION_FORWARD;
 
-        if (CUTTrue == cutCheckCmdLineFlag(argc, argv, "backward"))
+        if (checkCommandLineFlag(argc, argv, "backward"))
         {
             config.options = CUDPP_OPTION_BACKWARD;
         }  
     }
    
     int numElements = 8388608; // maximum test size
-    float probValid = 0.3f;
 
     bool oneTest = false;
 
-    if (CUTTrue == cutGetCmdLineArgumenti(argc, (const char**) argv, "n",
-        &numElements))
+    if (commandLineArg(numElements, argc, (const char**) argv, "n"))
     {
         oneTest = true;
     }
@@ -98,7 +100,8 @@ int testCompact(int argc, const char **argv, const CUDPPConfiguration *configPtr
         test[0] = numElements;
     }   
 
-    cutGetCmdLineArgumentf(argc, (const char**) argv, "prob", &probValid);
+    float probValid = 0.3f;
+    commandLineArg(probValid, argc, (const char**) argv, "prob");
 
     CUDPPResult result = CUDPP_SUCCESS;
     CUDPPHandle theCudpp;
@@ -180,13 +183,14 @@ int testCompact(int argc, const char **argv, const CUDPPConfiguration *configPtr
         // run once to avoid timing startup overhead.
         cudppCompact(plan, d_odata, d_numValid, d_idata, d_isValid, test[k]);
 
-        cutStartTimer(timer);
+        timer.reset();
+        timer.start();
         for (int i = 0; i < testOptions.numIterations; i++)
         {
             cudppCompact(plan, d_odata, d_numValid, d_idata, d_isValid, test[k]);
         }
         cudaThreadSynchronize();
-        cutStopTimer(timer);
+        timer.stop();
 
         // get number of valid elements back to host
         CUDA_SAFE_CALL( cudaMemcpy(numValidElements, d_numValid, sizeof(size_t), 
@@ -203,7 +207,8 @@ int testCompact(int argc, const char **argv, const CUDPPConfiguration *configPtr
         // check if the result is equivalent to the expected soluion
         if (!quiet)
             printf("numValidElements: %ld\n", *numValidElements);
-        CUTBoolean result = cutComparefe( reference, o_data, (unsigned int)*numValidElements, 0.001f);
+            
+        bool result = compareArrays( reference, o_data, (unsigned int)*numValidElements, 0.001f);
 
         free(o_data);
 
@@ -218,21 +223,19 @@ int testCompact(int argc, const char **argv, const CUDPPConfiguration *configPtr
         }
         else
         {
-            retval += (CUTTrue == result) ? 0 : 1;
+            retval += result ? 0 : 1;
             if (!quiet)
             {
-                printf("test %s\n", (CUTTrue == result) ? "PASSED" : "FAILED");
+                printf("test %s\n", result ? "PASSED" : "FAILED");
             }
         }
         if (!quiet)
         {
             printf("Average execution time: %f ms\n",
-                   cutGetTimerValue(timer) / testOptions.numIterations);
+                   timer.getTime() / testOptions.numIterations);
         }
         else
-            printf("\t%10d\t%0.4f\n", test[k], cutGetTimerValue(timer) / testOptions.numIterations);
-
-        cutResetTimer(timer);
+            printf("\t%10d\t%0.4f\n", test[k], timer.getTime() / testOptions.numIterations);
     }
     if (!quiet)
         printf("\n");
@@ -252,7 +255,6 @@ int testCompact(int argc, const char **argv, const CUDPPConfiguration *configPtr
     }
 
     // cleanup memory
-    cutDeleteTimer(timer);
     free( h_data);
     free( h_isValid);
     free( reference);

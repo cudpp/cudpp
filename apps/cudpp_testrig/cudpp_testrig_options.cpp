@@ -8,32 +8,32 @@
 // in the root directory of this source distribution.
 // ------------------------------------------------------------- 
 #include "cudpp_testrig_options.h"
+
+#define CUDPP_APP_COMMON_IMPL
+#include "commandline.h"
+
+using namespace cudpp_app;
+
 /**
  * Sets "global" options in testOptions given command line 
- * - --debug: sets bool <var>debug</var>. Usage is application-dependent.
- * - --op=OP: sets char * <var>op</var> to OP
- * - --iterations=#: sets int <var>numIterations</var> to #
+ *  -debug: sets bool <var>debug</var>. Usage is application-dependent.
+ *  -op=OP: sets char * <var>op</var> to OP
+ *  -iterations=#: sets int <var>numIterations</var> to #
+ *  -dir=<path>: sets the search path for cudppRand test inputs
  */
-
-extern "C"
 void setOptions(int argc, const char **argv, testrigOptions &testOptions)
 {
-    testOptions.debug = 
-        (cutCheckCmdLineFlag(argc, (const char**) argv, "debug") == CUTTrue)
-        ? true : false;
-
-    cutGetCmdLineArgumentstr(argc, (const char**) argv, "op", &testOptions.op);
-    if (testOptions.op == NULL)
-    {
-        testOptions.op = (char*)"sum";
-    }
-
-    testOptions.numIterations = numTestIterations;
-    cutGetCmdLineArgumenti(argc, (const char**) argv, "iterations", 
-                           &testOptions.numIterations);
+    testOptions.debug = false;
+    commandLineArg(testOptions.debug, argc, argv, "debug");
     
-    //get the rand path, if there is one
-    cutGetCmdLineArgumentstr(argc, (const char**) argv, "dir", &testOptions.dir);
+    testOptions.op = "sum";
+    commandLineArg(testOptions.op, argc, argv, "op");
+    
+    testOptions.numIterations = numTestIterations;
+    commandLineArg(testOptions.numIterations, argc, argv, "iterations");
+    
+    testOptions.dir = "";
+    commandLineArg(testOptions.dir, argc, argv, "dir");
 }
 
 // Leave this at the end of the file

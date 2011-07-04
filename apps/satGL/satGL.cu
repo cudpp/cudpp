@@ -13,7 +13,8 @@
 #include <string.h>
 #include <math.h>
 #include "cudpp.h"
-#include "cutil.h"
+#include "cuda_util.h"
+
 #if defined(__APPLE__) || defined(MACOSX)
 #include <GLUT/glut.h>
 #else
@@ -25,7 +26,6 @@
 #  include <windows.h>
 #endif
 #include <cuda_gl_interop.h>
-#include "cutil.h"
 
 #include <cuda.h>
 #if CUDA_VERSION < 3000
@@ -233,32 +233,21 @@ void process( int pbo_in, int pbo_out, int width, int height, int radius)
                                                    in_data, 
                                                    d_satPitchInElements,
                                                    width, height);
-    CUT_CHECK_ERROR("de-interleave");
 
     // scan rows
     cudppMultiScan(scanPlan, SATs[1][0], SATs[0][0], width, height);
-    CUT_CHECK_ERROR("scan 1");
     cudppMultiScan(scanPlan, SATs[1][1], SATs[0][1], width, height);
-    CUT_CHECK_ERROR("scan 2");
     cudppMultiScan(scanPlan, SATs[1][2], SATs[0][2], width, height);
-    CUT_CHECK_ERROR("scan 3");
-
-    
 
     // transpose so columns become rows
     transpose<float, 16, 16><<<grid, block, 0>>>
         (SATs[0][0], SATs[0][1], SATs[0][2], 
          SATs[1][0], SATs[1][1], SATs[1][2], d_satPitchInElements, width, height);
-    CUT_CHECK_ERROR("transpose");
 
     // scan columns
     cudppMultiScan(scanPlan, SATs[1][0], SATs[0][0], width, height);
-
-    CUT_CHECK_ERROR("scan 4");
     cudppMultiScan(scanPlan, SATs[1][1], SATs[0][1], width, height);
-    CUT_CHECK_ERROR("scan 5");
     cudppMultiScan(scanPlan, SATs[1][2], SATs[0][2], width, height);
-    CUT_CHECK_ERROR("scan 6"); 
     
     interleaveFloat32toRGBAfp32<<<grid, block, 0>>>((float4*)out_data, 
                                                     SATs[1][0], 
@@ -268,8 +257,6 @@ void process( int pbo_in, int pbo_out, int width, int height, int radius)
                                                     width, height);
 
     CUDA_SAFE_CALL(cudaEventRecord(timerStop));
-
-    CUT_CHECK_ERROR("interleave");
 
 #if USE_CUDA_GRAPHICS_INTEROP
     CUDA_SAFE_CALL(cudaGraphicsUnmapResources(2, pgres, 0));
@@ -284,5 +271,7 @@ void process( int pbo_in, int pbo_out, int width, int height, int radius)
     char msg[100];
     sprintf(msg, "CUDPP Summed-Area Table: %0.3f ms to create SAT", ms);
     glutSetWindowTitle(msg);
+    
+    CUDA_CHECK_ERROR("process");
 }
 

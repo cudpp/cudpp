@@ -16,7 +16,6 @@
  */
 
 #include <stdio.h>
-#include <cutil.h>
 #include <time.h>
 #include <limits.h>
 #include <cstring>
@@ -25,9 +24,14 @@
 #include "cudpp.h"
 #include "cudpp_testrig_options.h"
 #include "cudpp_testrig_utils.h"
-#include "arraycompare.h"
+#include "cuda_util.h"
+#include "comparearrays.h"
+#include "stopwatch.h"
+#include "commandline.h"
 
 #include "scan_gold.cpp" // this file is all templates now; must be included
+
+using namespace cudpp_app;
 
 /**
  * testScan exercises cudpp's unsegmented scan functionality.
@@ -51,17 +55,14 @@ int scanTest(int argc, const char **argv, const CUDPPConfiguration &config,
 {
     int retval = 0;
 
-    unsigned int timer;
-
-    CUT_SAFE_CALL(cutCreateTimer(&timer));
+    cudpp_app::StopWatch timer;
 
     int numElements = 8388608; // maximum test size
 
-    bool quiet = (CUTTrue == cutCheckCmdLineFlag(argc, (const char**) argv, "quiet"));
+    bool quiet = checkCommandLineFlag(argc, (const char**) argv, "quiet");
 
     bool oneTest = false;
-    if (CUTTrue == cutGetCmdLineArgumenti(argc, (const char**) argv, "n",
-                                          &numElements))
+    if (commandLineArg(numElements, argc, (const char**) argv, "n"))
     {
         oneTest = true;
     }
@@ -164,8 +165,8 @@ int scanTest(int argc, const char **argv, const CUDPPConfiguration &config,
             fflush(stdout);
         }
 
-        cutResetTimer(timer);
-        cutStartTimer(timer);
+        timer.reset();
+        timer.start();
          
         if (config.op == CUDPP_ADD)
             computeSumScanGold( reference, i_data, test[k], config);
@@ -176,51 +177,47 @@ int scanTest(int argc, const char **argv, const CUDPPConfiguration &config,
         else if (config.op == CUDPP_MIN)
             computeMinScanGold( reference, i_data, test[k], config);    
 
-        cutStopTimer(timer);
+        timer.start();
      
         if (!quiet)
-            printf("CPU execution time = %f\n", cutGetTimerValue(timer));
-        cutResetTimer(timer);
+            printf("CPU execution time = %f\n", timer.getTime());
+        timer.reset();
   
         // Run the scan
         // run once to avoid timing startup overhead.
         cudppScan(scanPlan, d_odata, d_idata, test[k]);
 
-        cutStartTimer(timer);
+        timer.start();
         for (int i = 0; i < testOptions.numIterations; i++)
         {
             cudppScan(scanPlan, d_odata, d_idata, test[k]);
         }
         cudaThreadSynchronize();
-        cutStopTimer(timer);
+        timer.stop();
      
         // copy result from device to host
         CUDA_SAFE_CALL(cudaMemcpy( o_data, d_odata, sizeof(T) * test[k],
                                    cudaMemcpyDeviceToHost));
           
         // check if the result is equivalent to the expected solution
-        ArrayComparator<T> compare;
-        CUTBoolean result = compare.compare_e( reference, o_data, 
-                                               test[k], 0.001f);
+        bool result = compareArrays( reference, o_data, test[k], 0.001f);
 
-        retval += (CUTTrue == result) ? 0 : 1;
+        retval += result ? 0 : 1;
         if (!quiet)
         {
-            printf("test %s\n", (CUTTrue == result) ? "PASSED" : "FAILED");
+            printf("test %s\n", result ? "PASSED" : "FAILED");
             printf("Average execution time: %f ms\n",
-                   cutGetTimerValue(timer) / testOptions.numIterations);
+                   timer.getTime() / testOptions.numIterations);
         }
         else
         {
-            printf("\t%10d\t%0.4f\n", test[k], cutGetTimerValue(timer) / testOptions.numIterations);
+            printf("\t%10d\t%0.4f\n", test[k], timer.getTime() / testOptions.numIterations);
         }
         if (testOptions.debug)
         {
             printArray(i_data, numElements);
             printArray(o_data, numElements);
         }
-     
-        cutResetTimer(timer); 
     }
     if (!quiet)
         printf("\n");
@@ -240,8 +237,6 @@ int scanTest(int argc, const char **argv, const CUDPPConfiguration &config,
     }
  
     // cleanup memory
-    cutDeleteTimer(timer);
-
     free(i_data);
     free(o_data);
     free(reference);
@@ -273,9 +268,7 @@ int testSegmentedScan(int argc, const char **argv, const CUDPPConfiguration *con
     testrigOptions testOptions;
     setOptions(argc, argv, testOptions);
 
-    unsigned int timer;
-
-    CUT_SAFE_CALL(cutCreateTimer(&timer));
+    cudpp_app::StopWatch timer;
 
     CUDPPConfiguration config;
     config.algorithm = CUDPP_SEGMENTED_SCAN;
@@ -293,32 +286,32 @@ int testSegmentedScan(int argc, const char **argv, const CUDPPConfiguration *con
         config.op = CUDPP_ADD;
         config.datatype = CUDPP_FLOAT;
 
-        if (testOptions.op && !strcmp(testOptions.op, "max"))
+        config.op = CUDPP_ADD;
+
+        if (testOptions.op == "max")
         {
             config.op = CUDPP_MAX;
         }
-
-        if (testOptions.op && !strcmp(testOptions.op, "multiply"))
-        {
-            config.op = CUDPP_MULTIPLY;
-        }
-
-        if (testOptions.op && !strcmp(testOptions.op, "min"))
+        else if (testOptions.op == "min")
         {
             config.op = CUDPP_MIN;
         }
-
-        if (CUTTrue == cutCheckCmdLineFlag(argc, argv, "backward"))
+        else if (testOptions.op == "multiply")
+        { 
+            config.op = CUDPP_MULTIPLY;
+        }
+        
+        if (checkCommandLineFlag(argc, argv, "backward"))
         {
             direction = CUDPP_OPTION_BACKWARD;
         }
      
-        if (CUTTrue == cutCheckCmdLineFlag(argc, argv, "exclusive"))
+        if (checkCommandLineFlag(argc, argv, "exclusive"))
         {
             inclusivity = CUDPP_OPTION_EXCLUSIVE;
         }
 
-        if (CUTTrue == cutCheckCmdLineFlag(argc, argv, "inclusive"))
+        if (checkCommandLineFlag(argc, argv, "inclusive"))
         {
             inclusivity = CUDPP_OPTION_INCLUSIVE;
         }
@@ -329,11 +322,10 @@ int testSegmentedScan(int argc, const char **argv, const CUDPPConfiguration *con
     int numElements = 8388608; // maximum test size
     int numFlags = 4;
 
-    bool quiet = (CUTTrue == cutCheckCmdLineFlag(argc, (const char**) argv, "quiet"));
+    bool quiet = checkCommandLineFlag(argc, (const char**) argv, "quiet");
 
     bool oneTest = false;
-    if (CUTTrue == cutGetCmdLineArgumenti(argc, (const char**) argv, "n",
-                                          &numElements))
+    if (commandLineArg(numElements, argc, (const char**) argv, "n"))
     {
         oneTest = true;
     }
@@ -469,8 +461,8 @@ int testSegmentedScan(int argc, const char **argv, const CUDPPConfiguration *con
 
         fflush(stdout);
 
-        cutResetTimer(timer);
-        cutStartTimer(timer);
+        timer.reset();
+        timer.start();
          
         if(config.op == CUDPP_ADD)
             computeSumSegmentedScanGold(reference, i_data, i_flags, test[k], config);
@@ -481,43 +473,43 @@ int testSegmentedScan(int argc, const char **argv, const CUDPPConfiguration *con
         else if (config.op == CUDPP_MIN)
             computeMinSegmentedScanGold(reference, i_data, i_flags, test[k], config);
         
-        cutStopTimer(timer);
-     
+        timer.stop();
+        
         if (!quiet)
         {
-            printf("CPU execution time = %f\n", cutGetTimerValue(timer));
+            printf("CPU execution time = %f\n", timer.getTime());
         }
-        cutResetTimer(timer);
+        timer.reset();
   
         // Run the scan
         // run once to avoid timing startup overhead.
         cudppSegmentedScan(segmentedScanPlan, d_odata, d_idata, d_iflags, test[k]);
 
-        cutStartTimer(timer);
+        timer.start();
         for (int i = 0; i < testOptions.numIterations; i++)
         {
             cudppSegmentedScan(segmentedScanPlan, d_odata, d_idata, d_iflags, test[k]);       
         }
         cudaThreadSynchronize();
-        cutStopTimer(timer);
+        timer.stop();
      
         // copy result from device to host
         CUDA_SAFE_CALL(cudaMemcpy( o_data, d_odata, sizeof(float) * test[k],
                                    cudaMemcpyDeviceToHost));
           
         // check if the result is equivalent to the expected soluion
-        CUTBoolean result = cutComparefe( reference, o_data, test[k], 0.001f);
+        bool result = compareArrays( reference, o_data, test[k], 0.001f);
 
-        retval += (CUTTrue == result) ? 0 : 1;
+        retval += result ? 0 : 1;
         if (!quiet)
         {
-            printf("test %s\n", (CUTTrue == result) ? "PASSED" : "FAILED");
+            printf("test %s\n", result ? "PASSED" : "FAILED");
             printf("Average execution time: %f ms\n",
-                   cutGetTimerValue(timer) / testOptions.numIterations);
+                   timer.getTime() / testOptions.numIterations);
         }
         else
         {
-            printf("\t%10d\t%0.4f\n", test[k], cutGetTimerValue(timer) / testOptions.numIterations);
+            printf("\t%10d\t%0.4f\n", test[k], timer.getTime() / testOptions.numIterations);
         }
 
         if (testOptions.debug)
@@ -534,8 +526,6 @@ int testSegmentedScan(int argc, const char **argv, const CUDPPConfiguration *con
             //}
             // printf("\n");
         }
-     
-        cutResetTimer(timer); // needed after CUT alpha2
     }
     if (!quiet)
         printf("\n");
@@ -555,8 +545,6 @@ int testSegmentedScan(int argc, const char **argv, const CUDPPConfiguration *con
     }
  
     // cleanup memory
-    cutDeleteTimer(timer);
-
     free(i_data);
     free(i_flags);
     free(o_data);
@@ -583,14 +571,13 @@ int testMultiSumScan(int argc, const char **argv)
     testrigOptions testOptions;
     setOptions(argc, argv, testOptions);
 
-    unsigned int timer;
-    CUT_SAFE_CALL(cutCreateTimer(&timer));
+    cudpp_app::StopWatch timer;
 
     CUDPPConfiguration config;
     CUDPPOption direction = CUDPP_OPTION_FORWARD;
     CUDPPOption inclusivity = CUDPP_OPTION_EXCLUSIVE;
      
-    if (CUTTrue == cutCheckCmdLineFlag(argc, argv, "backward"))
+    if (checkCommandLineFlag(argc, argv, "backward"))
     {
         direction = CUDPP_OPTION_BACKWARD;
     }
@@ -604,13 +591,11 @@ int testMultiSumScan(int argc, const char **argv)
     int numRows = 1024;
 
     //bool oneTest = false;
-    if (CUTTrue == cutGetCmdLineArgumenti(argc, (const char**) argv, "n",
-                                          &numElements))
+    if (commandLineArg(numElements, argc, (const char**) argv, "n"))
     {
         //   oneTest = true;
     }
-    if (CUTTrue == cutGetCmdLineArgumenti(argc, (const char**) argv, "r",
-                                          &numRows))
+    if (commandLineArg(numRows, argc, (const char**) argv, "r"))
     {
         //   oneTest = true;
     }
@@ -685,29 +670,25 @@ int testMultiSumScan(int argc, const char **argv)
     // run once to avoid timing startup overhead.
     cudppMultiScan(multiscanPlan, d_odata, d_idata, numElements, numRows);
 
-    cutStartTimer(timer);
+    timer.start();
     for (int i = 0; i < testOptions.numIterations; i++)
     {
         cudppMultiScan(multiscanPlan, d_odata, d_idata, numElements, numRows);
 
     }
     cudaThreadSynchronize();
-    cutStopTimer(timer);
+    timer.stop();
 
     // copy result from device to host
     CUDA_SAFE_CALL(cudaMemcpy2D( o_data, myPitch, d_odata, d_opitch,
                                  myPitch, numRows, cudaMemcpyDeviceToHost));
      
     // check if the result is equivalent to the expected solution
-    // ArrayComparator<T> compare;
-    // CUTBoolean result = compare.compare_e( reference, o_data, 
-    // numElements*numRows, 0.001f);
-    CUTBoolean result = cutComparefe( reference, o_data, 
-                                      numElements*numRows, 0.001f);
-    retval += (CUTTrue == result) ? 0 : 1;
-    printf("test %s\n", (CUTTrue == result) ? "PASSED" : "FAILED");
-    printf("Average execution time: %f ms\n",
-           cutGetTimerValue(timer) / testOptions.numIterations);
+    bool result = compareArrays( reference, o_data, numElements*numRows, 0.001f);
+    retval += (true == result) ? 0 : 1;
+    printf("test %s\n", (true == result) ? "PASSED" : "FAILED");
+    printf("Average execution time: %f ms\n", 
+           timer.getTime()/ testOptions.numIterations);
     printf("\n");
 
     ret = cudppDestroyPlan(multiscanPlan);
@@ -725,7 +706,6 @@ int testMultiSumScan(int argc, const char **argv)
     }
 
     // cleanup memory
-    cutDeleteTimer(timer);
     free( i_data);
     free(o_data);
     free( reference);
@@ -755,30 +735,30 @@ int testScan(int argc, const char **argv, const CUDPPConfiguration *configPtr)
         config.op = CUDPP_ADD;
         config.datatype = getDatatypeFromArgv(argc, argv);
 
-        if (testOptions.op && !strcmp(testOptions.op, "max"))
+        if (testOptions.op == "max")
         {
             config.op = CUDPP_MAX;
         }
-        else if (testOptions.op && !strcmp(testOptions.op, "min"))
+        else if (testOptions.op == "min")
         {
             config.op = CUDPP_MIN;
         }
-        else if (testOptions.op && !strcmp(testOptions.op, "multiply"))
-        {
+        else if (testOptions.op == "multiply")
+        { 
             config.op = CUDPP_MULTIPLY;
         }
 
-        if (CUTTrue == cutCheckCmdLineFlag(argc, argv, "backward"))
+        if (checkCommandLineFlag(argc, argv, "backward"))
         {
             direction = CUDPP_OPTION_BACKWARD;
         }
      
-        if (CUTTrue == cutCheckCmdLineFlag(argc, argv, "exclusive"))
+        if (checkCommandLineFlag(argc, argv, "exclusive"))
         {
             inclusivity = CUDPP_OPTION_EXCLUSIVE;
         }
 
-        if (CUTTrue == cutCheckCmdLineFlag(argc, argv, "inclusive"))
+        if (checkCommandLineFlag(argc, argv, "inclusive"))
         {
             inclusivity = CUDPP_OPTION_INCLUSIVE;
         }
@@ -810,6 +790,7 @@ int testScan(int argc, const char **argv, const CUDPPConfiguration *configPtr)
         return 0;
         break;
     }
+    return 0;
 }
 
 // Leave this at the end of the file

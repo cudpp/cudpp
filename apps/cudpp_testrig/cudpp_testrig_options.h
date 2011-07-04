@@ -27,7 +27,8 @@
 
 #include <cudpp.h>
 #include <limits.h>
-#include <cutil.h>
+#include <string>
+#include <sstream>
 
 #define numTestIterations 100
 
@@ -42,14 +43,13 @@
  */
 struct testrigOptions
 {
-    char *op;          //!< String containing name of OP (useful in e.g. scan).
-    char *datatype;    //!< String containing data type.
-    char *dir;         //!< String containing the path of the random number regression test files
+    std::string op;          //!< String containing name of OP (useful in e.g. scan).
+    std::string datatype;    //!< String containing data type.
+    std::string dir;         //!< String containing the path of the random number regression test files
     int numIterations; //!< Number of iterations to run.
     bool debug;        //!< Application-dependent bool, set if --debug 
 };
 
-extern "C"
 void setOptions(int argc, const char **argv, testrigOptions &testOptions);
 
 #endif

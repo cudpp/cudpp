@@ -11,7 +11,7 @@ CUFILES		:= satGL.cu
 # C/C++ source files (compiled with gcc / c++)
 CCFILES		:= main.cpp findFile.cpp
 
-INCLUDES	:= -I../../cudpp/include
+INCLUDES	:= -I../../cudpp/include -I../common/
 
 USEGLLIB	:= 1
 USEGLUT		:= 1

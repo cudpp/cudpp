@@ -9,13 +9,16 @@
 // ------------------------------------------------------------- 
 
 #include <stdio.h>
-#include <cutil.h>
 #include <math.h>
 #include <cuda_runtime_api.h>
 
 #include "cudpp.h"
 #include "cudpp_testrig_options.h"
 #include "cudpp_testrig_utils.h"
+#include "cuda_util.h"
+#include "commandline.h"
+
+using namespace cudpp_app;
 
 template <typename T>
 int radixSortTest(CUDPPHandle plan, CUDPPConfiguration config, size_t *tests, 
@@ -101,7 +104,7 @@ int radixSortTest(CUDPPHandle plan, CUDPPConfiguration config, size_t *tests,
             totalTime += time;
         }
         
-        CUT_CHECK_ERROR("testradixSort - cudppRadixSort");
+        CUDA_CHECK_ERROR("testradixSort - cudppRadixSort");
 
         // copy results
         CUDA_SAFE_CALL(cudaMemcpy(h_keysSorted, d_keys, tests[k] * sizeof(T), cudaMemcpyDeviceToHost));
@@ -130,7 +133,7 @@ int radixSortTest(CUDPPHandle plan, CUDPPConfiguration config, size_t *tests,
     printf("\n");
 
 
-    CUT_CHECK_ERROR("after radixsort");
+    CUDA_CHECK_ERROR("after radixsort");
 
     cudaFree(d_keys);
     if (config.options & CUDPP_OPTION_KEY_VALUE_PAIRS)
@@ -191,21 +194,21 @@ int testRadixSort(int argc, const char **argv, const CUDPPConfiguration *configP
     
     size_t numElements = test[numTests - 1];
 
-    if( cutCheckCmdLineFlag(argc, (const char**)argv, "help") )
+    if( checkCommandLineFlag(argc, (const char**)argv, "help") )
     {
         printf("Command line:\nradixsort_block [-n=<number of elements>] [-keybits=<number of key bits>]\n");
         exit(1);
     }
 
-    bool keysOnly = (cutCheckCmdLineFlag(argc, (const char**)argv, "keysonly") == CUTTrue);     
-    //bool keyValue = (cutCheckCmdLineFlag(argc, (const char**)argv, "keyval") == CUTTrue);
-    quiet = (cutCheckCmdLineFlag(argc, (const char**)argv, "quiet") == CUTTrue);        
+    bool keysOnly = checkCommandLineFlag(argc, (const char**)argv, "keysonly");     
+
+    quiet = checkCommandLineFlag(argc, (const char**)argv, "quiet");        
     
-    if( cutCheckCmdLineFlag(argc, (const char**)argv, "float") )
+    if( checkCommandLineFlag(argc, (const char**)argv, "float") )
     {     
         config.datatype = CUDPP_FLOAT;
     }
-    else if( cutCheckCmdLineFlag(argc, (const char**)argv, "uint") )
+    else if( checkCommandLineFlag(argc, (const char**)argv, "uint") )
     {        
         config.datatype = CUDPP_UINT;
     }
@@ -221,12 +224,13 @@ int testRadixSort(int argc, const char **argv, const CUDPPConfiguration *configP
         config.options = CUDPP_OPTION_KEY_VALUE_PAIRS;
     }
 
-    if( cutGetCmdLineArgumenti( argc, (const char**)argv, "n", &cmdVal) )
+    
+    if( commandLineArg( cmdVal, argc, (const char**)argv, "n" ) )
     { 
         numElements = cmdVal;
         numTests = 1;                           
     }
-    if( cutGetCmdLineArgumenti( argc, (const char**)argv, "keybits", &cmdVal) )
+    if( commandLineArg( cmdVal, argc, (const char**)argv, "keybits" ) )
     {
         keybits = cmdVal;
     }    
