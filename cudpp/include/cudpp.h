@@ -272,10 +272,7 @@
  * \section build-linux Building CUDPP on Linux and Mac OS X
  *
  * CUDPP can be built using standard g++ and Make tools on Linux, by typing 
- * "make" in the "cudpp/" subdirectory.  Before building CUDPP, you should 
- * first build the CUDA Utility Library (libcutil) by typing "make; make dbg=1" 
- * in the "common/" subdirectory.  This will generate libcutil.a and 
- * libcutilD.a.  
+ * "make" in the "cudpp/" subdirectory.  
  * 
  * The makefile for CUDPP and all sample applications take the optional 
  * arguments "dbg=1", "devdbg=1" and "verbose=1".  dbg=1 builds CUDPP

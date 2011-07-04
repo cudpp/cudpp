@@ -23,7 +23,7 @@
  * @{
  */
  
-
+#include "cuda_util.h"
 #include "cudpp.h"
 #include "cudpp_util.h"
 #include "cudpp_radixsort.h"
@@ -31,7 +31,6 @@
 #include "kernel/radixsort_kernel.cu"
 #include "cudpp_maximal_launch.h"
 
-#include <cutil.h>
 #include <cstdlib>
 #include <cstdio>
 #include <assert.h>
@@ -134,7 +133,7 @@ void radixSortStep(uint *keys,
         }
     }
 
-    CUT_CHECK_ERROR("radixSortBlocks");
+    CUDA_CHECK_ERROR("radixSortBlocks");
 
     if (fullBlocks)
     {
@@ -175,7 +174,7 @@ void radixSortStep(uint *keys,
         }
     }
 
-    CUT_CHECK_ERROR("findRadixOffsets");
+    CUDA_CHECK_ERROR("findRadixOffsets");
 
     cudppScanDispatch(plan->m_countersSum, plan->m_counters, 16*numBlocks2, 1, plan->m_scanPlan);
 
@@ -276,7 +275,7 @@ void radixSortStep(uint *keys,
         }
     }
 
-    CUT_CHECK_ERROR("radixSortStep");
+    CUDA_CHECK_ERROR("radixSortStep");
 }
 
 /**
@@ -311,7 +310,7 @@ void radixSortSingleBlock(uint *keys,
 
     if (flip) unflipFloats<<<1, SORT_CTA_SIZE>>>(keys, numElements);
 
-    CUT_CHECK_ERROR("radixSortSingleBlock");
+    CUDA_CHECK_ERROR("radixSortSingleBlock");
 }
 
 /**
@@ -349,7 +348,7 @@ void radixSort(uint *keys,
             radixSortSingleWarp<false><<<1, numElements>>>
                 (keys, values, numElements);
 
-        CUT_CHECK_ERROR("radixSortSingleWarp");        
+        CUDA_CHECK_ERROR("radixSortSingleWarp");        
         return;
     }
     
@@ -654,7 +653,7 @@ void radixSortStepKeysOnly(uint *keys,
         }
     }
 
-    CUT_CHECK_ERROR("radixSortStepKeysOnly");
+    CUDA_CHECK_ERROR("radixSortStepKeysOnly");
 }
 
 /**
@@ -685,7 +684,7 @@ void radixSortSingleBlockKeysOnly(uint *keys,
         unflipFloats<<<1, SORT_CTA_SIZE>>>(keys, numElements);
 
 
-    CUT_CHECK_ERROR("radixSortSingleBlock");
+    CUDA_CHECK_ERROR("radixSortSingleBlock");
 }
 
 /** 

@@ -14,15 +14,14 @@
 
   \dontinclude simpleCUDPP.cu   
   
-  simpleCUDPP uses libCUTIL, a CUDA utility library used in NVIDIA CUDA SDK samples
-  to initialize CUDA and to check for errors.  \c runTest starts by initializing
-  the CUDA device and then declaring the number of elements and the array size 
-  for the arrays we plan to scan.  It then allocates the host-side (CPU-side)
-  input array, \c h_idata, and initializes the data it contains with some random
-  values between 0 and 15.
+  \c runTest starts by initializing the CUDA device and then declaring the number 
+  of elements and the array size for the arrays we plan to scan.  It then allocates 
+  the host-side (CPU-side) input array, \c h_idata, and initializes the data it 
+  contains with some random values between 0 and 15.
   
   \skip Run a simple test
   \skip void
+  \until prop.clockRate
   \until }
   
   After the input data is created on the host, we allocate a device (GPU) array

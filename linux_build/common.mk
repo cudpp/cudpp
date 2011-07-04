@@ -40,8 +40,6 @@ ROOTBINDIR ?= $(ROOTDIR)/../bin
 BINDIR     ?= $(ROOTBINDIR)/$(OSLOWER)
 ROOTOBJDIR ?= obj
 LIBDIR     := $(ROOTDIR)/../lib
-COMMONDIR  := $(ROOTDIR)/../common
-MACPORTSDIR:= /opt/local
 
 # Compilers
 NVCC       := nvcc 
@@ -55,18 +53,7 @@ ifneq ($(DARWIN),)
 endif
 
 # Includes
-INCLUDES  += -I. -I$(CUDA_INSTALL_PATH)/include -I$(COMMONDIR)/inc
-ifneq ($(DARWIN),)
-        # Link against macports install (currently for Boost)
-	INCLUDES += -I$(MACPORTSDIR)/include
-endif
-
-# There's no standard installation place for glut on Mac. Default I'm
-# using is the macports install.
-ifneq ($(DARWIN),)
-	DARWIN_GLUT_LIB ?= $(MACPORTSDIR)/lib
-	LIB  += -L$(DARWIN_GLUT_LIB)
-endif
+INCLUDES  += -I. -I$(CUDA_INSTALL_PATH)/include
 
 # Warning flags
 CXXWARN_FLAGS := \
@@ -217,14 +204,14 @@ endif
 
 # Libs
 ifneq ($(DARWIN),)
-        LIB      += -L$(CUDA_INSTALL_PATH)/lib -L$(LIBDIR) -L$(COMMONDIR)/lib -L$(COMMONDIR)/lib/darwin -lcuda -lcudart ${OPENGLLIB} $(PARAMGLLIB) $(CUDPPLIB)
+        LIB      += -L$(CUDA_INSTALL_PATH)/lib -L$(LIBDIR) -lcuda -lcudart ${OPENGLLIB} $(PARAMGLLIB) $(CUDPPLIB)
 else
         ifneq ($(HP_64), )
             CUDA_LIB_PATH := $(CUDA_INSTALL_PATH)/lib64
         else
             CUDA_LIB_PATH := $(CUDA_INSTALL_PATH)/lib
         endif
-        LIB      += -L$(CUDA_LIB_PATH) -L$(LIBDIR) -L$(COMMONDIR)/lib -lcudart ${OPENGLLIB} $(PARAMGLLIB) $(CUDPPLIB)
+        LIB      += -L$(CUDA_LIB_PATH) -L$(LIBDIR) -lcudart ${OPENGLLIB} $(PARAMGLLIB) $(CUDPPLIB)
 endif
 
 
@@ -234,7 +221,6 @@ ifneq ($(STATIC_LIB),)
 	TARGET   := $(subst .a,$(LIBSUFFIX).a,$(LIBDIR)/$(STATIC_LIB))
 	LINKLINE  = ar qv $(TARGET) $(OBJS); ranlib $(TARGET)
 else
-	LIB += -lcutil_$(LIB_ARCH)$(LIBSUFFIX)
 	TARGETDIR := $(BINDIR)/$(BINSUBDIR)
 	TARGET    := $(TARGETDIR)/$(EXECUTABLE)
 	LINKLINE  = $(LINK) -o $(TARGET) $(OBJS) $(LIB)

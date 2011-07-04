@@ -23,17 +23,16 @@
 * @{
 */
 
+#include <cstdlib>
+#include <cstdio>
+#include <assert.h>
+
+#include "cuda_util.h"
 #include "cudpp.h"
 #include "cudpp_util.h"
 #include "cudpp_plan.h"
 #include "kernel/segmented_scan_kernel.cu"
 #include "kernel/vector_kernel.cu"
-
-
-#include <cutil.h>
-#include <cstdlib>
-#include <cstdio>
-#include <assert.h>
 
 /** @brief Perform recursive scan on arbitrary size arrays
 *
@@ -114,7 +113,7 @@ void segmentedScanArrayRecursive(T                  *d_out,
     dim3  threads(SCAN_CTA_SIZE, 1, 1);
 
     // make sure there are no CUDA errors before we start
-    CUT_CHECK_ERROR("segmentedScanArrayRecursive before kernels");
+    CUDA_CHECK_ERROR("segmentedScanArrayRecursive before kernels");
 
     bool fullBlock = (numElements == 
         (numBlocks * SEGSCAN_ELTS_PER_THREAD * SCAN_CTA_SIZE));    
@@ -194,7 +193,7 @@ void segmentedScanArrayRecursive(T                  *d_out,
         break;
     }
 
-    CUT_CHECK_ERROR("segmentedScanArrayRecursive after block level scans");
+    CUDA_CHECK_ERROR("segmentedScanArrayRecursive after block level scans");
 
     if (numBlocks > 1)
     {
@@ -232,7 +231,7 @@ void segmentedScanArrayRecursive(T                  *d_out,
                 numElements, 0, 0);
         }
 
-        CUT_CHECK_ERROR("vectorSegmentedAddUniform4");
+        CUDA_CHECK_ERROR("vectorSegmentedAddUniform4");
     }
 }
 
@@ -329,7 +328,7 @@ extern "C"
             numElts = numBlocks;
         } while (numElts > 1);
 
-        CUT_CHECK_ERROR("allocSegmentedScanStorage");
+        CUDA_CHECK_ERROR("allocSegmentedScanStorage");
     }
 
     /** @brief Deallocate intermediate block sums, block flags and block
@@ -349,7 +348,7 @@ extern "C"
             cudaFree(plan->m_blockIndices[i]);
         }
 
-        CUT_CHECK_ERROR("freeSegmentedScanStorage");
+        CUDA_CHECK_ERROR("freeSegmentedScanStorage");
 
         free((void**)plan->m_blockSums);
         free((void**)plan->m_blockFlags);

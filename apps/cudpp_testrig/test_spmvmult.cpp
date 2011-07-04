@@ -180,7 +180,6 @@ testSparseMatrixVectorMultiply(int argc, const char** argv)
     // Compute gold comparison
     sparseMatrixVectorMultiplyGold(&m, x, reference);
     
-    // cutStartTimer(timer);
     for (int i = 0; i < testOptions.numIterations; i++)
     {
         CUDA_SAFE_CALL(cudaMemcpy(d_y, y, rows * sizeof(float),

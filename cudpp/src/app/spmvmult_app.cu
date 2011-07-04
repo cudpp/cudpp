@@ -19,6 +19,11 @@
   *
   */
 
+#include <cstdlib>
+#include <cstdio>
+#include <assert.h>
+
+#include "cuda_util.h"
 #include "cudpp.h"
 #include "cudpp_util.h"
 #include "cudpp_plan.h"
@@ -32,11 +37,6 @@ void cudppSegmentedScanDispatch (void                   *d_out,
                                  int                    numElements,
                                  const CUDPPSegmentedScanPlan *plan
                                 );
-
-#include <cutil.h>
-#include <cstdlib>
-#include <cstdio>
-#include <assert.h>
 
 /** @name Sparse Matrix-Vector Multiply Functions
  * @{
@@ -187,7 +187,7 @@ void allocSparseMatrixVectorMultiplyStorage(CUDPPSparseMatrixVectorMultiplyPlan 
                                cudaMemcpyHostToDevice) );
 
 
-    CUT_CHECK_ERROR("allocSparseMatrixVectorMultiplyStorage");
+    CUDA_CHECK_ERROR("allocSparseMatrixVectorMultiplyStorage");
 }
 
 /** @brief Deallocate intermediate product, flags and rowFindx (index of the last
@@ -200,7 +200,7 @@ void allocSparseMatrixVectorMultiplyStorage(CUDPPSparseMatrixVectorMultiplyPlan 
   */
 void freeSparseMatrixVectorMultiplyStorage(CUDPPSparseMatrixVectorMultiplyPlan *plan)
 {
-    CUT_CHECK_ERROR("freeSparseMatrixVectorMultiply");
+    CUDA_CHECK_ERROR("freeSparseMatrixVectorMultiply");
 
     cudaFree(plan->m_d_prod);
     cudaFree(plan->m_d_A);

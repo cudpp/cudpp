@@ -15,13 +15,13 @@
   * @brief CUDPP application-level compact routines
   */
 
+#include "cuda_util.h"
 #include "cudpp_globals.h"
 #include "cudpp_util.h"
 #include "cudpp.h"
 #include "cudpp_plan.h"
 #include "cudpp_scan.h"
 #include "kernel/compact_kernel.cu"
-#include <cutil.h>
 #include <cstdlib>
 #include <cstdio>
 #include <assert.h>
@@ -137,7 +137,7 @@ void compactArray(T                      *d_out,
                                                          d_isValid, d_in, numElements);
 
     
-    CUT_CHECK_ERROR("compactArray -- compactData");
+    CUDA_CHECK_ERROR("compactArray -- compactData");
 }
 
 #ifdef __cplusplus

@@ -15,11 +15,11 @@
  * @brief CUDPP application-level rand routine for MD5
  */
 
+#include "cuda_util.h"
 #include "cudpp.h"
 #include "cudpp_util.h"
 #include "cudpp_plan.h"
 
-#include <cutil.h>
 #include <cstdlib>
 #include <cstdio>
 #include <assert.h>

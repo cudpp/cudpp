@@ -56,6 +56,8 @@
 #include "ppm.h"
 //#include "stopwatch.h"
 
+using namespace cudpp_app;
+
 #if CUDA_VERSION < 3000
 #define USE_CUDA_GRAPHICS_INTEROP 0
 #else

@@ -14,12 +14,13 @@
  *
  * @brief CUDPP application-level reduction routines
  */
+ 
+#include <stdio.h>
 
+#include "cuda_util.h"
 #include "cudpp_plan.h"
 #include "cudpp_util.h"
 #include "kernel/reduce_kernel.cu"
-#include <stdio.h>
-#include <cutil.h>
 
 /** \addtogroup cudpp_app
   *
@@ -108,7 +109,7 @@ void reduceBlocks(T *d_odata, const T *d_idata, size_t numElements, const CUDPPR
         }
     }
 
-     CUT_CHECK_ERROR("Reduce");
+     CUDA_CHECK_ERROR("Reduce");
 }
 /**
   * @brief Array reduction function.
@@ -182,7 +183,7 @@ void allocReduceStorage(CUDPPReducePlan *plan)
         break;
     }
    
-    CUT_CHECK_ERROR("allocReduceStorage");
+    CUDA_CHECK_ERROR("allocReduceStorage");
 }
 
 /** @brief Deallocate intermediate block sums arrays in a CUDPPReducePlan object.
@@ -196,7 +197,7 @@ void freeReduceStorage(CUDPPReducePlan *plan)
 {
     cudaFree(plan->m_blockSums);
 
-    CUT_CHECK_ERROR("freeReduceStorage");
+    CUDA_CHECK_ERROR("freeReduceStorage");
 
     plan->m_blockSums = 0;
 }
