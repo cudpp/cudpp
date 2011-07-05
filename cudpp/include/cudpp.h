@@ -316,6 +316,9 @@ enum CUDPPResult
                                             illegal. For example, an
                                             invalid or illogical
                                             combination of options. */
+    CUDPP_ERROR_INVALID_PLAN,          /**< The plan is not configured properly.
+                                            For example, passing a plan for scan
+                                            to cudppSegmentedScan. */
     CUDPP_ERROR_UNKNOWN = 9999         /**< Unknown or untraceable error. */
 };
 

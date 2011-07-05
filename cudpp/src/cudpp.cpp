@@ -100,13 +100,14 @@ CUDPPResult cudppScan(const CUDPPHandle planHandle,
 
     if (plan != NULL)
     {
+        if (plan->m_config.algorithm != CUDPP_SCAN)
+            return CUDPP_ERROR_INVALID_PLAN;
+            
         cudppScanDispatch(d_out, d_in, numElements, 1, plan);
         return CUDPP_SUCCESS;
     }
     else
-    {    
-        return CUDPP_ERROR_UNKNOWN; //! @todo Return more specific errors
-    }
+        return CUDPP_ERROR_INVALID_HANDLE;
 }
 
 /**
@@ -165,13 +166,14 @@ CUDPPResult cudppSegmentedScan(const CUDPPHandle  planHandle,
 
     if (plan != NULL)
     {
+        if (plan->m_config.algorithm != CUDPP_SEGMENTED_SCAN)
+            return CUDPP_ERROR_INVALID_PLAN;
+        
         cudppSegmentedScanDispatch(d_out, d_idata, d_iflags, numElements, plan);
         return CUDPP_SUCCESS;
     }
     else
-    {    
-        return CUDPP_ERROR_UNKNOWN; //! @todo Return more specific errors
-    }
+        return CUDPP_ERROR_INVALID_HANDLE;
 }
 
 /**
@@ -207,13 +209,14 @@ CUDPPResult cudppMultiScan(const CUDPPHandle planHandle,
         (CUDPPScanPlan*)getPlanPtrFromHandle<CUDPPScanPlan>(planHandle);
     if (plan != NULL)
     {
+        if (plan->m_config.algorithm != CUDPP_SCAN)
+            return CUDPP_ERROR_INVALID_PLAN;
+            
         cudppScanDispatch(d_out, d_in, numElements, numRows, plan);
         return CUDPP_SUCCESS;
     }
     else
-    {    
-        return CUDPP_ERROR_UNKNOWN; //! @todo Return more specific errors
-    }
+        return CUDPP_ERROR_INVALID_HANDLE;
 }
 
 
@@ -264,14 +267,15 @@ CUDPPResult cudppCompact(const CUDPPHandle  planHandle,
 
     if (plan != NULL)
     {
+        if (plan->m_config.algorithm != CUDPP_COMPACT)
+            return CUDPP_ERROR_INVALID_PLAN;
+        
         cudppCompactDispatch(d_out, d_numValidElements, d_in, d_isValid, 
             numElements, plan);
         return CUDPP_SUCCESS;
     }
     else
-    {
-        return CUDPP_ERROR_UNKNOWN; //! @todo Return more specific errors.
-    }
+        return CUDPP_ERROR_INVALID_HANDLE;
 }
 
 /**
@@ -313,13 +317,14 @@ CUDPPResult cudppReduce(const CUDPPHandle planHandle,
 
     if (plan != NULL)
     {
+        if (plan->m_config.algorithm != CUDPP_REDUCE)
+            return CUDPP_ERROR_INVALID_PLAN;
+        
         cudppReduceDispatch(d_out, d_in, numElements, plan);
         return CUDPP_SUCCESS;
     }
     else
-    {
-        return CUDPP_ERROR_UNKNOWN; //! @todo Return more specific errors.
-    }
+        return CUDPP_ERROR_INVALID_HANDLE;
 }
 
 /**
@@ -361,14 +366,15 @@ CUDPPResult cudppSort(const CUDPPHandle planHandle,
 
     if (plan != NULL)
     {
+        if (plan->m_config.algorithm != CUDPP_SORT_RADIX)
+            return CUDPP_ERROR_INVALID_PLAN;
+        
         cudppRadixSortDispatch(d_keys, d_values, numElements, keyBits, 
                                direction, plan);
         return CUDPP_SUCCESS;
     }
     else
-    {
-        return CUDPP_ERROR_UNKNOWN; //! @todo Return more specific errors.
-    }
+        return CUDPP_ERROR_INVALID_HANDLE;
 }
 
 /** @brief Perform matrix-vector multiply y = A*x for arbitrary sparse matrix A and vector x
@@ -394,13 +400,14 @@ CUDPPResult cudppSparseMatrixVectorMultiply(const CUDPPHandle  sparseMatrixHandl
     
     if (plan != NULL)
     {
+        if (plan->m_config.algorithm != CUDPP_SPMVMULT)
+            return CUDPP_ERROR_INVALID_PLAN;
+        
         cudppSparseMatrixVectorMultiplyDispatch(d_y, d_x, plan);
         return CUDPP_SUCCESS;
     }
     else
-    {
-        return CUDPP_ERROR_UNKNOWN; //! @todo Return more specific errors.
-    }
+        return CUDPP_ERROR_INVALID_HANDLE;
 }
 
 /**
@@ -433,12 +440,15 @@ CUDPPResult cudppRand(const CUDPPHandle planHandle,
 
     if(plan != NULL)
     {
+        if (plan->m_config.algorithm != CUDPP_RAND_MD5)
+            return CUDPP_ERROR_INVALID_PLAN;
+        
         //dispatch the rand algorithm here
         cudppRandDispatch(d_out, numElements, plan);
         return CUDPP_SUCCESS;
     }
     else
-        return CUDPP_ERROR_UNKNOWN; //! @todo Return more specific errors
+        return CUDPP_ERROR_INVALID_HANDLE;
 }
 
 
@@ -461,15 +471,14 @@ CUDPPResult cudppRandSeed(const CUDPPHandle planHandle,
     CUDPPRandPlan * plan = 
         (CUDPPRandPlan *) getPlanPtrFromHandle<CUDPPRandPlan>(planHandle);
 
-    //switch on the plan to figure out which seed to update
-    switch(plan->m_config.algorithm)
+    if (plan != NULL)
     {
-    case CUDPP_RAND_MD5:
+        if (plan->m_config.algorithm != CUDPP_RAND_MD5)
+            return CUDPP_ERROR_INVALID_PLAN;
         plan->m_seed = seed;
-        break;
-    default:
-        break;
     }
+    else
+        return CUDPP_ERROR_INVALID_HANDLE;
 
     return CUDPP_SUCCESS;
 }//end cudppRandSeed
