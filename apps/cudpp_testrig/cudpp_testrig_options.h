@@ -43,6 +43,7 @@
  */
 struct testrigOptions
 {
+    std::string algorithm;   //!< String containing name of algorithm
     std::string op;          //!< String containing name of OP (useful in e.g. scan).
     std::string datatype;    //!< String containing data type.
     std::string dir;         //!< String containing the path of the random number regression test files

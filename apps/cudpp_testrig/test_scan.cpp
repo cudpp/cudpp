@@ -88,9 +88,9 @@ int scanTest(int argc, const char **argv, const CUDPPConfiguration &config,
         return retval;
     }
 
-    CUDPPHandle scanPlan;
+    CUDPPHandle plan;
     
-    result = cudppPlan(theCudpp, &scanPlan, config, numElements, 1, 0);
+    result = cudppPlan(theCudpp, &plan, config, numElements, 1, 0);
 
     if (result != CUDPP_SUCCESS)
     {
@@ -116,6 +116,15 @@ int scanTest(int argc, const char **argv, const CUDPPConfiguration &config,
         i_data[i] = (T)(rand() & 1);
     }
 
+    unsigned int *i_flags = 0;
+    unsigned int *d_iflags = 0;
+    if (config.algorithm == CUDPP_SEGMENTED_SCAN)
+    {
+        i_flags = (unsigned int*)malloc(sizeof(unsigned int) * numElements);
+        CUDA_SAFE_CALL( cudaMalloc( (void**) &d_iflags, 
+                                    sizeof(unsigned int) * numElements));
+    }
+
     // allocate and compute reference solution
     T* reference = (T*) malloc( memSize);
  
@@ -135,6 +144,32 @@ int scanTest(int argc, const char **argv, const CUDPPConfiguration &config,
  
     for (int k = 0; k < numTests; ++k)
     {
+        int numFlags = 4;
+        if (config.algorithm == CUDPP_SEGMENTED_SCAN)
+        {
+            memset(i_flags, 0, sizeof(unsigned int) * test[k]);
+            // Generate flags
+            for(int i = 0; i < numFlags; ++i) 
+            {
+                unsigned int idx;
+
+                // The flag at the first position is implicitly set
+                // so try to generate non-zero positions
+                while((idx = (unsigned int)
+                       ((test[k] - 1) * (rand() / (double)RAND_MAX))) 
+                      == 0)
+                {
+                }
+
+                i_flags[idx] = 1;
+            }
+            
+            // Copy flags to GPU
+            CUDA_SAFE_CALL( cudaMemcpy(d_iflags, i_flags, 
+                                       sizeof(unsigned int) * test[k],
+                                       cudaMemcpyHostToDevice) );                                       
+        }
+        
         char op[10];
         switch (config.op)
         {
@@ -154,11 +189,13 @@ int scanTest(int argc, const char **argv, const CUDPPConfiguration &config,
             fprintf(stderr, "testScan called with invalid operator\n");
             break;
         }
+        
         if (!quiet)
         {
-            printf("Running a%s%s %s-scan of %d %s elements\n",
+            printf("Running a%s%s %s%s-scan of %d %s elements\n",
                    (config.options & CUDPP_OPTION_BACKWARD) ? " backward" : "",
                    (config.options & CUDPP_OPTION_INCLUSIVE) ? " inclusive" : "",
+                   (config.algorithm == CUDPP_SEGMENTED_SCAN) ? "segmented " : "",
                    op,
                    test[k],
                    datatype_to_string[(int) config.datatype]);
@@ -168,14 +205,28 @@ int scanTest(int argc, const char **argv, const CUDPPConfiguration &config,
         timer.reset();
         timer.start();
          
-        if (config.op == CUDPP_ADD)
-            computeSumScanGold( reference, i_data, test[k], config);
-        else if (config.op == CUDPP_MULTIPLY)
-            computeMultiplyScanGold( reference, i_data, test[k], config);
-        else if (config.op == CUDPP_MAX)
-            computeMaxScanGold( reference, i_data, test[k], config);     
-        else if (config.op == CUDPP_MIN)
-            computeMinScanGold( reference, i_data, test[k], config);    
+        if (config.algorithm == CUDPP_SEGMENTED_SCAN) 
+        {
+            if (config.op == CUDPP_ADD)
+                computeSegmentedSumScanGold( reference, i_data, i_flags, test[k], config);
+            else if (config.op == CUDPP_MULTIPLY)
+                computeSegmentedMultiplyScanGold( reference, i_data, i_flags, test[k], config);
+            else if (config.op == CUDPP_MAX)
+                computeSegmentedMaxScanGold( reference, i_data, i_flags, test[k], config);     
+            else if (config.op == CUDPP_MIN)
+                computeSegmentedMinScanGold( reference, i_data, i_flags, test[k], config);                
+        }
+        else 
+        {
+            if (config.op == CUDPP_ADD)
+                computeSumScanGold( reference, i_data, test[k], config);
+            else if (config.op == CUDPP_MULTIPLY)
+                computeMultiplyScanGold( reference, i_data, test[k], config);
+            else if (config.op == CUDPP_MAX)
+                computeMaxScanGold( reference, i_data, test[k], config);     
+            else if (config.op == CUDPP_MIN)
+                computeMinScanGold( reference, i_data, test[k], config);                
+        }
 
         timer.start();
      
@@ -185,16 +236,22 @@ int scanTest(int argc, const char **argv, const CUDPPConfiguration &config,
   
         // Run the scan
         // run once to avoid timing startup overhead.
-        cudppScan(scanPlan, d_odata, d_idata, test[k]);
+        if (config.algorithm == CUDPP_SEGMENTED_SCAN)
+            cudppSegmentedScan(plan, d_odata, d_idata, d_iflags, test[k]);
+        else
+            cudppScan(plan, d_odata, d_idata, test[k]);
 
         timer.start();
         for (int i = 0; i < testOptions.numIterations; i++)
         {
-            cudppScan(scanPlan, d_odata, d_idata, test[k]);
+            if (config.algorithm == CUDPP_SEGMENTED_SCAN)
+                cudppSegmentedScan(plan, d_odata, d_idata, d_iflags, test[k]);
+            else
+                cudppScan(plan, d_odata, d_idata, test[k]);
         }
         cudaThreadSynchronize();
-        timer.stop();
-     
+        timer.stop();            
+        
         // copy result from device to host
         CUDA_SAFE_CALL(cudaMemcpy( o_data, d_odata, sizeof(T) * test[k],
                                    cudaMemcpyDeviceToHost));
@@ -222,7 +279,7 @@ int scanTest(int argc, const char **argv, const CUDPPConfiguration &config,
     if (!quiet)
         printf("\n");
 
-    result = cudppDestroyPlan(scanPlan);
+    result = cudppDestroyPlan(plan);
 
     if (result != CUDPP_SUCCESS)
     {
@@ -240,320 +297,13 @@ int scanTest(int argc, const char **argv, const CUDPPConfiguration &config,
     free(i_data);
     free(o_data);
     free(reference);
+    if (i_flags) free(i_flags);
     cudaFree(d_odata);
     cudaFree(d_idata);
+    if (d_iflags) cudaFree(d_iflags);
     return retval;
 }
 
-/**
- * testSegmentedScan exercises cudpp's unsegmented scan functionality.
- * Possible command line arguments:
- * - --op=OP: sets scan operation to OP (sum, max, min and multiply.)
- * - --forward: sets direction of scan
- * - --exclusive, --inclusive: sets exclusivity of scan
- * - --n=#: number of elements in scan
- * - Also "global" options (see setOptions)
- * @param argc Number of arguments on the command line, passed
- * directly from main
- * @param argv Array of arguments on the command line, passed directly
- * from main
- * @param configPtr Configuration for scan, set by caller
- * @return Number of tests that failed regression (0 for all pass)
- * @see CUDPPConfiguration, setOptions, cudppSegmentedScan
- */
-int testSegmentedScan(int argc, const char **argv, const CUDPPConfiguration *configPtr)
-{
-    int retval = 0;
-
-    testrigOptions testOptions;
-    setOptions(argc, argv, testOptions);
-
-    cudpp_app::StopWatch timer;
-
-    CUDPPConfiguration config;
-    config.algorithm = CUDPP_SEGMENTED_SCAN;
-
-    if (configPtr != NULL)
-    {
-        config = *configPtr;
-    }
-    else
-    {
-        CUDPPOption direction = CUDPP_OPTION_FORWARD;
-        CUDPPOption inclusivity = CUDPP_OPTION_EXCLUSIVE;
-
-        //default segmented sum scan
-        config.op = CUDPP_ADD;
-        config.datatype = CUDPP_FLOAT;
-
-        config.op = CUDPP_ADD;
-
-        if (testOptions.op == "max")
-        {
-            config.op = CUDPP_MAX;
-        }
-        else if (testOptions.op == "min")
-        {
-            config.op = CUDPP_MIN;
-        }
-        else if (testOptions.op == "multiply")
-        { 
-            config.op = CUDPP_MULTIPLY;
-        }
-        
-        if (checkCommandLineFlag(argc, argv, "backward"))
-        {
-            direction = CUDPP_OPTION_BACKWARD;
-        }
-     
-        if (checkCommandLineFlag(argc, argv, "exclusive"))
-        {
-            inclusivity = CUDPP_OPTION_EXCLUSIVE;
-        }
-
-        if (checkCommandLineFlag(argc, argv, "inclusive"))
-        {
-            inclusivity = CUDPP_OPTION_INCLUSIVE;
-        }
-     
-        config.options = direction | inclusivity;
-    }
- 
-    int numElements = 8388608; // maximum test size
-    int numFlags = 4;
-
-    bool quiet = checkCommandLineFlag(argc, (const char**) argv, "quiet");
-
-    bool oneTest = false;
-    if (commandLineArg(numElements, argc, (const char**) argv, "n"))
-    {
-        oneTest = true;
-    }
-
-    unsigned int test[] = {32, 128, 256, 512, 1024, 1025, 32768, 45537, 65536, 131072,
-                           262144, 500001, 524288, 1048577, 1048576, 1048581, 2097152, 4194304, 8388608};
-
-    int numTests = sizeof(test) / sizeof(test[0]);
-    if (oneTest)
-    {
-        test[0] = numElements;
-        numTests = 1;
-    }
-
-    // Initialize CUDPP
-    CUDPPResult result = CUDPP_SUCCESS;
-    CUDPPHandle theCudpp;
-    result = cudppCreate(&theCudpp);
-    if (result != CUDPP_SUCCESS)
-    {
-        fprintf(stderr, "Error initializing CUDPP Library.\n");
-        retval = (oneTest) ? 1 : numTests;
-        return retval;
-    }
-
-    CUDPPHandle segmentedScanPlan;
-    result = cudppPlan(theCudpp, &segmentedScanPlan, config, numElements, 1, 0);
-
-    if (result != CUDPP_SUCCESS)
-    {
-        fprintf(stderr, "Error creating plan for Segmented Scan\n");
-        retval = (oneTest) ? 1 : numTests;
-        return retval;
-    }
- 
-    unsigned int memSize = sizeof(float) * numElements;
- 
-    // allocate host memory to store the input data
-    float* i_data = (float*) malloc( memSize);
-
-    // allocate host memory to store the input data
-    unsigned int* i_flags = 
-        (unsigned int*) malloc(sizeof(unsigned int) * numElements);
-
-    // Set all flags to 0
-    memset(i_flags, 0, sizeof(unsigned int) * numElements);
- 
-    // allocate host memory to store the output data
-    float* o_data = (float*) malloc( memSize);
- 
-    // host memory to store input flags
-  
-    // initialize the input data on the host
-    for(int i = 0; i < numElements; ++i)
-    {
-        i_data[i] = (float) 1; // (rand() & 1);
-    }
-
-    // allocate and compute reference solution
-    float* reference = (float*) malloc( memSize);
- 
-    // allocate device memory input and output arrays
-    float* d_idata         = NULL;
-    unsigned int *d_iflags = NULL;
-    float* d_odata         = NULL;
-
-
-    CUDA_SAFE_CALL( cudaMalloc( (void**) &d_idata, memSize));
-    CUDA_SAFE_CALL( cudaMalloc( (void**) &d_iflags, 
-                                sizeof(unsigned int) * numElements));
-    CUDA_SAFE_CALL( cudaMalloc( (void**) &d_odata, memSize));
-     
-    // copy host memory to device input array
-    CUDA_SAFE_CALL( cudaMemcpy(d_idata, i_data, memSize,
-                               cudaMemcpyHostToDevice) );
-    // initialize all the other device arrays to be safe
-    CUDA_SAFE_CALL( cudaMemcpy(d_odata, o_data, memSize,
-                               cudaMemcpyHostToDevice) );
- 
-    for (int k = 0; k < numTests; ++k)
-    {
-        // Generate flags
-        for(int i = 0; i < numFlags; ++i) 
-        {
-            unsigned int idx;
-
-            // The flag at the first position is implicitly set
-            // so try to generate non-zero positions
-            while((idx = (unsigned int)
-                   ((test[k] - 1) * (rand() / (float)RAND_MAX))) 
-                  == 0)
-            {
-            }
-            
-            // printf("Setting flag at pos %d\n", idx);
-            i_flags[idx] = 1;
-        }
-        // i_flags[5]=1;
-        // Copy flags to GPU
-        CUDA_SAFE_CALL( cudaMemcpy(d_iflags, i_flags, 
-                                   sizeof(unsigned int) * test[k],
-                                   cudaMemcpyHostToDevice) );
-
-        char op[10];
-        switch (config.op)
-        {
-        case CUDPP_ADD:
-            strcpy(op, "sum");
-            break;
-        case CUDPP_MULTIPLY:
-            strcpy(op, "multiply");
-            break;
-        case CUDPP_MAX:
-            strcpy(op, "max");
-            break;
-        case CUDPP_MIN:
-            strcpy(op, "min");
-            break;
-        case CUDPP_OPERATOR_INVALID:
-            fprintf(stderr, "testSegmentedScan called with invalid operator\n");
-            break;
-        }
-
-        if (!quiet)
-        {
-            printf("Running a%s%s %s-segmented scan of %d elements\n",               
-                   (config.options & CUDPP_OPTION_BACKWARD) ? " backward" : "",
-                   (config.options & CUDPP_OPTION_INCLUSIVE) ? " inclusive" : "",
-                   op,
-                   test[k]);
-            fflush(stdout);
-        }
-
-        fflush(stdout);
-
-        timer.reset();
-        timer.start();
-         
-        if(config.op == CUDPP_ADD)
-            computeSumSegmentedScanGold(reference, i_data, i_flags, test[k], config);
-        else if (config.op == CUDPP_MAX)
-            computeMaxSegmentedScanGold(reference, i_data, i_flags, test[k], config);
-        else if (config.op == CUDPP_MULTIPLY)
-            computeMultiplySegmentedScanGold(reference, i_data, i_flags, test[k], config);
-        else if (config.op == CUDPP_MIN)
-            computeMinSegmentedScanGold(reference, i_data, i_flags, test[k], config);
-        
-        timer.stop();
-        
-        if (!quiet)
-        {
-            printf("CPU execution time = %f\n", timer.getTime());
-        }
-        timer.reset();
-  
-        // Run the scan
-        // run once to avoid timing startup overhead.
-        cudppSegmentedScan(segmentedScanPlan, d_odata, d_idata, d_iflags, test[k]);
-
-        timer.start();
-        for (int i = 0; i < testOptions.numIterations; i++)
-        {
-            cudppSegmentedScan(segmentedScanPlan, d_odata, d_idata, d_iflags, test[k]);       
-        }
-        cudaThreadSynchronize();
-        timer.stop();
-     
-        // copy result from device to host
-        CUDA_SAFE_CALL(cudaMemcpy( o_data, d_odata, sizeof(float) * test[k],
-                                   cudaMemcpyDeviceToHost));
-          
-        // check if the result is equivalent to the expected soluion
-        bool result = compareArrays( reference, o_data, test[k], 0.001f);
-
-        retval += result ? 0 : 1;
-        if (!quiet)
-        {
-            printf("test %s\n", result ? "PASSED" : "FAILED");
-            printf("Average execution time: %f ms\n",
-                   timer.getTime() / testOptions.numIterations);
-        }
-        else
-        {
-            printf("\t%10d\t%0.4f\n", test[k], timer.getTime() / testOptions.numIterations);
-        }
-
-        if (testOptions.debug)
-        {
-            for (unsigned int i = 0; i < test[k]; ++i)
-            {
-                if (reference[i] != o_data[i]) printf("%d %f %f\n", i, o_data[i], reference[i]);
-                // printf("%f %f\n", reference[i], o_data[i]);
-            }
-            // printf("\n");
-            // for (unsigned int i = 0; i < test[k]; ++i)
-            // {
-            //    printf("%f ", reference[i]);
-            //}
-            // printf("\n");
-        }
-    }
-    if (!quiet)
-        printf("\n");
-
-    result = cudppDestroyPlan(segmentedScanPlan);
-
-    if (result != CUDPP_SUCCESS)
-    {
-        printf("Error destroying CUDPPPlan for Scan\n");
-    }
-
-    result = cudppDestroy(theCudpp);
-
-    if (result != CUDPP_SUCCESS)
-    {
-        printf("Error shutting down CUDPP Library.\n");
-    }
- 
-    // cleanup memory
-    free(i_data);
-    free(i_flags);
-    free(o_data);
-    free(reference);
-    cudaFree(d_odata);
-    cudaFree(d_idata);
-    cudaFree(d_iflags);
-    return retval;
-}
 
 /**
  * testMultiSumScan exercises cudpp's multiple-unsegmented-scan functionality.
@@ -735,6 +485,9 @@ int testScan(int argc, const char **argv, const CUDPPConfiguration *configPtr)
         config.op = CUDPP_ADD;
         config.datatype = getDatatypeFromArgv(argc, argv);
 
+        if (testOptions.algorithm == "segscan")
+            config.algorithm = CUDPP_SEGMENTED_SCAN;
+            
         if (testOptions.op == "max")
         {
             config.op = CUDPP_MAX;

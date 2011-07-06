@@ -838,6 +838,7 @@ __device__ void scanWarps(T x, T y,
     T val  = warpscan<T, traits, 4>(x, s_data);
     __syncthreads(); 
     T val2 = warpscan<T, traits, 4>(y, s_data);
+    __syncthreads(); 
     
     int idx = threadIdx.x;
 
@@ -896,6 +897,10 @@ __device__ void scanCTA(T            *s_data,
     {
         d_blockSums[blockSumIndex] = op(val2, s_data[threadIdx.x + blockDim.x]);
     }
+    // have to sync here on backward scans or we might clobber s_data before 
+    // writing blocksums
+    if (traits::isBackward()) 
+        __syncthreads();
 }
 
 

@@ -109,14 +109,14 @@ __global__ void scan4(T            *d_out,
 #endif
 
     scanCTA<T, traits>(temp, d_blockSums, blockSumIndex);
-    
+
     // write results to device memory
 #if 0
     storeSharedChunkToMem2<T, traits>
         (d_out, threadScan, temp, blockN, devOffset, ai, bi, aiDev, biDev);
 #else
     storeSharedChunkToMem4<T, traits>
-        (d_out, threadScan, temp, blockN, devOffset, ai, bi, aiDev, biDev);
+        (d_out, threadScan, temp, blockN, devOffset, ai, bi, aiDev, biDev);    
 #endif
 
 }

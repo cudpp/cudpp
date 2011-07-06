@@ -139,7 +139,7 @@ loadForSegmentedScanSharedChunkFromMem4(
 
     // convert to 4-vector
     typename typeToVector<T,4>::Result* iData = (typename typeToVector<T,4>::Result*)d_idata;
-    typename typeToVector<unsigned int,4>::Result* iFlags = (typename typeToVector<unsigned,4>::Result*)d_iflags;
+    uint4* iFlags = (uint4*)d_iflags;
     typename typeToVector<T,4>::Result tempData;
 
     uint4 tempFlag;
@@ -165,14 +165,16 @@ loadForSegmentedScanSharedChunkFromMem4(
     }
     else
     {
-        tempFlag = iFlags[aiDev];
-
-        if (isLastBlock && !traits::isFullBlock())
+        if (traits::isFullBlock() || (gIndex+3) < numElements)         
         {
-            if (gIndex >= numElements) tempFlag.x = 0;
-            if ((gIndex+1) >= numElements) tempFlag.y = 0;
-            if ((gIndex+2) >= numElements) tempFlag.z = 0;
-            if ((gIndex+3) >= numElements) tempFlag.w = 0;
+            tempFlag = iFlags[aiDev]; 
+        }
+        else
+        {
+            tempFlag.x = (gIndex < numElements) ? d_iflags[gIndex] : 0; 
+            tempFlag.y = ((gIndex+1) < numElements) ? d_iflags[gIndex+1] : 0; 
+            tempFlag.z = ((gIndex+2) < numElements) ? d_iflags[gIndex+2] : 0; 
+            tempFlag.w = 0;
         }
     }
 
@@ -215,13 +217,16 @@ loadForSegmentedScanSharedChunkFromMem4(
 
     // Read 4 data
     // Pad values beyond numElements with identity elements
-    tempData = iData[aiDev];
-    if (isLastBlock && !traits::isFullBlock())
+    if (traits::isFullBlock() || (gIndex+3) < numElements)         
     {
-        if (gIndex     >= numElements) tempData.x = op.identity();
-        if ((gIndex+1) >= numElements) tempData.y = op.identity();
-        if ((gIndex+2) >= numElements) tempData.z = op.identity();
-        if ((gIndex+3) >= numElements) tempData.w = op.identity();
+        tempData = iData[aiDev]; 
+    }
+    else
+    {
+        tempData.x = (gIndex < numElements) ? d_idata[gIndex] : op.identity(); 
+        tempData.y = ((gIndex+1) < numElements) ? d_idata[gIndex+1] : op.identity(); 
+        tempData.z = ((gIndex+2) < numElements) ? d_idata[gIndex+2] : op.identity(); 
+        tempData.w = op.identity();
     }
 
     // Computed inclusive segmented scan and store result in
@@ -346,14 +351,16 @@ loadForSegmentedScanSharedChunkFromMem4(
     }
     else
     {
-        tempFlag = iFlags[biDev];
-
-        if (isLastBlock && !traits::isFullBlock())
+        if (traits::isFullBlock() || (gIndex+3) < numElements) 
         {
-            if (gIndex >= numElements) tempFlag.x = 0;
-            if ((gIndex+1) >= numElements) tempFlag.y = 0;
-            if ((gIndex+2) >= numElements) tempFlag.z = 0;
-            if ((gIndex+3) >= numElements) tempFlag.w = 0;
+            tempFlag = iFlags[biDev];
+        }
+        else
+        {
+            tempFlag.x = (gIndex < numElements) ? d_iflags[gIndex] : 0; 
+            tempFlag.y = ((gIndex+1) < numElements) ? d_iflags[gIndex+1] : 0; 
+            tempFlag.z = ((gIndex+2) < numElements) ? d_iflags[gIndex+2] : 0; 
+            tempFlag.w = 0;
         }
     } 
 
@@ -391,15 +398,16 @@ loadForSegmentedScanSharedChunkFromMem4(
 
     // Read 4 data
     // Pad values beyond numElements with identity elements
-    tempData = iData[biDev];
-
-    // Pad values beyond numElements with identity elements 
-    if (isLastBlock && !traits::isFullBlock())
+    if (traits::isFullBlock() || (gIndex+3) < numElements)
     {
-        if (gIndex     >= numElements) tempData.x = op.identity();
-        if ((gIndex+1) >= numElements) tempData.y = op.identity();
-        if ((gIndex+2) >= numElements) tempData.z = op.identity();
-        if ((gIndex+3) >= numElements) tempData.w = op.identity();
+        tempData = iData[biDev];
+    }
+    else
+    {
+        tempData.x = (gIndex < numElements) ? d_idata[gIndex] : op.identity();
+        tempData.y = ((gIndex+1) < numElements) ? d_idata[gIndex+1] : op.identity();
+        tempData.z = ((gIndex+2) < numElements) ? d_idata[gIndex+2] : op.identity();
+        tempData.w = op.identity();
     }
 
     // Computed inclusive segmented scan and store result in
@@ -460,7 +468,7 @@ loadForSegmentedScanSharedChunkFromMem4(
 
     if (traits::isBackward())
     {
-        // Compute the minimum of 4 indices
+        // Compute the maximum of 4 indices
         m_index = 
             max(max(max(indexVec[0], indexVec[1]), indexVec[2]), indexVec[3]);
     }
@@ -741,42 +749,46 @@ reduceCTA(volatile T *s_data)
     return s_data[0];
 }
 
-template<class T, class traits, bool isExclusive, unsigned int maxlevel>
+template<class T, class traits, bool isExclusive, unsigned int log_simd_threads>
 __device__ void warpSegScan(T val,
                             unsigned int flag,
                             volatile T *s_data,
                             volatile unsigned int *s_flags,
                             T& oVal,
-                            unsigned int& oFlag)
+                            unsigned int& oFlag,
+                            bool print = false)
 {
     // instantiate operator functor
     typename traits::Op op;
 
     int idx;
+    
+    const unsigned int simd_threads = (1<<log_simd_threads); 
+    
     if (traits::isBackward())
     {
-        idx = 2 * threadIdx.x - (threadIdx.x & (WARP_SIZE-1)) + WARP_SIZE;
+        idx = 2 * threadIdx.x - (threadIdx.x & (simd_threads-1)) + simd_threads;
     }
     else
     {
-        idx = 2 * threadIdx.x - (threadIdx.x & (WARP_SIZE-1));
+        idx = 2 * threadIdx.x - (threadIdx.x & (simd_threads-1)); 
     }
 
     s_data[idx] = op.identity(); s_flags[idx] = 0;
 
     if (traits::isBackward())
     {
-        idx -= WARP_SIZE;
+        idx -= simd_threads; 
     }
     else
     {
-        idx += WARP_SIZE;
+        idx += simd_threads; 
     }
 
     T t = s_data[idx] = val; 
     unsigned int f = s_flags[idx] = flag;
-
-    if (0 <= maxlevel)
+    
+    if (1 <= log_simd_threads) 
     {
         if (traits::isBackward())
         {
@@ -789,7 +801,8 @@ __device__ void warpSegScan(T val,
             s_flags[idx] = f = s_flags[idx -  1] | f;
         }
     }
-    if (1 <= maxlevel)
+    
+    if (2 <= log_simd_threads) 
     {
         if (traits::isBackward())
         {
@@ -802,7 +815,8 @@ __device__ void warpSegScan(T val,
             s_flags[idx] = f = s_flags[idx -  2] | f;
         }
     }
-    if (2 <= maxlevel)
+    
+    if (3 <= log_simd_threads) 
     {
         if (traits::isBackward())
         {
@@ -815,7 +829,8 @@ __device__ void warpSegScan(T val,
             s_flags[idx] = f = s_flags[idx -  4] | f;
         }
     }
-    if (3 <= maxlevel)
+    
+    if (4 <= log_simd_threads) 
     {
         if (traits::isBackward())
         {
@@ -828,7 +843,8 @@ __device__ void warpSegScan(T val,
             s_flags[idx] = f = s_flags[idx -  8] | f;
         }
     }
-    if (4 <= maxlevel)
+    
+    if (5 <= log_simd_threads)
     {
         if (traits::isBackward())
         {
@@ -841,7 +857,7 @@ __device__ void warpSegScan(T val,
             s_flags[idx] = f = s_flags[idx - 16] | f;
         }
     }
-
+    
     if( isExclusive ) 
         if (traits::isBackward())
             oVal = (!flag) ? s_data[idx+1] : op.identity();
@@ -868,18 +884,18 @@ __device__ void segmentedScanWarps(T val1,
     const unsigned int idx = threadIdx.x;
 
     // Phase 1: Intra-warp prefix sums
-
+    
     // Seg scan for (0 ... blockDim.x - 1)
     T oVal1; unsigned int oFlag1;
-    warpSegScan<T, traits, false, 4>(val1, flag1, s_data, s_flags,
-                                     oVal1, oFlag1);
-    __syncthreads();
-
+    warpSegScan<T, traits, false, LOG_WARP_SIZE>(val1, flag1, s_data, s_flags,
+                                                 oVal1, oFlag1, true);
+                                                                                              
     // Seg scan for (blockDim.x ... 2*blockDim.x - 1)
     T oVal2; unsigned int oFlag2;
-    warpSegScan<T, traits, false, 4>(val2, flag2, s_data, s_flags, 
-                                     oVal2, oFlag2);
-    __syncthreads(); // FIXME - this is needed why?
+    warpSegScan<T, traits, false, LOG_WARP_SIZE>(val2, flag2, s_data, s_flags, 
+                                                 oVal2, oFlag2, false);
+    __syncthreads(); // Have all threads finish their accesses to shared memory 
+                     // before it is overwritten again                                                                  
         
     // Phase 2: Sum across warps of the CTA
 
@@ -890,24 +906,13 @@ __device__ void segmentedScanWarps(T val1,
     //  - write per-warp partial sums
     if (traits::isBackward())
     {
-        const unsigned int num_warps = ((blockDim.x << 1) >> LOG_WARP_SIZE);
-        const unsigned int offset = blockDim.x - num_warps;
-
-        // The effect of adding the offset is to shift the input values of the second
-        // level seg-scan to the last warp. This is needed because the data movement
-        // in backward segmented scan in right to left (as opposed to left to right in 
-        // forward segmented scan). This implies that spurious values in other warps
-        // will not affect the values that we need in the last warp when we do the 
-        // second level segmented scan. This would not have been a concern if the
-        // compiler bug noted below is fixed. In that case we could have done a 
-        // segmented scan on a single warp instead of a whole CTA
         if( lane == 0 )  
         {
-            s_data[warpid + offset] = oVal1; 
-            s_data[warpid2 + offset] = oVal2;
+            s_data[warpid] = oVal1; 
+            s_data[warpid2] = oVal2;
 
-            s_flags[warpid + offset] = oFlag1;
-            s_flags[warpid2 + offset] = oFlag2;
+            s_flags[warpid] = oFlag1;
+            s_flags[warpid2] = oFlag2;
         }
     }
     else
@@ -921,38 +926,32 @@ __device__ void segmentedScanWarps(T val1,
             s_flags[warpid2] = oFlag2;
         }
     }
-    __syncthreads();
+    __syncthreads(); // Make sure that values written by all warps are visible to the first 
 
-    T oVal3; unsigned int oFlag3;
+    if (idx < (1<<((LOG_SCAN_CTA_SIZE+1)-LOG_WARP_SIZE)))   
+    { 
+        T oVal3; unsigned int oFlag3;
 
-    T tdata = s_data[idx];
-    T tflag = s_flags[idx];
-    __syncthreads();
-
-    //  - use 1 warp for prefix sum over them
-    // MJH: This optimization saves very little time in practice, and it
-    // breaks backward segscans for some reason, so commenting it out.
-    //    if ( warpid==0 )   
-    {
+        T tdata = s_data[idx];
+        T tflag = s_flags[idx];
+        
+        //  - use 1 warp for prefix sum over them
         warpSegScan<T, traits, false, (LOG_SCAN_CTA_SIZE-LOG_WARP_SIZE+1)>
             (tdata, tflag, s_data, s_flags, oVal3, oFlag3);
-    }
-    __syncthreads(); // This looks unnecessary but won't work without it
 
-    s_data[idx] = oVal3;
-    s_flags[idx] = oFlag3;
-    __syncthreads();
+        s_data[idx] = oVal3;
+        s_flags[idx] = oFlag3;
+    }
+    __syncthreads(); // Make sure that values written by the first warp are visible to all
 
      //  - add the results back into each thread
     if (traits::isBackward())
     {
-        // FIXME - this shouldn't need to be defined twice
         const unsigned int num_warps = ((blockDim.x << 1) >> LOG_WARP_SIZE);
-        const unsigned int offset = blockDim.x - num_warps;
 
-        oVal1 = oFlag1 ? oVal1 : op(s_data[offset+warpid+1], oVal1);
+        oVal1 = oFlag1 ? oVal1 : op(s_data[warpid+1], oVal1);
 
-        if (warpid2 < (num_warps-1)) oVal2 = oFlag2 ? oVal2 : op(s_data[offset+warpid2+1], oVal2);
+        if (warpid2 < (num_warps-1)) oVal2 = oFlag2 ? oVal2 : op(s_data[warpid2+1], oVal2); 
     }
     else
     {
@@ -960,13 +959,14 @@ __device__ void segmentedScanWarps(T val1,
 
         oVal2 = oFlag2 ? oVal2 : op(s_data[warpid2-1], oVal2);
     }
-    __syncthreads(); // This looks unnecessary
+    __syncthreads(); // Have all threads finish their accesses to shared memory 
+                     // before it is overwritten again
 
-     //  - and we're done
-     s_data[idx] = oVal1;
-     s_data[idx + blockDim.x] = oVal2;
+    //  - and we're done
+    s_data[idx] = oVal1;
+    s_data[idx + blockDim.x] = oVal2;
      
-     __syncthreads(); // make sure the caller sees all our s_data[] writes
+    __syncthreads(); // make sure the caller sees all our s_data[] writes
 }
 
 
@@ -1009,16 +1009,12 @@ void segmentedScanCTA(T            *s_data,
 
     segmentedScanWarps<T, traits>(val, flag, val2, flag2, 
                                   s_data, s_flags);
-
     if (traits::isBackward())
     {
         if (traits::writeSums() && (threadIdx.x == 0))
         {
             d_blockSums[blockIdx.x] = s_data[0];
-
-            const unsigned int num_warps = ((blockDim.x << 1) >> LOG_WARP_SIZE);
-            const unsigned int offset = blockDim.x - num_warps;
-            d_blockFlags[blockIdx.x] = (s_flags[offset+0] != 0);
+            d_blockFlags[blockIdx.x] = (s_flags[0] != 0);
         }
     }
     else
@@ -1046,11 +1042,11 @@ void segmentedScanCTA(T            *s_data,
                 reduceCTA<unsigned int, ScanTraits<unsigned int, OperatorMin<unsigned int>, false, false, false, false, true>,
                       (2 * SCAN_CTA_SIZE)>(s_indices);
         }
-    }
-
-    if (traits::writeSums() && (threadIdx.x == 0))
-    {
-        d_blockIndices[blockIdx.x] = mIndex;
+    
+        if (threadIdx.x == 0)
+        {
+            d_blockIndices[blockIdx.x] = mIndex;
+        }
     }
 }
 

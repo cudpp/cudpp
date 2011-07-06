@@ -76,21 +76,18 @@ void segmentedScan4(T                  *d_odata,
 
     int ai, bi, aiDev, biDev;
 
-    // Last index in shared memory which contains data
-    unsigned int lastIdx = ((blockDim.x << 1)-1);
-
     // Chop up the shared memory into 4 contiguous spaces - the first 
     // for the data, the second for the indices, the third for the 
     // read-only version of the flags and the last for the read-write
     // version of the flags
-    unsigned int* indices = (unsigned int *)(&(temp[lastIdx + 1]));
-    unsigned int* flags = (unsigned int *)(&(temp[2*(lastIdx + 1)]));
+    unsigned int* indices = (unsigned int *)(temp + 2*blockDim.x);
+    unsigned int* flags   = (unsigned int *)(indices + 2*blockDim.x);
 
     T threadScan0[4];
     T threadScan1[4];
     unsigned int threadFlag = 0;
 
-    int devOffset = blockIdx.x * (blockDim.x << 1);
+    int devOffset = blockIdx.x * (2 * blockDim.x);
 
     // load data into shared memory
     loadForSegmentedScanSharedChunkFromMem4<T, traits>(
@@ -101,7 +98,7 @@ void segmentedScan4(T                  *d_odata,
     segmentedScanCTA<T, traits>(
         temp, flags, indices, 
         d_blockSums, d_blockFlags, d_blockIndices);
-
+        
     // write results to device memory
     storeForSegmentedScanSharedChunkToMem4<T, traits>(
         d_odata, threadScan0, threadScan1, threadFlag, 

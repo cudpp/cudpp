@@ -5,8 +5,10 @@ DATE HERE
 - Revamp public interface to be thread safe -- requires creating a
   CUDPP instance with cudppCreate, and passing it to all functions
 - Added cudppReduce parallel reductions
-- Added double, long long, and unsigned long long datatypes, implemented
-  in cudppReduce, cudppScan
+- Added 64-bit type support (double, long long, and unsigned long long), 
+  implemented in cudppReduce, cudppScan, cudppSegmentedScan
+- Fixed bug in cudppSegmentedScan which prevented 64-bit types to work
+  correctly
 - Removed all support for device emulation
 - Removed all dependencies on CUTIL; removed common/ subdirectory, added
   minimal set of app utilities in apps/common/ subdirectory

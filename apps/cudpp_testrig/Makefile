@@ -13,7 +13,7 @@ CCFILES :=	cudpp_testrig.cpp cudpp_testrig_options.cpp \
 		test_radixsort.cpp test_rand.cpp test_reduce.cpp \
 		test_scan.cpp test_spmvmult.cpp test_compact.cpp \
 
-INCLUDES := -I../../cudpp/include -I../common/
+INCLUDES := -I../../cudpp/include -I../common/ 
 
 USECUDPP := 1
 

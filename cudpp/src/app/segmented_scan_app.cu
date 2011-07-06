@@ -295,6 +295,18 @@ extern "C"
             plan->m_blockSums = (void**) malloc(level * sizeof(float*));
             elementSize = sizeof(float);
             break;
+        case CUDPP_DOUBLE:
+            plan->m_blockSums = (void**) malloc(level * sizeof(double*));
+            elementSize = sizeof(double);
+            break;
+        case CUDPP_LONGLONG:
+            plan->m_blockSums = (void**) malloc(level * sizeof(long long*));
+            elementSize = sizeof(long long);
+            break;
+        case CUDPP_ULONGLONG:
+            plan->m_blockSums = (void**) malloc(level * sizeof(unsigned long long*));
+            elementSize = sizeof(unsigned long long);
+            break;            
         default:
             break;
         }
@@ -422,6 +434,18 @@ void cudppSegmentedScanDispatchType(void                         *d_out,
         cudppSegmentedScanDispatchOperator<float, isBackward, isExclusive>
             (d_out, d_in, d_iflags, numElements, plan);
         break;
+    case CUDPP_DOUBLE:
+        cudppSegmentedScanDispatchOperator<double, isBackward, isExclusive>
+            (d_out, d_in, d_iflags, numElements, plan);
+        break;
+    case CUDPP_LONGLONG:
+        cudppSegmentedScanDispatchOperator<long long, isBackward, isExclusive>
+            (d_out, d_in, d_iflags, numElements, plan);
+        break;
+    case CUDPP_ULONGLONG:
+        cudppSegmentedScanDispatchOperator<unsigned long long, isBackward, isExclusive>
+            (d_out, d_in, d_iflags, numElements, plan);
+        break;
     default:
         break;
     }
@@ -453,7 +477,7 @@ void cudppSegmentedScanDispatchType(void                         *d_out,
                                      int                          numElements,
                                      const CUDPPSegmentedScanPlan *plan
                                      )
-    {    
+    {        
         if (CUDPP_OPTION_EXCLUSIVE & plan->m_config.options)
         {
             if (CUDPP_OPTION_BACKWARD & plan->m_config.options)

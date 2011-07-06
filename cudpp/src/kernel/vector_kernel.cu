@@ -287,7 +287,7 @@ __global__ void vectorSegmentedAddUniform4(T                  *d_vector,
             uni[0] = op.identity(); 
         
         // Tacit assumption that T is four-byte wide
-        uni[1] = (T)(d_maxIndices[blockAddress]);
+        *((unsigned int *)(uni + 1)) = d_maxIndices[blockAddress]; 
     }
 
     // Compute this thread's output address
@@ -298,7 +298,7 @@ __global__ void vectorSegmentedAddUniform4(T                  *d_vector,
 
     __syncthreads();
 
-    unsigned int maxIndex = (unsigned int)(uni[1]);
+    unsigned int maxIndex = *((unsigned int*)(uni + 1)); 
 
     bool isLastBlock = (blockIdx.x == (gridDim.x-1));
      
@@ -413,7 +413,7 @@ __global__ void vectorSegmentedAddUniformToRight4(T                  *d_vector,
             uni[0] = op.identity(); 
         
         // Tacit assumption that T is four-byte wide
-        uni[1] = (T)(d_minIndices[blockAddress]);
+        *((unsigned int *)(uni + 1)) = d_minIndices[blockAddress]; 
     }
 
     // Compute this thread's output address
@@ -424,7 +424,7 @@ __global__ void vectorSegmentedAddUniformToRight4(T                  *d_vector,
 
     __syncthreads();
 
-    unsigned int minIndex = (unsigned int)(uni[1]);
+    unsigned int minIndex = *((unsigned int*)(uni + 1));
 
     bool isLastBlock = (blockIdx.x == (gridDim.x-1));
      
@@ -442,16 +442,45 @@ __global__ void vectorSegmentedAddUniformToRight4(T                  *d_vector,
                 for (unsigned int i = 0; i < 8; ++i)
                     d_vector[address + i * blockDim.x] = 
                         op(d_vector[address + i * blockDim.x], uni[0]);
+                if (!isLastBlockFull && isLastBlock) 
+                { 
+                    for (unsigned int i = 0; i < 8; ++i) 
+                    { 
+                        if (address < numElements) 
+                            d_vector[address] = op(d_vector[address], uni[0]); 
+                        address += blockDim.x; 
+                    } 
+                } 
+                else 
+                { 
+                    for (unsigned int i=0; i<8; ++i) 
+                    { 
+                        d_vector[address] = op(d_vector[address], uni[0]); 
+                        address += blockDim.x; 
+                    }             
+                }
             }
             else
             {
-                for (unsigned int i=0; i < 8; ++i)
+                if (!isLastBlockFull && isLastBlock) 
                 {
-                    if (address > minIndex)
-                        d_vector[address] = 
-                            op(d_vector[address], uni[0]);
+                    for (unsigned int i = 0; i < 8; ++i) 
+                    { 
+                        if (address > minIndex && address < numElements) 
+                            d_vector[address] = op(d_vector[address], uni[0]); 
+         
+                        address += blockDim.x; 
+                    }
+                }
+                else 
+                { 
+                    for (unsigned int i=0; i<8; ++i) 
+                    {
+                        if (address > minIndex) 
+                            d_vector[address] = op(d_vector[address], uni[0]); 
 
-                    address += blockDim.x;
+                        address += blockDim.x; 
+                    }             
                 }
             }
         }
@@ -463,8 +492,7 @@ __global__ void vectorSegmentedAddUniformToRight4(T                  *d_vector,
             for (unsigned int i = 0; i < 8; ++i)
             {
                 if (address < numElements)
-                    d_vector[address] = 
-                        op(d_vector[address], uni[0]);
+                    d_vector[address] = op(d_vector[address], uni[0]);
                 
                 address += blockDim.x;
             }
@@ -473,8 +501,7 @@ __global__ void vectorSegmentedAddUniformToRight4(T                  *d_vector,
         {
             for (unsigned int i=0; i<8; ++i)
             {
-                d_vector[address] = 
-                    op(d_vector[address], uni[0]);
+                d_vector[address] = op(d_vector[address], uni[0]);
                 
                 address += blockDim.x;
             }            

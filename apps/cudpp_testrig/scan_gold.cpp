@@ -9,8 +9,6 @@
 // ------------------------------------------------------------- 
 #include <cudpp.h>
 #include <stdio.h>
-#include <limits.h>
-#include <float.h>
 #include <algorithm>
 #include "cudpp_testrig_utils.h"
 
@@ -43,28 +41,28 @@ void computeMinScanGold( T *reference, const T *idata,
                         const CUDPPConfiguration &config);
 
 template<typename T>
-void computeSumSegmentedScanGold(T *reference, const T *idata,
+void computeSegmentedSumScanGold(T *reference, const T *idata,
                                  const unsigned int* iflags,
                                  const unsigned int len,
                                  const CUDPPConfiguration &config);
 
 template<typename T>
 void
-computeMaxSegmentedScanGold(T* reference, const T* idata, 
+computeSegmentedMaxScanGold(T* reference, const T* idata, 
                             const unsigned int *iflag,
                             const unsigned int len,
                             const CUDPPConfiguration & config); 
 
 template<typename T>
 void
-computeMultiplySegmentedScanGold(T* reference, const T* idata, 
+computeSegmentedMultiplyScanGold(T* reference, const T* idata, 
                                  const unsigned int *iflag,
                                  const unsigned int len,
                                  const CUDPPConfiguration & config);
 
 template<typename T>
 void
-computeMinSegmentedScanGold(T* reference, const T* idata, 
+computeSegmentedMinScanGold(T* reference, const T* idata, 
                             const unsigned int *iflag,
                             const unsigned int len,
                             const CUDPPConfiguration & config);
@@ -83,26 +81,13 @@ computeSumScanGold( T *reference, const T *idata,
                     const unsigned int len,
                     const CUDPPConfiguration &config) 
 {
-    if (config.options & CUDPP_OPTION_FORWARD)
-    {
-        reference[0] = 0;
-    }
-    else if (config.options & CUDPP_OPTION_BACKWARD)
+    int startIdx = 1, stopIdx = len;
+    int increment = 1;
+    reference[0] = 0;    
+    
+    if (config.options & CUDPP_OPTION_BACKWARD)
     {
         reference[len-1] = 0;
-    }
-
-    int startIdx = 0, stopIdx = 0;
-    int increment = 0;
-
-    if (config.options & CUDPP_OPTION_FORWARD)
-    {
-        startIdx = 1;
-        stopIdx = len ;
-        increment = 1 ;
-    }
-    else if (config.options & CUDPP_OPTION_BACKWARD)
-    {
         startIdx = len-2;
         stopIdx = -1;
         increment = -1;
@@ -152,32 +137,19 @@ computeMultiplyScanGold( T *reference, const T *idata,
                          const unsigned int len,
                          const CUDPPConfiguration &config) 
 {
-    if (config.options & CUDPP_OPTION_FORWARD)
-    {
-        reference[0] = 1;
-    }
-    else if (config.options & CUDPP_OPTION_BACKWARD)
+    int startIdx = 1, stopIdx = len;
+    int increment = 1;
+    reference[0] = 1;    
+
+    if (config.options & CUDPP_OPTION_BACKWARD)
     {
         reference[len-1] = 1;
-    }
-
-    int startIdx = 0, stopIdx = 0;
-    int increment = 0;
-
-    if (config.options & CUDPP_OPTION_FORWARD)
-    {
-        startIdx = 1;
-        stopIdx = len ;
-        increment = 1 ;
-    }
-    else if (config.options & CUDPP_OPTION_BACKWARD)
-    {
         startIdx = len-2;
         stopIdx = -1;
         increment = -1;
     }
 
-    double totalProduct = 0;
+    double totalProduct = 1;
 
     for( int i = startIdx; i != stopIdx; i = i + increment)
     {
@@ -189,7 +161,7 @@ computeMultiplyScanGold( T *reference, const T *idata,
     {
         totalProduct *= idata[stopIdx - increment];
 
-        for (int i = startIdx - increment; i < stopIdx; i = i + increment) 
+        for (int i = startIdx - increment; i != stopIdx; i = i + increment) 
         {
             reference[i] *= idata[i];
         }      
@@ -209,36 +181,23 @@ computeMultiplyScanGold( T *reference, const T *idata,
 
 template<typename T>
 void
-computeSumSegmentedScanGold(T* reference, const T* idata, 
+computeSegmentedSumScanGold(T* reference, const T* idata, 
                             const unsigned int *iflag,
                             const unsigned int len,
                             const CUDPPConfiguration & config) 
 {
-    if (config.options & CUDPP_OPTION_FORWARD)
-    {
-        reference[0] = 0;
-    }
-    else if (config.options & CUDPP_OPTION_BACKWARD)
-    {
-        reference[len-1] = 0;
-    }
- 
     int startIdx=1, stopIdx=len;
     int increment=1;
-
-    if (config.options & CUDPP_OPTION_FORWARD)
+    reference[0] = 0;
+    
+    if (config.options & CUDPP_OPTION_BACKWARD)
     {
-        startIdx = 1;
-        stopIdx = len ;
-        increment = 1 ;
-    }
-    else if (config.options & CUDPP_OPTION_BACKWARD)
-    {
+        reference[len-1] = 0;
         startIdx = len-2;
         stopIdx = -1;
-        increment = -1;
+        increment = -1;    
     }
-    
+ 
     double total_sum = 0;
 
     for( int i = startIdx; i != stopIdx; i = i + increment)
@@ -267,7 +226,7 @@ computeSumSegmentedScanGold(T* reference, const T* idata,
     {
         total_sum += idata[stopIdx - increment];
 
-        for (unsigned int i = 0; i < len; i++) 
+        for (int i = startIdx - increment; i != stopIdx; i = i + increment) 
         {
             reference[i] += idata[i];
         }
@@ -286,57 +245,46 @@ computeSumSegmentedScanGold(T* reference, const T* idata,
 
 template<typename T>
 void
-computeMaxSegmentedScanGold(T* reference, const T* idata, 
+computeSegmentedMaxScanGold(T* reference, const T* idata, 
                             const unsigned int *iflag,
                             const unsigned int len,
                             const CUDPPConfiguration & config) 
 {
-    if (config.options & CUDPP_OPTION_FORWARD)
-    {
-        reference[0] = -FLT_MAX;
-    }
-    else if (config.options & CUDPP_OPTION_BACKWARD)
-    {
-        reference[len-1] = -FLT_MAX;
-    }
- 
     int startIdx=1, stopIdx=len;
     int increment=1;
-
-    if (config.options & CUDPP_OPTION_FORWARD)
+    
+    OperatorMax<T> mx;
+    reference[0] = mx.identity();
+    
+    if (config.options & CUDPP_OPTION_BACKWARD)
     {
-        startIdx = 1;
-        stopIdx = len ;
-        increment = 1 ;
-    }
-    else if (config.options & CUDPP_OPTION_BACKWARD)
-    {
+        reference[len-1] = mx.identity();
         startIdx = len-2;
         stopIdx = -1;
         increment = -1;
     }
     
-    float total_max = -FLT_MAX;
+    T total_max = mx.identity();
 
     for( int i = startIdx; i != stopIdx; i = i + increment)
     {
         if (config.options & CUDPP_OPTION_FORWARD)
         {
             total_max = 
-                (iflag[i] == 1) ? -FLT_MAX : std::max(total_max, idata[i-increment]);
+                (iflag[i] == 1) ? mx.identity() : std::max(total_max, idata[i-increment]);
 
             reference[i] = 
                 (iflag[i] == 1) ? 
-                -FLT_MAX : std::max(idata[i-increment], reference[i-increment]);
+                mx.identity() : std::max(idata[i-increment], reference[i-increment]);
         }
         else if (config.options & CUDPP_OPTION_BACKWARD)
         {
             total_max = 
-                (iflag[i-increment] == 1) ? -FLT_MAX : std::max(total_max, idata[i-increment]);
+                (iflag[i-increment] == 1) ? mx.identity() : std::max(total_max, idata[i-increment]);
 
             reference[i] = 
                 (iflag[i-increment] == 1) ? 
-                -FLT_MAX : std::max(idata[i-increment], reference[i-increment]);
+                mx.identity() : std::max(idata[i-increment], reference[i-increment]);
         }
 
     }
@@ -345,7 +293,7 @@ computeMaxSegmentedScanGold(T* reference, const T* idata,
     {
         total_max = std::max(total_max, idata[stopIdx - increment]);
 
-        for (unsigned i = 0; i < len; i++) 
+        for( int i = startIdx; i != stopIdx; i = i + increment) 
         {
             reference[i] = std::max(reference[i], idata[i]);
         }
@@ -364,36 +312,23 @@ computeMaxSegmentedScanGold(T* reference, const T* idata,
 
 template<typename T>
 void
-computeMultiplySegmentedScanGold(T* reference, const T* idata, 
+computeSegmentedMultiplyScanGold(T* reference, const T* idata, 
                                  const unsigned int *iflag,
                                  const unsigned int len,
                                  const CUDPPConfiguration & config) 
 {
-    if (config.options & CUDPP_OPTION_FORWARD)
-    {
-        reference[0] = 1.0;
-    }
-    else if (config.options & CUDPP_OPTION_BACKWARD)
-    {
-        reference[len-1] = 1.0;
-    }
-
     int startIdx=1, stopIdx=len;
     int increment=1;
-
-    if (config.options & CUDPP_OPTION_FORWARD)
+    reference[0] = 1.0;
+    
+    if (config.options & CUDPP_OPTION_BACKWARD)
     {
-        startIdx = 1;
-        stopIdx = len ;
-        increment = 1 ;
-    }
-    else if (config.options & CUDPP_OPTION_BACKWARD)
-    {
+        reference[len-1] = 1.0;
         startIdx = len-2;
         stopIdx = -1;
         increment = -1;
     }
-    
+
     double total_multi = 1.0;
 
     for( int i = startIdx; i != stopIdx; i = i + increment)
@@ -422,7 +357,7 @@ computeMultiplySegmentedScanGold(T* reference, const T* idata,
     {
         total_multi = total_multi * idata[stopIdx - increment];
 
-        for (unsigned i = 0; i < len; i++) 
+        for( int i = startIdx; i != stopIdx; i = i + increment) 
         {
             reference[i] = reference[i] * idata[i];
         }
@@ -441,57 +376,45 @@ computeMultiplySegmentedScanGold(T* reference, const T* idata,
 
 template<typename T>
 void
-computeMinSegmentedScanGold(T* reference, const T* idata, 
+computeSegmentedMinScanGold(T* reference, const T* idata, 
                             const unsigned int *iflag,
                             const unsigned int len,
                             const CUDPPConfiguration & config) 
 {
-    if (config.options & CUDPP_OPTION_FORWARD)
-    {
-        reference[0] = FLT_MAX;
-    }
-    else if (config.options & CUDPP_OPTION_BACKWARD)
-    {
-        reference[len-1] = FLT_MAX;
-    }
- 
+    OperatorMin<T> mn;
     int startIdx=1, stopIdx=len;
     int increment=1;
-
-    if (config.options & CUDPP_OPTION_FORWARD)
+    reference[0] = mn.identity();
+    
+    if (config.options & CUDPP_OPTION_BACKWARD)
     {
-        startIdx = 1;
-        stopIdx = len ;
-        increment = 1 ;
-    }
-    else if (config.options & CUDPP_OPTION_BACKWARD)
-    {
+        reference[len-1] = mn.identity();
         startIdx = len-2;
         stopIdx = -1;
         increment = -1;
     }
-    
-    float total_min = FLT_MAX;
+
+    T total_min = mn.identity();
 
     for( int i = startIdx; i != stopIdx; i = i + increment)
     {
         if (config.options & CUDPP_OPTION_FORWARD)
         {
             total_min = 
-                (iflag[i] == 1) ? FLT_MAX : std::min(total_min, idata[i-increment]);
+                (iflag[i] == 1) ? mn.identity() : std::min(total_min, idata[i-increment]);
 
             reference[i] = 
                 (iflag[i] == 1) ? 
-                FLT_MAX : std::min(idata[i-increment], reference[i-increment]);
+                mn.identity() : std::min(idata[i-increment], reference[i-increment]);
         }
         else if (config.options & CUDPP_OPTION_BACKWARD)
         {
             total_min = 
-                (iflag[i-increment] == 1) ? FLT_MAX : std::min(total_min, idata[i-increment]);
+                (iflag[i-increment] == 1) ? mn.identity() : std::min(total_min, idata[i-increment]);
 
             reference[i] = 
                 (iflag[i-increment] == 1) ? 
-                FLT_MAX : std::min(idata[i-increment], reference[i-increment]);
+                mn.identity() : std::min(idata[i-increment], reference[i-increment]);
         }
     }
 
@@ -499,7 +422,7 @@ computeMinSegmentedScanGold(T* reference, const T* idata,
     {
         total_min = std::min(total_min, idata[stopIdx - increment]);
 
-        for (unsigned i = 0; i < len; i++) 
+        for( int i = startIdx; i != stopIdx; i = i + increment)
         {
             reference[i] = std::min(reference[i], idata[i]);
         }
@@ -530,6 +453,9 @@ computeMultiRowSumScanGold( T *reference, const T *idata,
                             const unsigned int rows,
                             const CUDPPConfiguration &config) 
 {
+    int startIdx = 1, stopIdx = len;
+    int increment = 1;
+    
     if (config.options & CUDPP_OPTION_FORWARD)
     {
         for (unsigned int r = 0; r < rows; ++r)
@@ -539,26 +465,13 @@ computeMultiRowSumScanGold( T *reference, const T *idata,
     }
     else if (config.options & CUDPP_OPTION_BACKWARD)
     {
+        startIdx = len-2;
+        stopIdx = -1;
+        increment = -1;
         for (unsigned int r = 1; r <= rows; ++r)
         {
             reference[r*len-1] = 0;
         }
-    }
-
-    int startIdx = 0, stopIdx = 0;
-    int increment = 0;
-
-    if (config.options & CUDPP_OPTION_FORWARD)
-    {
-        startIdx = 1;
-        stopIdx = len ;
-        increment = 1 ;
-    }
-    else if (config.options & CUDPP_OPTION_BACKWARD)
-    {
-        startIdx = len-2;
-        stopIdx = -1;
-        increment = -1;
     }
     
     double *total_sum;

@@ -25,7 +25,23 @@ void setOptions(int argc, const char **argv, testrigOptions &testOptions)
 {
     testOptions.debug = false;
     commandLineArg(testOptions.debug, argc, argv, "debug");
-    
+
+    testOptions.algorithm = "scan";
+    if (checkCommandLineFlag(argc, argv, "segscan"))
+        testOptions.algorithm = "segscan";
+    else if (checkCommandLineFlag(argc, argv, "multiscan"))
+        testOptions.algorithm = "multiscan";
+    else if (checkCommandLineFlag(argc, argv, "compact"))
+        testOptions.algorithm = "compact";
+    else if (checkCommandLineFlag(argc, argv, "sort"))
+        testOptions.algorithm = "sort";
+    else if (checkCommandLineFlag(argc, argv, "reduce"))
+        testOptions.algorithm = "reduce";
+    else if (checkCommandLineFlag(argc, argv, "spmv"))
+        testOptions.algorithm = "spmv";
+    else if (checkCommandLineFlag(argc, argv, "rand"))
+        testOptions.algorithm = "rand";
+            
     testOptions.op = "sum";
     commandLineArg(testOptions.op, argc, argv, "op");
     
