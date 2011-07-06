@@ -78,10 +78,20 @@
  *
  * For specific release details see the \ref changelog "Change Log".
  *
- * This release (1.1.1) is a bugfix release to CUDPP 1.1 that includes
- * fixes to support CUDA 3.0 and the new NVIDIA Fermi architecture, 
- * including GeForce 400 series and Tesla 20 series GPUs.  It also has
- * bug fixes for 64-bit OSes.
+ * \subsection size-limits Algorithm Input Size Limitations
+ * 
+ * The following maximum size limitations currently apply.  In some 
+ * cases this is the theory -- they algorithms may not have been tested
+ * to the maximum size.  Also, for things like 32-bit integer scans, 
+ * precision often limits the useful maximum size.
+ 
+ * CUDPP_SCAN:              67,107,840 elements
+ * CUDPP_SEGMENTED_SCAN     67,107,840 elements
+ * CUDPP_COMPACT            67,107,840 elements
+ * CUDPP_SORT               2,147,450,880 elements
+ * CUDPP_REDUCE             NO LIMIT
+ * CUDPP_RAND               33,554,432 elements
+ * CUDPP_SPMVMULT           67,107,840 non-zero elements
  * 
  * \section opSys Operating System Support
  * 
@@ -96,10 +106,7 @@
  * this time.
  *
  * Notes: CUDPP is not compatible with CUDA 2.1.  A compiler bug in 2.1 
- * causes the compiler to crash.  Also, starting with CUDPP 1.1.1, we are 
- * no longer testing CUDA device emulation, because it is deprecated in 
- * CUDA 3.0 and hase been removed from future CUDA versions.  Device 
- * emulation support has been removed starting with CUDPP 2.0.
+ * causes the compiler to crash.  
  *
  * \section cuda CUDA
  * CUDPP is implemented in
