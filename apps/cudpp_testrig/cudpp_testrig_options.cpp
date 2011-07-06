@@ -52,6 +52,26 @@ void setOptions(int argc, const char **argv, testrigOptions &testOptions)
     commandLineArg(testOptions.dir, argc, argv, "dir");
 }
 
+bool hasOptions(int argc, const char**argv) 
+{
+    std::string temp;
+    if (commandLineArg(temp, argc, argv, "op") ||
+        checkCommandLineFlag(argc, argv, "float") ||
+        checkCommandLineFlag(argc, argv, "int") ||
+        checkCommandLineFlag(argc, argv, "uint") ||
+        checkCommandLineFlag(argc, argv, "double") ||
+        checkCommandLineFlag(argc, argv, "longlong") ||
+        checkCommandLineFlag(argc, argv, "ulonglong") ||
+        checkCommandLineFlag(argc, argv, "char") ||
+        checkCommandLineFlag(argc, argv, "uchar") ||
+        checkCommandLineFlag(argc, argv, "backward") ||
+        checkCommandLineFlag(argc, argv, "forward") ||
+        checkCommandLineFlag(argc, argv, "inclusive") ||
+        checkCommandLineFlag(argc, argv, "exclusive"))
+        return true;
+    return false;
+}
+
 // Leave this at the end of the file
 // Local Variables:
 // mode:c++

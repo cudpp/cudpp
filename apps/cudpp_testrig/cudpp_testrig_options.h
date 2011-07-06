@@ -53,6 +53,8 @@ struct testrigOptions
 
 void setOptions(int argc, const char **argv, testrigOptions &testOptions);
 
+bool hasOptions(int argc, const char **argv);
+
 #endif
 
 // Leave this at the end of the file

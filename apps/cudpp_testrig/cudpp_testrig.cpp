@@ -30,6 +30,7 @@
 #include <cuda_runtime_api.h>
 #include "cudpp.h"
 #include "cudpp_testrig_utils.h"
+#include "cudpp_testrig_options.h"
 
 #define CUDPP_APP_COMMON_IMPL
 #include "stopwatch.h"
@@ -206,39 +207,53 @@ int main(int argc, const char** argv)
         printf("dir=<directory>: Directory containing all the random number regression tests\n");
     }
 
-    bool testAll = checkCommandLineFlag(argc, argv, "all");
+    bool runAll = checkCommandLineFlag(argc, argv, "all");
+    bool runScan = runAll || checkCommandLineFlag(argc, argv, "scan");
+    bool runSegScan = runAll || checkCommandLineFlag(argc, argv, "segscan");
+    bool runMultiScan = runAll || checkCommandLineFlag(argc, argv, "multiscan");
+    bool runCompact = runAll || checkCommandLineFlag(argc, argv, "compact");
+    bool runReduce = runAll || checkCommandLineFlag(argc, argv, "reduce");
+    bool runSort = runAll || checkCommandLineFlag(argc, argv, "sort");
+    bool runRand = runAll || checkCommandLineFlag(argc, argv, "rand");
+    bool runSpmv = checkCommandLineFlag(argc, argv, "spmv");
+    
+    bool hasopts = hasOptions(argc, argv);
 
-    if (testAll || checkCommandLineFlag(argc, argv, "scan") ||
-        checkCommandLineFlag(argc, argv, "segscan"))
+    if (runScan || runSegScan)
     {
-        if (testAll)
+        if (hasopts) 
         {
-            CUDPPConfiguration config;
-            config.options = 0;
-            config.algorithm = CUDPP_SCAN;
-            
-            retval += testAllOptionsAndDatatypes(argc, argv, config, supportsDouble);        
-            
-            config.algorithm = CUDPP_SEGMENTED_SCAN;
-            
-            retval += testAllOptionsAndDatatypes(argc, argv, config, supportsDouble);        
+            if (runScan)    retval += testScan(argc, argv, NULL);
+            if (runSegScan) retval += testScan(argc, argv, NULL);
         }
         else
         {
-            retval += testScan(argc, argv, NULL);
+            CUDPPConfiguration config;
+            config.options = 0;
+            
+            if (runScan) {
+                config.algorithm = CUDPP_SCAN;
+                retval += testAllOptionsAndDatatypes(argc, argv, config, supportsDouble);        
+            }
+            
+            if (runSegScan) {
+                config.algorithm = CUDPP_SEGMENTED_SCAN;
+                retval += testAllOptionsAndDatatypes(argc, argv, config, supportsDouble);                        
+            }
         }
-
     }
 
-    if (testAll || checkCommandLineFlag(argc, argv, "multiscan"))
+    if (runMultiScan)
     {
         retval += testMultiSumScan(argc, argv);
     }
     
 
-    if (testAll || checkCommandLineFlag(argc, argv, "compact"))
+    if (runCompact)
     {
-        if (testAll)
+        if (hasopts)
+            retval += testCompact(argc, argv, NULL);
+        else
         {
             CUDPPConfiguration config;
             config.algorithm = CUDPP_COMPACT;
@@ -248,13 +263,13 @@ int main(int argc, const char** argv)
             config.options = CUDPP_OPTION_BACKWARD;
             retval += testCompact(argc, argv, &config);
         }
-        else
-            retval += testCompact(argc, argv, NULL);
     }
 
-    if (testAll || checkCommandLineFlag(argc, argv, "reduce"))
+    if (runReduce)
     {
-        if (testAll)
+        if (hasopts)
+            retval += testReduce(argc, argv, NULL);
+        else
         {
             CUDPPConfiguration config;
             config.options = 0;
@@ -262,15 +277,13 @@ int main(int argc, const char** argv)
             
             retval += testAllOptionsAndDatatypes(argc, argv, config, supportsDouble);
         }
-        else
-        {
-            retval += testReduce(argc, argv, NULL);
-        }
     }
 
-    if (testAll || checkCommandLineFlag(argc, argv, "sort"))
+    if (runSort)
     {
-        if(testAll)
+        if (hasopts)
+            retval += testRadixSort(argc, argv, NULL);
+        else
         {
             CUDPPConfiguration config;
             config.algorithm = CUDPP_SORT_RADIX;                  
@@ -286,16 +299,14 @@ int main(int argc, const char** argv)
             config.options = CUDPP_OPTION_KEY_VALUE_PAIRS;                
             retval += testRadixSort(argc, argv, &config);
         }  
-        else
-            retval += testRadixSort(argc, argv, NULL);
     }    
 
-    if (checkCommandLineFlag(argc, argv, "spmvmult"))
+    if (runSpmv)
     {
         retval += testSparseMatrixVectorMultiply(argc, argv);
     }    
 
-    if (testAll || checkCommandLineFlag(argc, argv, "rand"))
+    if (runRand)
     {
         //in the future we need to add so that it tests other random numbers as well
         retval += testRandMD5(argc, argv);

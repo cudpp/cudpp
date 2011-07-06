@@ -113,7 +113,7 @@ int scanTest(int argc, const char **argv, const CUDPPConfiguration &config,
     for(int i = 0; i < numElements; ++i)
     {
         // @TODO: Not thrilled that we're only scanning 0s and 1s --JDO
-        i_data[i] = (T)(rand() & 1);
+        i_data[i] = 1;//(T)(rand() & 1);
     }
 
     unsigned int *i_flags = 0;
@@ -144,9 +144,9 @@ int scanTest(int argc, const char **argv, const CUDPPConfiguration &config,
  
     for (int k = 0; k < numTests; ++k)
     {
-        int numFlags = 4;
         if (config.algorithm == CUDPP_SEGMENTED_SCAN)
         {
+            int numFlags = 4;
             memset(i_flags, 0, sizeof(unsigned int) * test[k]);
             // Generate flags
             for(int i = 0; i < numFlags; ++i) 
@@ -163,7 +163,7 @@ int scanTest(int argc, const char **argv, const CUDPPConfiguration &config,
 
                 i_flags[idx] = 1;
             }
-            
+        
             // Copy flags to GPU
             CUDA_SAFE_CALL( cudaMemcpy(d_iflags, i_flags, 
                                        sizeof(unsigned int) * test[k],
@@ -471,7 +471,9 @@ int testScan(int argc, const char **argv, const CUDPPConfiguration *configPtr)
 
     CUDPPConfiguration config;
     config.algorithm = CUDPP_SCAN;
-
+    if (checkCommandLineFlag(argc, argv, "segscan"))
+        config.algorithm = CUDPP_SEGMENTED_SCAN;
+        
     if (configPtr != NULL)
     {
         config = *configPtr;
