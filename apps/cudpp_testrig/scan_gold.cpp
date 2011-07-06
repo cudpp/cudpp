@@ -293,7 +293,7 @@ computeSegmentedMaxScanGold(T* reference, const T* idata,
     {
         total_max = std::max(total_max, idata[stopIdx - increment]);
 
-        for( int i = startIdx; i != stopIdx; i = i + increment) 
+        for (int i = startIdx - increment; i != stopIdx; i = i + increment) 
         {
             reference[i] = std::max(reference[i], idata[i]);
         }
@@ -357,7 +357,7 @@ computeSegmentedMultiplyScanGold(T* reference, const T* idata,
     {
         total_multi = total_multi * idata[stopIdx - increment];
 
-        for( int i = startIdx; i != stopIdx; i = i + increment) 
+        for (int i = startIdx - increment; i != stopIdx; i = i + increment) 
         {
             reference[i] = reference[i] * idata[i];
         }
@@ -422,7 +422,7 @@ computeSegmentedMinScanGold(T* reference, const T* idata,
     {
         total_min = std::min(total_min, idata[stopIdx - increment]);
 
-        for( int i = startIdx; i != stopIdx; i = i + increment)
+        for (int i = startIdx - increment; i != stopIdx; i = i + increment) 
         {
             reference[i] = std::min(reference[i], idata[i]);
         }

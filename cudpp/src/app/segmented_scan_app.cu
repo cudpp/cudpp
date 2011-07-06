@@ -196,7 +196,7 @@ void segmentedScanArrayRecursive(T                  *d_out,
     CUDA_CHECK_ERROR("segmentedScanArrayRecursive after block level scans");
 
     if (numBlocks > 1)
-    {
+    {            
         // After scanning all the sub-blocks, we are mostly done. But
         // now we need to take all of the last values of the
         // sub-blocks and segment scan those. This will give us a new value
@@ -207,7 +207,7 @@ void segmentedScanArrayRecursive(T                  *d_out,
             d_blockFlags[level], (T **)d_blockSums,
             d_blockFlags, d_blockIndices,
             numBlocks, level + 1);
-
+            
         if (isBackward)
         {
             if (fullBlock)

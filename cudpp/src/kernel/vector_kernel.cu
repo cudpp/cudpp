@@ -439,9 +439,6 @@ __global__ void vectorSegmentedAddUniformToRight4(T                  *d_vector,
         {
             if (leftInRange)
             {
-                for (unsigned int i = 0; i < 8; ++i)
-                    d_vector[address + i * blockDim.x] = 
-                        op(d_vector[address + i * blockDim.x], uni[0]);
                 if (!isLastBlockFull && isLastBlock) 
                 { 
                     for (unsigned int i = 0; i < 8; ++i) 
