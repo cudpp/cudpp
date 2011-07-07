@@ -67,7 +67,8 @@ bool hasOptions(int argc, const char**argv)
         checkCommandLineFlag(argc, argv, "backward") ||
         checkCommandLineFlag(argc, argv, "forward") ||
         checkCommandLineFlag(argc, argv, "inclusive") ||
-        checkCommandLineFlag(argc, argv, "exclusive"))
+        checkCommandLineFlag(argc, argv, "exclusive") ||
+        checkCommandLineFlag(argc, argv, "keysonly"))
         return true;
     return false;
 }

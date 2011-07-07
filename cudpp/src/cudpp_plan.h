@@ -124,9 +124,10 @@ public:
     bool           m_bUsePersistentCTAs;
     unsigned int   m_persistentCTAThreshold[2];
     unsigned int   m_persistentCTAThresholdFullBlocks[2];
-    CUDPPScanPlan *m_scanPlan;        //!< @internal Sort performs a scan of type unsigned int using this plan
     unsigned int   m_keyBits;
-    CUDPPOption    m_direction;       //!< Designates forward or backward sort
+    bool           m_bBackward;       //!< Designates reverse-order sort
+    CUDPPScanPlan *m_scanPlan;        //!< @internal Sort performs a scan of type unsigned int using this plan
+
     mutable void  *m_tempKeys;        //!< @internal Intermediate storage for keys
     mutable void  *m_tempValues;      //!< @internal Intermediate storage for values
     unsigned int  *m_counters;        //!< @internal Counter for each radix

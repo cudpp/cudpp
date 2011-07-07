@@ -6,8 +6,15 @@ DATE HERE
   with cudppCreate, and passing it to all functions
 - Added cudppReduce parallel reductions
 - Added 64-bit type support (double, long long, and unsigned long long), 
-  implemented in cudppReduce, cudppScan, cudppSegmentedScan, cudppCompact
+  implemented in cudppReduce, cudppScan, cudppMultiscan, cudppSegmentedScan, 
+  cudppCompact, and cudppRadixSort
 - Fixed various bugs in cudppSegmentedScan
+- Replaced radix sort implementation with thrust::sort() due to performance
+  advantages and simplicity.
+- Reverse sorting now supported (use CUDPP_OPTION_BACKWARD option when 
+  creating the sort plan)
+- cudppRadixSort now supports char, uchar, int, uint, float, double, longlong,
+  and ulonglong keys.  (Values must be reinterpretable as 32-bit types, currently)
 - Removed all support for device emulation
 - Removed all dependencies on CUTIL; removed common/ subdirectory, added
   minimal set of app utilities in apps/common/ subdirectory

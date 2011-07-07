@@ -20,12 +20,14 @@
 #define NO_MINMAX
 #include <math.h>
 #include <cstdio>
+#include <iostream>
 #include <climits>
 #include <float.h>
 #include <algorithm>
 
 #include "commandline.h"
 
+using namespace std;
 using namespace cudpp_app;
 
 // declared in cudpp.cpp (in cudpp library)
@@ -39,7 +41,8 @@ class VectorSupport
 public:
     static void fillVector(T *a, size_t numElements, T info);
     //! @todo should this really be T info? instead unsigned int or float? 
-    static int  verifySort(T *keysSorted, unsigned int *valuesSorted, T *keysUnsorted, size_t len);
+    static int verifySort(T *keysSorted, unsigned int *valuesSorted, T *keysUnsorted, 
+                          size_t len, bool reverse);
 };
 
 template <typename T>
@@ -144,7 +147,22 @@ void VectorSupport<unsigned long long>::fillVector(unsigned long long *a, size_t
     }
 }
 
-// "info" is the number of key bits
+template<> inline
+void VectorSupport<char>::fillVector(char *a, size_t numElements,char keybits)
+{
+    VectorSupport<unsigned int>::fillVector((unsigned int *)a, 
+                                            numElements, 
+                                            keybits);
+}
+
+template<> inline
+void VectorSupport<unsigned char>::fillVector(unsigned char *a, size_t numElements,unsigned char keybits)
+{
+    VectorSupport<unsigned int>::fillVector((unsigned int *)a, 
+                                            numElements, 
+                                            keybits);
+}
+
 template<> inline
 void VectorSupport<int>::fillVector(int *a, size_t numElements,int keybits)
 {
@@ -186,17 +204,21 @@ void VectorSupport<double>::fillVector(double *a, size_t numElements, double ran
 
 // assumes the values were initially indices into the array, for simplicity of 
 // checking correct order of values
-template<> inline
-int VectorSupport<unsigned int>::verifySort(unsigned int *keysSorted, unsigned int *valuesSorted, 
-                                            unsigned int *keysUnsorted, size_t len)
+template<typename T> inline
+int VectorSupport<T>::verifySort(T *keysSorted, unsigned int *valuesSorted, 
+                                 T *keysUnsorted, size_t len, bool reverse)
 {
     int retval = 0;
 
     for(unsigned int i=0; i<len-1; ++i)
-    {      
-        if( (keysSorted[i])>(keysSorted[i+1]) )
+    {   
+        bool unordered = reverse ? (keysSorted[i])<(keysSorted[i+1]) 
+                                 : (keysSorted[i])>(keysSorted[i+1]);
+        if (unordered)
         {
-            printf("Unordered key[%u]:%u > key[%u]:%u\n", i, keysSorted[i], i+1, keysSorted[i+1]);
+            cout << "Unordered key[" << i << "]:" << keysSorted[i] 
+                 << (reverse ? " < " : " > ") << "key["
+                 << i+1 << "]:" << keysSorted[i+1] << endl;
             retval = 1;
             break;
         }               
@@ -206,111 +228,11 @@ int VectorSupport<unsigned int>::verifySort(unsigned int *keysSorted, unsigned i
     {
         for(unsigned int i=0; i<len; ++i)
         {
-            if( keysUnsorted[(valuesSorted[i])] != keysSorted[i] )
+            if( keysUnsorted[valuesSorted[i]] != keysSorted[i] )
             {
-                printf("Incorrectly sorted value[%u] (%u) %u != %u\n", 
-                    i, valuesSorted[i], keysUnsorted[valuesSorted[i]], keysSorted[i]);
-                retval = 1;
-                break;
-            }
-        }
-    }
-
-    return retval;
-}
-
-template<> inline
-int VectorSupport<float>::verifySort(float *keysSorted, unsigned int *valuesSorted, 
-                                     float *keysUnsorted, size_t len)
-{
-    int retval = 0;
-
-    for(unsigned int i=0; i<len-1; ++i)
-    {      
-        if( (keysSorted[i])>(keysSorted[i+1]) )
-        {
-            printf("Unordered key[%u]:%f > key[%u]:%f\n", i, keysSorted[i], i+1, keysSorted[i+1]);
-            retval = 1;
-            break;
-        }               
-    }
-
-    if (valuesSorted)
-    {
-        for(unsigned int i=0; i<len; ++i)
-        {
-            if( keysUnsorted[(valuesSorted[i])] != keysSorted[i] )
-            {
-                printf("Incorrectly sorted value[%u] (%u) %f != %f\n", 
-                    i, valuesSorted[i], keysUnsorted[valuesSorted[i]], keysSorted[i]);
-                retval = 1;
-                break;
-            }
-        }
-    }
-
-    return retval;
-}
-
-// assumes the values were initially indices into the array, for simplicity of 
-// checking correct order of values
-template<> inline
-int VectorSupport<int>::verifySort(int *keysSorted, unsigned int *valuesSorted, 
-                                   int *keysUnsorted, size_t len)
-{
-    int retval = 0;
-
-    for(unsigned int i=0; i<len-1; ++i)
-    {      
-        if( (keysSorted[i])>(keysSorted[i+1]) )
-        {
-            printf("Unordered key[%u]:%d > key[%u]:%d\n", i, keysSorted[i], i+1, keysSorted[i+1]);
-            retval = 1;
-            break;
-        }               
-    }
-
-    if (valuesSorted)
-    {
-        for(unsigned int i=0; i<len; ++i)
-        {
-            if( keysUnsorted[(valuesSorted[i])] != keysSorted[i] )
-            {
-                printf("Incorrectly sorted value[%u] (%u) %d != %d\n", 
-                    i, valuesSorted[i], keysUnsorted[valuesSorted[i]], keysSorted[i]);
-                retval = 1;
-                break;
-            }
-        }
-    }
-
-    return retval;
-}
-
-template<> inline
-int VectorSupport<double>::verifySort(double *keysSorted, unsigned int *valuesSorted, 
-                                      double *keysUnsorted, size_t len)
-{
-    int retval = 0;
-
-    for(unsigned int i=0; i<len-1; ++i)
-    {      
-        if( (keysSorted[i])>(keysSorted[i+1]) )
-        {
-            printf("Unordered key[%u]:%f > key[%u]:%f\n", i, keysSorted[i], i+1, keysSorted[i+1]);
-            retval = 1;
-            break;
-        }               
-    }
-
-    if (valuesSorted)
-    {
-        for(unsigned int i=0; i<len; ++i)
-        {
-            if( keysUnsorted[(valuesSorted[i])] != keysSorted[i] )
-            {
-                printf("Incorrectly sorted value[%u] (%u) %f != %f\n", 
-                    i, valuesSorted[i], keysUnsorted[valuesSorted[i]], keysSorted[i]);
+                cout << "Incorrectly sorted value[" << i << "] ("
+                     << valuesSorted[i] << ") " << keysUnsorted[valuesSorted[i]] 
+                     << " != " << keysSorted[i] << endl;
                 retval = 1;
                 break;
             }

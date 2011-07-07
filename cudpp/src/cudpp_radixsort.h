@@ -22,8 +22,6 @@ void freeRadixSortStorage(CUDPPRadixSortPlan* plan);
 void cudppRadixSortDispatch(void       *keys,
                             void       *values,
                             size_t      numElements,
-                            int         keyBits,
-                            CUDPPOption direction, 
                             const       CUDPPRadixSortPlan *plan);
 
 

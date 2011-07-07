@@ -419,6 +419,8 @@ CUDPPRadixSortPlan::CUDPPRadixSortPlan(CUDPPManager *mgr,
                                        CUDPPConfiguration config, 
                                        size_t numElements)
 : CUDPPPlan(mgr, config, numElements, 1, 0),
+  m_bKeysOnly(m_config.options & CUDPP_OPTION_KEYS_ONLY),
+  m_bBackward(m_config.options & CUDPP_OPTION_BACKWARD),
   m_scanPlan(0),
   m_tempKeys(0),    
   m_tempValues(0),
@@ -436,11 +438,6 @@ CUDPPRadixSortPlan::CUDPPRadixSortPlan(CUDPPManager *mgr,
       CUDPP_UINT, 
       CUDPP_OPTION_FORWARD | CUDPP_OPTION_EXCLUSIVE 
     };    
-
-    if(m_config.options == CUDPP_OPTION_KEYS_ONLY)
-        m_bKeysOnly = true;
-    else
-        m_bKeysOnly = false;
 
     m_scanPlan = new CUDPPScanPlan(mgr, scanConfig, numBlocks2*16, 1, 0);    
         

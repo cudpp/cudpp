@@ -28,13 +28,15 @@
 #include "cudpp_util.h"
 #include "cudpp_radixsort.h"
 #include "cudpp_scan.h"
+#if 0
 #include "kernel/radixsort_kernel.cu"
 #include "cudpp_maximal_launch.h"
-
+#endif
 #include <cstdlib>
 #include <cstdio>
 #include <assert.h>
 
+#if 0
 typedef unsigned int uint;
 
 /** @brief Perform one step of the radix sort.  Sorts by nbits key bits per step, 
@@ -865,7 +867,7 @@ void initDeviceParameters(CUDPPRadixSortPlan *plan)
         }
     }
 }
-
+#endif
 /**
  * @brief From the programmer-specified sort configuration, 
  *        creates internal memory for performing the sort.
@@ -874,7 +876,7 @@ void initDeviceParameters(CUDPPRadixSortPlan *plan)
 **/
 void allocRadixSortStorage(CUDPPRadixSortPlan *plan)
 {               
-        
+      #if 0  
     unsigned int numElements = plan->m_numElements;
 
     unsigned int numBlocks = 
@@ -922,6 +924,7 @@ void allocRadixSortStorage(CUDPPRadixSortPlan *plan)
     }
         
     initDeviceParameters(plan);
+    #endif
 }
 
 /** @brief Deallocates intermediate memory from allocRadixSortStorage.
@@ -931,11 +934,40 @@ void allocRadixSortStorage(CUDPPRadixSortPlan *plan)
 **/
 void freeRadixSortStorage(CUDPPRadixSortPlan* plan)
 {
+    #if 0
     CUDA_SAFE_CALL( cudaFree(plan->m_tempKeys));
     CUDA_SAFE_CALL( cudaFree(plan->m_tempValues));
     CUDA_SAFE_CALL( cudaFree(plan->m_counters));
     CUDA_SAFE_CALL( cudaFree(plan->m_countersSum));
     CUDA_SAFE_CALL( cudaFree(plan->m_blockOffsets));
+    #endif
+}
+
+#include <thrust/sort.h>
+#include <thrust/device_ptr.h>
+#include <thrust/reverse.h>
+template<typename T>
+void runSort(T *pkeys, 
+             unsigned int *pvals,
+             size_t numElements, 
+             const CUDPPRadixSortPlan *plan)
+{
+    thrust::device_ptr<T> keys((T*)pkeys);
+    thrust::device_ptr<unsigned int> vals((unsigned int*)pvals);
+
+    if (plan->m_bKeysOnly)
+        thrust::sort(keys, keys + numElements);
+    else
+        thrust::sort_by_key(keys, keys + numElements, vals);
+            
+    if (plan->m_bBackward)
+    {
+        thrust::reverse(keys, keys + numElements);
+        if (!plan->m_bKeysOnly)
+            thrust::reverse(vals, vals + numElements);
+    }
+    
+    CUDA_CHECK_ERROR("cudppRadixSortDispatch");
 }
 
 /** @brief Dispatch function to perform a sort on an array with 
@@ -950,14 +982,43 @@ void freeRadixSortStorage(CUDPPRadixSortPlan* plan)
  * @param[in] keyBits Number of interesting bits in the key*
  * @param[in] plan Configuration information for RadixSort.
 **/
+
 void cudppRadixSortDispatch(void  *keys,
                             void  *values,
                             size_t numElements,
-                            int   keyBits,
-                            CUDPPOption direction,
                             const CUDPPRadixSortPlan *plan)
 {
-    direction = direction;      // @todo: add capability to backward sort
+    
+        
+    switch(plan->m_config.datatype)
+    {
+    case CUDPP_CHAR:
+        runSort<char>((char*)keys, (unsigned int*)values, numElements, plan);
+        break;
+    case CUDPP_UCHAR:
+        runSort<unsigned char>((unsigned char*)keys, (unsigned int*)values, numElements, plan);
+        break;
+    case CUDPP_INT:
+        runSort<int>((int*)keys, (unsigned int*)values, numElements, plan);
+        break;
+    case CUDPP_UINT:
+        runSort<unsigned int>((unsigned int*)keys, (unsigned int*)values, numElements, plan);
+        break;
+    case CUDPP_FLOAT:
+        runSort<float>((float*)keys, (unsigned int*)values, numElements, plan);
+        break;
+    case CUDPP_DOUBLE:
+        runSort<double>((double*)keys, (unsigned int*)values, numElements, plan);
+        break;
+    case CUDPP_LONGLONG:
+        runSort<long long>((long long*)keys, (unsigned int*)values, numElements, plan);        
+        break;
+    case CUDPP_ULONGLONG:
+        runSort<unsigned long long>((unsigned long long*)keys, (unsigned int*)values, numElements, plan);
+        break;
+    }
+        
+    /*direction = direction;      // @todo: add capability to backward sort
     if (plan->m_bKeysOnly)
     {
         switch(plan->m_config.datatype)
@@ -983,7 +1044,8 @@ void cudppRadixSortDispatch(void  *keys,
             radixSortFloatKeys((float*)keys, (uint*) values, plan, 
                                numElements, true, keyBits);
         }
-    }
+    }*/
+    
 }                            
 
 /** @} */ // end radixsort functions
