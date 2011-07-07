@@ -63,6 +63,9 @@ int testAllDatatypes(int argc, const char** argv, CUDPPConfiguration & config, b
                 case CUDPP_REDUCE:
                     retval += testReduce(argc, argv, &config);
                     break;
+                case CUDPP_COMPACT:
+                    retval += testCompact(argc, argv, &config);
+                    break;
                 default:
                     break;  
             }
@@ -74,51 +77,68 @@ int testAllDatatypes(int argc, const char** argv, CUDPPConfiguration & config, b
 int testAllOptionsAndDatatypes(int argc, const char** argv, CUDPPConfiguration & config, bool supportsDouble)
 {
     int retval = 0;
-    // forward/backward and exclusive/inclusive ignored for reduce
-    
     config.op = CUDPP_ADD;
+    
+    bool testInclusive = (config.algorithm != CUDPP_REDUCE && 
+        config.algorithm != CUDPP_COMPACT);
     
     config.options = CUDPP_OPTION_FORWARD | CUDPP_OPTION_EXCLUSIVE;
     retval += testAllDatatypes(argc, argv, config, supportsDouble);        
-    config.options = CUDPP_OPTION_FORWARD | CUDPP_OPTION_INCLUSIVE;
-    retval += testAllDatatypes(argc, argv, config, supportsDouble);        
     config.options = CUDPP_OPTION_BACKWARD | CUDPP_OPTION_EXCLUSIVE;
-    retval += testAllDatatypes(argc, argv, config, supportsDouble);        
-    config.options = CUDPP_OPTION_BACKWARD | CUDPP_OPTION_INCLUSIVE;
-    retval += testAllDatatypes(argc, argv, config, supportsDouble);        
+    retval += testAllDatatypes(argc, argv, config, supportsDouble);
+    
+    if (testInclusive)
+    {
+        config.options = CUDPP_OPTION_FORWARD | CUDPP_OPTION_INCLUSIVE;
+        retval += testAllDatatypes(argc, argv, config, supportsDouble);        
+        config.options = CUDPP_OPTION_BACKWARD | CUDPP_OPTION_INCLUSIVE;
+        retval += testAllDatatypes(argc, argv, config, supportsDouble);            
+    } 
 
     config.op = CUDPP_MULTIPLY;
 
     config.options = CUDPP_OPTION_FORWARD | CUDPP_OPTION_EXCLUSIVE;
     retval += testAllDatatypes(argc, argv, config, supportsDouble);        
-    config.options = CUDPP_OPTION_FORWARD | CUDPP_OPTION_INCLUSIVE;
-    retval += testAllDatatypes(argc, argv, config, supportsDouble);        
     config.options = CUDPP_OPTION_BACKWARD | CUDPP_OPTION_EXCLUSIVE;
     retval += testAllDatatypes(argc, argv, config, supportsDouble);        
-    config.options = CUDPP_OPTION_BACKWARD | CUDPP_OPTION_INCLUSIVE;
-    retval += testAllDatatypes(argc, argv, config, supportsDouble);        
-                
+
+    if (testInclusive)
+    {
+        config.options = CUDPP_OPTION_FORWARD | CUDPP_OPTION_INCLUSIVE;
+        retval += testAllDatatypes(argc, argv, config, supportsDouble);        
+        config.options = CUDPP_OPTION_BACKWARD | CUDPP_OPTION_INCLUSIVE;
+        retval += testAllDatatypes(argc, argv, config, supportsDouble);        
+    }                
+
     config.op = CUDPP_MAX;
 
     config.options = CUDPP_OPTION_FORWARD | CUDPP_OPTION_EXCLUSIVE;
     retval += testAllDatatypes(argc, argv, config, supportsDouble);        
-    config.options = CUDPP_OPTION_FORWARD | CUDPP_OPTION_INCLUSIVE;
-    retval += testAllDatatypes(argc, argv, config, supportsDouble);        
     config.options = CUDPP_OPTION_BACKWARD | CUDPP_OPTION_EXCLUSIVE;
     retval += testAllDatatypes(argc, argv, config, supportsDouble);        
-    config.options = CUDPP_OPTION_BACKWARD | CUDPP_OPTION_INCLUSIVE;
-    retval += testAllDatatypes(argc, argv, config, supportsDouble);        
 
+    if (testInclusive)
+    {
+        config.options = CUDPP_OPTION_FORWARD | CUDPP_OPTION_INCLUSIVE;
+        retval += testAllDatatypes(argc, argv, config, supportsDouble);        
+        config.options = CUDPP_OPTION_BACKWARD | CUDPP_OPTION_INCLUSIVE;
+        retval += testAllDatatypes(argc, argv, config, supportsDouble);        
+    }
+    
     config.op = CUDPP_MIN;
 
     config.options = CUDPP_OPTION_FORWARD | CUDPP_OPTION_EXCLUSIVE;
     retval += testAllDatatypes(argc, argv, config, supportsDouble);        
-    config.options = CUDPP_OPTION_FORWARD | CUDPP_OPTION_INCLUSIVE;
-    retval += testAllDatatypes(argc, argv, config, supportsDouble);        
     config.options = CUDPP_OPTION_BACKWARD | CUDPP_OPTION_EXCLUSIVE;
-    retval += testAllDatatypes(argc, argv, config, supportsDouble);        
-    config.options = CUDPP_OPTION_BACKWARD | CUDPP_OPTION_INCLUSIVE;
     retval += testAllDatatypes(argc, argv, config, supportsDouble);
+    
+    if (testInclusive)
+    {
+        config.options = CUDPP_OPTION_FORWARD | CUDPP_OPTION_INCLUSIVE;
+        retval += testAllDatatypes(argc, argv, config, supportsDouble);        
+        config.options = CUDPP_OPTION_BACKWARD | CUDPP_OPTION_INCLUSIVE;
+        retval += testAllDatatypes(argc, argv, config, supportsDouble);
+    }    
     
     return retval;
 }
@@ -219,12 +239,15 @@ int main(int argc, const char** argv)
     
     bool hasopts = hasOptions(argc, argv);
 
-    if (runScan || runSegScan)
+    if (runScan || runMultiScan || runSegScan || runCompact || runReduce)
     {
         if (hasopts) 
         {
-            if (runScan)    retval += testScan(argc, argv, NULL);
-            if (runSegScan) retval += testScan(argc, argv, NULL);
+            if (runScan)      retval += testScan(argc, argv, NULL);
+            if (runMultiScan) retval += testScan(argc, argv, NULL);
+            if (runSegScan)   retval += testScan(argc, argv, NULL);
+            if (runCompact)   retval += testCompact(argc, argv, NULL);
+            if (runReduce)    retval += testReduce(argc, argv, NULL);
         }
         else
         {
@@ -235,47 +258,26 @@ int main(int argc, const char** argv)
                 config.algorithm = CUDPP_SCAN;
                 retval += testAllOptionsAndDatatypes(argc, argv, config, supportsDouble);        
             }
-            
+
+            if (runMultiScan) {
+                config.algorithm = CUDPP_SCAN;
+                retval += testAllOptionsAndDatatypes(argc, argv, config, supportsDouble);        
+            }
+        
             if (runSegScan) {
                 config.algorithm = CUDPP_SEGMENTED_SCAN;
                 retval += testAllOptionsAndDatatypes(argc, argv, config, supportsDouble);                        
             }
-        }
-    }
-
-    if (runMultiScan)
-    {
-        retval += testMultiSumScan(argc, argv);
-    }
-    
-
-    if (runCompact)
-    {
-        if (hasopts)
-            retval += testCompact(argc, argv, NULL);
-        else
-        {
-            CUDPPConfiguration config;
-            config.algorithm = CUDPP_COMPACT;
-            config.options = CUDPP_OPTION_FORWARD;
-            config.datatype = CUDPP_FLOAT;
-            retval += testCompact(argc, argv, &config);
-            config.options = CUDPP_OPTION_BACKWARD;
-            retval += testCompact(argc, argv, &config);
-        }
-    }
-
-    if (runReduce)
-    {
-        if (hasopts)
-            retval += testReduce(argc, argv, NULL);
-        else
-        {
-            CUDPPConfiguration config;
-            config.options = 0;
-            config.algorithm = CUDPP_REDUCE;
             
-            retval += testAllOptionsAndDatatypes(argc, argv, config, supportsDouble);
+            if (runCompact) {
+                config.algorithm = CUDPP_COMPACT;
+                retval += testAllOptionsAndDatatypes(argc, argv, config, supportsDouble);        
+            }
+            
+            if (runReduce) {
+                config.algorithm = CUDPP_REDUCE;
+                retval += testAllOptionsAndDatatypes(argc, argv, config, supportsDouble);
+            }
         }
     }
 

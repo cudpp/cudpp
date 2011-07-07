@@ -13,61 +13,6 @@
 #include "cudpp_testrig_utils.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-
-template<typename T>
-void computeSumScanGold(T *reference, const T *idata,
-                        const unsigned int len,
-                        const CUDPPConfiguration &config);
-
-template<typename T>
-void computeMultiplyScanGold(T *reference, const T *idata,
-                             const unsigned int len,
-                             const CUDPPConfiguration &config);
-
-template<typename T>
-void computeMultiRowSumScanGold(T *reference, const T *idata,
-                                const unsigned int len,
-                                const unsigned int rows,
-                                const CUDPPConfiguration &config);
-
-template<typename T>
-void computeMaxScanGold( T *reference, const T *idata,
-                         const unsigned int len,
-                         const CUDPPConfiguration &config);
-
-template<typename T>
-void computeMinScanGold( T *reference, const T *idata,
-                        const unsigned int len,
-                        const CUDPPConfiguration &config);
-
-template<typename T>
-void computeSegmentedSumScanGold(T *reference, const T *idata,
-                                 const unsigned int* iflags,
-                                 const unsigned int len,
-                                 const CUDPPConfiguration &config);
-
-template<typename T>
-void
-computeSegmentedMaxScanGold(T* reference, const T* idata, 
-                            const unsigned int *iflag,
-                            const unsigned int len,
-                            const CUDPPConfiguration & config); 
-
-template<typename T>
-void
-computeSegmentedMultiplyScanGold(T* reference, const T* idata, 
-                                 const unsigned int *iflag,
-                                 const unsigned int len,
-                                 const CUDPPConfiguration & config);
-
-template<typename T>
-void
-computeSegmentedMinScanGold(T* reference, const T* idata, 
-                            const unsigned int *iflag,
-                            const unsigned int len,
-                            const CUDPPConfiguration & config);
-
-////////////////////////////////////////////////////////////////////////////////
 //! Compute reference data set for sum-scan
 //! Each element is the sum of the elements before it in the array.
 //! @param reference  reference data, computed but preallocated
@@ -446,13 +391,15 @@ computeSegmentedMinScanGold(T* reference, const T* idata,
 //! @param idata      const input data as provided to device
 //! @param len        number of elements in reference / idata
 ////////////////////////////////////////////////////////////////////////////////
-template<typename T>
+template<typename T, typename Operator>
 void
-computeMultiRowSumScanGold( T *reference, const T *idata, 
-                            const unsigned int len,
-                            const unsigned int rows,
-                            const CUDPPConfiguration &config) 
+computeMultiRowScanGold( T *reference, const T *idata, 
+                         const unsigned int len,
+                         const unsigned int rows,
+                         const CUDPPConfiguration &config) 
 {
+    Operator op;
+    
     int startIdx = 1, stopIdx = len;
     int increment = 1;
     
@@ -460,7 +407,7 @@ computeMultiRowSumScanGold( T *reference, const T *idata,
     {
         for (unsigned int r = 0; r < rows; ++r)
         {
-            reference[r*len] = 0;
+            reference[r*len] = op.identity();
         }
     }
     else if (config.options & CUDPP_OPTION_BACKWARD)
@@ -470,34 +417,42 @@ computeMultiRowSumScanGold( T *reference, const T *idata,
         increment = -1;
         for (unsigned int r = 1; r <= rows; ++r)
         {
-            reference[r*len-1] = 0;
+            reference[r*len-1] = op.identity();
         }
     }
     
     double *total_sum;
     total_sum = (double*) malloc(rows * sizeof(double));
     for (unsigned int r = 0; r < rows; ++r)
-        total_sum[r] = 0;
-
-    for( int i = startIdx; i != stopIdx; i = i + increment)
-    {       
-        for (unsigned int r = 0; r < rows; ++r)
-        {   
-            total_sum[r] += idata[i-increment];
-            reference[r*len+i] = idata[r*len+i-increment] + reference[r*len+i-increment];
-        }
-    }
+        total_sum[r] = op.identity();
 
     for (unsigned int r = 0; r < rows; ++r)
-    {
-        if (total_sum[r] != reference[stopIdx - increment])
+    {       
+        for( int i = startIdx; i != stopIdx; i = i + increment)    
+        {   
+            total_sum[r] = op(total_sum[r], idata[r*len+i-increment]);
+            reference[r*len+i] = op(idata[r*len+i-increment], reference[r*len+i-increment]);
+        }
+        
+        if (config.options & CUDPP_OPTION_INCLUSIVE) 
+        {
+            total_sum[r] = op(total_sum[r], idata[r*len+stopIdx-increment]);
+
+            for (int i = startIdx - increment; i != stopIdx; i = i + increment) 
+            {
+                reference[r*len+i] = op(reference[r*len+i], idata[r*len+i]);
+            }      
+        }
+        
+        if (total_sum[r] != reference[r*len+stopIdx-increment])
         {
             printf("Warning: exceeding single-precision accuracy. "
                    "Scan will be inaccurate.\n");
             printf("total sum ");
             printItem(total_sum[r], "\n");
-        }  
+        }
     }
+
     free((void*)total_sum);
 }
 

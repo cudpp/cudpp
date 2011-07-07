@@ -1,15 +1,19 @@
-/*
- * Copyright 1993-2010 NVIDIA Corporation.  All rights reserved.
- *
- * Please refer to the NVIDIA end user license agreement (EULA) associated
- * with this source code for terms and conditions that govern your use of
- * this software. Any use, reproduction, disclosure, or distribution of
- * this software and related documentation outside the terms of the EULA
- * is strictly prohibited.
- *
+// -------------------------------------------------------------
+// CUDPP -- CUDA Data Parallel Primitives library
+// -------------------------------------------------------------
+//
+// This source code is distributed under the terms of license.txt in
+// the root directory of this source distribution.
+// ------------------------------------------------------------- 
+
+/**
+ * @file
+ * commandline.h
+ * 
+ * @brief Command line argument parsing
+ * 
  */
- 
-/* CUda UTility Library */
+
 
 #ifndef _COMMAND_LINE_H_
 #define _COMMAND_LINE_H_
