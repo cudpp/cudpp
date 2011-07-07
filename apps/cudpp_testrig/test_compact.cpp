@@ -29,13 +29,9 @@
 #include "stopwatch.h"
 #include "comparearrays.h"
 #include "commandline.h"
+#include "compact_gold.h"
 
 using namespace cudpp_app;
-
-extern "C"
-unsigned int compactGold(float* reference, const float* idata,
-                         const unsigned int *isValid, const unsigned int len,
-                         const CUDPPConfiguration &config);
 
 /**
  * testCompact exercises cudpp's compact functionality.
@@ -51,54 +47,29 @@ unsigned int compactGold(float* reference, const float* idata,
  * @return Number of tests that failed regression (0 for all pass)
  * @see setOptions, cudppCompact
  */
-int testCompact(int argc, const char **argv, const CUDPPConfiguration *configPtr)
+template <typename T>
+int compactTest(int argc, const char **argv, 
+                const CUDPPConfiguration &config, 
+                testrigOptions &testOptions)
 {
     int retval = 0;
 
-    testrigOptions testOptions;
-    setOptions(argc, argv, testOptions);
-
     cudpp_app::StopWatch timer;
 
-    CUDPPConfiguration config;
-    config.algorithm = CUDPP_COMPACT;
-    config.datatype = CUDPP_FLOAT;
-
     bool quiet = checkCommandLineFlag(argc, (const char**)argv, "quiet");   
-
-    if (configPtr != NULL)
-    {
-        config = *configPtr;
-    }
-    else
-    {
-        config.options = CUDPP_OPTION_FORWARD;
-
-        if (checkCommandLineFlag(argc, argv, "backward"))
-        {
-            config.options = CUDPP_OPTION_BACKWARD;
-        }  
-    }
    
-    int numElements = 8388608; // maximum test size
+    unsigned int test[] = {39, 128, 256, 512, 1000, 1024, 1025, 32768, 45537, 65536, 131072,
+        262144, 500001, 524288, 1048577, 1048576, 1048581, 2097152, 4194304, 8388608};
+    int numTests = sizeof(test) / sizeof(test[0]);
+    int numElements = test[numTests-1]; // maximum test size
 
     bool oneTest = false;
-
     if (commandLineArg(numElements, argc, (const char**) argv, "n"))
     {
         oneTest = true;
-    }
-
-    unsigned int test[] = {39, 128, 256, 512, 1000, 1024, 1025, 32768, 45537, 65536, 131072,
-        262144, 500001, 524288, 1048577, 1048576, 1048581, 2097152, 4194304, 8388608};
-
-    int numTests = sizeof(test) / sizeof(test[0]);
-
-    if (oneTest)
-    {
         numTests = 1;
         test[0] = numElements;
-    }   
+    }
 
     float probValid = 0.3f;
     commandLineArg(probValid, argc, (const char**) argv, "prob");
@@ -125,18 +96,18 @@ int testCompact(int argc, const char **argv, const CUDPPConfiguration *configPtr
         return retval;
     }
 
-    unsigned int memSize = sizeof(float) * numElements;
+    unsigned int memSize = sizeof(T) * numElements;
     
     // allocate host memory to store the input data
-    float* h_data = (float*) malloc( memSize);
+    T* h_data = (T*) malloc( memSize);
     unsigned int *h_isValid = (unsigned int*) malloc(sizeof(unsigned int) * numElements);
 
     // allocate and compute reference solution
-    float* reference = (float*) malloc( memSize);
+    T* reference = (T*) malloc( memSize);
 
     // allocate device memory input and output arrays
-    float* d_idata     = NULL;
-    float* d_odata     = NULL;
+    T* d_idata     = NULL;
+    T* d_odata     = NULL;
     unsigned int* d_isValid   = NULL;
     size_t* d_numValid  = NULL;
 
@@ -145,17 +116,19 @@ int testCompact(int argc, const char **argv, const CUDPPConfiguration *configPtr
     CUDA_SAFE_CALL( cudaMalloc( (void**) &d_isValid, sizeof(unsigned int) * numElements));
     CUDA_SAFE_CALL( cudaMalloc( (void**) &d_numValid, sizeof(size_t)));
 
-    size_t *numValidElements = (size_t*)malloc(sizeof(size_t));
+    size_t numValidElements = 0;
 
     // numTests = numTests;
     for (int k = 0; k < numTests; ++k)
     {
         if (!quiet)
         {
-            printf("Running a %sstream-compact of %d elements\n", 
-                   config.options & CUDPP_OPTION_BACKWARD ? "backward " : "", test[k]);
+           printf("Running a%s stream compact of %d %s elements\n",
+                  (config.options & CUDPP_OPTION_BACKWARD) ? " backward" : "",
+                  test[k],
+                  datatype_to_string[(int) config.datatype]);
+           fflush(stdout);
         }
-        fflush(stdout);
 
         //srand((unsigned int)time(NULL));
         srand(222);
@@ -169,16 +142,16 @@ int testCompact(int argc, const char **argv, const CUDPPConfiguration *configPtr
             h_data[i] = (float)(rand() + 1);
         }
 
-        memset(reference, 0, sizeof(float) * test[k]);
+        memset(reference, 0, sizeof(T) * test[k]);
         size_t c_numValidElts =
             compactGold( reference, h_data, h_isValid, test[k], config);
-        CUDA_SAFE_CALL( cudaMemcpy(d_idata, h_data, sizeof(float) * test[k],
+        CUDA_SAFE_CALL( cudaMemcpy(d_idata, h_data, sizeof(T) * test[k],
                                    cudaMemcpyHostToDevice) );
 
         CUDA_SAFE_CALL( cudaMemcpy(d_isValid, h_isValid, sizeof(unsigned int) * test[k],
                                    cudaMemcpyHostToDevice) );
 
-        CUDA_SAFE_CALL( cudaMemset(d_odata, 0, sizeof(float) * test[k]));
+        CUDA_SAFE_CALL( cudaMemset(d_odata, 0, sizeof(T) * test[k]));
 
         // run once to avoid timing startup overhead.
         cudppCompact(plan, d_odata, d_numValid, d_idata, d_isValid, test[k]);
@@ -193,26 +166,26 @@ int testCompact(int argc, const char **argv, const CUDPPConfiguration *configPtr
         timer.stop();
 
         // get number of valid elements back to host
-        CUDA_SAFE_CALL( cudaMemcpy(numValidElements, d_numValid, sizeof(size_t), 
+        CUDA_SAFE_CALL( cudaMemcpy(&numValidElements, d_numValid, sizeof(size_t), 
                                    cudaMemcpyDeviceToHost) );
 
         // allocate host memory to store the output data
 
-        float* o_data = (float*) malloc( sizeof(float) * *numValidElements);
+        T* o_data = (T*) malloc( sizeof(T) * numValidElements);
 
         // copy result from device to host
         CUDA_SAFE_CALL(cudaMemcpy(o_data, d_odata,
-                                  sizeof(float) * *numValidElements,
+                                  sizeof(T) * numValidElements,
                                   cudaMemcpyDeviceToHost));
         // check if the result is equivalent to the expected soluion
         if (!quiet)
-            printf("numValidElements: %ld\n", *numValidElements);
+            printf("numValidElements: %ld\n", numValidElements);
             
-        bool result = compareArrays( reference, o_data, (unsigned int)*numValidElements, 0.001f);
+        bool result = compareArrays( reference, o_data, (unsigned int)numValidElements, 0.001f);
 
         free(o_data);
 
-        if (c_numValidElts != *numValidElements)
+        if (c_numValidElts != numValidElements)
         {
             retval += 1;
             if (!quiet)
@@ -263,4 +236,61 @@ int testCompact(int argc, const char **argv, const CUDPPConfiguration *configPtr
     cudaFree( d_isValid);
     cudaFree( d_numValid);
     return retval;
+}
+
+int testCompact(int argc, const char **argv, const CUDPPConfiguration *configPtr)
+{
+    testrigOptions testOptions;
+    setOptions(argc, argv, testOptions);
+
+    CUDPPConfiguration config;
+    config.algorithm = CUDPP_COMPACT;
+        
+    if (configPtr != NULL)
+    {
+        config = *configPtr;
+    }
+    else
+    {
+        CUDPPOption direction = CUDPP_OPTION_FORWARD;
+
+        config.datatype = getDatatypeFromArgv(argc, argv);
+            
+        if (checkCommandLineFlag(argc, argv, "backward"))
+        {
+            direction = CUDPP_OPTION_BACKWARD;
+        } 
+    }
+
+    switch(config.datatype)
+    {
+    case CUDPP_CHAR:
+        return compactTest<char>(argc, argv, config, testOptions);
+        break;
+    case CUDPP_UCHAR:
+        return compactTest<unsigned char>(argc, argv, config, testOptions);
+        break;    
+    case CUDPP_INT:
+        return compactTest<int>(argc, argv, config, testOptions);
+        break;
+    case CUDPP_UINT:
+        return compactTest<unsigned int>(argc, argv, config, testOptions);
+        break;
+    case CUDPP_FLOAT:
+        return compactTest<float>(argc, argv, config, testOptions);
+        break;
+    case CUDPP_DOUBLE:
+        return compactTest<double>(argc, argv, config, testOptions);
+        break;
+    case CUDPP_LONGLONG:
+        return compactTest<long long>(argc, argv, config, testOptions);
+        break;
+    case CUDPP_ULONGLONG:
+        return compactTest<unsigned long long>(argc, argv, config, testOptions);
+        break;
+    default:
+        return 0;
+        break;
+    }
+    return 0;
 }

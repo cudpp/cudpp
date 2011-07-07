@@ -135,8 +135,7 @@ void compactArray(T                      *d_out,
                                                          d_numValidElements,
                                                          plan->m_d_outputIndices, 
                                                          d_isValid, d_in, numElements);
-
-    
+                                                         
     CUDA_CHECK_ERROR("compactArray -- compactData");
 }
 
@@ -216,6 +215,18 @@ void cudppCompactDispatch(void                   *d_out,
     case CUDPP_FLOAT:
         compactArray<float>((float*)d_out, d_numValidElements, 
                             (const float*)d_in, d_isValid, numElements, plan);
+        break;
+    case CUDPP_DOUBLE:
+        compactArray<double>((double*)d_out, d_numValidElements, 
+                            (const double*)d_in, d_isValid, numElements, plan);
+        break;
+    case CUDPP_LONGLONG:
+        compactArray<long long>((long long*)d_out, d_numValidElements, 
+                            (const long long*)d_in, d_isValid, numElements, plan);
+        break;
+    case CUDPP_ULONGLONG:
+        compactArray<unsigned long long>((unsigned long long*)d_out, d_numValidElements, 
+                                         (const unsigned long long*)d_in, d_isValid, numElements, plan);
         break;
     default:
         break;

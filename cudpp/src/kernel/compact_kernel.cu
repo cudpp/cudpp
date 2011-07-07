@@ -28,32 +28,6 @@
  */
 
 /**
- * @brief Compute the number of valid flags in an array given the array and 
- * its exclusive sum scan.
- *
- * @param[out] d_numValidElements   Number of valid eleents in \a d_isValid.
- * @param[in]  d_indices  Array of output indices created using an exclusive
- *                        sum scan.
- * @param[in]  d_isValid  Array of flags indicating which elements are valid (1) 
- *                        and invalid (0).
- * @param[in]  numElements The length of the \a d_isValid and d_indices arrays.
- * 
- */
-template <bool isBackward>
-__global__ void computeNumValidElements(size_t        *d_numValidElements,
-                                        const unsigned int  *d_indices, // Exclusive Sum-Scan Result
-                                        const unsigned int  *d_isValid,
-                                        size_t        numElements
-                                        )
-{
-    if (isBackward)
-        *d_numValidElements = d_isValid[0] + d_indices[0];
-    else
-        *d_numValidElements = d_isValid[numElements-1] + d_indices[numElements-1];
-}
-
-
-/**
  * @brief Consolidate non-null elements - for each non-null element
  * in \a d_in write it to \a d_out, in the position specified by 
  * \a d_isValid. Called by compactArray().
@@ -69,7 +43,7 @@ __global__ void computeNumValidElements(size_t        *d_numValidElements,
  */
 template <class T, bool isBackward>
 __global__ void compactData(T                  *d_out, 
-                            size_t           *d_numValidElements,
+                            size_t             *d_numValidElements,
                             const unsigned int *d_indices, // Exclusive Sum-Scan Result
                             const unsigned int *d_isValid,
                             const T            *d_in,

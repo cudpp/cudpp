@@ -12,21 +12,15 @@
 #include <limits.h>
 
 ////////////////////////////////////////////////////////////////////////////////
-// export C interface
-extern "C" 
-unsigned int compactGold(float* reference, const float* idata, 
-                         const unsigned int *isValid, const unsigned int len,
-                         const CUDPPConfiguration &config);
-
-////////////////////////////////////////////////////////////////////////////////
 //! Compute reference data set for exclusive sum-scan
 //! Each element is the sum of the elements before it in the array.
 //! @param reference  reference data, computed but preallocated
 //! @param idata      const input data as provided to device
 //! @param len        number of elements in reference / idata
 ////////////////////////////////////////////////////////////////////////////////
+template <typename T>
 unsigned int
-compactGold( float* reference, const float* idata, 
+compactGold( T* reference, const T* idata, 
              const unsigned int *isValid, const unsigned int len,
              const CUDPPConfiguration & config) 
 {
