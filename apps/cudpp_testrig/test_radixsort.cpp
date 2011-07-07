@@ -75,6 +75,9 @@ int radixSortTest(CUDPPHandle theCudpp, CUDPPConfiguration config, size_t *tests
 
     for (unsigned int k = 0; k < numTests; ++k)
     {
+        if(numTests == 1)
+            tests[0] = numElements;
+            
         if (!quiet)
         {
             printf("Running a %s radix sort of %ld %s %s\n",
@@ -83,10 +86,7 @@ int radixSortTest(CUDPPHandle theCudpp, CUDPPConfiguration config, size_t *tests
                   datatype_to_string[(int) config.datatype],
                   (config.options & CUDPP_OPTION_KEY_VALUE_PAIRS) ? "key-value pairs" : "keys");
             fflush(stdout);
-        }
-           
-        if(numTests == 1)
-            tests[0] = numElements;                                             
+        }                                        
             
         float totalTime = 0;
 
