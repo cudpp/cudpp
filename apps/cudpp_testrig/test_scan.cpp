@@ -499,10 +499,13 @@ int multiscanTest(int argc, const char **argv, const CUDPPConfiguration &config,
     return retval;
 }
 
-int testScan(int argc, const char **argv, const CUDPPConfiguration *configPtr)
+int testScan(int argc, const char **argv, const CUDPPConfiguration *configPtr, bool multiRow)
 {
     testrigOptions testOptions;
     setOptions(argc, argv, testOptions);
+
+    if (multiRow)
+        testOptions.algorithm = "multiscan";
 
     CUDPPConfiguration config;
     config.algorithm = CUDPP_SCAN;
