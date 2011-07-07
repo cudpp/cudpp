@@ -269,6 +269,15 @@
  * CUDPP has currently been tested in Windows XP, Windows Vista, Mac OS X 
  * and Linux.  See \ref release-notes for release specific platform support.
  *
+ * \section build-thrust Thrust Dependency
+ * Starting with release 2.0, CUDPP uses the
+ * <a href="http://thrust.googlecode.com">Thrust library</a> for the 
+ * implementation of cudppRadixSort().  Thrust is included with the CUDA
+ * Toolkit version 4.0, so if you are using CUDA 4.0 or later, you need
+ * to do nothing else.  If you are using an earlier version of CUDA,
+ * however, you will need to download the Thrust source distribution and
+ * install it in your CUDA/include path before building CUDPP
+ *
  * \section build-win32 Building CUDPP on Windows XP
  *
  * CUDPP can be built using either or MSVC 8 (2005) or MSVC 9 (2008).  To 
