@@ -22,7 +22,7 @@
 #include "cudpp_testrig_utils.h"
 #include "cuda_util.h"
 #include "stopwatch.h"
-#include "findFile.h"
+#include "findfile.h"
 #include "commandline.h"
 
 using namespace cudpp_app;
