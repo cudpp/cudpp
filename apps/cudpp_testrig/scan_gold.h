@@ -384,6 +384,12 @@ computeSegmentedMinScanGold(T* reference, const T* idata,
     }   
 }
 
+template <typename T>
+struct LargestSimilarType { typedef long long type; };
+
+template <> struct LargestSimilarType<float>  { typedef double type; };
+template <> struct LargestSimilarType<double> { typedef double type; };
+
 ////////////////////////////////////////////////////////////////////////////////
 //! Compute reference data set for exclusive sum-scan
 //! Each element is the sum of the elements before it in the array.
@@ -391,7 +397,7 @@ computeSegmentedMinScanGold(T* reference, const T* idata,
 //! @param idata      const input data as provided to device
 //! @param len        number of elements in reference / idata
 ////////////////////////////////////////////////////////////////////////////////
-template<typename T, typename Operator>
+template<typename T, class Operator>
 void
 computeMultiRowScanGold( T *reference, const T *idata, 
                          const unsigned int len,
@@ -421,22 +427,22 @@ computeMultiRowScanGold( T *reference, const T *idata,
         }
     }
     
-    double *total_sum;
-    total_sum = (double*) malloc(rows * sizeof(double));
-    for (unsigned int r = 0; r < rows; ++r)
-        total_sum[r] = op.identity();
-
+    typedef typename LargestSimilarType<T>::type bigtype;
+    bigtype *total_sum = new bigtype[rows];
+    
     for (unsigned int r = 0; r < rows; ++r)
     {       
+        total_sum[r] = (bigtype)op.identity();
+        
         for( int i = startIdx; i != stopIdx; i = i + increment)    
         {   
-            total_sum[r] = op(total_sum[r], idata[r*len+i-increment]);
+            total_sum[r] = (bigtype)op((T)total_sum[r], idata[r*len+i-increment]);
             reference[r*len+i] = op(idata[r*len+i-increment], reference[r*len+i-increment]);
         }
         
         if (config.options & CUDPP_OPTION_INCLUSIVE) 
         {
-            total_sum[r] = op(total_sum[r], idata[r*len+stopIdx-increment]);
+            total_sum[r] = (bigtype)op((T)total_sum[r], idata[r*len+stopIdx-increment]);
 
             for (int i = startIdx - increment; i != stopIdx; i = i + increment) 
             {
@@ -444,7 +450,7 @@ computeMultiRowScanGold( T *reference, const T *idata,
             }      
         }
         
-        if (total_sum[r] != reference[r*len+stopIdx-increment])
+        if (((T)total_sum[r]) != reference[r*len+stopIdx-increment])
         {
             printf("Warning: exceeding single-precision accuracy. "
                    "Scan will be inaccurate.\n");
@@ -453,12 +459,7 @@ computeMultiRowScanGold( T *reference, const T *idata,
         }
     }
 
-    free((void*)total_sum);
-}
-
-int maxi(int a, int b)
-{
-    return (a > b) ? a : b;
+    delete [] total_sum;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

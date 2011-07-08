@@ -376,12 +376,14 @@ int multiscanTest(int argc, const char **argv, const CUDPPConfiguration &config,
 
     for (int k = 0; k < numTests; ++k)
     {    
+       if (test[k] * numRows > 33554432)
+           numRows = 33554432 / test[k];
+           
        if (!quiet)
        {
-           printf("Running a%s%s %s%s-multiscan of %d %s elements in %d rows\n",
+           printf("Running a%s%s %s-multiscan of %d %s elements in %d rows\n",
                   (config.options & CUDPP_OPTION_BACKWARD) ? " backward" : "",
                   (config.options & CUDPP_OPTION_INCLUSIVE) ? " inclusive" : "",
-                  (config.algorithm == CUDPP_SEGMENTED_SCAN) ? "segmented " : "",
                   op,
                   test[k],
                   datatype_to_string[(int) config.datatype],
@@ -504,13 +506,15 @@ int testScan(int argc, const char **argv, const CUDPPConfiguration *configPtr, b
     testrigOptions testOptions;
     setOptions(argc, argv, testOptions);
 
-    if (multiRow)
-        testOptions.algorithm = "multiscan";
-
     CUDPPConfiguration config;
     config.algorithm = CUDPP_SCAN;
     if (testOptions.algorithm == "segscan")
         config.algorithm = CUDPP_SEGMENTED_SCAN;
+
+    if (multiRow) {
+        testOptions.algorithm = "multiscan";
+        config.algorithm = CUDPP_SCAN;
+    }
         
     if (configPtr != NULL)
     {
