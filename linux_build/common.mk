@@ -202,16 +202,23 @@ ifeq ($(USECUDPP), 1)
 	CUDPPLIB := -lcudpp$(LIBSUFFIX)
 endif
 
+ifeq ($(USECUDPP_HASH), 1)
+	# detect if 32 bit or 64 bit system
+	HP_64 =	$(shell uname -m | grep 64)
+
+	CUDPPHASHLIB := -lcudpp_hash$(LIBSUFFIX)
+endif
+
 # Libs
 ifneq ($(DARWIN),)
-        LIB      += -L$(CUDA_INSTALL_PATH)/lib -L$(LIBDIR) -lcuda -lcudart ${OPENGLLIB} $(PARAMGLLIB) $(CUDPPLIB)
+        LIB      += -L$(CUDA_INSTALL_PATH)/lib -L$(LIBDIR) -lcuda -lcudart ${OPENGLLIB} $(PARAMGLLIB) $(CUDPPLIB) $(CUDPPHASHLIB)
 else
         ifneq ($(HP_64), )
             CUDA_LIB_PATH := $(CUDA_INSTALL_PATH)/lib64
         else
             CUDA_LIB_PATH := $(CUDA_INSTALL_PATH)/lib
         endif
-        LIB      += -L$(CUDA_LIB_PATH) -L$(LIBDIR) -lcudart ${OPENGLLIB} $(PARAMGLLIB) $(CUDPPLIB)
+        LIB      += -L$(CUDA_LIB_PATH) -L$(LIBDIR) -lcudart ${OPENGLLIB} $(PARAMGLLIB) $(CUDPPLIB) $(CUDPPHASHLIB)
 endif
 
 
