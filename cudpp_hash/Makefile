@@ -7,8 +7,9 @@
 ###############################################################################
 # SOURCE VARS
 CUFILES :=	src/hash_functions.cu \
-		src/hash_multivalue.cu \
 		src/hash_table.cu \
+		src/hash_compacting.cu \
+		src/hash_multivalue.cu \
 		src/debugging.cu
 CCFILES :=      src/cudpp_hash.cpp
 

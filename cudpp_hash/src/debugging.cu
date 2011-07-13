@@ -221,21 +221,20 @@ void OutputBuildStatistics(const unsigned  n,
     max_iterations_taken = std::max(max_iterations_taken, iterations_taken[i]);
   }
 
-  int current_value = iterations_taken[0];
-  int count = 1;
+  unsigned current_value = iterations_taken[0];
+  unsigned count = 1;
   char buffer[10000];
-  sprintf(buffer, "Iterations taken: ");
-  PrintMessage(buffer);
+  sprintf(buffer, "Iterations taken:\n");
   for (unsigned i = 1; i < n; ++i) {
-    if (iterations_taken[i] != (unsigned)current_value) {
-      sprintf(buffer, "\t(%u, %u) ", current_value, count);
+    if (iterations_taken[i] != current_value) {
+      sprintf(buffer, "%s\t(%u, %u)\n", buffer, current_value, count);
       current_value = iterations_taken[i];
       count = 1;
     } else {
       count++;
     }
   }
-  sprintf(buffer, "%s(%u, %u)", buffer, current_value, count);
+  sprintf(buffer, "%s\t(%u, %u)", buffer, current_value, count);
   PrintMessage(buffer);
   sprintf(buffer, "Total iterations: %u", total_iterations);
   PrintMessage(buffer);

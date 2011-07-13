@@ -27,6 +27,13 @@ enum CUDPPHashTableType
     CUDPP_INVALID_HASH_TABLE,
 };
 
+inline CUDPPHashTableType& operator++(CUDPPHashTableType& htt, int)
+{
+   const int i = static_cast<int>(htt);
+   htt = static_cast<CUDPPHashTableType>(i + 1);
+   return htt;
+}
+
 struct CUDPPHashTableConfig
 {
     CUDPPHashTableType type;
@@ -58,18 +65,21 @@ public:
 };
 
 CUDPPResult
-cudppHashTable(CUDPPHandle *plan, const CUDPPHashTableConfig *config);
+cudppHashTable(CUDPPHandle theCudpp_, CUDPPHandle *plan, 
+               const CUDPPHashTableConfig *config);
 
 CUDPPResult
-cudppHashInsert(CUDPPHandle plan, const void* d_keys, 
+cudppHashInsert(CUDPPHandle theCudpp_, CUDPPHandle plan, const void* d_keys, 
                 const void* d_vals, unsigned int num);
 
 CUDPPResult
-cudppHashRetrieve(CUDPPHandle plan, const void* d_keys, void* d_vals, 
-                  size_t num);
+cudppHashRetrieve(CUDPPHandle theCudpp_, CUDPPHandle plan, const void* d_keys, 
+                  void* d_vals, size_t num);
 
 CUDPPResult
-cudppDestroyHashTable(CUDPPHandle plan);
+cudppDestroyHashTable(CUDPPHandle theCudpp_, CUDPPHandle plan);
+
+unsigned cudppHashGetNotFoundValue(CUDPPHandle theCudpp_);
 
 // Leave this at the end of the file
 // Local Variables:

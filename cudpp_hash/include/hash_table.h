@@ -138,6 +138,9 @@ class HashTable {
   //! When using five hash functions, returns the constants.
   inline Functions<5> get_constants_5()        const {return constants_5_;}
 
+  //! Set the internal CUDPP instance
+  inline void setTheCudpp(CUDPPHandle theCudpp_)     { theCudpp = theCudpp_; }
+
   /// @}
 
  protected:

@@ -23,11 +23,11 @@ namespace CuckooHashing {
 
 //! Compacts the unique keys down and stores the location of its values as the value.
 __global__ void compact_keys(const unsigned keys[],
-                  const unsigned is_unique[],
-                  const unsigned locations[],
-                  uint2          index_counts[],
-                  unsigned       compacted[],
-                  size_t         kSize) {
+                             const unsigned is_unique[],
+                             const unsigned locations[],
+                             uint2          index_counts[],
+                             unsigned       compacted[],
+                             size_t         kSize) {
     unsigned index = threadIdx.x +
         blockIdx.x * blockDim.x +
         blockIdx.y * blockDim.x * gridDim.x;
@@ -93,7 +93,7 @@ void hash_retrieve_multi_sorted(const unsigned   n_queries,
                                 uint2     *location_count)
 {
     // Get the key & perform the query.
-    unsigned thread_index = threadIdx.x + blockIdx.x*blockDim.x +
+    unsigned thread_index = threadIdx.x + blockIdx.x*blockDim.x + 
         blockIdx.y*blockDim.x*gridDim.x;
     if (thread_index >= n_queries)
         return;
@@ -150,7 +150,6 @@ bool MultivalueHashTable::Build(const unsigned  n,
         cudppDestroyPlan(sort_plan);
         return retval;
     }
-
     CUDA_CHECK_ERROR("Failed to sort");
 
     // Find the first key-value pair for each key.
@@ -197,19 +196,17 @@ bool MultivalueHashTable::Build(const unsigned  n,
                           target_space_usage_,
                           num_hash_functions_);
 
-    d_index_counts_ = d_index_counts_tmp;
-    d_unique_keys_ = d_compacted_keys;
+    d_index_counts_  = d_index_counts_tmp;
+    d_unique_keys_   = d_compacted_keys;
     d_sorted_values_ = d_sorted_vals;
     sorted_values_size_ = n;
 
     // Build the cuckoo hash table with each key assigned a unique index.
-    unsigned *d_indices = NULL;
-    CUDA_SAFE_CALL(cudaMalloc((void**)&d_indices, 
-                              sizeof(unsigned) * num_unique_keys));
-    prepare_indices<<<ComputeGridDim(num_unique_keys), 
-        kBlockSize>>>(num_unique_keys, d_indices);
-    bool success = HashTable::Build(num_unique_keys, d_unique_keys_, d_indices);
-    CUDA_SAFE_CALL(cudaFree(d_indices));
+    // Re-uses the sorted key memory as an array of values from 0 to k-1.
+    prepare_indices<<<ComputeGridDim(num_unique_keys), kBlockSize>>>
+        (num_unique_keys, d_sorted_keys);
+    bool success = HashTable::Build(num_unique_keys, d_unique_keys_,
+                                    d_sorted_keys);
     CUDA_SAFE_CALL(cudaFree(d_sorted_keys));
     return success;
 }
@@ -271,19 +268,21 @@ bool MultivalueHashTable::Initialize(const unsigned   max_table_entries,
                                      const float      space_usage,
                                      const unsigned   num_hash_functions)
 {                                    
-    unsigned success = HashTable::Initialize(max_table_entries, space_usage, 
+    unsigned success = HashTable::Initialize(max_table_entries, space_usage,
                                              num_hash_functions);
     target_space_usage_ = space_usage;
 
+    // + 2N 32-bit entries
     CUDA_SAFE_CALL(cudaMalloc( (void**)&d_scratch_offsets_, 
                                sizeof(unsigned) * max_table_entries ));
-    CUDA_SAFE_CALL(cudaMalloc( (void**)&d_scratch_is_unique_, 
+    CUDA_SAFE_CALL(cudaMalloc( (void**)&d_scratch_is_unique_,
                                sizeof(unsigned) * max_table_entries ));
 
     success &= d_scratch_offsets_ != NULL;
     success &= d_scratch_is_unique_ != NULL;
 
     // Allocate memory for the scan.
+    // + Unknown memory usage
     CUDPPConfiguration config;
     config.op            = CUDPP_ADD;
     config.datatype      = CUDPP_UINT;
@@ -327,7 +326,7 @@ void MultivalueHashTable::Release() {
 };  // namespace CuckooHashing
 };  // namespace CudaHT
 
-#endif
+#endif //  HASH_V2_MULTI__CUH
 
 // Leave this at the end of the file
 // Local Variables:
