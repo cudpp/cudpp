@@ -12,7 +12,7 @@
 #include <map>
 #include <set>
 #include <vector>
-#include <string.h>		// memcpy
+#include <string.h>             // memcpy
 
 #include "random_numbers.h"
 #define CUDPP_APP_COMMON_IMPL
@@ -20,18 +20,6 @@
 #include "commandline.h"
 
 using namespace cudpp_app;
-
-#if 0
-            switch(htt)
-            {
-            case CUDPP_BASIC_HASH_TABLE:
-                break;
-            case CUDPP_COMPACTING_HASH_TABLE:
-                break;
-            case CUDPP_MULTIVALUE_HASH_TABLE:
-                break;
-            }
-#endif
 
 int CheckResults_basic(const unsigned            kInputSize,
                        const std::map<unsigned, unsigned> &pairs,
@@ -504,7 +492,7 @@ int main(int argc, const char **argv)
     cudaGetDeviceCount(&deviceCount);
     if (deviceCount == 0)
     {       
-        fprintf(stderr, "error: no devices supporting CUDA.\n");
+        fprintf(stderr, "Error (main): no devices supporting CUDA.\n");
         exit(EXIT_FAILURE);
     }
     int dev = 0;
@@ -526,7 +514,7 @@ int main(int argc, const char **argv)
     {
         fprintf(stderr, "Hash tables are only supported on devices with "
                 "compute capability 2.0 or greater.\n");
-        return 1;
+        // possibly should exit here?
     }
 
     int retval = 0;

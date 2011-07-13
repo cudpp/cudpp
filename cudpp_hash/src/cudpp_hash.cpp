@@ -1,3 +1,4 @@
+#include <cuda_runtime.h>
 #include "cudpp_hash.h"
 #include "cudpp_plan.h"
 
@@ -17,6 +18,29 @@ CUDPP_HASH_DLL
 CUDPPResult cudppHashTable(CUDPPHandle theCudpp_, CUDPPHandle *hash_table, 
                            const CUDPPHashTableConfig *config)
 {
+    /* first check: is this device >= 2.0? if not, say so and exit. */
+    int dev;
+    if (cudaGetDevice(&dev) != cudaSuccess)
+    {
+        fprintf(stderr, "Can't get current device (cudppHashTable)\n");
+        return CUDPP_ERROR_UNKNOWN;
+    }
+
+    cudaDeviceProp prop;
+    if (cudaGetDeviceProperties(&prop, dev) != cudaSuccess)
+    {
+        fprintf(stderr, "Can't get current device properties "
+                "(cudppHashTable)\n");
+        return CUDPP_ERROR_UNKNOWN;
+    }
+
+    if (prop.major < 2)
+    {
+        fprintf(stderr, "Hash tables are only supported on devices with "
+                "compute capability 2.0 or greater.\n");
+        return CUDPP_ERROR_ILLEGAL_CONFIGURATION;
+    }
+
     switch(config->type)
     {
     case CUDPP_BASIC_HASH_TABLE:
