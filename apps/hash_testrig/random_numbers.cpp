@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <cstdio>
+#include <string.h>		// memcpy
 #include <mt19937ar.h>
 
 void Shuffle(const unsigned  num_random_numbers,

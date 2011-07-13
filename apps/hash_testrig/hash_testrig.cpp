@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <cstdio>
 #include <map>
+#include <string.h>		// memcpy
 
 #include "random_numbers.h"
 #define CUDPP_APP_COMMON_IMPL
