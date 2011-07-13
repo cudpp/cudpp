@@ -81,7 +81,7 @@
  * \subsection size-limits Algorithm Input Size Limitations
  * 
  * The following maximum size limitations currently apply.  In some 
- * cases this is the theory -- they algorithms may not have been tested
+ * cases this is the theory -- the algorithms may not have been tested
  * to the maximum size.  Also, for things like 32-bit integer scans, 
  * precision often limits the useful maximum size.
  
@@ -417,10 +417,10 @@ enum CUDPPAlgorithm
     CUDPP_SCAN,              //!< Scan or prefix-sum
     CUDPP_SEGMENTED_SCAN,    //!< Segmented scan
     CUDPP_COMPACT,           //!< Stream compact
-    CUDPP_REDUCE,            //!< Parallel reduction (NOTE: currently unimplemented)
+    CUDPP_REDUCE,            //!< Parallel reduction
     CUDPP_SORT_RADIX,        //!< Radix sort
     CUDPP_SPMVMULT,          //!< Sparse matrix-dense vector multiplication
-    CUDPP_RAND_MD5,          //!< PseudoRandom Number Generator using MD5 hash algorithm
+    CUDPP_RAND_MD5,          //!< Pseudorandom number generator using MD5 hash algorithm
     CUDPP_ALGORITHM_INVALID, //!< Placeholder at end of enum
 };
 

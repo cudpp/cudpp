@@ -32,6 +32,7 @@ namespace cudpp_app {
     template<class T>
     inline T convertTo( const std::string& element)
     {
+        (void) element;  // suppress compiler warning
         return (T)false;
     }
 
@@ -135,3 +136,8 @@ namespace cudpp_app {
 
 #endif // #ifndef _COMMAND_LINE_H_
 
+// Leave this at the end of the file
+// Local Variables:
+// mode:c++
+// c-file-style: "NVIDIA"
+// End:
