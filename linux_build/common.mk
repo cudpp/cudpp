@@ -11,7 +11,7 @@ CUDA_VERSION := $(shell nvcc --version | sed -n -e '/release/!d' -e 's/Cuda comp
 threeplus := 3.0
 CUDA_VERSION_3PLUS := $(filter $(threeplus), $(firstword $(sort $(CUDA_VERSION) $(threeplus))))
 
-CUDA_INSTALL_PATH ?= /usr/local/cuda
+CUDA_INSTALL_PATH ?= /usr/common/usg/cuda/4.0/
 
 ifdef cuda-install
 	CUDA_INSTALL_PATH := $(cuda-install)
@@ -211,14 +211,14 @@ endif
 
 # Libs
 ifneq ($(DARWIN),)
-        LIB      += -L$(CUDA_INSTALL_PATH)/lib -L$(LIBDIR) -lcuda -lcudart ${OPENGLLIB} $(PARAMGLLIB) $(CUDPPLIB) $(CUDPPHASHLIB)
+        LIB      += -L$(CUDA_INSTALL_PATH)/lib -L$(LIBDIR) -lcuda -lcudart ${OPENGLLIB} $(PARAMGLLIB) $(CUDPPHASHLIB) $(CUDPPLIB)
 else
         ifneq ($(HP_64), )
             CUDA_LIB_PATH := $(CUDA_INSTALL_PATH)/lib64
         else
             CUDA_LIB_PATH := $(CUDA_INSTALL_PATH)/lib
         endif
-        LIB      += -L$(CUDA_LIB_PATH) -L$(LIBDIR) -lcudart ${OPENGLLIB} $(PARAMGLLIB) $(CUDPPLIB) $(CUDPPHASHLIB)
+        LIB      += -L$(CUDA_LIB_PATH) -L$(LIBDIR) -lcudart ${OPENGLLIB} $(PARAMGLLIB) $(CUDPPHASHLIB) $(CUDPPLIB)
 endif
 
 
