@@ -231,6 +231,43 @@ CUDPPResult cudppDestroyHashTable(CUDPPHandle theCudpp_, CUDPPHandle plan)
 }
 
 CUDPP_HASH_DLL
+CUDPPResult
+cudppMultivalueHashGetValuesSize(CUDPPHandle theCudpp_, CUDPPHandle plan,
+                                 unsigned int * size)
+{
+    (void) theCudpp_;
+    hti_void * hti_init = (hti_void *) getPlanPtrFromHandle<hti_void>(plan);
+    if (hti_init->config.type != CUDPP_MULTIVALUE_HASH_TABLE)
+    {
+        // better be a MULTIVALUE
+        return CUDPP_ERROR_ILLEGAL_CONFIGURATION;
+    }
+    hti_multivalue * hti = 
+        (hti_multivalue *) getPlanPtrFromHandle<hti_multivalue>(plan);
+    *size = hti->hash_table->get_values_size();
+    return CUDPP_SUCCESS;
+}
+
+CUDPP_HASH_DLL
+CUDPPResult
+cudppMultivalueHashGetAllValues(CUDPPHandle theCudpp_, CUDPPHandle plan,
+                                const unsigned int * d_vals)
+{
+    (void) theCudpp_;
+    hti_void * hti_init = (hti_void *) getPlanPtrFromHandle<hti_void>(plan);
+    if (hti_init->config.type != CUDPP_MULTIVALUE_HASH_TABLE)
+    {
+        // better be a MULTIVALUE
+        return CUDPP_ERROR_ILLEGAL_CONFIGURATION;
+    }
+    hti_multivalue * hti = 
+        (hti_multivalue *) getPlanPtrFromHandle<hti_multivalue>(plan);
+    d_vals = hti->hash_table->get_all_values();
+    return CUDPP_SUCCESS;
+}
+
+
+CUDPP_HASH_DLL
 unsigned cudppHashGetNotFoundValue(CUDPPHandle theCudpp_)
 {
     (void) theCudpp_;           // suppress compiler warning

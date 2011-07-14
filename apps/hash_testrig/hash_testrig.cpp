@@ -71,9 +71,11 @@ int CheckResults_compacting(const unsigned            kInputSize,
         {
             if (query_vals[j] >= kInputSize)
             {
+#ifdef _DEBUG
                 fprintf(stderr, 
                         "\t\t\t\t!!! Valid query returned bad ID: %10u %10u\n",
                         query_keys[j], query_vals[j]);
+#endif
                 errors++;
             }
         }
@@ -81,9 +83,11 @@ int CheckResults_compacting(const unsigned            kInputSize,
         {
             if (query_vals[j] < kInputSize)
             {
+#ifdef _DEBUG
                 fprintf(stderr, 
                         "\t\t\t\t!!! Invalid query returned good ID: "
                         "%10u %10u\n", query_keys[j], query_vals[j]);
+#endif
                 errors++;
             }
         }
@@ -102,11 +106,13 @@ int CheckResults_compacting(const unsigned            kInputSize,
             {
                 if (key_to_id_map[query_keys[j]] != query_vals[j])
                 {
+#ifdef _DEBUG
                     fprintf(stderr,
                             "\t\t\t\t!!! Key %10u had two IDs: %10u %10u\n",
                             query_keys[j],
                             key_to_id_map[query_keys[j]],
                             query_vals[j]);
+#endif
                     errors++;
                 }
             }
@@ -116,11 +122,13 @@ int CheckResults_compacting(const unsigned            kInputSize,
             {
                 if (id_to_key_map[query_vals[j]] != query_keys[j])
                 {
+#ifdef _DEBUG
                     fprintf(stderr,
                             "\t\t\t\t!!! ID %10u had two keys: %10u %10u\n",
                             query_vals[j],
                             id_to_key_map[query_vals[j]],
                             query_keys[j]);
+#endif
                     errors++;
                 }
             }
@@ -306,12 +314,10 @@ void testHashTable(CUDPPHandle theCudpp,
                 }
                 break;
             case CUDPP_COMPACTING_HASH_TABLE:
-#ifdef _DEBUG      
                 for (unsigned i = 0; i < kInputSize; ++i)
                 {
                     pairs_compacting.insert(input_keys[i]);
                 }
-#endif      
                 break;
             case CUDPP_MULTIVALUE_HASH_TABLE:
                 for (unsigned i = 0; i < kInputSize; ++i) {
@@ -383,16 +389,32 @@ void testHashTable(CUDPPHandle theCudpp,
                 /// -----------------------------------------------------------
 
                 unsigned *sorted_values = NULL;
-#ifdef _DEBUG
-                sorted_values = 
-                    new unsigned[multivalue_table.get_values_size()];
-                CUDA_SAFE_CALL(cudaMemcpy(sorted_values,
-                                          multivalue_table.get_all_values(),
-                                          sizeof(unsigned) * 
-                                          multivalue_table.get_values_size(),
-                                          cudaMemcpyDeviceToHost));
-#endif
-
+                if (htt == CUDPP_MULTIVALUE_HASH_TABLE)
+                {
+                    unsigned int values_size;
+                    if (cudppMultivalueHashGetValuesSize(theCudpp,
+                                                         hash_table_handle,
+                                                         &values_size) !=
+                        CUDPP_SUCCESS)
+                    {
+                        fprintf(stderr, "Error: "
+                                "cudppMultivalueHashGetValuesSize()\n");
+                    }
+                    sorted_values = new unsigned[values_size];
+                    unsigned int * d_all_values = NULL;
+                    if (cudppMultivalueHashGetAllValues(theCudpp, 
+                                                        hash_table_handle, 
+                                                        d_all_values) !=
+                        CUDPP_SUCCESS)
+                    {
+                        fprintf(stderr, "Error: "
+                                "cudppMultivalueHashGetAllValues()\n");
+                    }
+                    CUDA_SAFE_CALL(cudaMemcpy(sorted_values,
+                                              d_all_values,
+                                              sizeof(unsigned) * values_size,
+                                              cudaMemcpyDeviceToHost));
+                }
 
                 unsigned int failure_trials = 10;
                 for (unsigned failure = 0; failure <= failure_trials; ++failure)

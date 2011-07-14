@@ -79,6 +79,14 @@ cudppHashRetrieve(CUDPPHandle theCudpp_, CUDPPHandle plan, const void* d_keys,
 CUDPPResult
 cudppDestroyHashTable(CUDPPHandle theCudpp_, CUDPPHandle plan);
 
+CUDPPResult
+cudppMultivalueHashGetValuesSize(CUDPPHandle theCudpp_, CUDPPHandle plan,
+                                 unsigned int * size);
+
+CUDPPResult
+cudppMultivalueHashGetAllValues(CUDPPHandle theCudpp_, CUDPPHandle plan,
+                                const unsigned int * d_vals);
+
 unsigned cudppHashGetNotFoundValue(CUDPPHandle theCudpp_);
 
 // Leave this at the end of the file
