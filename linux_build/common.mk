@@ -11,7 +11,7 @@ CUDA_VERSION := $(shell nvcc --version | sed -n -e '/release/!d' -e 's/Cuda comp
 threeplus := 3.0
 CUDA_VERSION_3PLUS := $(filter $(threeplus), $(firstword $(sort $(CUDA_VERSION) $(threeplus))))
 
-CUDA_INSTALL_PATH ?= /usr/common/usg/cuda/4.0/
+CUDA_INSTALL_PATH ?= /usr/local/cuda
 
 ifdef cuda-install
 	CUDA_INSTALL_PATH := $(cuda-install)
