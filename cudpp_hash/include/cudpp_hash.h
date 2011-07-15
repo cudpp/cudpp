@@ -85,7 +85,7 @@ cudppMultivalueHashGetValuesSize(CUDPPHandle theCudpp_, CUDPPHandle plan,
 
 CUDPPResult
 cudppMultivalueHashGetAllValues(CUDPPHandle theCudpp_, CUDPPHandle plan,
-                                const unsigned int * d_vals);
+                                unsigned int ** d_vals);
 
 unsigned cudppHashGetNotFoundValue(CUDPPHandle theCudpp_);
 

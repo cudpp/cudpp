@@ -141,7 +141,7 @@ bool MultivalueHashTable::Build(const unsigned  n,
     CUDPPHandle sort_plan;
     CUDPPResult sort_result = cudppPlan(theCudpp, &sort_plan, sort_config, n,
                                         1, 0);
-    cudppSort(sort_plan, &d_sorted_keys, (void*)&d_sorted_vals, n);
+    cudppSort(sort_plan, d_sorted_keys, (void*)d_sorted_vals, n);
 
     if (sort_result != CUDPP_SUCCESS)
     {
@@ -309,6 +309,11 @@ MultivalueHashTable::MultivalueHashTable() :
 
 void MultivalueHashTable::Release() {
     HashTable::Release();
+
+    if (scanplan_) {
+      cudppDestroyPlan(scanplan_);
+      scanplan_ = 0;
+    }
 
     cudaFree(d_index_counts_);
     cudaFree(d_sorted_values_);

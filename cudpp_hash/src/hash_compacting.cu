@@ -670,7 +670,9 @@ void CompactingHashTable::Release() {
     d_scratch_counts_      = NULL;
     d_scratch_unique_ids_  = NULL;
 
-    cudppDestroyPlan(scanplan_);
+    if (scanplan_) {
+      cudppDestroyPlan(scanplan_);
+    }
     scanplan_         = 0;
     unique_keys_size_ = 0;
 }

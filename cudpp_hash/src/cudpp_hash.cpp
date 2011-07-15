@@ -184,7 +184,7 @@ CUDPPResult cudppHashRetrieve(CUDPPHandle theCudpp_, CUDPPHandle plan,
         hti_multivalue * hti = 
             (hti_multivalue *) getPlanPtrFromHandle<hti_multivalue>(plan);
         hti->hash_table->Retrieve(num, (const unsigned int *) d_keys, 
-                                  (unsigned int *) d_vals);
+                                  (uint2 *) d_vals);
         return CUDPP_SUCCESS;
         break;
     }
@@ -251,7 +251,7 @@ cudppMultivalueHashGetValuesSize(CUDPPHandle theCudpp_, CUDPPHandle plan,
 CUDPP_HASH_DLL
 CUDPPResult
 cudppMultivalueHashGetAllValues(CUDPPHandle theCudpp_, CUDPPHandle plan,
-                                const unsigned int * d_vals)
+                                unsigned int ** d_vals)
 {
     (void) theCudpp_;
     hti_void * hti_init = (hti_void *) getPlanPtrFromHandle<hti_void>(plan);
@@ -262,7 +262,8 @@ cudppMultivalueHashGetAllValues(CUDPPHandle theCudpp_, CUDPPHandle plan,
     }
     hti_multivalue * hti = 
         (hti_multivalue *) getPlanPtrFromHandle<hti_multivalue>(plan);
-    d_vals = hti->hash_table->get_all_values();
+        // @TODO fix up constness
+    *d_vals = (unsigned*) (hti->hash_table->get_all_values());
     return CUDPP_SUCCESS;
 }
 
