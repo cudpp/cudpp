@@ -176,6 +176,7 @@
  * - Shubhabrata Sengupta, Mark Harris, and Michael Garland. "Efficient parallel scan algorithms for GPUs". NVIDIA Technical Report NVR-2008-003, December 2008. http://mgarland.org/papers.html#segscan-tr
  * - Nadathur Satish, Mark Harris, and Michael Garland. "Designing Efficient Sorting Algorithms for Manycore GPUs". In <i>Proceedings of the 23rd IEEE International Parallel & Distributed Processing Symposium</i>, May 2009. http://mgarland.org/papers.html#gpusort
  * - Stanley Tzeng, Li-Yi Wei. "Parallel White Noise Generation on a GPU via Cryptographic Hash". In <i>Proceedings of the 2008 Symposium on Interactive 3D Graphics and Games</i>, pages 79&ndash;87, February 2008. http://research.microsoft.com/apps/pubs/default.aspx?id=70502
+ * - Yao Zhang, Jonathan Cohen, and John D. Owens. "Fast Tridiagonal Solvers on the GPU". In <i>Proceedings of the 15th ACM SIGPLAN Symposium on Principles and Practice of Parallel Programming (PPoPP 2010)<i>, January 2010. http://graphics.cs.ucdavis.edu/publications/print_pub?pub_id=978
  *
  * Many researchers are using CUDPP in their work, and there are many publications 
  * that have used it \ref cudpp_refs "(references)". If your work uses CUDPP, please 
@@ -199,9 +200,15 @@
  * - <a href="http://www.markmark.net">Mark Harris</a>, NVIDIA Corporation
  * - <a href="http://www.ece.ucdavis.edu/~jowens/">John D. Owens</a>, University of California, Davis
  * - <a href="http://graphics.cs.ucdavis.edu/~shubho/">Shubho Sengupta</a>, University of California, Davis
+<<<<<<< .working
  * - Stanley Tzeng,   University of California, Davis
  * - <a href="http://www.ece.ucdavis.edu/~yaozhang/">Yao Zhang</a>,       University of California, Davis
  * - <a href="http://www.ece.ucdavis.edu/~aaldavid/">Andrew Davidson</a>, University of California, Davis (formerly Louisiana State University)
+=======
+ * - Stanley Tseng,   University of California, Davis
+ * - <a href="http://www.ece.ucdavis.edu/~yaozhang/">Yao Zhang</a>, University of California, Davis
+ * - Andrew Davidson, University of California, Davis (formerly Louisiana State University)
+>>>>>>> .merge-right.r183
  * 
  * \subsection contributors Other CUDPP Contributors
  * - <a href="http://www.eecs.berkeley.edu/~nrsatish/">Nadatur Satish</a>,  University of California, Berkeley
@@ -421,6 +428,9 @@ enum CUDPPAlgorithm
     CUDPP_SORT_RADIX,        //!< Radix sort
     CUDPP_SPMVMULT,          //!< Sparse matrix-dense vector multiplication
     CUDPP_RAND_MD5,          //!< Pseudorandom number generator using MD5 hash algorithm
+    CUDPP_TRIDIAGONAL_CR,    //!< Tridiagonal solver using cyclic reduction algorithm
+    CUDPP_TRIDIAGONAL_PCR,   //!< Tridiagonal solver using parallel cyclic reduction algorithm
+    CUDPP_TRIDIAGONAL_CRPCR, //!< Tridiagonal solver using hybrid CR-PCR algorithm
     CUDPP_ALGORITHM_INVALID, //!< Placeholder at end of enum
 };
 
@@ -553,6 +563,17 @@ CUDPPResult cudppRand(const CUDPPHandle planHandle,
 CUDPP_DLL
 CUDPPResult cudppRandSeed(const CUDPPHandle planHandle, 
                           unsigned int      seed);
+
+// tridiagonal solver algorithms
+CUDPP_DLL
+CUDPPResult cudppTridiagonal(CUDPPHandle planHandle, 
+                             void *a, 
+                             void *b, 
+                             void *c, 
+                             void *d, 
+                             void *x, 
+                             int systemSize, 
+                             int numSystems);
 
 #ifdef __cplusplus
 }

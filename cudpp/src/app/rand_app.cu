@@ -86,7 +86,7 @@ void launchRandMD5Kernel(unsigned int * d_out, unsigned int seed,
             devOutputsize/blockSize + (devOutputsize%blockSize == 0 ? 0:1);  
 
     //printf("Generating %u random numbers using %u blocks and %u threads per block\n", numElements, n_blocks, blockSize);
-/*	old debug code now removed.
+/*  old debug code now removed.
     printf("\nnumber of elements: %u, devOutputSize: %u\n", 
             numElements, devOutputsize);
     printf("number of blocks: %u blocksize: %u devOutputsize = %u\n", 

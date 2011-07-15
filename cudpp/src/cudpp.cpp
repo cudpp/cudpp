@@ -49,6 +49,7 @@
 #include "cudpp_radixsort.h"
 #include "cudpp_rand.h"
 #include "cudpp_reduce.h"
+#include "cudpp_tridiagonal.h"
 
 /**
  * @brief Performs a scan operation of numElements on its input in
@@ -506,6 +507,57 @@ const char * operator_to_string[] =
     "operator_invalid",
 };
 
+
+/**
+ * @brief Solves a tridiagonal linear system
+ *
+ * We support three algorithms, which are cyclic reduction (CR),
+ * parallel cyclic reduction (PCR), and the hybrid 
+ * CR-PCR  algorithm. We support both float and double datatypes.
+ * By configuring a plan, you can select the algorithm and datatype 
+ * to be used. 
+ 
+ * The maximum system size is limited by the maximum number of threads
+ * of a CUDA block, the number of registers per multiprocessor, and the 
+ * amount of shared memory available. For the GTX 280 GPU, the maximum system
+ * size we support is 512 for float datatype, and 256 for double 
+ * datatype, which is determined by the size of shared memory in this case. 
+ * There is virtually no limitation on the number of systems to be solved, 
+ * which depends on the maximum number of CUDA blocks that can be issued
+ * for a kernel launch.
+ *
+ * @param[out] x Solution vector
+ * @param[in] planHandle Handle to plan for tridiagonal solver
+ * @param[in] a Lower diagonal
+ * @param[in] b Main diagonal
+ * @param[in] c Upper diagonal
+ * @param[in] d Right hand side
+ * @param[in] systemSize The size of the linear system
+ * @param[in] numSystems The number of systems to be solved
+ *
+ * @see cudppPlan, CUDPPConfiguration, CUDPPAlgorithm
+ */
+CUDPP_DLL
+CUDPPResult cudppTridiagonal(CUDPPHandle planHandle, 
+                             void *a, 
+                             void *b, 
+                             void *c, 
+                             void *d, 
+                             void *x, 
+                             int systemSize, 
+                             int numSystems)
+{
+    CUDPPTridiagonalPlan * plan = 
+        (CUDPPTridiagonalPlan *) getPlanPtrFromHandle<CUDPPTridiagonalPlan>(planHandle);
+    if(plan != NULL)
+    {
+        //dispatch the tridiagonal solver here
+        cudppTridiagonalDispatch(a, b, c, d, x, systemSize, numSystems, plan);
+        return CUDPP_SUCCESS;
+    }
+    else
+        return CUDPP_ERROR_UNKNOWN;
+}
 
 /** @} */ // end Algorithm Interface
 /** @} */ // end of publicInterface group

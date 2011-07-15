@@ -210,4 +210,14 @@ public:
 
     unsigned int m_seed; //!< @internal the seed for the random number generator
 };
+
+/** @brief Plan class for tridiagonal solver
+*
+*/
+class CUDPPTridiagonalPlan : public CUDPPPlan
+{
+public:
+    CUDPPTridiagonalPlan(CUDPPManager *mgr, CUDPPConfiguration config);
+};
+
 #endif // __CUDPP_PLAN_H__

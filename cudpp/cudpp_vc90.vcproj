@@ -1444,6 +1444,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\cudpp_tridiagonal.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\cudpp_util.h"
 				>
 			</File>
@@ -1709,6 +1713,78 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="StaticLib_EmuRelease|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\src\app\cr_app.cu"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\src\kernel\cr_kernel.cu"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\src\app\crpcr_app.cu"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\src\kernel\crpcr_kernel.cu"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\src\app\pcr_app.cu"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\src\kernel\pcr_kernel.cu"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -3676,6 +3752,10 @@
 						Name="CUDA Build Rule"
 					/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\src\app\tridiagonal_app.cu"
+				>
 			</File>
 			<File
 				RelativePath=".\src\kernel\vector_kernel.cu"
