@@ -11,6 +11,8 @@ typedef CUDPPHashTableInternal<CudaHT::CuckooHashing::CompactingHashTable> hti_c
 typedef CUDPPHashTableInternal<CudaHT::CuckooHashing::MultivalueHashTable> hti_multivalue;
 typedef CUDPPHashTableInternal<void> hti_void;
 
+const unsigned int CUDPP_HASH_KEY_NOT_FOUND = CudaHT::CuckooHashing::kNotFound;
+
 // cudppHashTable will create some sort of internal struct that you
 // write. It will then cast the pointer to that struct to a
 // CUDPPHandle (just like cudppPlan() does), and return that.
@@ -109,12 +111,10 @@ CUDPPResult cudppHashTable(CUDPPHandle theCudpp_, CUDPPHandle *hash_table,
 // getPlanPtrFromHandle<T>(handle), where T is the type of the
 // internal struct you define, to get back the pointer to the struct.
 CUDPP_HASH_DLL
-CUDPPResult cudppHashInsert(CUDPPHandle theCudpp_, CUDPPHandle plan, 
+CUDPPResult cudppHashInsert(CUDPPHandle /* theCudpp_ */, CUDPPHandle plan, 
                             const void* d_keys, const void* d_vals, 
                             unsigned int num)
 {
-    (void) theCudpp_;           // suppress compiler warning
-
     // the other way to do this hacky thing is to have inherited classes
     // from CUDPPHashTableInternal maybe?
     hti_void * hti_init = (hti_void *) getPlanPtrFromHandle<hti_void>(plan);
@@ -154,11 +154,9 @@ CUDPPResult cudppHashInsert(CUDPPHandle theCudpp_, CUDPPHandle plan,
 }
 
 CUDPP_HASH_DLL
-CUDPPResult cudppHashRetrieve(CUDPPHandle theCudpp_, CUDPPHandle plan, 
+CUDPPResult cudppHashRetrieve(CUDPPHandle /* theCudpp_ */, CUDPPHandle plan, 
                               const void* d_keys, void* d_vals, size_t num)
 {
-    (void) theCudpp_;           // suppress compiler warning
-
     hti_void * hti_init = (hti_void *) getPlanPtrFromHandle<hti_void>(plan);
     switch(hti_init->config.type)
     {
@@ -196,10 +194,8 @@ CUDPPResult cudppHashRetrieve(CUDPPHandle theCudpp_, CUDPPHandle plan,
 }
 
 CUDPP_HASH_DLL
-CUDPPResult cudppDestroyHashTable(CUDPPHandle theCudpp_, CUDPPHandle plan)
+CUDPPResult cudppDestroyHashTable(CUDPPHandle /* theCudpp_ */, CUDPPHandle plan)
 {
-    (void) theCudpp_;           // suppress compiler warning
-
     hti_void * hti_init = (hti_void *) getPlanPtrFromHandle<hti_void>(plan);
     switch(hti_init->config.type)
     {
@@ -232,10 +228,9 @@ CUDPPResult cudppDestroyHashTable(CUDPPHandle theCudpp_, CUDPPHandle plan)
 
 CUDPP_HASH_DLL
 CUDPPResult
-cudppMultivalueHashGetValuesSize(CUDPPHandle theCudpp_, CUDPPHandle plan,
+cudppMultivalueHashGetValuesSize(CUDPPHandle /* theCudpp_ */, CUDPPHandle plan,
                                  unsigned int * size)
 {
-    (void) theCudpp_;
     hti_void * hti_init = (hti_void *) getPlanPtrFromHandle<hti_void>(plan);
     if (hti_init->config.type != CUDPP_MULTIVALUE_HASH_TABLE)
     {
@@ -250,10 +245,9 @@ cudppMultivalueHashGetValuesSize(CUDPPHandle theCudpp_, CUDPPHandle plan,
 
 CUDPP_HASH_DLL
 CUDPPResult
-cudppMultivalueHashGetAllValues(CUDPPHandle theCudpp_, CUDPPHandle plan,
+cudppMultivalueHashGetAllValues(CUDPPHandle /* theCudpp_ */, CUDPPHandle plan,
                                 unsigned int ** d_vals)
 {
-    (void) theCudpp_;
     hti_void * hti_init = (hti_void *) getPlanPtrFromHandle<hti_void>(plan);
     if (hti_init->config.type != CUDPP_MULTIVALUE_HASH_TABLE)
     {
@@ -269,10 +263,8 @@ cudppMultivalueHashGetAllValues(CUDPPHandle theCudpp_, CUDPPHandle plan,
 
 
 CUDPP_HASH_DLL
-unsigned cudppHashGetNotFoundValue(CUDPPHandle theCudpp_)
+unsigned cudppHashGetNotFoundValue(CUDPPHandle /* theCudpp_ */)
 {
-    (void) theCudpp_;           // suppress compiler warning
-
     return CudaHT::CuckooHashing::kNotFound;
 }
 

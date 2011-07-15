@@ -24,13 +24,13 @@ using namespace cudpp_app;
 int CheckResults_basic(const unsigned            kInputSize,
                        const std::map<unsigned, unsigned> &pairs,
                        const unsigned           *query_keys,
-                       const unsigned           *query_vals,
-                       unsigned int             not_found)
+                       const unsigned           *query_vals)
 {
     int errors = 0;
     for (unsigned i = 0; i < kInputSize; ++i)
     {       
-        unsigned actual_value = not_found; // @TODO is this right? 
+        // @TODO is this right? 
+        unsigned actual_value = CUDPP_HASH_KEY_NOT_FOUND;
         std::map<unsigned, unsigned>::const_iterator it = 
             pairs.find(query_keys[i]);
         if (it != pairs.end())
@@ -54,8 +54,7 @@ int CheckResults_basic(const unsigned            kInputSize,
 int CheckResults_compacting(const unsigned            kInputSize,
                             const std::set<unsigned> &pairs,
                             const unsigned           *query_keys,
-                            const unsigned           *query_vals,
-                            unsigned int             not_found)
+                            const unsigned           *query_vals)
 {
     int errors = 0;
     std::map<unsigned, unsigned> id_to_key_map;
@@ -93,7 +92,7 @@ int CheckResults_compacting(const unsigned            kInputSize,
         }
 
         // Track which unique IDs were returned.
-        if (query_vals[j] != not_found)
+        if (query_vals[j] != CUDPP_HASH_KEY_NOT_FOUND)
         {
             ids.push_back(query_vals[j]);
         }
@@ -175,10 +174,8 @@ int CheckResults_multivalue(const unsigned            kInputSize,
                             &pairs,
                             const unsigned           *sorted_values,
                             const unsigned           *query_keys,
-                            const uint2              *query_vals_multivalue,
-                            unsigned int             not_found)
+                            const uint2              *query_vals_multivalue)
 {
-    (void) not_found;
     int errors = 0;
     for (unsigned i = 0; i < kInputSize; ++i) {
         std::map<unsigned, std::vector<unsigned> >::const_iterator itr = 
@@ -474,9 +471,7 @@ void testHashTable(CUDPPHandle theCudpp,
                             CheckResults_basic(kInputSize, 
                                                pairs_basic, 
                                                query_keys, 
-                                               query_vals,
-                                               cudppHashGetNotFoundValue
-                                               (theCudpp));
+                                               query_vals);
                         break;
                     case CUDPP_COMPACTING_HASH_TABLE:
                         CUDA_SAFE_CALL(cudaMemcpy(query_vals, d_test_vals, 
@@ -486,9 +481,7 @@ void testHashTable(CUDPPHandle theCudpp,
                             CheckResults_compacting(kInputSize, 
                                                     pairs_compacting, 
                                                     query_keys, 
-                                                    query_vals,
-                                                    cudppHashGetNotFoundValue
-                                                    (theCudpp));
+                                                    query_vals);
                         break;
                     case CUDPP_MULTIVALUE_HASH_TABLE:
                         CUDA_SAFE_CALL(cudaMemcpy(query_vals_multivalue,
@@ -500,9 +493,7 @@ void testHashTable(CUDPPHandle theCudpp,
                                                     pairs_multivalue, 
                                                     sorted_values,
                                                     query_keys, 
-                                                    query_vals_multivalue,
-                                                    cudppHashGetNotFoundValue
-                                                    (theCudpp));
+                                                    query_vals_multivalue);
                         break;
                     default:
                         errors = -1;

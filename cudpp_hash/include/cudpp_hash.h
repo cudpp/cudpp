@@ -64,6 +64,8 @@ public:
     }
 };
 
+extern const unsigned int CUDPP_HASH_KEY_NOT_FOUND;
+
 CUDPPResult
 cudppHashTable(CUDPPHandle theCudpp_, CUDPPHandle *plan, 
                const CUDPPHashTableConfig *config);

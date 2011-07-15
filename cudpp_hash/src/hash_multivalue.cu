@@ -303,6 +303,7 @@ MultivalueHashTable::MultivalueHashTable() :
     d_scratch_offsets_(NULL),
     d_scratch_is_unique_(NULL),
     d_unique_keys_(NULL),
+    scanplan_(0),
     HashTable()
 {
 }
