@@ -22,6 +22,7 @@
  * @{
  */
 
+// #include "stopwatch.h"
 #include "kernel/cr_kernel.cu"
 
 /**
@@ -51,9 +52,9 @@ void cr(T *a, T *b, T *c, T *d, T *x, int systemSize, int numSystems)
     T* d_d;
     T* d_x;
 
-    unsigned int timer;
-    CUT_SAFE_CALL(cutCreateTimer(&timer));
-    cutStartTimer(timer);
+    // cudpp_app::StopWatch timer;
+    // timer.reset();
+    // timer.start();
 
     CUDA_SAFE_CALL( cudaMalloc( (void**) &d_a,memSize));
     CUDA_SAFE_CALL( cudaMalloc( (void**) &d_b,memSize));
@@ -61,8 +62,8 @@ void cr(T *a, T *b, T *c, T *d, T *x, int systemSize, int numSystems)
     CUDA_SAFE_CALL( cudaMalloc( (void**) &d_d,memSize));
     CUDA_SAFE_CALL( cudaMalloc( (void**) &d_x,memSize));
 
-    cutStopTimer(timer);
-    printf("GPU cudaMalloc time: %f ms\n", cutGetTimerValue(timer));
+    // timer.stop();            
+    // printf("GPU cudaMalloc time: %f ms\n", timer.getTime());
 
    // copy host memory to device input array
     CUDA_SAFE_CALL( cudaMemcpy( d_a, a,memSize, cudaMemcpyHostToDevice));

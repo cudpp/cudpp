@@ -238,6 +238,12 @@
  * Note that prior to release 1.1 of CUDPP, the license used was a modified
  * BSD license.  With release 1.1, this license was replaced with the pure BSD
  * license to facilitate the use of open source hosting of the code.
+ *
+ * CUDPP also includes the <a
+ * href="http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/emt.html">Mersenne
+ * twister code</a> of <a
+ * href="http://www.math.sci.hiroshima-u.ac.jp/~m-mat/eindex.html">Makoto
+ * Matsumoto</a>, also licensed under BSD. 
  */
 
 /**
@@ -247,6 +253,11 @@
  *
  * CUDPP is released under the 
  * <a href="http://www.opensource.org/licenses/bsd-license.php">BSD license</a>.
+ * This CUDPP distribution also includes the <a
+ * href="http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/emt.html"Mersenne
+ * twister code</a> of <a
+ * href="http://www.math.sci.hiroshima-u.ac.jp/~m-mat/eindex.html">Makoto
+ * Matsumoto</a>, also licensed under BSD, as the file <em>mt19937ar.c</em>. 
  * 
  * @include license.txt
  *

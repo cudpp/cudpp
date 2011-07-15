@@ -25,8 +25,8 @@
 #include "cudpp.h"
 #include "cudpp_util.h"
 #include "cudpp_plan.h"
+#include "cuda_util.h"
 
-#include <cutil.h>
 #include <cstdlib>
 #include <cstdio>
 #include <assert.h>
