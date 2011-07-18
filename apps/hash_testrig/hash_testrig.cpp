@@ -226,26 +226,43 @@ int CheckResults_multivalue(const unsigned            kInputSize,
     return errors;
 }
 
-void testHashTable(CUDPPHandle theCudpp,
-                   CUDPPHashTableType htt,
-                   unsigned int kMaxIterations,
-                   unsigned int kInputSize,
-                   unsigned int * number_pool,
-                   unsigned int pool_size,
-                   unsigned int * input_vals,
-                   unsigned int * input_keys,
-                   unsigned int * d_test_vals,
-                   uint2 *        d_test_vals_multivalue,
-                   unsigned int * d_test_keys,
-                   unsigned int * query_vals,
-                   uint2 *        query_vals_multivalue,
-                   unsigned int * query_keys)
+int testHashTable(CUDPPHandle theCudpp,
+                  CUDPPHashTableType htt,
+                  unsigned int kMaxIterations,
+                  unsigned int kInputSize,
+                  unsigned int * number_pool,
+                  unsigned int pool_size,
+                  unsigned int * input_vals,
+                  unsigned int * input_keys,
+                  unsigned int * d_test_vals,
+                  uint2 *        d_test_vals_multivalue,
+                  unsigned int * d_test_keys,
+                  unsigned int * query_vals,
+                  uint2 *        query_vals_multivalue,
+                  unsigned int * query_keys)
 {
+    int total_errors = 0;
     for (unsigned iteration = 0; iteration < kMaxIterations; ++iteration)
     {       
+        switch(htt)
+        {
+        case CUDPP_BASIC_HASH_TABLE:
+            printf("Basic hash table: ");
+            break;
+        case CUDPP_COMPACTING_HASH_TABLE:
+            printf("Compacting hash table: ");
+            break;
+        case CUDPP_MULTIVALUE_HASH_TABLE:
+            printf("Multivalue hash table: ");
+            break;
+        default:
+            printf("INVALID hash table: ");
+            break;
+        }
+        
         printf("Iteration %u\n", iteration);
 
-        unsigned int multiplicity_max = 1; // loops only once
+        unsigned int multiplicity_max = 1; // loops only once by default
         switch(htt)
         {
         case CUDPP_COMPACTING_HASH_TABLE:
@@ -383,7 +400,7 @@ void testHashTable(CUDPPHandle theCudpp,
                 cudppHashInsert(theCudpp, hash_table_handle, d_test_keys, 
                                 d_test_vals, kInputSize);
                 timer.stop();
-                printf("\t\tHash table build: %f ms\n", timer.getTime());
+                printf("\tHash table build: %f ms\n", timer.getTime());
                 /// -----------------------------------------------------------
 
                 unsigned *sorted_values = NULL;
@@ -435,39 +452,39 @@ void testHashTable(CUDPPHandle theCudpp,
                     /// hash_table.Retrieve(kInputSize, d_test_keys, 
                     //                      d_test_vals);
 
-                    // @TODO clean this up
-                    unsigned int errors;
+                    unsigned int errors = 0;
                     switch(htt)
                     {
                     case CUDPP_BASIC_HASH_TABLE:
                     case CUDPP_COMPACTING_HASH_TABLE:
-                        cudppHashRetrieve(theCudpp, hash_table_handle, d_test_keys, 
-                                          d_test_vals, kInputSize);
+                        cudppHashRetrieve(theCudpp, hash_table_handle, 
+                                          d_test_keys, d_test_vals, kInputSize);
                         break;                                          
                     case CUDPP_MULTIVALUE_HASH_TABLE:
-                        cudppHashRetrieve(theCudpp, hash_table_handle, d_test_keys, 
-                                          d_test_vals_multivalue, kInputSize);
+                        cudppHashRetrieve(theCudpp, hash_table_handle, 
+                                          d_test_keys, d_test_vals_multivalue, 
+                                          kInputSize);
                         break;
                     default:
-                        errors = -1;
+                        errors++;
                         fprintf(stderr, "Bad CUDPPHashTableType (htt) in "
                                 "testHashTable\n");
                         break;
                     }                 
                     timer.stop();
-                    printf("\t\tHash table retrieve with %3u%% chance of "
+                    printf("\tHash table retrieve with %3u%% chance of "
                            "failed queries: %f ms\n", failure * failure_trials, 
                            timer.getTime());
-                    /// -----------------------------------------------------------
+                    /// --------------------------------------------------------
   
                     // Check the results.
                     switch(htt)
                     {
                     case CUDPP_BASIC_HASH_TABLE:
                         CUDA_SAFE_CALL(cudaMemcpy(query_vals, d_test_vals, 
-                                                  sizeof(unsigned) * kInputSize, 
+                                                  sizeof(unsigned) * kInputSize,
                                                   cudaMemcpyDeviceToHost));
-                        errors = 
+                        errors += 
                             CheckResults_basic(kInputSize, 
                                                pairs_basic, 
                                                query_keys, 
@@ -475,9 +492,9 @@ void testHashTable(CUDPPHandle theCudpp,
                         break;
                     case CUDPP_COMPACTING_HASH_TABLE:
                         CUDA_SAFE_CALL(cudaMemcpy(query_vals, d_test_vals, 
-                                                  sizeof(unsigned) * kInputSize, 
+                                                  sizeof(unsigned) * kInputSize,
                                                   cudaMemcpyDeviceToHost));
-                        errors =
+                        errors +=
                             CheckResults_compacting(kInputSize, 
                                                     pairs_compacting, 
                                                     query_keys, 
@@ -488,7 +505,7 @@ void testHashTable(CUDPPHandle theCudpp,
                                                   d_test_vals_multivalue, 
                                                   sizeof(uint2) * kInputSize, 
                                                   cudaMemcpyDeviceToHost));
-                        errors = 
+                        errors += 
                             CheckResults_multivalue(kInputSize,
                                                     pairs_multivalue, 
                                                     sorted_values,
@@ -496,7 +513,7 @@ void testHashTable(CUDPPHandle theCudpp,
                                                     query_vals_multivalue);
                         break;
                     default:
-                        errors = -1;
+                        errors++;
                         fprintf(stderr, "Bad CUDPPHashTableType (htt) in "
                                 "testHashTable\n");
                         break;
@@ -510,6 +527,7 @@ void testHashTable(CUDPPHandle theCudpp,
                     {
                         printf("No errors found, test passes\n");
                     }
+                    total_errors += errors;
                 }
   
                 delete [] sorted_values;
@@ -520,6 +538,7 @@ void testHashTable(CUDPPHandle theCudpp,
             }
         }
     }
+    return total_errors;
 }
 
 
@@ -570,7 +589,7 @@ int main(int argc, const char **argv)
     unsigned kInputSize = 1000000;
     commandLineArg(kInputSize, argc, argv, "n");
 
-    unsigned kMaxIterations = 100;
+    unsigned kMaxIterations = 1;
     commandLineArg(kMaxIterations, argc, argv, "iterations");
 
     /// Allocate memory.
@@ -608,6 +627,7 @@ int main(int argc, const char **argv)
         return retval;
     }
     
+    int total_errors = 0;
     for (CUDPPHashTableType htt = CUDPP_BASIC_HASH_TABLE;
          htt != CUDPP_INVALID_HASH_TABLE;
          htt++)
@@ -617,21 +637,30 @@ int main(int argc, const char **argv)
             ((htt == CUDPP_COMPACTING_HASH_TABLE) && runCompactingHash) ||
             ((htt == CUDPP_MULTIVALUE_HASH_TABLE) && runMultivalueHash))
         {
-            testHashTable(theCudpp,
-                          htt,
-                          kMaxIterations,
-                          kInputSize, 
-                          number_pool,
-                          pool_size,
-                          input_vals,
-                          input_keys, 
-                          d_test_vals,
-                          d_test_vals_multivalue,
-                          d_test_keys,
-                          query_vals, 
-                          query_vals_multivalue,
-                          query_keys);
+            total_errors += 
+                testHashTable(theCudpp,
+                              htt,
+                              kMaxIterations,
+                              kInputSize, 
+                              number_pool,
+                              pool_size,
+                              input_vals,
+                              input_keys, 
+                              d_test_vals,
+                              d_test_vals_multivalue,
+                              d_test_keys,
+                              query_vals, 
+                              query_vals_multivalue,
+                              query_keys);
         }
+    }
+    if (total_errors == 0)
+    {
+        printf("All tests pass.\n");
+    }
+    else
+    {
+        printf("Some tests failed.\n");
     }
 
 
@@ -649,7 +678,9 @@ int main(int argc, const char **argv)
     if (result != CUDPP_SUCCESS)
     {
         if (!quiet)
+        {
             printf("Error shutting down CUDPP Library.\n");
+        }
     }
 
     return retval;
