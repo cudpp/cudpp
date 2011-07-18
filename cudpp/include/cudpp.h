@@ -92,6 +92,7 @@
  * CUDPP_REDUCE             NO LIMIT
  * CUDPP_RAND               33,554,432 elements
  * CUDPP_SPMVMULT           67,107,840 non-zero elements
+ * CUDPP_TRIDIAGONAL        1024 equations per system (Geforce 400 series), no limit on the number of systems 
  * 
  * \section opSys Operating System Support
  * 

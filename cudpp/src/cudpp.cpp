@@ -511,18 +511,17 @@ const char * operator_to_string[] =
 /**
  * @brief Solves a tridiagonal linear system
  *
- * We support three algorithms, which are cyclic reduction (CR),
- * parallel cyclic reduction (PCR), and the hybrid 
- * CR-PCR  algorithm. We support both float and double datatypes.
- * By configuring a plan, you can select the algorithm and datatype 
- * to be used. 
+ * We support three algorithms, cyclic reduction (CR), parallel cyclic 
+ * reduction (PCR), and the hybrid CR-PCR  algorithm, in both the float 
+ * and double datatype. By configuring a plan, you can select the algorithm 
+ * and datatype to be used. 
  
- * The maximum system size is limited by the maximum number of threads
+ * The maximum system size could be limited by the maximum number of threads
  * of a CUDA block, the number of registers per multiprocessor, and the 
- * amount of shared memory available. For the GTX 280 GPU, the maximum system
- * size we support is 512 for float datatype, and 256 for double 
+ * amount of shared memory available. For exampel, on the GTX 280 GPU, the 
+ * maximum system size is 512 for the float datatype, and 256 for the double 
  * datatype, which is determined by the size of shared memory in this case. 
- * There is virtually no limitation on the number of systems to be solved, 
+ * There is virtually no limit on the number of systems to be solved, 
  * which depends on the maximum number of CUDA blocks that can be issued
  * for a kernel launch.
  *
