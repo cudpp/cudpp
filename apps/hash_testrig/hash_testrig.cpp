@@ -399,6 +399,7 @@ int testHashTable(CUDPPHandle theCudpp,
                 /// hash_table.Build(kInputSize, d_test_keys, d_test_vals);
                 cudppHashInsert(theCudpp, hash_table_handle, d_test_keys, 
                                 d_test_vals, kInputSize);
+                cudaThreadSynchronize();
                 timer.stop();
                 printf("\tHash table build: %f ms\n", timer.getTime());
                 /// -----------------------------------------------------------
@@ -471,6 +472,7 @@ int testHashTable(CUDPPHandle theCudpp,
                                 "testHashTable\n");
                         break;
                     }                 
+                    cudaThreadSynchronize();
                     timer.stop();
                     printf("\tHash table retrieve with %3u%% chance of "
                            "failed queries: %f ms\n", failure * failure_trials, 
