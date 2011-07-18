@@ -45,6 +45,7 @@ int testRadixSort(int argc, const char ** argv, const CUDPPConfiguration *config
 int testReduce(int argc, const char ** argv, const CUDPPConfiguration *config);
 int testSparseMatrixVectorMultiply(int argc, const char ** argv);
 int testRandMD5(int argc, const char ** argv);
+int testTridiagonal(int argc, const char** argv, const CUDPPConfiguration *config);
 
 int testAllDatatypes(int argc, 
                      const char** argv, 
@@ -75,6 +76,19 @@ int testAllDatatypes(int argc,
             }
         }
     }
+
+    if (config.algorithm == CUDPP_TRIDIAGONAL)
+    {
+        config.datatype = CUDPP_FLOAT;
+        retval += testTridiagonal(argc, argv, &config);
+
+        if (supportsDouble)
+        {
+            config.datatype = CUDPP_DOUBLE;
+            retval += testTridiagonal(argc, argv, &config);      
+        }
+    }
+    
     return retval;
 }
 
@@ -85,6 +99,17 @@ int testAllOptionsAndDatatypes(int argc,
                                bool multiRow = false)
 {
     int retval = 0;
+
+    if (config.algorithm == CUDPP_TRIDIAGONAL)
+    {
+        config.options = CUDPP_OPTION_TRIDIAGONAL_CR;
+        retval += testAllDatatypes(argc, argv, config, supportsDouble, multiRow);
+        config.options = CUDPP_OPTION_TRIDIAGONAL_PCR;
+        retval += testAllDatatypes(argc, argv, config, supportsDouble, multiRow);
+        config.options = CUDPP_OPTION_TRIDIAGONAL_CRPCR;
+        retval += testAllDatatypes(argc, argv, config, supportsDouble, multiRow);
+	return retval;
+    }
     
     if (config.algorithm == CUDPP_SORT_RADIX)
     {
@@ -225,6 +250,7 @@ int main(int argc, const char** argv)
         printf("compact: Run compact test(s)\n\n");
         printf("reduce: Run reduce test(s)\n\n");
         printf("rand: Run random number generator test(s)\n\n");
+        printf("tridiagonal: Run tridiagonal solver test(s)\n\n");	
         printf("--- Global Options ---\n");
         printf("iterations=<N>: Number of times to run each test\n");
         printf("n=<N>: Number of values to use in a single test\n");
@@ -261,6 +287,7 @@ int main(int argc, const char** argv)
     bool runSort = runAll || checkCommandLineFlag(argc, argv, "sort");
     bool runRand = runAll || checkCommandLineFlag(argc, argv, "rand");
     bool runSpmv = checkCommandLineFlag(argc, argv, "spmv");
+    bool runTridiagonal = checkCommandLineFlag(argc, argv, "tridiagonal");
     
     bool hasopts = hasOptions(argc, argv);
 
@@ -307,6 +334,12 @@ int main(int argc, const char** argv)
             config.algorithm = CUDPP_SCAN;
             retval += testAllOptionsAndDatatypes(argc, argv, config, supportsDouble, true);        
         }
+        
+        if (runTridiagonal) {
+            config.algorithm = CUDPP_TRIDIAGONAL;
+            retval += testAllOptionsAndDatatypes(argc, argv, config, supportsDouble);
+        }    
+
     }
 
     if (runSpmv)

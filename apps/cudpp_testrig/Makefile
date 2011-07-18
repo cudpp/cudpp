@@ -10,7 +10,7 @@ EXECUTABLE	:= cudpp_testrig
 
 CCFILES :=	cudpp_testrig.cpp cudpp_testrig_options.cpp spmvmult_gold.cpp \
 		rand_gold.cpp test_radixsort.cpp test_rand.cpp test_reduce.cpp \
-		test_scan.cpp test_spmvmult.cpp test_compact.cpp \
+		test_scan.cpp test_spmvmult.cpp test_compact.cpp test_tridiagonal.cpp\
 
 INCLUDES := -I../../cudpp/include -I../common/ 
 
