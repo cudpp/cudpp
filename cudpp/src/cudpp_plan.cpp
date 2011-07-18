@@ -111,17 +111,7 @@ CUDPPResult cudppPlan(const CUDPPHandle  cudppHandle,
             plan = new CUDPPRandPlan(mgr, config, numElements);
             break;
         }
-    case (CUDPP_TRIDIAGONAL_CR):
-        {
-            plan = new CUDPPTridiagonalPlan(mgr, config);
-            break;
-        }
-    case (CUDPP_TRIDIAGONAL_PCR):
-        {
-            plan = new CUDPPTridiagonalPlan(mgr, config);
-            break;
-        }
-    case (CUDPP_TRIDIAGONAL_CRPCR):
+    case (CUDPP_TRIDIAGONAL):
         {
             plan = new CUDPPTridiagonalPlan(mgr, config);
             break;
@@ -187,17 +177,7 @@ CUDPPResult cudppDestroyPlan(CUDPPHandle planHandle)
             delete static_cast<CUDPPRandPlan*>(plan);
             break;
         }
-    case (CUDPP_TRIDIAGONAL_CR):
-        {
-            delete static_cast<CUDPPTridiagonalPlan*>(plan);
-            break;
-        }
-    case (CUDPP_TRIDIAGONAL_PCR):
-        {
-            delete static_cast<CUDPPTridiagonalPlan*>(plan);
-            break;
-        }
-    case (CUDPP_TRIDIAGONAL_CRPCR):
+    case (CUDPP_TRIDIAGONAL):
         {
             delete static_cast<CUDPPTridiagonalPlan*>(plan);
             break;

@@ -58,44 +58,45 @@ extern "C"
  * @param[in] numSystems The number of systems to be solved
  * @param[in] plan pointer to CUDPPTridiagonalPlan
  */
-void cudppTridiagonalDispatch(void *a, 
-                              void *b, 
-                              void *c, 
-                              void *d, 
-                              void *x, 
+void cudppTridiagonalDispatch(void *d_a, 
+                              void *d_b, 
+                              void *d_c, 
+                              void *d_d, 
+                              void *d_x, 
                               int systemSize, 
                               int numSystems, 
                               const CUDPPTridiagonalPlan * plan)
 {
+  
     //figure out which algorithm to run
     if (plan->m_config.datatype == CUDPP_FLOAT)
     {
-        switch(plan->m_config.algorithm)
+        switch(plan->m_config.options)
         {
-            case CUDPP_TRIDIAGONAL_CR:
-                cr<float>((float *)a, 
-                          (float *)b, 
-                          (float *)c, 
-                          (float *)d, 
-                          (float *)x, 
+            case CUDPP_OPTION_TRIDIAGONAL_CR:
+                cr<float>((float *)d_a, 
+                          (float *)d_b, 
+                          (float *)d_c, 
+                          (float *)d_d, 
+                          (float *)d_x, 
                           systemSize, 
                           numSystems);
                 break;
-            case CUDPP_TRIDIAGONAL_PCR:
-                pcr<float>((float *)a, 
-                           (float *)b, 
-                           (float *)c, 
-                           (float *)d, 
-                           (float *)x, 
+            case CUDPP_OPTION_TRIDIAGONAL_PCR:
+                pcr<float>((float *)d_a, 
+                           (float *)d_b, 
+                           (float *)d_c, 
+                           (float *)d_d, 
+                           (float *)d_x, 
                            systemSize, 
                            numSystems);
                 break;
-            case CUDPP_TRIDIAGONAL_CRPCR:
-                crpcr<float>((float *)a, 
-                             (float *)b, 
-                             (float *)c, 
-                             (float *)d, 
-                             (float *)x, 
+            case CUDPP_OPTION_TRIDIAGONAL_CRPCR:
+                crpcr<float>((float *)d_a, 
+                             (float *)d_b, 
+                             (float *)d_c, 
+                             (float *)d_d, 
+                             (float *)d_x, 
                              systemSize, 
                              numSystems);
                 break;
@@ -105,32 +106,32 @@ void cudppTridiagonalDispatch(void *a,
     }
     else if (plan->m_config.datatype == CUDPP_DOUBLE)
     {
-        switch(plan->m_config.algorithm)
+        switch(plan->m_config.options)
         {
-            case CUDPP_TRIDIAGONAL_CR:
-                cr<double>((double *)a, 
-                           (double *)b, 
-                           (double *)c, 
-                           (double *)d, 
-                           (double *)x, 
+            case CUDPP_OPTION_TRIDIAGONAL_CR:
+                cr<double>((double *)d_a, 
+                           (double *)d_b, 
+                           (double *)d_c, 
+                           (double *)d_d, 
+                           (double *)d_x, 
                            systemSize, 
                            numSystems);
                 break;
-            case CUDPP_TRIDIAGONAL_PCR:
-                pcr<double>((double *)a, 
-                            (double *)b, 
-                            (double *)c, 
-                            (double *)d, 
-                            (double *)x, 
+            case CUDPP_OPTION_TRIDIAGONAL_PCR:
+                pcr<double>((double *)d_a, 
+                            (double *)d_b, 
+                            (double *)d_c, 
+                            (double *)d_d, 
+                            (double *)d_x, 
                             systemSize, 
                             numSystems);
                 break;
-            case CUDPP_TRIDIAGONAL_CRPCR:
-                crpcr<double>((double *)a, 
-                              (double *)b, 
-                              (double *)c, 
-                              (double *)d, 
-                              (double *)x, 
+            case CUDPP_OPTION_TRIDIAGONAL_CRPCR:
+                crpcr<double>((double *)d_a, 
+                              (double *)d_b, 
+                              (double *)d_c, 
+                              (double *)d_d, 
+                              (double *)d_x, 
                               systemSize, 
                               numSystems);
                 break;
@@ -140,6 +141,7 @@ void cudppTridiagonalDispatch(void *a,
     }
     else
         printf("datatype not specified\n");
+    
 }
 
 #ifdef __cplusplus

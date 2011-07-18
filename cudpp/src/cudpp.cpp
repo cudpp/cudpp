@@ -539,20 +539,21 @@ const char * operator_to_string[] =
  */
 CUDPP_DLL
 CUDPPResult cudppTridiagonal(CUDPPHandle planHandle, 
-                             void *a, 
-                             void *b, 
-                             void *c, 
-                             void *d, 
-                             void *x, 
+                             void *d_a, 
+                             void *d_b, 
+                             void *d_c, 
+                             void *d_d, 
+                             void *d_x, 
                              int systemSize, 
                              int numSystems)
-{
+{   
     CUDPPTridiagonalPlan * plan = 
         (CUDPPTridiagonalPlan *) getPlanPtrFromHandle<CUDPPTridiagonalPlan>(planHandle);
+    
     if(plan != NULL)
     {
         //dispatch the tridiagonal solver here
-        cudppTridiagonalDispatch(a, b, c, d, x, systemSize, numSystems, plan);
+        cudppTridiagonalDispatch(d_a, d_b, d_c, d_d, d_x, systemSize, numSystems, plan);
         return CUDPP_SUCCESS;
     }
     else

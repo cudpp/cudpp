@@ -382,6 +382,13 @@ enum CUDPPOption
     CUDPP_OPTION_KEYS_ONLY = 0x20, /**< No associated value to a key 
                                     * (for global radix sort) */
     CUDPP_OPTION_KEY_VALUE_PAIRS = 0x40, /**< Each key has an associated value */
+
+    CUDPP_OPTION_TRIDIAGONAL_CR = 0x80,  /**< Tridiagonal solver using 
+                                          * cyclic reduction (CR) algorithm */
+    CUDPP_OPTION_TRIDIAGONAL_PCR = 0x100,/**< Tridiagonal solver using 
+                                          * parallel cyclic reduction (PCR) algorithm */
+    CUDPP_OPTION_TRIDIAGONAL_CRPCR = 0x200 /**< Tridiagonal solver using 
+                                            * hybrid CR-PCR algorithm */
 };
 
 
@@ -439,9 +446,7 @@ enum CUDPPAlgorithm
     CUDPP_SORT_RADIX,        //!< Radix sort
     CUDPP_SPMVMULT,          //!< Sparse matrix-dense vector multiplication
     CUDPP_RAND_MD5,          //!< Pseudorandom number generator using MD5 hash algorithm
-    CUDPP_TRIDIAGONAL_CR,    //!< Tridiagonal solver using cyclic reduction algorithm
-    CUDPP_TRIDIAGONAL_PCR,   //!< Tridiagonal solver using parallel cyclic reduction algorithm
-    CUDPP_TRIDIAGONAL_CRPCR, //!< Tridiagonal solver using hybrid CR-PCR algorithm
+    CUDPP_TRIDIAGONAL,    //!< Tridiagonal solver algorithm
     CUDPP_ALGORITHM_INVALID, //!< Placeholder at end of enum
 };
 
