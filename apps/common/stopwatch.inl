@@ -19,14 +19,13 @@
 
 namespace cudpp_app {
 
-    #ifdef WIN32
-
+#ifdef WIN32
     //! tick frequency
-    /*static*/ double  StopWatchWin::freq;
+    /*static*/ double  StopWatch::freq;
 
     //! flag if the frequency has been set
-    /*static*/  bool   StopWatchWin::freq_set;
-    #endif
+    /*static*/  bool   StopWatch::freq_set;
+#endif
 
     ////////////////////////////////////////////////////////////////////////////////
     //! Constructor, default
