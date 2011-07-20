@@ -29,7 +29,7 @@
 #include "cudpp_radixsort.h"
 #include "cudpp_scan.h"
 #if 0
-#include "kernel/radixsort_kernel.cu"
+#include "kernel/radixsort_kernel.cuh"
 #include "cudpp_maximal_launch.h"
 #endif
 #include <cstdlib>
@@ -988,8 +988,7 @@ void cudppRadixSortDispatch(void  *keys,
                             size_t numElements,
                             const CUDPPRadixSortPlan *plan)
 {
-    
-        
+   
     switch(plan->m_config.datatype)
     {
     case CUDPP_CHAR:
@@ -1017,7 +1016,7 @@ void cudppRadixSortDispatch(void  *keys,
         runSort<unsigned long long>((unsigned long long*)keys, (unsigned int*)values, numElements, plan);
         break;
     }
-        
+
     /*direction = direction;      // @todo: add capability to backward sort
     if (plan->m_bKeysOnly)
     {

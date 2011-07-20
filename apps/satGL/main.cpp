@@ -54,11 +54,12 @@
 #define CUDPP_APP_COMMON_IMPL
 #include "findfile.h"
 #include "ppm.h"
+#include "cuda_util.h"
 //#include "stopwatch.h"
 
 using namespace cudpp_app;
 
-#if CUDA_VERSION < 3000
+#if CUDART_VERSION < 3000
 #define USE_CUDA_GRAPHICS_INTEROP 0
 #else
 #define USE_CUDA_GRAPHICS_INTEROP 1
@@ -180,7 +181,7 @@ int
 main( int argc, char** argv) {
 
     int deviceCount;
-    cudaGetDeviceCount(&deviceCount);
+    CUDA_SAFE_CALL(cudaGetDeviceCount(&deviceCount));
     if (deviceCount == 0) {
         fprintf(stderr, "error: no devices supporting CUDA.\n");
         exit(-1);
@@ -195,7 +196,7 @@ main( int argc, char** argv) {
     }
     if (dev < 0) dev = 0;
     if (dev > deviceCount-1) dev = deviceCount - 1;
-    cudaSetDevice(dev);
+    CUDA_SAFE_CALL(cudaSetDevice(dev));
 
     cudaDeviceProp prop;
     if (cudaGetDeviceProperties(&prop, dev) == cudaSuccess)
@@ -473,7 +474,7 @@ createPBO( GLuint* pbo, bool bUseFloat)
     {
         size_tex_data = sizeof(GLubyte) * num_values;
     }
-    void *data = malloc(size_tex_data);
+    int *data = (int*)malloc(size_tex_data);
 
     // create buffer object
     glGenBuffers( 1, pbo);
@@ -485,14 +486,14 @@ createPBO( GLuint* pbo, bool bUseFloat)
 
     glBindBuffer( GL_ARRAY_BUFFER, 0);
 
+    CHECK_ERROR_GL();
+
     // attach this Buffer Object to CUDA
 #if USE_CUDA_GRAPHICS_INTEROP
-    cudaGraphicsGLRegisterBuffer(&gres, *pbo, cudaGraphicsMapFlagsWriteDiscard);
+    CUDA_SAFE_CALL(cudaGraphicsGLRegisterBuffer(&gres, *pbo, cudaGraphicsMapFlagsWriteDiscard));
 #else
-    cudaGLRegisterBufferObject(*pbo);
+    CUDA_SAFE_CALL(cudaGLRegisterBufferObject(*pbo));
 #endif
-
-    CHECK_ERROR_GL();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -507,16 +508,17 @@ deletePBO( GLuint* pbo)
 {
 
 #if USE_CUDA_GRAPHICS_INTEROP
-    cudaGraphicsUnregisterResource(gres);
+    CUDA_SAFE_CALL(cudaGraphicsUnregisterResource(gres));
 #else
-    cudaGLUnregisterBufferObject(*pbo);
+    CUDA_SAFE_CALL(cudaGLUnregisterBufferObject(*pbo));
 #endif
 
     glBindBuffer( GL_ARRAY_BUFFER, *pbo);
     glDeleteBuffers( 1, pbo);
-    CHECK_ERROR_GL();
-
+    
     glBindBuffer( GL_ARRAY_BUFFER, 0);
+
+    CHECK_ERROR_GL();
 
     *pbo = 0;
 }

@@ -32,7 +32,7 @@
 */
 
 #include <cudpp_globals.h>
-#include "cta/segmented_scan_cta.cu"
+#include "cta/segmented_scan_cta.cuh"
 #include "sharedmem.h"
 
 /**

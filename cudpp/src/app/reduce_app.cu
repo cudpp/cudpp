@@ -20,7 +20,7 @@
 #include "cuda_util.h"
 #include "cudpp_plan.h"
 #include "cudpp_util.h"
-#include "kernel/reduce_kernel.cu"
+#include "kernel/reduce_kernel.cuh"
 
 /** \addtogroup cudpp_app
   *
@@ -43,8 +43,8 @@
 template <class T, class Oper>
 void reduceBlocks(T *d_odata, const T *d_idata, size_t numElements, const CUDPPReducePlan *plan)
 {
-    unsigned int numThreads = (numElements > 2 * plan->m_threadsPerBlock) ?
-        plan->m_threadsPerBlock : ceilPow2((numElements + 1) / 2);
+    unsigned int numThreads = (unsigned int)((numElements > 2 * plan->m_threadsPerBlock) ?
+        plan->m_threadsPerBlock : ceilPow2((numElements + 1) / 2));
     dim3 dimBlock(numThreads, 1, 1);
     unsigned int numBlocks =
         min(plan->m_maxBlocks,
@@ -56,30 +56,30 @@ void reduceBlocks(T *d_odata, const T *d_idata, size_t numElements, const CUDPPR
 
     // choose which of the optimized versions of reduction to launch
     
-    if (isPowerOfTwo(numElements))
+    if (isPowerOfTwo((unsigned int)numElements))
     {
         switch (dimBlock.x)
         {
         case 512:
-            reduce<T, Oper, 512, true><<< dimGrid, dimBlock, smemSize >>>(d_odata, d_idata, numElements); break;
+            reduce<T, Oper, 512, true><<< dimGrid, dimBlock, smemSize >>>(d_odata, d_idata, (unsigned)numElements); break;
         case 256:
-            reduce<T, Oper, 256, true><<< dimGrid, dimBlock, smemSize >>>(d_odata, d_idata, numElements); break;
+            reduce<T, Oper, 256, true><<< dimGrid, dimBlock, smemSize >>>(d_odata, d_idata, (unsigned)numElements); break;
         case 128:
-            reduce<T, Oper, 128, true><<< dimGrid, dimBlock, smemSize >>>(d_odata, d_idata, numElements); break;
+            reduce<T, Oper, 128, true><<< dimGrid, dimBlock, smemSize >>>(d_odata, d_idata, (unsigned)numElements); break;
         case 64:
-            reduce<T, Oper, 64, true><<< dimGrid, dimBlock, smemSize >>>(d_odata, d_idata, numElements); break;
+            reduce<T, Oper, 64, true><<< dimGrid, dimBlock, smemSize >>>(d_odata, d_idata, (unsigned)numElements); break;
         case 32:
-            reduce<T, Oper, 32, true><<< dimGrid, dimBlock, smemSize >>>(d_odata, d_idata, numElements); break;
+            reduce<T, Oper, 32, true><<< dimGrid, dimBlock, smemSize >>>(d_odata, d_idata, (unsigned)numElements); break;
         case 16:
-            reduce<T, Oper, 16, true><<< dimGrid, dimBlock, smemSize >>>(d_odata, d_idata, numElements); break;
+            reduce<T, Oper, 16, true><<< dimGrid, dimBlock, smemSize >>>(d_odata, d_idata, (unsigned)numElements); break;
         case  8:
-            reduce<T, Oper,  8, true><<< dimGrid, dimBlock, smemSize >>>(d_odata, d_idata, numElements); break;
+            reduce<T, Oper,  8, true><<< dimGrid, dimBlock, smemSize >>>(d_odata, d_idata, (unsigned)numElements); break;
         case  4:
-            reduce<T, Oper,  4, true><<< dimGrid, dimBlock, smemSize >>>(d_odata, d_idata, numElements); break;
+            reduce<T, Oper,  4, true><<< dimGrid, dimBlock, smemSize >>>(d_odata, d_idata, (unsigned)numElements); break;
         case  2:
-            reduce<T, Oper,  2, true><<< dimGrid, dimBlock, smemSize >>>(d_odata, d_idata, numElements); break;
+            reduce<T, Oper,  2, true><<< dimGrid, dimBlock, smemSize >>>(d_odata, d_idata, (unsigned)numElements); break;
         case  1:
-            reduce<T, Oper,  1, true><<< dimGrid, dimBlock, smemSize >>>(d_odata, d_idata, numElements); break;
+            reduce<T, Oper,  1, true><<< dimGrid, dimBlock, smemSize >>>(d_odata, d_idata, (unsigned)numElements); break;
         }
     }
     else
@@ -87,25 +87,25 @@ void reduceBlocks(T *d_odata, const T *d_idata, size_t numElements, const CUDPPR
         switch (dimBlock.x)
         {
         case 512:
-            reduce<T, Oper, 512, false><<< dimGrid, dimBlock, smemSize >>>(d_odata, d_idata, numElements); break;
+            reduce<T, Oper, 512, false><<< dimGrid, dimBlock, smemSize >>>(d_odata, d_idata, (unsigned)numElements); break;
         case 256:
-            reduce<T, Oper, 256, false><<< dimGrid, dimBlock, smemSize >>>(d_odata, d_idata, numElements); break;
+            reduce<T, Oper, 256, false><<< dimGrid, dimBlock, smemSize >>>(d_odata, d_idata, (unsigned)numElements); break;
         case 128:
-            reduce<T, Oper, 128, false><<< dimGrid, dimBlock, smemSize >>>(d_odata, d_idata, numElements); break;
+            reduce<T, Oper, 128, false><<< dimGrid, dimBlock, smemSize >>>(d_odata, d_idata, (unsigned)numElements); break;
         case 64:
-            reduce<T, Oper,  64, false><<< dimGrid, dimBlock, smemSize >>>(d_odata, d_idata, numElements); break;
+            reduce<T, Oper,  64, false><<< dimGrid, dimBlock, smemSize >>>(d_odata, d_idata, (unsigned)numElements); break;
         case 32:
-            reduce<T, Oper,  32, false><<< dimGrid, dimBlock, smemSize >>>(d_odata, d_idata, numElements); break;
+            reduce<T, Oper,  32, false><<< dimGrid, dimBlock, smemSize >>>(d_odata, d_idata, (unsigned)numElements); break;
         case 16:
-            reduce<T, Oper,  16, false><<< dimGrid, dimBlock, smemSize >>>(d_odata, d_idata, numElements); break;
+            reduce<T, Oper,  16, false><<< dimGrid, dimBlock, smemSize >>>(d_odata, d_idata, (unsigned)numElements); break;
         case  8:
-            reduce<T, Oper,   8, false><<< dimGrid, dimBlock, smemSize >>>(d_odata, d_idata, numElements); break;
+            reduce<T, Oper,   8, false><<< dimGrid, dimBlock, smemSize >>>(d_odata, d_idata, (unsigned)numElements); break;
         case  4:
-            reduce<T, Oper,   4, false><<< dimGrid, dimBlock, smemSize >>>(d_odata, d_idata, numElements); break;
+            reduce<T, Oper,   4, false><<< dimGrid, dimBlock, smemSize >>>(d_odata, d_idata, (unsigned)numElements); break;
         case  2:
-            reduce<T, Oper,   2, false><<< dimGrid, dimBlock, smemSize >>>(d_odata, d_idata, numElements); break;
+            reduce<T, Oper,   2, false><<< dimGrid, dimBlock, smemSize >>>(d_odata, d_idata, (unsigned)numElements); break;
         case  1:
-            reduce<T, Oper,   1, false><<< dimGrid, dimBlock, smemSize >>>(d_odata, d_idata, numElements); break;
+            reduce<T, Oper,   1, false><<< dimGrid, dimBlock, smemSize >>>(d_odata, d_idata, (unsigned)numElements); break;
         }
     }
 

@@ -21,7 +21,7 @@
 #include "cudpp.h"
 #include "cudpp_plan.h"
 #include "cudpp_scan.h"
-#include "kernel/compact_kernel.cu"
+#include "kernel/compact_kernel.cuh"
 #include <cstdlib>
 #include <cstdio>
 #include <assert.h>
@@ -56,7 +56,7 @@
   * @param[out] numEltsPerBlock Number of elements processed per block
   *
   */
-void calculatCompactLaunchParams(const unsigned int numElements,
+void calculateCompactLaunchParams(const unsigned int numElements,
                  unsigned int       &numThreads, 
                  unsigned int       &numBlocks,
                  unsigned int       &numEltsPerBlock)
@@ -116,7 +116,7 @@ void compactArray(T                      *d_out,
 
     // Calculate CUDA launch parameters - number of blocks, number of threads
     // @todo What is numEltsPerBlock doing here?
-    calculatCompactLaunchParams(numElements, numThreads, numBlocks, numEltsPerBlock);
+    calculateCompactLaunchParams((unsigned)numElements, numThreads, numBlocks, numEltsPerBlock);
 
     // Run prefix sum on isValid array to find the addresses in the compacted
     // output array where each non-null element of d_in will go to
@@ -129,12 +129,12 @@ void compactArray(T                      *d_out,
         compactData<T, true><<<numBlocks, numThreads>>>(d_out,
                                                         d_numValidElements,
                                                         plan->m_d_outputIndices, 
-                                                        d_isValid, d_in, numElements);
+                                                        d_isValid, d_in, (unsigned)numElements);
     else
         compactData<T, false><<<numBlocks, numThreads>>>(d_out, 
                                                          d_numValidElements,
                                                          plan->m_d_outputIndices, 
-                                                         d_isValid, d_in, numElements);
+                                                         d_isValid, d_in, (unsigned)numElements);
                                                          
     CUDA_CHECK_ERROR("compactArray -- compactData");
 }

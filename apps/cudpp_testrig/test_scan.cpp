@@ -198,7 +198,7 @@ int scanTest(int argc, const char **argv, const CUDPPConfiguration &config,
                    (config.algorithm == CUDPP_SEGMENTED_SCAN) ? "segmented " : "",
                    op,
                    test[k],
-                   datatype_to_string[(int) config.datatype]);
+                   datatypeToString(config.datatype));
             fflush(stdout);
         }
 
@@ -386,7 +386,7 @@ int multiscanTest(int argc, const char **argv, const CUDPPConfiguration &config,
                   (config.options & CUDPP_OPTION_INCLUSIVE) ? " inclusive" : "",
                   op,
                   test[k],
-                  datatype_to_string[(int) config.datatype],
+                  datatypeToString(config.datatype),
                   numRows);
            fflush(stdout);
        }

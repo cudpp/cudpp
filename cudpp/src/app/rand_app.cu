@@ -24,8 +24,8 @@
 #include <cstdio>
 #include <assert.h>
 
-#include "cta/rand_cta.cu"
-#include "kernel/rand_kernel.cu"
+#include "cta/rand_cta.cuh"
+#include "kernel/rand_kernel.cuh"
 
 #define RAND_CTA_SIZE 128 //128 chosen, may be changed later
 
@@ -73,7 +73,7 @@ void launchRandMD5Kernel(unsigned int * d_out, unsigned int seed,
     uint4 * dev_output;
 
     //figure out how many elements are needed in this array
-    unsigned int devOutputsize = numElements / 4;
+    unsigned int devOutputsize = (unsigned int)(numElements / 4);
     devOutputsize += (numElements %4 == 0) ? 0 : 1; //used for overflow
     unsigned int memSize = devOutputsize * sizeof(uint4);
 

@@ -23,7 +23,7 @@
 * @{
 */
 
-#include "cta/scan_cta.cu"
+#include "cta/scan_cta.cuh"
 #include <cudpp_globals.h>
 #include <math.h>
 #include <cstdio>

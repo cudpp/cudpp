@@ -37,8 +37,8 @@
 #include "cudpp.h"
 #include "cudpp_util.h"
 #include "cudpp_plan.h"
-#include "kernel/scan_kernel.cu"
-#include "kernel/vector_kernel.cu"
+#include "kernel/scan_kernel.cuh"
+#include "kernel/vector_kernel.cuh"
 
 /** @brief Perform recursive scan on arbitrary size arrays
   *
@@ -89,14 +89,14 @@ void scanArrayRecursive(T                   *d_out,
 
     if (numRows > 1)
     {
-        rowPitch         = rowPitches[level] / 4; 
-        blockSumRowPitch = (numBlocks > 1) ? rowPitches[level+1] / 4 : 0;
+        rowPitch         = (unsigned int)(rowPitches[level] / 4); 
+        blockSumRowPitch = (unsigned int)((numBlocks > 1) ? rowPitches[level+1] / 4 : 0);
     }
 
     bool fullBlock = (numElements == numBlocks * SCAN_ELTS_PER_THREAD * SCAN_CTA_SIZE);
 
     // setup execution parameters
-    dim3  grid(numBlocks, numRows, 1); 
+    dim3  grid(numBlocks, (unsigned int)numRows, 1); 
     dim3  threads(SCAN_CTA_SIZE, 1, 1);
 
     // make sure there are no CUDA errors before we start
@@ -112,42 +112,42 @@ void scanArrayRecursive(T                   *d_out,
     case 0: // single block, single row, non-full block
         scan4<T, ScanTraits<T, Op, isBackward, isExclusive, false, false, false> >
                <<< grid, threads, sharedMemSize >>>
-               (d_out, d_in, 0, numElements, rowPitch, blockSumRowPitch);
+               (d_out, d_in, 0, (unsigned)numElements, rowPitch, blockSumRowPitch);
         break;
     case 1: // multiblock, single row, non-full block
         scan4< T, ScanTraits<T, Op, isBackward, isExclusive, false, true, false> >
                <<< grid, threads, sharedMemSize >>>
-               (d_out, d_in, d_blockSums[level], numElements, rowPitch, blockSumRowPitch);
+               (d_out, d_in, d_blockSums[level], (unsigned)numElements, rowPitch, blockSumRowPitch);
         break;
     case 2: // single block, multirow, non-full block
         scan4<T, ScanTraits<T, Op, isBackward, isExclusive, true, false, false> >
                 <<< grid, threads, sharedMemSize >>>
-                (d_out, d_in, 0, numElements, rowPitch, blockSumRowPitch);
+                (d_out, d_in, 0, (unsigned)numElements, rowPitch, blockSumRowPitch);
         break;
     case 3: // multiblock, multirow, non-full block
         scan4<T, ScanTraits<T, Op, isBackward, isExclusive, true, true, false> >
                 <<< grid, threads, sharedMemSize >>>
-                (d_out, d_in, d_blockSums[level], numElements, rowPitch, blockSumRowPitch);
+                (d_out, d_in, d_blockSums[level], (unsigned)numElements, rowPitch, blockSumRowPitch);
         break;
     case 4: // single block, single row, full block
         scan4<T, ScanTraits<T, Op, isBackward, isExclusive, false, false, true> >
                <<< grid, threads, sharedMemSize >>>
-               (d_out, d_in, 0, numElements, rowPitch, blockSumRowPitch);
+               (d_out, d_in, 0, (unsigned)numElements, rowPitch, blockSumRowPitch);
         break;
     case 5: // multiblock, single row, full block
         scan4< T, ScanTraits<T, Op, isBackward, isExclusive, false, true, true> >
                <<< grid, threads, sharedMemSize >>>
-               (d_out, d_in, d_blockSums[level], numElements, rowPitch, blockSumRowPitch);
+               (d_out, d_in, d_blockSums[level], (unsigned)numElements, rowPitch, blockSumRowPitch);
         break;
     case 6: // single block, multirow, full block
         scan4<T, ScanTraits<T, Op, isBackward, isExclusive, true, false, true> >
                 <<< grid, threads, sharedMemSize >>>
-                (d_out, d_in, 0, numElements, rowPitch, blockSumRowPitch);
+                (d_out, d_in, 0, (unsigned)numElements, rowPitch, blockSumRowPitch);
         break;
     case 7: // multiblock, multirow, full block
         scan4<T, ScanTraits<T, Op, isBackward, isExclusive, true, true, true> >
                 <<< grid, threads, sharedMemSize >>>
-                (d_out, d_in, d_blockSums[level], numElements, rowPitch, blockSumRowPitch);
+                (d_out, d_in, d_blockSums[level], (unsigned)numElements, rowPitch, blockSumRowPitch);
         break;
     }
 
@@ -168,7 +168,7 @@ void scanArrayRecursive(T                   *d_out,
             vectorAddUniform4<T, Op, SCAN_ELTS_PER_THREAD, true>
                 <<< grid, threads >>>(d_out, 
                                       (T*)d_blockSums[level], 
-                                      numElements,
+                                      (unsigned)numElements,
                                       rowPitch*4,
                                       blockSumRowPitch*4,
                                       0, 0);
@@ -176,7 +176,7 @@ void scanArrayRecursive(T                   *d_out,
             vectorAddUniform4<T, Op, SCAN_ELTS_PER_THREAD, false>
                 <<< grid, threads >>>(d_out, 
                                       (T*)d_blockSums[level], 
-                                      numElements,
+                                      (unsigned)numElements,
                                       rowPitch*4,
                                       blockSumRowPitch*4,
                                       0, 0);

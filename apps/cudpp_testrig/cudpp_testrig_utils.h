@@ -30,8 +30,22 @@
 using namespace std;
 using namespace cudpp_app;
 
-// declared in cudpp.cpp (in cudpp library)
-extern const char * datatype_to_string[];
+inline const char * datatypeToString(CUDPPDatatype t)
+{
+    static const char * d2s[] =
+    {
+        "char",
+        "uchar",
+        "int",
+        "uint",
+        "float",
+        "double",
+        "longlong",
+        "ulonglong",
+        "datatype_invalid",
+    };
+    return d2s[(int)t];
+}
 
 // template specializations defined below after class definitions
 

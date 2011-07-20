@@ -24,6 +24,7 @@
 #include "stopwatch.h"
 #include "findfile.h"
 #include "commandline.h"
+#include "common_config.h"
 
 using namespace cudpp_app;
  
@@ -105,6 +106,16 @@ bool searchForFile(unsigned int numElements, FILE ** randFile, char * path, test
         *randFile = fopen(fullFileName,"rb");
         return true;
     }
+
+    // search in CMAKE-configured app data path
+    constructFileName(fullFileName, testOptions, numElements, CUDPP_APP_DATA_DIR);
+    strcpy(path, fullFileName);
+    if(file_exists(fullFileName))
+    {
+        *randFile = fopen(fullFileName,"rb");
+        return true;
+    }
+
     /*
     this part added for windows: path in Visual Studio and command line is different!  
     */

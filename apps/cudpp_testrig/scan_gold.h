@@ -264,11 +264,11 @@ computeSegmentedMultiplyScanGold(T* reference, const T* idata,
 {
     int startIdx=1, stopIdx=len;
     int increment=1;
-    reference[0] = 1.0;
+    reference[0] = T(1.0);
     
     if (config.options & CUDPP_OPTION_BACKWARD)
     {
-        reference[len-1] = 1.0;
+        reference[len-1] = T(1.0);
         startIdx = len-2;
         stopIdx = -1;
         increment = -1;
@@ -285,7 +285,7 @@ computeSegmentedMultiplyScanGold(T* reference, const T* idata,
 
             reference[i] = 
                 (iflag[i] == 1) ? 
-                1.0f : idata[i-increment] * reference[i-increment];
+                T(1.0) : idata[i-increment] * reference[i-increment];
         }
         else
         {
@@ -294,7 +294,7 @@ computeSegmentedMultiplyScanGold(T* reference, const T* idata,
 
             reference[i] = 
                 (iflag[i-increment] == 1) ? 
-                1.0f : idata[i-increment] * reference[i-increment];
+                T(1.0) : idata[i-increment] * reference[i-increment];
         }
     }
 

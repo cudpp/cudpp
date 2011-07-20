@@ -54,6 +54,8 @@ __host__ void initialize(int width, int height)
 {   
     size_t dpitch = width * sizeof(float);
 
+    CUDA_CHECK_ERROR("Before CUDA initialization");
+
     CUDA_SAFE_CALL( cudaMallocPitch( (void**) &SATs[0][0], &d_satPitch, dpitch, height));
     CUDA_SAFE_CALL( cudaMallocPitch( (void**) &SATs[0][1], &d_satPitch, dpitch, height));
     CUDA_SAFE_CALL( cudaMallocPitch( (void**) &SATs[0][2], &d_satPitch, dpitch, height));

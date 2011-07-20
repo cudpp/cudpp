@@ -31,8 +31,8 @@
 #include "cudpp.h"
 #include "cudpp_util.h"
 #include "cudpp_plan.h"
-#include "kernel/segmented_scan_kernel.cu"
-#include "kernel/vector_kernel.cu"
+#include "kernel/segmented_scan_kernel.cuh"
+#include "kernel/vector_kernel.cuh"
 
 /** @brief Perform recursive scan on arbitrary size arrays
 *

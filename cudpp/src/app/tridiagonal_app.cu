@@ -31,9 +31,9 @@
 #include <cstdio>
 #include <assert.h>
 
-#include "app/cr_app.cu"
-#include "app/pcr_app.cu"
-#include "app/crpcr_app.cu"
+#include "app/cr_app.cuh"
+#include "app/pcr_app.cuh"
+#include "app/crpcr_app.cuh"
 
 #ifdef __cplusplus
 extern "C"

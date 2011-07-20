@@ -83,7 +83,7 @@ int radixSortTest(CUDPPHandle theCudpp, CUDPPConfiguration config, size_t *tests
             printf("Running a %s radix sort of %ld %s %s\n",
                   (config.options & CUDPP_OPTION_BACKWARD) ? " backward" : "forward",
                   tests[k],
-                  datatype_to_string[(int) config.datatype],
+                  datatypeToString(config.datatype),
                   (config.options & CUDPP_OPTION_KEY_VALUE_PAIRS) ? "key-value pairs" : "keys");
             fflush(stdout);
         }                                        
@@ -128,7 +128,7 @@ int radixSortTest(CUDPPHandle theCudpp, CUDPPConfiguration config, size_t *tests
             h_values = 0;               
 
         retval += VectorSupport<T>::verifySort(h_keysSorted, h_valuesSorted, h_keys, tests[k], 
-                                               config.options & CUDPP_OPTION_BACKWARD);
+                                               (config.options & CUDPP_OPTION_BACKWARD) != 0);
 
         if(!quiet)
         {                         
@@ -152,11 +152,19 @@ int radixSortTest(CUDPPHandle theCudpp, CUDPPConfiguration config, size_t *tests
         retval = numTests;
     }
 
+    cudaEventDestroy(start_event);
+    cudaEventDestroy(stop_event);
+
     cudaFree(d_keys);
-    if (config.options & CUDPP_OPTION_KEY_VALUE_PAIRS)
-        cudaFree(d_values);
     free(h_keys);
-    free(h_values);     
+    free(h_keysSorted);
+    
+    if (config.options & CUDPP_OPTION_KEY_VALUE_PAIRS)
+    {
+        cudaFree(d_values);
+        free(h_values);     
+        free(h_valuesSorted);
+    }
 
     return retval;
 }

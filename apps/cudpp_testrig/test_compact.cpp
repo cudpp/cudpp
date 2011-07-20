@@ -126,7 +126,7 @@ int compactTest(int argc, const char **argv,
            printf("Running a%s stream compact of %d %s elements\n",
                   (config.options & CUDPP_OPTION_BACKWARD) ? " backward" : "",
                   test[k],
-                  datatype_to_string[(int) config.datatype]);
+                  datatypeToString(config.datatype));
            fflush(stdout);
         }
 
@@ -139,7 +139,7 @@ int compactTest(int argc, const char **argv,
                 h_isValid[i] = 0;
             else
                 h_isValid[i] = 1;
-            h_data[i] = (float)(rand() + 1);
+            h_data[i] = (T)(rand() + 1);
         }
 
         memset(reference, 0, sizeof(T) * test[k]);

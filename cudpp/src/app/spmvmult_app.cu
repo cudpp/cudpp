@@ -28,7 +28,7 @@
 #include "cudpp_util.h"
 #include "cudpp_plan.h"
 #include "cudpp_globals.h"
-#include "kernel/spmvmult_kernel.cu"
+#include "kernel/spmvmult_kernel.cuh"
 
 extern "C"
 void cudppSegmentedScanDispatch (void                   *d_out, 
@@ -89,10 +89,10 @@ void sparseMatrixVectorMultiply(
 
     if (fullBlock)
         sparseMatrixVectorFetchAndMultiply<T, true><<<gridElts, threads>>>
-            (plan->m_d_flags, (T*)plan->m_d_prod, (T*)plan->m_d_A, d_x, plan->m_d_index, plan->m_numNonZeroElements);
+            (plan->m_d_flags, (T*)plan->m_d_prod, (T*)plan->m_d_A, d_x, plan->m_d_index, (unsigned)plan->m_numNonZeroElements);
     else
         sparseMatrixVectorFetchAndMultiply<T, false><<<gridElts, threads>>>
-            (plan->m_d_flags, (T*)plan->m_d_prod, (T*)plan->m_d_A, d_x, plan->m_d_index, plan->m_numNonZeroElements);
+            (plan->m_d_flags, (T*)plan->m_d_prod, (T*)plan->m_d_A, d_x, plan->m_d_index, (unsigned)plan->m_numNonZeroElements);
 
     unsigned int numRowBlocks = 
         max(1, (int)ceil((double)plan->m_numRows / 
@@ -101,15 +101,15 @@ void sparseMatrixVectorMultiply(
     dim3  gridRows(max(1, numRowBlocks), 1, 1);
 
     sparseMatrixVectorSetFlags<<<gridRows, threads>>>
-        (plan->m_d_flags, plan->m_d_rowIndex, plan->m_numRows);
+        (plan->m_d_flags, plan->m_d_rowIndex, (unsigned)plan->m_numRows);
 
     cudppSegmentedScanDispatch ((T*)plan->m_d_prod, 
                                 (const T*)plan->m_d_prod,
                                 plan->m_d_flags,
-                                plan->m_numNonZeroElements, plan->m_segmentedScanPlan);
+                                (unsigned)plan->m_numNonZeroElements, plan->m_segmentedScanPlan);
 
     yGather<<<gridRows, threads>>>
-        (d_y, (T*)plan->m_d_prod, plan->m_d_rowFinalIndex, plan->m_numRows); 
+        (d_y, (T*)plan->m_d_prod, plan->m_d_rowFinalIndex, (unsigned)plan->m_numRows); 
 }
 
 #ifdef __cplusplus

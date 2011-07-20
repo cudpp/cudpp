@@ -150,7 +150,7 @@ runTest( int argc, char** argv)
 
     // check result
     bool passed = true;
-    for (int i = 0; i < numElements; i++)
+    for (unsigned int i = 0; i < numElements; i++)
         if (reference[i] != h_odata[i]) passed = false;
         
     printf( "Test %s\n", passed ? "PASSED" : "FAILED");

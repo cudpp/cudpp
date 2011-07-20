@@ -10,24 +10,24 @@
 
 /**
  * @file
- * crpcr_app.cu
+ * cr_app.cu
  *
- * @brief CUDPP app-level CR-PCR tridiagonal solver
+ * @brief CUDPP application-level CR tridiagonal solver
  */
 
 /** \addtogroup cudpp_app
   * @{
   */
-/** @name Hybrid CR-PCR solver (CRPCR)
+/** @name Cyclic reduction solver (CR)
  * @{
  */
 
-#include "kernel/crpcr_kernel.cu"
+#include "kernel/cr_kernel.cuh"
 
 /**
- * @brief Hybrid CR-PCR solver (CRPCR)
+ * @brief Cyclic reduction solver (CR)
  *
- * This is a wrapper function for the GPU CR-PCR kernel.
+ * This is a wrapper function for the GPU CR kernel.
  *
  * @param[out] d_x Solution vector
  * @param[in] d_a Lower diagonal
@@ -39,17 +39,16 @@
  */
 
 template <class T>
-void crpcr(T *d_a, T *d_b, T *d_c, T *d_d, T *d_x, int systemSize, int numSystems)
+void cr(T *d_a, T *d_b, T *d_c, T *d_d, T *d_x, int systemSize, int numSystems)
 {
     const unsigned int num_threads_block = systemSize/2;
-    int restSystemSize = systemSize/2;
-  
+
     // setup execution parameters
     dim3  grid(numSystems, 1, 1);
     dim3  threads(num_threads_block, 1, 1);
 
-    crpcrKernel<<< grid, threads,(systemSize+1)*5*sizeof(T)+restSystemSize*(5+0)*sizeof(float)>>>(d_a, d_b, d_c, d_d, d_x);
+    crKernel<<< grid, threads,systemSize*5*sizeof(T)>>>(d_a, d_b, d_c, d_d, d_x);
 }
-/** @} */ // end Hybrid CR-PCR solver (CRPCR)
+/** @} */ // end Cyclic reduction solver (CR)
 /** @} */ // end cudpp_app
 

@@ -518,7 +518,7 @@ const char * operator_to_string[] =
  
  * The maximum system size could be limited by the maximum number of threads
  * of a CUDA block, the number of registers per multiprocessor, and the 
- * amount of shared memory available. For exampel, on the GTX 280 GPU, the 
+ * amount of shared memory available. For example, on the GTX 280 GPU, the 
  * maximum system size is 512 for the float datatype, and 256 for the double 
  * datatype, which is determined by the size of shared memory in this case. 
  * There is virtually no limit on the number of systems to be solved, 
