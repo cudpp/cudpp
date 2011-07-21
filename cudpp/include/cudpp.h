@@ -61,6 +61,7 @@
  * depth of field blur.
  * - cudpp_testrig, a comprehensive test application for all the functionality 
  * of CUDPP
+ * - hash_testrig, a comprehensive test application for CUDPP's hash table data structures
  *
  * We have also provided a code walkthrough of the 
  * \ref example_simpleCUDPP "simpleCUDPP" example.
@@ -85,13 +86,14 @@
  * to the maximum size.  Also, for things like 32-bit integer scans, 
  * precision often limits the useful maximum size.
  
- * CUDPP_SCAN:              67,107,840 elements
+ * CUDPP_SCAN               67,107,840 elements
  * CUDPP_SEGMENTED_SCAN     67,107,840 elements
  * CUDPP_COMPACT            67,107,840 elements
  * CUDPP_SORT               2,147,450,880 elements
  * CUDPP_REDUCE             NO LIMIT
  * CUDPP_RAND               33,554,432 elements
  * CUDPP_SPMVMULT           67,107,840 non-zero elements
+ * CUDPP_HASH               See hash docs
  * CUDPP_TRIDIAGONAL        1024 equations per system (Geforce 400 series), no limit on the number of systems 
  * 
  * \section opSys Operating System Support
@@ -144,13 +146,13 @@
  *        \link cudpp_kernel Kernel-Level API\endlink below them.
  *     -# The \link cudpp_kernel Kernel-Level API\endlink comprises functions
  *        that run entirely on the GPU across an entire grid of thread blocks.  
- *        These functions may call into the \link cudpp_cta CTA-Level API\endlink 
- *        below them.
- *     -# The \link cudpp_cta CTA-Level API\endlink comprises functions that run 
- *        entirely on the GPU within a single Cooperative Thread Array (CTA, 
- *        aka thread block). These are low-level functions that implement core 
- *        data-parallel algorithms, typically by processing data within shared 
- *        (CUDA \c __shared__) memory.
+ *        These functions may call into the \link cudpp_cta CTA-Level 
+ *        API\endlink below them.
+ *     -# The \link cudpp_cta CTA-Level API\endlink comprises functions that 
+ *        run entirely on the GPU within a single Cooperative Thread Array 
+ *        (CTA, aka thread block). These are low-level functions that implement
+ *        core data-parallel algorithms, typically by processing data within 
+ *        shared (CUDA \c __shared__) memory.
  *
  * Programmers may use any of the lower three CUDPP layers in their own 
  * programs by building the source directly into their application.  However, 
@@ -172,12 +174,13 @@
  * \section references References
  * The following publications describe work incorporated in CUDPP.
  * 
- * - Mark Harris, Shubhabrata Sengupta, and John D. Owens. "Parallel Prefix Sum (Scan) with CUDA". In Hubert Nguyen, editor, <i>GPU Gems 3</i>, chapter 39, pages 851&ndash;876. Addison Wesley, August 2007. http://graphics.idav.ucdavis.edu/publications/print_pub?pub_id=916
- * - Shubhabrata Sengupta, Mark Harris, Yao Zhang, and John D. Owens. "Scan Primitives for GPU Computing". In <i>Graphics Hardware 2007</i>, pages 97&ndash;106, August 2007. http://graphics.idav.ucdavis.edu/publications/print_pub?pub_id=915
+ * - Mark Harris, Shubhabrata Sengupta, and John D. Owens. "Parallel Prefix Sum (Scan) with CUDA". In Hubert Nguyen, editor, <i>GPU Gems 3</i>, chapter 39, pages 851&ndash;876. Addison Wesley, August 2007. http://www.idav.ucdavis.edu/publications/print_pub?pub_id=916
+ * - Shubhabrata Sengupta, Mark Harris, Yao Zhang, and John D. Owens. "Scan Primitives for GPU Computing". In <i>Graphics Hardware 2007</i>, pages 97&ndash;106, August 2007. http://www.idav.ucdavis.edu/publications/print_pub?pub_id=915
  * - Shubhabrata Sengupta, Mark Harris, and Michael Garland. "Efficient parallel scan algorithms for GPUs". NVIDIA Technical Report NVR-2008-003, December 2008. http://mgarland.org/papers.html#segscan-tr
  * - Nadathur Satish, Mark Harris, and Michael Garland. "Designing Efficient Sorting Algorithms for Manycore GPUs". In <i>Proceedings of the 23rd IEEE International Parallel & Distributed Processing Symposium</i>, May 2009. http://mgarland.org/papers.html#gpusort
  * - Stanley Tzeng, Li-Yi Wei. "Parallel White Noise Generation on a GPU via Cryptographic Hash". In <i>Proceedings of the 2008 Symposium on Interactive 3D Graphics and Games</i>, pages 79&ndash;87, February 2008. http://research.microsoft.com/apps/pubs/default.aspx?id=70502
- * - Yao Zhang, Jonathan Cohen, and John D. Owens. "Fast Tridiagonal Solvers on the GPU". In <i>Proceedings of the 15th ACM SIGPLAN Symposium on Principles and Practice of Parallel Programming (PPoPP 2010)<i>, January 2010. http://graphics.cs.ucdavis.edu/publications/print_pub?pub_id=978
+ * - Yao Zhang, Jonathan Cohen, and John D. Owens. Fast Tridiagonal Solvers on the GPU. In <i>Proceedings of the 15th ACM SIGPLAN Symposium on Principles and Practice of Parallel Programming (PPoPP 2010)</i>, pages 127&ndash;136, January 2010. http://www.cs.ucdavis.edu/publications/print_pub?pub_id=978
+ * - Shubhabrata Sengupta, Mark Harris, Michael Garland, and John D. Owens. "Efficient Parallel Scan Algorithms for many-core GPUs". In Jakub Kurzak, David A. Bader, and Jack Dongarra, editors, <i>Scientific Computing with Multicore and Accelerators</i>, Chapman & Hall/CRC Computational Science, chapter 19, pages 413&ndash;442. Taylor & Francis, January 2011. http://www.idav.ucdavis.edu/publications/print_pub?pub_id=1041
  *
  * Many researchers are using CUDPP in their work, and there are many publications 
  * that have used it \ref cudpp_refs "(references)". If your work uses CUDPP, please 
@@ -201,11 +204,14 @@
  * - <a href="http://www.markmark.net">Mark Harris</a>, NVIDIA Corporation
  * - <a href="http://www.ece.ucdavis.edu/~jowens/">John D. Owens</a>, University of California, Davis
  * - <a href="http://graphics.cs.ucdavis.edu/~shubho/">Shubho Sengupta</a>, University of California, Davis
+ * - <a href="http://wwwcsif.cs.ucdavis.edu/~tzeng/">Stanley Tzeng</a>,   University of California, Davis
  * - Stanley Tzeng,   University of California, Davis
  * - <a href="http://www.ece.ucdavis.edu/~yaozhang/">Yao Zhang</a>,       University of California, Davis
  * - <a href="http://www.ece.ucdavis.edu/~aaldavid/">Andrew Davidson</a>, University of California, Davis (formerly Louisiana State University)
+ * - Ritesh Patel, University of California, Davis
  * 
  * \subsection contributors Other CUDPP Contributors
+ * - <a href="http://idav.ucdavis.edu/~dfalcant/research.php">Dan Alcantara</a>, University of California, Davis
  * - <a href="http://www.eecs.berkeley.edu/~nrsatish/">Nadatur Satish</a>,  University of California, Berkeley
  *
  * \subsection acknowledgments Acknowledgments
@@ -216,11 +222,11 @@
  * during the development of this library. 
  * 
  * CUDPP Developers from UC Davis thank their funding agencies:
+ * - National Science Foundation (grants CCF-0541448, IIS-0964357, and particularly OCI-1032859)
  * - Department of Energy Early Career Principal Investigator Award
  *   DE-FG02-04ER25609
  * - SciDAC Institute for Ultrascale Visualization (http://www.iusv.org/)
  * - Los Alamos National Laboratory
- * - National Science Foundation (grant 0541448)
  * - Generous hardware donations from NVIDIA
  *
  * \section license-overview CUDPP Copyright and Software License
