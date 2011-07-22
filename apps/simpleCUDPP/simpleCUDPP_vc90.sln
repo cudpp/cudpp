@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "simpleCUDPP", "simpleCUDPP_vc90.vcproj", "{95561772-BB95-4A97-976B-DD24A00B2E66}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		EmuDebug|Win32 = EmuDebug|Win32
+		EmuRelease|Win32 = EmuRelease|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{95561772-BB95-4A97-976B-DD24A00B2E66}.Debug|Win32.ActiveCfg = Debug|Win32
+		{95561772-BB95-4A97-976B-DD24A00B2E66}.Debug|Win32.Build.0 = Debug|Win32
+		{95561772-BB95-4A97-976B-DD24A00B2E66}.EmuDebug|Win32.ActiveCfg = EmuDebug|Win32
+		{95561772-BB95-4A97-976B-DD24A00B2E66}.EmuDebug|Win32.Build.0 = EmuDebug|Win32
+		{95561772-BB95-4A97-976B-DD24A00B2E66}.EmuRelease|Win32.ActiveCfg = EmuRelease|Win32
+		{95561772-BB95-4A97-976B-DD24A00B2E66}.EmuRelease|Win32.Build.0 = EmuRelease|Win32
+		{95561772-BB95-4A97-976B-DD24A00B2E66}.Release|Win32.ActiveCfg = Release|Win32
+		{95561772-BB95-4A97-976B-DD24A00B2E66}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

@@ -37,7 +37,7 @@ set(CMAKE_MODULE_PATH
   )
 
 set(cudpp_INCLUDE_DIRS
-  ${CMAKE_SOURCE_DIR}/include
+  ${CMAKE_SOURCE_DIR}/cudpp/include
   )
 include_directories(${cudpp_INCLUDE_DIRS})
 
@@ -65,8 +65,8 @@ else()
 endif(BUILD_SHARED_LIBS)
 
 configure_file(
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/cudpp_config.h.in
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/cudpp_config.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/cudpp/include/cudpp_config.h.in
+  ${CMAKE_CURRENT_SOURCE_DIR}/cudpp/include/cudpp_config.h
   )
 
 set (CUDPP_APP_DATA_DIR
@@ -85,8 +85,7 @@ endif (WIN32)
 # copy data files
 file(COPY apps/data DESTINATION apps)
 
-add_subdirectory(src/cudpp)
-add_subdirectory(src/cudpp_hash)
+add_subdirectory(cudpp)
 
 option(BUILD_APPLICATIONS
   "If on, builds the sample applications."
@@ -95,7 +94,6 @@ option(BUILD_APPLICATIONS
 
 if (BUILD_APPLICATIONS)
   add_subdirectory(apps/cudpp_testrig)
-  add_subdirectory(apps/cudpp_hash_testrig)
   add_subdirectory(apps/simpleCUDPP)
   add_subdirectory(apps/satGL)
 endif (BUILD_APPLICATIONS)
@@ -103,7 +101,7 @@ endif (BUILD_APPLICATIONS)
 # Make files that store configuration to help dependent CMake files use
 # these libraries.
 export(
-  TARGETS cudpp cudpp_hash
+  TARGETS cudpp
   FILE ${LIBRARY_OUTPUT_PATH}/cudpp-targets.cmake
   )
 
