@@ -39,7 +39,10 @@
 
 using namespace cudpp_app;
 
-int testScan(int argc, const char ** argv, const CUDPPConfiguration *config, bool multiRow);
+cudaDeviceProp devProps;
+
+int testScan(int argc, const char ** argv, const CUDPPConfiguration *config, 
+             bool multiRow, cudaDeviceProp props);
 int testCompact(int argc, const char ** argv, const CUDPPConfiguration *config);
 int testRadixSort(int argc, const char ** argv, const CUDPPConfiguration *config);
 int testReduce(int argc, const char ** argv, const CUDPPConfiguration *config);
@@ -61,7 +64,7 @@ int testAllDatatypes(int argc,
             switch (config.algorithm) {
                 case CUDPP_SCAN:
                 case CUDPP_SEGMENTED_SCAN:
-                    retval += testScan(argc, argv, &config, multiRow);
+                    retval += testScan(argc, argv, &config, multiRow, devProps);
                     break;
                 case CUDPP_REDUCE:
                     retval += testReduce(argc, argv, &config);
@@ -224,16 +227,15 @@ int main(int argc, const char** argv)
     if (dev > deviceCount-1) dev = deviceCount - 1;
     cudaSetDevice(dev);
 
-    cudaDeviceProp prop;
-    if (!quiet && cudaGetDeviceProperties(&prop, dev) == 0)
+    if (!quiet && cudaGetDeviceProperties(&devProps, dev) == 0)
     {
         printf("Using device %d:\n", dev);
         printf("%s; global mem: %dB; compute v%d.%d; clock: %d kHz\n",
-               prop.name, (int)prop.totalGlobalMem, (int)prop.major, 
-               (int)prop.minor, (int)prop.clockRate);
+               devProps.name, (int)devProps.totalGlobalMem, (int)devProps.major, 
+               (int)devProps.minor, (int)devProps.clockRate);
     }
 
-    int computeVersion = prop.major * 10 + prop.minor;
+    int computeVersion = devProps.major * 10 + devProps.minor;
     bool supportsDouble = (computeVersion >= 13);
 
     int retval = 0;
@@ -293,12 +295,12 @@ int main(int argc, const char** argv)
 
     if (hasopts) 
     {
-        if (runScan)      retval += testScan(argc, argv, NULL, false);
-        if (runSegScan)   retval += testScan(argc, argv, NULL, false);
+        if (runScan)      retval += testScan(argc, argv, NULL, false, devProps);
+        if (runSegScan)   retval += testScan(argc, argv, NULL, false, devProps);
         if (runCompact)   retval += testCompact(argc, argv, NULL);
         if (runReduce)    retval += testReduce(argc, argv, NULL);
         if (runSort)      retval += testRadixSort(argc, argv, NULL);
-        if (runMultiScan) retval += testScan(argc, argv, NULL, true);
+        if (runMultiScan) retval += testScan(argc, argv, NULL, true, devProps);
     }
     else
     {
