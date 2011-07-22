@@ -6,6 +6,30 @@
 #include "hash_compacting.h"    // CompactingHashTable class
 #include "hash_multivalue.h"    // MultivalueHashTable class
 
+/* @brief Internal structure used to store CUDPP hash table */
+template<class T>
+class CUDPPHashTableInternal
+{
+public:
+    CUDPPHashTableInternal(const CUDPPHashTableConfig * c, T * t) : 
+      config(*c), hash_table(t) {}
+      CUDPPHashTableConfig config;
+      T * hash_table;
+      // template<typename T> T getHashTablePtr()
+      // {
+      // return reinterpret_cast<T>(hash_table);
+      // }
+      //! @internal Convert this pointer to an opaque handle
+      CUDPPHandle getHandle()
+      {
+          return reinterpret_cast<CUDPPHandle>(this);
+      }
+      ~CUDPPHashTableInternal() 
+      {
+          delete hash_table;
+      }
+};
+
 typedef CUDPPHashTableInternal<CudaHT::CuckooHashing::HashTable> hti_basic;
 typedef CUDPPHashTableInternal<CudaHT::CuckooHashing::CompactingHashTable> hti_compacting;
 typedef CUDPPHashTableInternal<CudaHT::CuckooHashing::MultivalueHashTable> hti_multivalue;
@@ -41,7 +65,7 @@ const unsigned int CUDPP_HASH_KEY_NOT_FOUND = CudaHT::CuckooHashing::kNotFound;
  * 
  * @see cudppCreate, cudppDestroyHashTable
  */
-CUDPP_HASH_DLL
+CUDPP_DLL
 CUDPPResult
 cudppHashTable(CUDPPHandle cudppHandle, CUDPPHandle *plan,
                const CUDPPHashTableConfig *config)
@@ -157,7 +181,7 @@ cudppHashTable(CUDPPHandle cudppHandle, CUDPPHandle *plan,
  * CompactingHashTable::Build, MultivalueHashTable::Build
  */
 
-CUDPP_HASH_DLL
+CUDPP_DLL
 CUDPPResult 
 cudppHashInsert(CUDPPHandle plan, const void* d_keys, const void* d_vals,
                 size_t num)
@@ -220,7 +244,7 @@ cudppHashInsert(CUDPPHandle plan, const void* d_keys, const void* d_vals,
  * @see cudppHashTable, cudppHashBuild, HashTable::Retrieve,
  * CompactingHashTable::Retrieve, MultivalueHashTable::Retrieve
  */
-CUDPP_HASH_DLL
+CUDPP_DLL
 CUDPPResult
 cudppHashRetrieve(CUDPPHandle plan, const void* d_keys, void* d_vals, 
                   size_t num)
@@ -276,7 +300,7 @@ cudppHashRetrieve(CUDPPHandle plan, const void* d_keys, void* d_vals,
  * 
  * @see cudppHashTable
  */
-CUDPP_HASH_DLL
+CUDPP_DLL
 CUDPPResult
 cudppDestroyHashTable(CUDPPHandle /* cudppHandle */, CUDPPHandle plan)
 {
@@ -324,7 +348,7 @@ cudppDestroyHashTable(CUDPPHandle /* cudppHandle */, CUDPPHandle plan)
  * 
  * @see cudppHashTable, cudppMultivalueHashGetAllValues
  */
-CUDPP_HASH_DLL
+CUDPP_DLL
 CUDPPResult
 cudppMultivalueHashGetValuesSize(CUDPPHandle plan, unsigned int * size)
 {
@@ -354,7 +378,7 @@ cudppMultivalueHashGetValuesSize(CUDPPHandle plan, unsigned int * size)
  * 
  * @see cudppHashTable, cudppMultivalueHashGetValuesSize
  */
-CUDPP_HASH_DLL
+CUDPP_DLL
 CUDPPResult
 cudppMultivalueHashGetAllValues(CUDPPHandle plan, unsigned int ** d_vals)
 {

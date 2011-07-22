@@ -160,7 +160,7 @@ void TakeHashFunctionStatistics(const unsigned   num_keys,
                             cudaMemcpyDeviceToHost));
 
   static const unsigned kHistogramSize = kNumHashFunctions + 1;
-  unsigned histogram[kHistogramSize];
+  unsigned *histogram = new unsigned[kHistogramSize];
   memset(histogram, 0, sizeof(unsigned) * kHistogramSize);
   for (unsigned i = 0; i < num_keys; ++i) {
     histogram[num_slots_available[i]]++;
@@ -172,6 +172,7 @@ void TakeHashFunctionStatistics(const unsigned   num_keys,
   }
   PrintMessage(buffer);
 
+  delete [] histogram;
   delete [] num_slots_available;
   CUDA_SAFE_CALL(cudaFree(d_num_slots_available));
  #endif

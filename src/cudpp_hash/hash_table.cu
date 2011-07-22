@@ -31,7 +31,7 @@ dim3 ComputeGridDim(unsigned n) {
 unsigned ComputeMaxIterations(const unsigned n,
                               const unsigned table_size,
                               const unsigned num_functions) {
-    float lg_input_size = log(n) / log(2.0f);
+    float lg_input_size = (float)log2((double)n);
 
 // #define CONSTANT_ITERATIONS
 #ifdef CONSTANT_ITERATIONS
@@ -42,10 +42,10 @@ unsigned ComputeMaxIterations(const unsigned n,
     // Use an empirical formula for determining what the maximum number of
     // iterations should be.  Works OK in most situations.
     float load_factor = float(n) / table_size;
-    float ln_load_factor = log(load_factor) / log(2.71828183);
+    float ln_load_factor = (float)(log(load_factor) / log(2.71828183));
 
-    unsigned max_iterations = 4 * ceil(-1.0 / (0.028255 + 1.1594772 * 
-                                               ln_load_factor)* lg_input_size);
+    unsigned max_iterations = (unsigned)(4.0 * ceil(-1.0 / (0.028255 + 1.1594772 * 
+                                               ln_load_factor)* lg_input_size));
 #endif
 
     // Debugging: Print out how many iterations are allowed.

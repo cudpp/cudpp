@@ -277,7 +277,7 @@ int testHashTable(CUDPPHandle theCudpp,
              multiplicity <= multiplicity_max;
              multiplicity *= 2)
         {
-            float chance_of_repeating = 1.0 - 1.0/multiplicity;
+            float chance_of_repeating = 1.0f - 1.0f/multiplicity;
             if (multiplicity_max != 1)
             {
                 printf("\tAverage multiplicity of keys: %u\n", multiplicity);
@@ -353,7 +353,7 @@ int testHashTable(CUDPPHandle theCudpp,
             }
 
 
-            const float kSpaceUsagesToTest[] = {1.05, 1.15, 1.25, 1.5, 2};
+            const float kSpaceUsagesToTest[] = {1.05f, 1.15f, 1.25f, 1.5f, 2.0f};
             const unsigned kNumSpaceUsagesToTest = 5;
 
             for (unsigned i = 0; i < kNumSpaceUsagesToTest; ++i)
@@ -389,16 +389,12 @@ int testHashTable(CUDPPHandle theCudpp,
                 config.space_usage = space_usage;
                 CUDPPHandle hash_table_handle;
                 cudppHashTable(theCudpp, &hash_table_handle, &config);
-
-                /// CudaHT::CuckooHashing::HashTable hash_table;
-                /// hash_table.Initialize(kInputSize, space_usage);
-  
+ 
                 cudpp_app::StopWatch timer;
                 timer.reset();
                 timer.start();
-                /// hash_table.Build(kInputSize, d_test_keys, d_test_vals);
-                cudppHashInsert(theCudpp, hash_table_handle, d_test_keys, 
-                                d_test_vals, kInputSize);
+                
+                cudppHashInsert(hash_table_handle, d_test_keys, d_test_vals, kInputSize);
                 cudaThreadSynchronize();
                 timer.stop();
                 printf("\tHash table build: %f ms\n", timer.getTime());
@@ -408,8 +404,7 @@ int testHashTable(CUDPPHandle theCudpp,
                 if (htt == CUDPP_MULTIVALUE_HASH_TABLE)
                 {
                     unsigned int values_size;
-                    if (cudppMultivalueHashGetValuesSize(theCudpp,
-                                                         hash_table_handle,
+                    if (cudppMultivalueHashGetValuesSize(hash_table_handle, 
                                                          &values_size) !=
                         CUDPP_SUCCESS)
                     {
@@ -418,8 +413,7 @@ int testHashTable(CUDPPHandle theCudpp,
                     }
                     sorted_values = new unsigned[values_size];
                     unsigned int * d_all_values = NULL;
-                    if (cudppMultivalueHashGetAllValues(theCudpp, 
-                                                        hash_table_handle, 
+                    if (cudppMultivalueHashGetAllValues(hash_table_handle, 
                                                         &d_all_values) !=
                         CUDPP_SUCCESS)
                     {
@@ -458,13 +452,12 @@ int testHashTable(CUDPPHandle theCudpp,
                     {
                     case CUDPP_BASIC_HASH_TABLE:
                     case CUDPP_COMPACTING_HASH_TABLE:
-                        cudppHashRetrieve(theCudpp, hash_table_handle, 
-                                          d_test_keys, d_test_vals, kInputSize);
+                        cudppHashRetrieve(hash_table_handle, d_test_keys, 
+                                          d_test_vals, kInputSize);
                         break;                                          
                     case CUDPP_MULTIVALUE_HASH_TABLE:
-                        cudppHashRetrieve(theCudpp, hash_table_handle, 
-                                          d_test_keys, d_test_vals_multivalue, 
-                                          kInputSize);
+                        cudppHashRetrieve(hash_table_handle, d_test_keys, 
+                                          d_test_vals_multivalue, kInputSize);
                         break;
                     default:
                         errors++;
@@ -579,7 +572,8 @@ int main(int argc, const char **argv)
 
     int retval = 0;
 
-    init_genrand(time(NULL));
+    init_genrand(543289423);
+    //init_genrand(time(NULL));
 
     bool runAll = checkCommandLineFlag(argc, argv, "all");
     bool runBasicHash = runAll || checkCommandLineFlag(argc, argv, "basic");
@@ -632,7 +626,7 @@ int main(int argc, const char **argv)
     int total_errors = 0;
     for (CUDPPHashTableType htt = CUDPP_BASIC_HASH_TABLE;
          htt != CUDPP_INVALID_HASH_TABLE;
-         htt++)
+         htt = (CUDPPHashTableType)((unsigned)htt+1))
     {
         if (runAll ||
             ((htt == CUDPP_BASIC_HASH_TABLE) && runBasicHash) ||

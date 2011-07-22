@@ -205,7 +205,6 @@
  * - <a href="http://www.ece.ucdavis.edu/~jowens/">John D. Owens</a>, University of California, Davis
  * - <a href="http://graphics.cs.ucdavis.edu/~shubho/">Shubho Sengupta</a>, University of California, Davis
  * - <a href="http://wwwcsif.cs.ucdavis.edu/~tzeng/">Stanley Tzeng</a>,   University of California, Davis
- * - Stanley Tzeng,   University of California, Davis
  * - <a href="http://www.ece.ucdavis.edu/~yaozhang/">Yao Zhang</a>,       University of California, Davis
  * - <a href="http://www.ece.ucdavis.edu/~aaldavid/">Andrew Davidson</a>, University of California, Davis (formerly Louisiana State University)
  * - Ritesh Patel, University of California, Davis
@@ -245,6 +244,11 @@
  * twister code</a> of <a
  * href="http://www.math.sci.hiroshima-u.ac.jp/~m-mat/eindex.html">Makoto
  * Matsumoto</a>, also licensed under BSD. 
+ *
+ * CUDPP also includes a modified version of FindGLEW.cmake from
+ * <a href="http://code.google.com/p/nvidia-texture-tools/">nvidia-texture-tools</a>,
+ * licensed under the 
+ * <a href="http://www.opensource.org/licenses/mit-license.php">MIT license.</a>
  */
 
 /**
@@ -285,8 +289,8 @@
 /**
  * @page building-cudpp Building CUDPP
  *
- * CUDPP has currently been tested in Windows XP, Windows Vista, Mac OS X 
- * and Linux.  See \ref release-notes for release specific platform support.
+ * CUDPP has currently been tested on Windows, Mac OS X and Linux.  
+ * See \ref release-notes for release specific platform support.
  *
  * \section build-thrust Thrust Dependency
  * Starting with release 2.0, CUDPP uses the
@@ -297,36 +301,11 @@
  * however, you will need to download the Thrust source distribution and
  * install it in your CUDA/include path before building CUDPP
  *
- * \section build-win32 Building CUDPP on Windows XP
+ * \section build-win32 Building CUDPP using CMake
  *
- * CUDPP can be built using either or MSVC 8 (2005) or MSVC 9 (2008).  To 
- * build, open cudpp/cudpp.sln. Then you can build the library 
- * using the "build" command as you would with any other workspace. There are 
- * two configurations: debug and release.
- *
- * \section build-linux Building CUDPP on Linux and Mac OS X
- *
- * CUDPP can be built using standard g++ and Make tools on Linux, by typing 
- * "make" in the "cudpp/" subdirectory.  
- * 
- * The makefile for CUDPP and all sample applications take the optional 
- * arguments "dbg=1", "devdbg=1" and "verbose=1".  dbg=1 builds CUDPP
- * for host code debugging, devdbg=1 builds CUDPP with support for host
- * and device code debugging (using cuda-gdb), and verbose=1 displays 
- * the progress of the compilation.  These flags can be combined, but 
- * dbg=1 is implied by devdbg=1.
- *
- * \section build-apps Building CUDPP Sample Applications
- * 
- * The sample applications in the "apps/" subdirectory can be built exactly 
- * like CUDPP is--either by opening the appropriate .sln/.vcproj file in MSVC 
- * in Windows, or using "make" in Linux.
- *
- * On some Linux installations you will get linker errors relating to "-lXi"
- * and "-lXmu".  To fix this, you will need to install libXi and libXmu.  On 
- * Debian and Ubuntu, for example, you can simply run 
- *  "sudo apt-get install libxi-dev", and 
- *  "sudo apt-get install libxmu-dev"
+ * CUDPP 2.0 uses CMake for cross-platform builds.  Follow the instructions
+ * <a href="http://code.google.com/p/cudpp/wiki/BuildingCUDPPwithCMake">on
+ * the CUDPP Wiki</a> to build CUDPP.
  * 
  */
 
@@ -473,7 +452,7 @@ typedef size_t CUDPPHandle;
 #ifdef WIN32
     #if defined(CUDPP_STATIC_LIB)
         #define CUDPP_DLL
-    #elif defined(cudpp_EXPORTS)
+    #elif defined(cudpp_EXPORTS) || defined(cudpp_hash_EXPORTS)
         #define CUDPP_DLL __declspec(dllexport)
     #else
         #define CUDPP_DLL __declspec(dllimport)

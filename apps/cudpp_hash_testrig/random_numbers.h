@@ -7,7 +7,7 @@ void Shuffle(const unsigned  num_random_numbers,
 
 
 //! Generate a set of random unique 32-bit numbers that aren't 0xffffffff.
-void GenerateUniqueRandomNumbers(unsigned       *random_numbers,
+bool GenerateUniqueRandomNumbers(unsigned       *random_numbers,
                                  const unsigned  num_random_numbers,
                                  const unsigned  max_number = 0xfffffffe);
 
