@@ -228,7 +228,7 @@ int scanTest(int argc, const char **argv, const CUDPPConfiguration &config,
                 computeMinScanGold( reference, i_data, test[k], config);                
         }
 
-        timer.start();
+        timer.stop();
      
         if (!quiet)
             printf("CPU execution time = %f\n", timer.getTime());
