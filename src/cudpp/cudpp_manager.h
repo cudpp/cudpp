@@ -22,12 +22,14 @@ public:
    
     //! @internal Convert an opaque handle to a pointer to a manager
     //! @param [in] cudppHandle Handle to the Manager object
+    //! @returns Pointer to CUDPP manager
     static CUDPPManager* getManagerFromHandle(CUDPPHandle cudppHandle)
     {
         return reinterpret_cast<CUDPPManager*>(cudppHandle);
     }
 
     //! @internal Get an opaque handle for this manager
+    //! @returns CUDPP handle for this manager
     CUDPPHandle getHandle()
     {
         return reinterpret_cast<CUDPPHandle>(this);

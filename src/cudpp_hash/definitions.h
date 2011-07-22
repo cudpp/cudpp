@@ -1,5 +1,5 @@
 /*! @file definitions.h
- *  @brief Stores configuration flags and definitions for hard-coded values.
+ *  @brief Stores configuration flags and definitions for hard-coded values in hash table implementations.
  */
 
 #ifndef CUDAHT__CUCKOO_STASH__H

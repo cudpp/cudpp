@@ -42,6 +42,7 @@ typedef unsigned int uint;
  *  if it's 1 (negative float), it flips all bits
  *  if it's 0 (positive float), it flips the sign only
  * @param[in] f floating-point input (passed as unsigned int)
+ * @returns uint that stores the flipped version of the input
  * @see floatUnflip
 **/
 
@@ -65,6 +66,7 @@ __device__ uint floatFlip(uint f)
  *  if sign is 1 (negative), it flips the sign bit back
  *  if sign is 0 (positive), it flips all bits back
  * @param[in] f floating-point input (passed as unsigned int)
+ * @returns uint that stores the unflipped version of the input
  * @see floatFlip
 **/
 template <bool doFlip>
@@ -87,7 +89,8 @@ __device__ uint floatUnflip(uint f)
  * 
  * @param[in] val Elements per thread to scan
  * @param[in,out] sData
-**/
+ * @returns Scanned input warp
+ **/
 template<class T, int maxlevel>
 __device__ T scanwarp(T val, volatile T* sData)
 {
@@ -114,7 +117,8 @@ __device__ T scanwarp(T val, volatile T* sData)
  * thread), using a warp-scan algorithm
  * 
  * @param[in] idata 4-vector of integers to scan
-**/
+ * @returns Scanned input 4-vector of integers
+ **/
 __device__ uint4 scan4(uint4 idata)
 {    
     extern  __shared__  uint ptr[];
@@ -163,6 +167,7 @@ __device__ uint4 scan4(uint4 idata)
  * This version handles 4 predicates per thread; hence, "rank4".
  *
  * @param[in] preds true/false values for each of the 4 elements in this thread
+ * @returns Output position for each thread
  *
  * @todo is the description of "preds" correct?
 **/
@@ -195,7 +200,8 @@ __device__ uint4 rank4(uint4 preds)
  * to bits startbit -> nbits + startbit
  * @param[in,out] key
  * @param[in,out] value
-**/
+ * @returns Sorted key/value block with respect to startbit and nbits
+ **/
 template<uint nbits, uint startbit>
 __device__ void radixSortBlock(uint4 &key, uint4 &value)
 {
@@ -267,7 +273,8 @@ __device__ void radixSortBlock(uint4 &key, uint4 &value)
  * Uses rank to sort one bit at a time: Sorts a block according
  * to bits startbit -> nbits + startbit
  * @param[in,out] key
-**/
+ * @returns Sorted key-only block with respect to startbit and nbits
+ **/
 
 template<uint nbits, uint startbit>
 __device__ void radixSortBlockKeysOnly(uint4 &key)

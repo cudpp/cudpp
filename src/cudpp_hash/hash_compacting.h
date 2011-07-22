@@ -7,12 +7,19 @@
 
 #include "hash_table.h"
 
+/** \addtogroup cudpp_app 
+  * @{
+  */
+
+/** \addtogroup cudpp_hash_data_structures
+ * @{
+ */
+
 namespace CudaHT {
 namespace CuckooHashing {
 
 //! @class CompactingHashTable
 /*! @brief Provides O(1) translation between keys and unique identifiers.
- *  @ingroup PublicInterface
  */
 class CompactingHashTable : public HashTable {
 public:
@@ -21,6 +28,16 @@ public:
 
     //! Initializes the compacting hash table's memory.
     /*! See \ref HashTable::Initialize() for an explanation of the parameters.
+     * @param[in] max_input_size  Largest expected number of items in the input.
+     * @param[in] space_usage     Size of the hash table relative to the input.
+     *                            Bigger tables are faster to build and 
+     *                            retrieve from.
+     * @param[in] num_functions   Number of hash functions to use. May be 2-5.
+     *                            More hash functions make it easier to build
+     *                            the table, but increase retrieval times.
+     * @returns Whether the hash table was initialized successfully (true) or
+     *                            not (false).
+     * @see HashTable::Initialize()
      */
     virtual bool Initialize(const unsigned max_input_size,
                             const float    space_usage   = 1.25,
@@ -32,6 +49,11 @@ public:
      *  them down into a list of unique keys and assign each a unique
      *  key an ID from 0 to K-1, where K is the number of unique keys.
      *  The values are not used with this structure and are ignored.
+     *  @param[in] input_size   Number of key-value pairs being inserted.
+     *  @param[in] d_keys       Device memory array containing all of the input keys.
+     *  @param[in] d_vals       Device memory array containing the keys' values.
+     *  @returns Whether the hash table was built successfully (true) or not (false).
+     *  @see \ref HashTable::Build()
      */
     virtual bool Build(const unsigned  input_size,
                        const unsigned *d_keys,
@@ -81,6 +103,9 @@ private:
 
 };  // namespace CuckooHashing
 };  // namespace CudaHT
+
+/** @} */ // end hash table data structures
+/** @} */ // end cudpp_app
 
 #endif
 

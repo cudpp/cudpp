@@ -47,6 +47,7 @@ public:
     CUDPPManager      *m_planManager;  //!< @internal pointer to the manager of this plan
    
     //! @internal Convert this pointer to an opaque handle
+    //! @returns Handle to a CUDPP plan
     CUDPPHandle getHandle()
     {
         return reinterpret_cast<CUDPPHandle>(this);

@@ -6,34 +6,18 @@
 #include "hash_compacting.h"    // CompactingHashTable class
 #include "hash_multivalue.h"    // MultivalueHashTable class
 
-/* @brief Internal structure used to store CUDPP hash table */
-template<class T>
-class CUDPPHashTableInternal
-{
-public:
-    CUDPPHashTableInternal(const CUDPPHashTableConfig * c, T * t) : 
-      config(*c), hash_table(t) {}
-      CUDPPHashTableConfig config;
-      T * hash_table;
-      // template<typename T> T getHashTablePtr()
-      // {
-      // return reinterpret_cast<T>(hash_table);
-      // }
-      //! @internal Convert this pointer to an opaque handle
-      CUDPPHandle getHandle()
-      {
-          return reinterpret_cast<CUDPPHandle>(this);
-      }
-      ~CUDPPHashTableInternal() 
-      {
-          delete hash_table;
-      }
-};
-
 typedef CUDPPHashTableInternal<CudaHT::CuckooHashing::HashTable> hti_basic;
 typedef CUDPPHashTableInternal<CudaHT::CuckooHashing::CompactingHashTable> hti_compacting;
 typedef CUDPPHashTableInternal<CudaHT::CuckooHashing::MultivalueHashTable> hti_multivalue;
 typedef CUDPPHashTableInternal<void> hti_void;
+
+/** @addtogroup publicInterface
+  * @{
+  */
+
+/** @name Hash Table Interface
+ * @{
+ */
 
 /* @brief unsigned int indicating a not-found value in a hash table */
 const unsigned int CUDPP_HASH_KEY_NOT_FOUND = CudaHT::CuckooHashing::kNotFound;
@@ -302,8 +286,9 @@ cudppHashRetrieve(CUDPPHandle plan, const void* d_keys, void* d_vals,
  */
 CUDPP_DLL
 CUDPPResult
-cudppDestroyHashTable(CUDPPHandle /* cudppHandle */, CUDPPHandle plan)
+cudppDestroyHashTable(CUDPPHandle cudppHandle, CUDPPHandle plan)
 {
+    (void) cudppHandle;         // eliminates doxygen (!) warning
     hti_void * hti_init = (hti_void *) getPlanPtrFromHandle<hti_void>(plan);
     switch(hti_init->config.type)
     {
@@ -394,6 +379,9 @@ cudppMultivalueHashGetAllValues(CUDPPHandle plan, unsigned int ** d_vals)
     *d_vals = (unsigned*) (hti->hash_table->get_all_values());
     return CUDPP_SUCCESS;
 }
+
+/** @} */ // end Plan Interface
+/** @} */ // end publicInterface
 
 // Leave this at the end of the file
 // Local Variables:

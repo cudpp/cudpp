@@ -251,7 +251,7 @@ __device__ void loadSharedChunkFromMem4(T        *s_out,
 * T4 is, e.g. int4 or float4) to global memory.
 *
 * @param[out] d_out The output (device) memory array
-* @param[in] threadScan0 Intermediate per-thread partial sums array (x2)
+* @param[in] threadScan Intermediate per-thread partial sums array (x2)
 * (contents computed in loadSharedChunkFromMem4())
 * @param[in] s_in The input (shared) memory array
 * @param[in] numElements The number of elements in the array being scanned
@@ -592,7 +592,7 @@ __device__ void loadSharedChunkFromMem2(T        *s_out,
 * T4 is, e.g. int4 or float4) to global memory.
 *
 * @param[out] d_out The output (device) memory array
-* @param[in] threadScan0 Intermediate per-thread partial sums array (x2)
+* @param[in] threadScan Intermediate per-thread partial sums array (x2)
 * (contents computed in loadSharedChunkFromMem4())
 * @param[in] s_in The input (shared) memory array
 * @param[in] numElements The number of elements in the array being scanned

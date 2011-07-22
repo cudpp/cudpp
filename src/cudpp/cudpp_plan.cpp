@@ -63,6 +63,7 @@ CUDPPResult validateOptions(CUDPPConfiguration config, size_t /*numElements*/, s
   * @param[in]  numElements The maximum number of elements to be processed
   * @param[in]  numRows The number of rows (for 2D operations) to be processed
   * @param[in]  rowPitch The pitch of the rows of input data, in elements
+  * @returns CUDPPResult indicating success or error condition
   */
 CUDPP_DLL
 CUDPPResult cudppPlan(const CUDPPHandle  cudppHandle,
@@ -141,6 +142,7 @@ CUDPPResult cudppPlan(const CUDPPHandle  cudppHandle,
   * storage.
   * 
   * @param[in] planHandle The CUDPPHandle to the plan to be destroyed
+  * @returns CUDPPResult indicating success or error condition
   */
 CUDPP_DLL
 CUDPPResult cudppDestroyPlan(CUDPPHandle planHandle)
@@ -198,13 +200,15 @@ CUDPPResult cudppDestroyPlan(CUDPPHandle planHandle)
 
 /** @brief Create a CUDPP Sparse Matrix Object 
   *
-  * The sparse matrix plan is a data structure containing state and intermediate storage space
-  * that CUDPP uses to perform sparse matrix dense vector multiply.  This plan is created by 
-  * passing to CUDPPSparseMatrixVectorMultiplyPlan() a CUDPPConfiguration that specifies the 
-  * algorithm (sprarse matrix-dense vector multiply) and datatype, along with the sparse matrix
-  * itself in CSR format.  The number of non-zero elements in the sparse matrix must also be passed
-  * as \a numNonZeroElements. This is used to allocate internal storage space at the time the 
-  * sparse matrix plan is created.
+  * The sparse matrix plan is a data structure containing state and
+  * intermediate storage space that CUDPP uses to perform sparse
+  * matrix dense vector multiply. This plan is created by passing to
+  * CUDPPSparseMatrixVectorMultiplyPlan() a CUDPPConfiguration that
+  * specifies the algorithm (sprarse matrix-dense vector multiply) and
+  * datatype, along with the sparse matrix itself in CSR format. The
+  * number of non-zero elements in the sparse matrix must also be
+  * passed as \a numNonZeroElements. This is used to allocate internal
+  * storage space at the time the sparse matrix plan is created.
   *
   * @param[out] sparseMatrixHandle A pointer to an opaque handle to the sparse matrix object
   * @param[in]  cudppHandle A handle to an instance of the CUDPP library used for resource management
@@ -214,6 +218,7 @@ CUDPPResult cudppDestroyPlan(CUDPPHandle planHandle)
   * @param[in]  A The matrix data
   * @param[in]  h_rowIndices An array containing the index of the start of each row in \a A
   * @param[in]  h_indices An array containing the index of each nonzero element in \a A
+  * @returns CUDPPResult indicating success or error condition
   */
 CUDPP_DLL
 CUDPPResult cudppSparseMatrix(const CUDPPHandle  cudppHandle,
@@ -260,10 +265,12 @@ CUDPPResult cudppSparseMatrix(const CUDPPHandle  cudppHandle,
 
 /** @brief Destroy a CUDPP Sparse Matrix Object
   *
-  * Deletes the sparse matrix data and plan referred to by \a sparseMatrixHandle 
-  * and all associated internal storage.
+  * Deletes the sparse matrix data and plan referred to by \a
+  * sparseMatrixHandle and all associated internal storage.
   * 
-  * @param[in] sparseMatrixHandle The CUDPPHandle to the matrix object to be destroyed
+  * @param[in] sparseMatrixHandle The CUDPPHandle to the matrix object to be 
+  *                               destroyed
+  * @returns CUDPPResult indicating success or error condition
   */
 CUDPP_DLL
 CUDPPResult cudppDestroySparseMatrix(CUDPPHandle sparseMatrixHandle)

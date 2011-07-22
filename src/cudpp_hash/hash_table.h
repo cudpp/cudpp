@@ -11,6 +11,14 @@
 #include "hash_functions.h"
 #include <cstdio>
 
+/** \addtogroup cudpp_app 
+  * @{
+  */
+
+/** \addtogroup cudpp_hash_data_structures
+ * @{
+ */
+
 /* --------------------------------------------------------------------------
    Doxygen definitions.
    -------------------------------------------------------------------------- */
@@ -21,11 +29,6 @@
 /*! @namespace CuckooHashing
  *  @brief Encapsulates the cuckoo hash table that uses stashes.
  */
-
-/*! @defgroup PublicInterface Public Interface
- *  Code necessary for using the hash tables.
- */
-
 
 /* -------------------------------------------------------------------------
    Hash table code.
@@ -54,7 +57,7 @@ unsigned ComputeMaxIterations(const unsigned num_keys,
  *  None of the keys are expected to be repeated.
  *
  *  @todo Templatize the interface without forcing the header file to have CUDA calls.
- *  @ingroup PublicInterface
+ *  @ingroup cudpp_app
  */
 class HashTable {
  public:
@@ -69,7 +72,7 @@ class HashTable {
   /*! @param[in] max_input_size   Largest expected number of items in the input.
    *  @param[in] space_usage      Size of the hash table relative to the input.  Bigger tables are faster to build and retrieve from.
    *  @param[in] num_functions    Number of hash functions to use.  May be 2-5.  More hash functions make it easier to build the table, but increase retrieval times.
-   *  @returns Whether the initialization was successful.
+   *  @returns Whether the hash table was initialized successfully (true) or not (false).
    *
    *  The minimum space usage is dependent on the number of functions being used; for two through five functions, the
    *  minimum space usage is 2.1, 1.1, 1.03, and 1.02 respectively.
@@ -85,7 +88,7 @@ class HashTable {
   /*! @param[in] input_size   Number of key-value pairs being inserted.
    *  @param[in] d_keys       Device memory array containing all of the input keys.
    *  @param[in] d_vals       Device memory array containing the keys' values.
-   *  @returns Whether the hash table was built successfully or not.
+     *  @returns Whether the hash table was built successfully (true) or not (false).
    *
    *  Several attempts are allowed to build the hash table in case of failure.
    *  The input keys are expected to be completely unique.
@@ -163,4 +166,13 @@ class HashTable {
 };  // namespace CuckooHashing
 };  // namespace CudaHT
 
+/** @} */ // end hash table data structures
+/** @} */ // end cudpp_app
+
 #endif
+
+// Leave this at the end of the file
+// Local Variables:
+// mode:c++
+// c-file-style: "NVIDIA"
+// End:

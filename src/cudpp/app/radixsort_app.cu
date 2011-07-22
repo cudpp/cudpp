@@ -979,7 +979,6 @@ void runSort(T *pkeys,
  * @param[in,out] keys Keys to be sorted.
  * @param[in,out] values Associated values to be sorted (through keys).
  * @param[in] numElements Number of elements in the sort.
- * @param[in] keyBits Number of interesting bits in the key*
  * @param[in] plan Configuration information for RadixSort.
 **/
 

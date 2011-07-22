@@ -82,19 +82,19 @@
  * \subsection size-limits Algorithm Input Size Limitations
  * 
  * The following maximum size limitations currently apply.  In some 
- * cases this is the theory -- the algorithms may not have been tested
+ * cases this is the theory&mdash;the algorithms may not have been tested
  * to the maximum size.  Also, for things like 32-bit integer scans, 
  * precision often limits the useful maximum size.
- 
- * CUDPP_SCAN               67,107,840 elements
- * CUDPP_SEGMENTED_SCAN     67,107,840 elements
- * CUDPP_COMPACT            67,107,840 elements
- * CUDPP_SORT               2,147,450,880 elements
- * CUDPP_REDUCE             NO LIMIT
- * CUDPP_RAND               33,554,432 elements
- * CUDPP_SPMVMULT           67,107,840 non-zero elements
- * CUDPP_HASH               See hash docs
- * CUDPP_TRIDIAGONAL        1024 equations per system (Geforce 400 series), no limit on the number of systems 
+ *
+ * - CUDPP_SCAN               67,107,840 elements
+ * - CUDPP_SEGMENTED_SCAN     67,107,840 elements
+ * - CUDPP_COMPACT            67,107,840 elements
+ * - CUDPP_SORT               2,147,450,880 elements
+ * - CUDPP_REDUCE             NO LIMIT
+ * - CUDPP_RAND               33,554,432 elements
+ * - CUDPP_SPMVMULT           67,107,840 non-zero elements
+ * - CUDPP_HASH               See hash docs
+ * - CUDPP_TRIDIAGONAL        1024 equations per system (Geforce 400 series), no limit on the number of systems 
  * 
  * \section opSys Operating System Support
  * 
@@ -176,28 +176,33 @@
  * 
  * - Mark Harris, Shubhabrata Sengupta, and John D. Owens. "Parallel Prefix Sum (Scan) with CUDA". In Hubert Nguyen, editor, <i>GPU Gems 3</i>, chapter 39, pages 851&ndash;876. Addison Wesley, August 2007. http://www.idav.ucdavis.edu/publications/print_pub?pub_id=916
  * - Shubhabrata Sengupta, Mark Harris, Yao Zhang, and John D. Owens. "Scan Primitives for GPU Computing". In <i>Graphics Hardware 2007</i>, pages 97&ndash;106, August 2007. http://www.idav.ucdavis.edu/publications/print_pub?pub_id=915
- * - Shubhabrata Sengupta, Mark Harris, and Michael Garland. "Efficient parallel scan algorithms for GPUs". NVIDIA Technical Report NVR-2008-003, December 2008. http://mgarland.org/papers.html#segscan-tr
  * - Nadathur Satish, Mark Harris, and Michael Garland. "Designing Efficient Sorting Algorithms for Manycore GPUs". In <i>Proceedings of the 23rd IEEE International Parallel & Distributed Processing Symposium</i>, May 2009. http://mgarland.org/papers.html#gpusort
  * - Stanley Tzeng, Li-Yi Wei. "Parallel White Noise Generation on a GPU via Cryptographic Hash". In <i>Proceedings of the 2008 Symposium on Interactive 3D Graphics and Games</i>, pages 79&ndash;87, February 2008. http://research.microsoft.com/apps/pubs/default.aspx?id=70502
  * - Yao Zhang, Jonathan Cohen, and John D. Owens. Fast Tridiagonal Solvers on the GPU. In <i>Proceedings of the 15th ACM SIGPLAN Symposium on Principles and Practice of Parallel Programming (PPoPP 2010)</i>, pages 127&ndash;136, January 2010. http://www.cs.ucdavis.edu/publications/print_pub?pub_id=978
  * - Shubhabrata Sengupta, Mark Harris, Michael Garland, and John D. Owens. "Efficient Parallel Scan Algorithms for many-core GPUs". In Jakub Kurzak, David A. Bader, and Jack Dongarra, editors, <i>Scientific Computing with Multicore and Accelerators</i>, Chapman & Hall/CRC Computational Science, chapter 19, pages 413&ndash;442. Taylor & Francis, January 2011. http://www.idav.ucdavis.edu/publications/print_pub?pub_id=1041
+ * - Dan A. Alcantara, Andrei Sharf, Fatemeh Abbasinejad, Shubhabrata Sengupta, Michael Mitzenmacher, John D. Owens, and Nina Amenta. Real-Time Parallel Hashing on the GPU. ACM Transactions on Graphics, 28(5):154:1–154:9, December 2009. http://www.idav.ucdavis.edu/publications/print_pub?pub_id=973
+ * - Dan A. Alcantara, Vasily Volkov, Shubhabrata Sengupta, Michael Mitzenmacher, John D. Owens, and Nina Amenta. Building an Efficient Hash Table on the GPU. In Wen-mei W. Hwu, editor, GPU Computing Gems, volume 2, chapter 1. Morgan Kaufmann, August 2011. 
  *
- * Many researchers are using CUDPP in their work, and there are many publications 
- * that have used it \ref cudpp_refs "(references)". If your work uses CUDPP, please 
- * let us know by sending us a reference (preferably in BibTeX format) to your work.
+ * Many researchers are using CUDPP in their work, and there are many
+ * publications that have used it \ref cudpp_refs "(references)". If
+ * your work uses CUDPP, please let us know by sending us a reference
+ * (preferably in BibTeX format) to your work.
  * 
  * \section citing Citing CUDPP
  *
  * If you make use of CUDPP primitives in your work and want to cite
- * CUDPP (thanks!), we would prefer for you to cite the appropriate 
- * papers above, since they form the core of CUDPP. To be more specific, 
- * the GPU Gems paper describes (unsegmented) scan, multi-scan for 
- * summed-area tables, and stream compaction. The NVIDIA technical report 
- * describes the current scan and segmented scan algorithms used in the 
- * library, and the Graphics Hardware paper describes an earlier 
- * implementation of segmented scan, quicksort, and sparse matrix-vector 
- * multiply. The IPDPS paper describes the radix sort used in CUDPP, and 
- * the I3D paper describes the random number generation algorithm.
+ * CUDPP (thanks!), we would prefer for you to cite the appropriate
+ * papers above, since they form the core of CUDPP. To be more
+ * specific, the GPU Gems paper (Harris et al.) describes
+ * (unsegmented) scan, multi-scan for summed-area tables, and stream
+ * compaction. The Sengupta et al. book chapter describes the current
+ * scan and segmented scan algorithms used in the library, and the
+ * Sengupta et al. Graphics Hardware paper describes an earlier
+ * implementation of segmented scan, quicksort, and sparse
+ * matrix-vector multiply. The IPDPS paper (Satish et al.) describes
+ * the radix sort used in CUDPP, and the I3D paper (Tzeng and Wei)
+ * describes the random number generation algorithm. The two Alcantara
+ * papers describe the hash algorithms. 
  *
  * \section credits Credits
  * \subsection developers CUDPP Developers
@@ -206,12 +211,12 @@
  * - <a href="http://graphics.cs.ucdavis.edu/~shubho/">Shubho Sengupta</a>, University of California, Davis
  * - <a href="http://wwwcsif.cs.ucdavis.edu/~tzeng/">Stanley Tzeng</a>,   University of California, Davis
  * - <a href="http://www.ece.ucdavis.edu/~yaozhang/">Yao Zhang</a>,       University of California, Davis
- * - <a href="http://www.ece.ucdavis.edu/~aaldavid/">Andrew Davidson</a>, University of California, Davis (formerly Louisiana State University)
+ * - <a href="http://www.ece.ucdavis.edu/~aaldavid/">Andrew Davidson</a>, University of California, Davis
  * - Ritesh Patel, University of California, Davis
  * 
  * \subsection contributors Other CUDPP Contributors
- * - <a href="http://idav.ucdavis.edu/~dfalcant/research.php">Dan Alcantara</a>, University of California, Davis
- * - <a href="http://www.eecs.berkeley.edu/~nrsatish/">Nadatur Satish</a>,  University of California, Berkeley
+ * - <a href="http://idav.ucdavis.edu/~dfalcant/research.php">Dan Alcantara</a>, University of California, Davis [hash tables]
+ * - <a href="http://www.eecs.berkeley.edu/~nrsatish/">Nadatur Satish</a>,  University of California, Berkeley [radix sort]
  *
  * \subsection acknowledgments Acknowledgments
  *
@@ -390,7 +395,7 @@ enum CUDPPDatatype
     CUDPP_ULONGLONG,//!< 64-bit unsigned integer type (C unsigned long long)
     CUDPP_DATATYPE_INVALID,  //!< invalid datatype (must be last in list)
 };
-extern const char * datatype_to_string[];
+extern CUDPP_DLL const char * datatype_to_string[];
 
 /** 
  * @brief Operators supported by CUDPP algorithms (currently scan and
@@ -409,7 +414,7 @@ enum CUDPPOperator
     CUDPP_MAX,      //!< Maximum of two operands
     CUDPP_OPERATOR_INVALID, //!< invalid operator (must be last in list)
 };
-extern const char * operator_to_string[];
+extern CUDPP_DLL const char * operator_to_string[];
 
 /**
 * @brief Algorithms supported by CUDPP.  Used to create appropriate plans using

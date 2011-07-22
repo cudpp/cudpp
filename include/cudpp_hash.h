@@ -48,6 +48,39 @@ struct CUDPPHashTableConfig
                                  * to construct. */
 };
 
+/**
+ * \defgroup cudpp_hash_data_structures Hash Table Data Structures
+ * Internal hash table data structures used by CUDPP.
+ *
+ * @{
+ */
+
+/* @brief Internal structure used to store a generic CUDPP hash table */
+template<class T>
+class CUDPPHashTableInternal
+{
+public:
+    CUDPPHashTableInternal(const CUDPPHashTableConfig * c, T * t) : 
+      config(*c), hash_table(t) {}
+      CUDPPHashTableConfig config;
+      T * hash_table;
+      // template<typename T> T getHashTablePtr()
+      // {
+      // return reinterpret_cast<T>(hash_table);
+      // }
+      //! @internal Convert this pointer to an opaque handle
+      CUDPPHandle getHandle()
+      {
+          return reinterpret_cast<CUDPPHandle>(this);
+      }
+      ~CUDPPHashTableInternal() 
+      {
+          delete hash_table;
+      }
+};
+
+/** @} */ // end hashDataStructures
+
 extern CUDPP_DLL const unsigned int CUDPP_HASH_KEY_NOT_FOUND;
 
 CUDPP_DLL CUDPPResult 

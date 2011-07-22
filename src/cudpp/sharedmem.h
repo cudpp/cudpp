@@ -70,7 +70,8 @@
 template <typename T>
 struct SharedMemory
 {
-    /** Return a pointer to the runtime-sized shared memory array. **/
+    //! @brief Return a pointer to the runtime-sized shared memory array.
+    //! @returns Pointer to runtime-sized shared memory array
     __device__ T* getPointer() 
     { 
         extern __device__ void Error_UnsupportedType(); // Ensure that we won't compile any un-specialized types

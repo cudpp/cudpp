@@ -12,7 +12,7 @@
  * @file
  * cudpp_globals.h
  *
- * @brief Global declarations defining machine characteristics of GPU target
+ * @brief Global declarations defining machine characteristics of GPU target.
  * These are currently set for best performance on G8X GPUs.  The optimal 
  * parameters may change on future GPUs. In the future, we hope to make
  * CUDPP a self-tuning library.

@@ -27,11 +27,11 @@
  * defined in cudpp.h.  Public interface functions call functions in the
  * \link cudpp_app Application-Level\endlink interface. The public 
  * interface functions include Plan Interface functions and Algorithm
- * Interface functions.  Plan Inteface functions are used for creating
- * CUDPP Plan objects which contain configuration details, intermediate
+ * Interface functions.  Plan Interface functions are used for creating
+ * CUDPP Plan objects that contain configuration details, intermediate
  * storage space, and in the case of cudppSparseMatrix(), data.  The 
  * Algorithm Interface is the set of functions that do the real work 
- * of CUDPP, such as cudppScan() and cudppSparseMatrixVectorMultiply.
+ * of CUDPP, such as cudppScan() and cudppSparseMatrixVectorMultiply().
  *
  * @{
  */
@@ -87,6 +87,7 @@
  * @param[out] d_out output of scan, in GPU memory
  * @param[in] d_in input to scan, in GPU memory
  * @param[in] numElements number of elements to scan
+ * @returns CUDPPResult indicating success or error condition 
  * 
  * @see cudppPlan, cudppDestroyPlan
  */
@@ -152,6 +153,7 @@ CUDPPResult cudppScan(const CUDPPHandle planHandle,
  * @param[in] d_idata input data to segmented scan, in GPU memory
  * @param[in] d_iflags input flags to segmented scan, in GPU memory
  * @param[in] numElements number of elements to perform segmented scan on
+ * @returns CUDPPResult indicating success or error condition 
  * 
  * @see cudppPlan, cudppDestroyPlan
  */
@@ -196,6 +198,7 @@ CUDPPResult cudppSegmentedScan(const CUDPPHandle  planHandle,
  * @param[in] d_in input to scan, in GPU memory
  * @param[in] numElements number of elements (per row) to scan
  * @param[in] numRows number of rows to scan in parallel
+ * @returns CUDPPResult indicating success or error condition 
  * 
  * @see cudppScan, cudppPlan
  */
@@ -254,6 +257,7 @@ CUDPPResult cudppMultiScan(const CUDPPHandle planHandle,
  * @param[in] d_in input to compact
  * @param[in] d_isValid which elements in d_in are valid
  * @param[in] numElements number of elements in d_in
+ * @returns CUDPPResult indicating success or error condition 
  */
 CUDPP_DLL
 CUDPPResult cudppCompact(const CUDPPHandle  planHandle,
@@ -304,6 +308,7 @@ CUDPPResult cudppCompact(const CUDPPHandle  planHandle,
  * @param[in] d_in Input array to reduce in GPU memory.  
  *                 Must be a pointer to an array of at least \a numElements elements.
  * @param[in] numElements the number of elements to reduce.  
+ * @returns CUDPPResult indicating success or error condition 
  * 
  * @see cudppPlan
  */
@@ -347,10 +352,8 @@ CUDPPResult cudppReduce(const CUDPPHandle planHandle,
  * @param[in] planHandle handle to CUDPPSortPlan
  * @param[out] d_keys keys by which key-value pairs will be sorted
  * @param[in] d_values values to be sorted
- * @param[in] keyBits the number of least significant bits in each element 
- *            of d_keys to sort by
- * @param[in] reverseSort if true, sort in reverse (descending) order
  * @param[in] numElements number of elements in d_keys and d_values
+ * @returns CUDPPResult indicating success or error condition 
  *
  * @see cudppPlan, CUDPPConfiguration, CUDPPAlgorithm
  */
@@ -384,6 +387,7 @@ CUDPPResult cudppSort(const CUDPPHandle planHandle,
   * @param sparseMatrixHandle Handle to a sparse matrix object created with cudppSparseMatrix()
   * @param d_y The output vector, y
   * @param d_x The input vector, x
+  * @returns CUDPPResult indicating success or error condition 
   * 
   * @see cudppSparseMatrix, cudppDestroySparseMatrix
   */
@@ -425,6 +429,7 @@ CUDPPResult cudppSparseMatrixVectorMultiply(const CUDPPHandle  sparseMatrixHandl
  * @param[in] planHandle Handle to plan for rand
  * @param[in] numElements number of elements in d_out.
  * @param[out] d_out output of rand, in GPU memory.  Should be an array of unsigned integers.
+ * @returns CUDPPResult indicating success or error condition 
  *
  * @see cudppPlan, CUDPPConfiguration, CUDPPAlgorithm
  */
@@ -461,6 +466,7 @@ CUDPPResult cudppRand(const CUDPPHandle planHandle,
  *
  * @param[in] planHandle the handle to the plan which specifies which rand seed to set
  * @param[in] seed the value which the internal cudpp seed will be set to
+ * @returns CUDPPResult indicating success or error condition 
  */
 CUDPP_DLL
 CUDPPResult cudppRandSeed(const CUDPPHandle planHandle, 
@@ -533,6 +539,7 @@ const char * operator_to_string[] =
  * @param[in] d Right hand side
  * @param[in] systemSize The size of the linear system
  * @param[in] numSystems The number of systems to be solved
+ * @returns CUDPPResult indicating success or error condition
  *
  * @see cudppPlan, CUDPPConfiguration, CUDPPAlgorithm
  */

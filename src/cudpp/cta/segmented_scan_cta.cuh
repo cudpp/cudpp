@@ -49,18 +49,18 @@ template <typename T, class Oper, bool backward, bool exclusivity,
 class SegmentedScanTraits
 {
 public:
-    //! Returns true if this is a backward scan
+    //! @returns true if this is a backward scan
     static __device__ bool isBackward()   { return backward;   }
-    //! Returns true if this is an exclusive scan
+    //! @returns true if this is an exclusive scan
     static __device__ bool isExclusive()  { return exclusivity; }
-    //! Returns true if this scan needs to shift flags to the left. This is only needed for the first level scan
+    //! @returns true if this scan needs to shift flags to the left. This is only needed for the first level scan
     //! in a multi-block scan
     static __device__ bool shiftFlags() { return doShiftFlags; }
-    //! Returns true if this is a full scan -- all blocks process CTA_SIZE * SCAN_ELEMENTS_PER_THREAD elements
+    //! @returns true if this is a full scan -- all blocks process CTA_SIZE * SCAN_ELEMENTS_PER_THREAD elements
     static __device__ bool isFullBlock() { return fullBlock;        }
-    //! Returns true if this scan writes the sum of each block to the d_blockSums array (multi-block scans)
+    //! @returns true if this scan writes the sum of each block to the d_blockSums array (multi-block scans)
     static __device__ bool writeSums() { return sums; }
-    //! Returns true if we are sm12 or better hardware
+    //! @returns true if we are sm12 or better hardware
     static __device__ bool isSM12OrBetter() { return sm12OrBetter; }
 
     typedef Oper Op; //!< The operator functor used for segmented scan

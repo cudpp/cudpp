@@ -87,15 +87,17 @@ floorPow2(unsigned int x)
 }
 
 /** @brief Returns the maximum value for type \a T.
-  * 
-  * Implemented using template specialization on \a T.
-  */
+ * @returns Maximum value for type \a T.
+ * 
+ * Implemented using template specialization on \a T.
+ */
 template <class T> 
 __host__ __device__ inline T getMax() { return 0; }
 /** @brief Returns the minimum value for type \a T.
-* 
-* Implemented using template specialization on \a T.
-*/
+ * @returns Minimum value for type \a T.
+ * 
+ * Implemented using template specialization on \a T.
+ */
 template <class T> 
 __host__ __device__ inline T getMin() { return 0; }
 // type specializations for the above
