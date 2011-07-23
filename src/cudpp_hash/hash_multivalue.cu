@@ -1,3 +1,19 @@
+// -------------------------------------------------------------
+// cuDPP -- CUDA Data Parallel Primitives library
+// -------------------------------------------------------------
+// $Revision:$
+// $Date:$
+// ------------------------------------------------------------- 
+// This source code is distributed under the terms of license.txt in
+// the root directory of this source distribution.
+// ------------------------------------------------------------- 
+
+/**
+ * @file hash_multivalue.cu
+ *
+ * @brief Implements hash tables that store multiple values per key.
+ */
+
 #ifndef HASH_V2_MULTI__CUH
 #define HASH_V2_MULTI__CUH
 

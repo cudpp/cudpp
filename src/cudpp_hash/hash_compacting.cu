@@ -1,3 +1,19 @@
+// -------------------------------------------------------------
+// cuDPP -- CUDA Data Parallel Primitives library
+// -------------------------------------------------------------
+// $Revision:$
+// $Date:$
+// ------------------------------------------------------------- 
+// This source code is distributed under the terms of license.txt in
+// the root directory of this source distribution.
+// ------------------------------------------------------------- 
+
+/**
+ * @file hash_compacting.cu
+ *
+ * @brief Implements hash tables that assign each unique key an ID.
+ */
+
 #ifndef CUDAHT__CUCKOO__SRC__LIBRARY__HASH_COMPACTING__CUH
 #define CUDAHT__CUCKOO__SRC__LIBRARY__HASH_COMPACTING__CUH
 

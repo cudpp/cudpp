@@ -1,3 +1,129 @@
+// -------------------------------------------------------------
+// cuDPP -- CUDA Data Parallel Primitives library
+// -------------------------------------------------------------
+// $Revision:$
+// $Date:$
+// ------------------------------------------------------------- 
+// This source code is distributed under the terms of license.txt in
+// the root directory of this source distribution.
+// ------------------------------------------------------------- 
+
+/**
+ * @file
+ * cudpp_hash.cpp
+ *
+ * @brief Main hash table library source file. Implements wrappers for
+ * public interface.
+ * 
+ * Main hash table library source file. Implements wrappers for public
+ * interface. These wrappers call application-level operators and
+ * internal data structures.
+ */
+
+/**
+ * @page hash_overview Overview of CUDPP hash tables
+ * 
+ * CUDPP includes three different hash table types:
+ * <table style="width:90%; margin: auto; border: 1px solid #dddddd;">
+ *   <tr>
+ *     <th class="classes" style="padding-right: 1em;">
+ *       \ref CudaHT::CuckooHashing::HashTable
+ *     </th>
+ *     <td>
+ *       Stores a single value per key. Input is expected to be a set
+ *       of key-value pairs, where the keys are all unique.
+ *     </td>
+ *   </tr>
+ *   <tr>
+ *     <th class="classes" style="padding-right: 1em;">
+ *       \ref CudaHT::CuckooHashing::CompactingHashTable
+ *     </th>
+ *     <td>
+ *       Assigns each key a unique identifier and allows O(1)
+ *       translation between the key and the unique IDs. Input is a
+ *       set of keys that may, or may not, be repeated.
+ *     </td>
+ *   </tr>
+ *   <tr>
+ *     <th class="classes" style="padding-right: 1em;">
+ *       \ref CudaHT::CuckooHashing::MultivalueHashTable
+ *     </th>
+ *     <td>
+ *       Allows you to store multiple values for ach key. Multiple
+ *       values for the same key are represented by different
+ *       key-value pairs in the input.
+ *     </td>
+ *   </tr>
+ * </table>
+ *
+ * This library relies on a good random number generator to ensure
+ * good hash function generation. CUDPP uses the Mesenne Twister
+ * implementation provided by Makoto Matsumoto, <a
+ * href=http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/MT2002/emt19937ar.html>available
+ * here</a> (and included in the CUDPP distribution). You may try
+ * using your system's rand() function and srand() functions, but keep
+ * in mind that Windows' generator produces numbers in a very small
+ * range.
+ * 
+ * The compacting hash table and multivalue hash tables use CUDPP's
+ * scan and sort functionality.
+ * 
+ * \section hash_space_limitations Hash table space limitations
+ *
+ * The hash table implementations are primarily limited by the size of
+ * available memory. The figures below indicate the size of the hash
+ * table as a function of:
+ *
+ * - N, the number of elements in the hash table;
+ * - K, the number of unique keys in the input (for the multivalue  
+ *   and compacting hash table); and
+ * - M, the space multiplier for the hash table (for every 1 element
+ *   to be stored in the hash table, we allocate space for M
+ *   elements). M defaults to 1.25.
+ * 
+ * \subsection basic_hash_space_limitations Basic hash table:
+ * 
+ * Other than some 32-bit values (like an error flag and the number of
+ * items in the stash), the only memory allocation is for the actual hash
+ * table itself:
+ * 
+ * - Hash table: 2 * (M * N + 101) uint32s
+ * 
+ * 101 is the size of the stash (in uint32s).
+ * We multiply by 2 because we store both keys and values.
+ * 
+ * \subsection multivalue_hash_space_limitations Multi-value hash table:
+ * 
+ * In the multivalue hash table, memory is held until the hash table
+ * is deleted; it was set up this way to prevent mucking up the
+ * timings with memory management. 
+ * 
+ * - Hash table: 2 * (M * K + 101) uint32s
+ * - Values of all of the keys: N uint32s
+ * - Information about each key's values: 2 * K uint32s
+ * - Compacted list of the keys: K uint32s
+ * - Scratch memory, CUDPP scan: Enough to scan N items. Note that
+ *   scan has its own limitation on size (~67M elements).
+ * - Scratch memory, radix sort: 2N uint32s. Note that
+ *   sort has its own limitation on size (~2B elements).
+ * - Scratch memory, additional: N uint32s
+ * 
+ * Each key is capped at UINT_MAX values. Although the code doesn't do
+ * it, you could in theory creatively re-use some of the memory or
+ * move allocations around to avoid having to hold onto more scratch
+ * space than you really need. The CUDPP scan memory, for example, is
+ * allocated when the hash table is initialized but only used when
+ * it's being built.
+ * 
+ * \subsection compacting_hash_space_limitations Compacting hash table:
+ * 
+ * - Hash table: 2 * (M * N + 101) uint32s
+ * - Compacted unique keys: K uint32s
+ * - Scratch memory: 3 * (M * N + 101) uint32s
+ * - Scratch memory, CUDPP scan: Enough to scan N + 101 uint32s. Note that
+ *   scan has its own limitation on size (~67M elements).
+ */
+
 #include <cuda_runtime.h>
 #include "cudpp_hash.h"
 #include "cudpp_plan.h"
@@ -28,8 +154,8 @@ const unsigned int CUDPP_HASH_KEY_NOT_FOUND = CudaHT::CuckooHashing::kNotFound;
 
 /**
  * @brief Creates a CUDPP hash table in GPU memory given an input hash
- * table configuration; returns the \a plan for that hash table.
- * 
+ * table configuration; returns the \a plan for that hash table. 
+ *
  * Requires a CUDPPHandle for the CUDPP instance (to ensure thread
  * safety); call cudppCreate() to get this handle. 
  * 
@@ -42,12 +168,15 @@ const unsigned int CUDPP_HASH_KEY_NOT_FOUND = CudaHT::CuckooHashing::kNotFound;
  * After you are finished with the hash table, clean up with
  * cudppDestroyHashTable().
  * 
+ * See \ref hash_overview for an overview of CUDPP's hash table support. 
+ *
  * @param[in] cudppHandle Handle to CUDPP instance
  * @param[out] plan Handle to hash table instance
  * @param[in] config Configuration for hash table to be created
  * @returns CUDPPResult indicating if creation was successful
  * 
- * @see cudppCreate, cudppDestroyHashTable
+ * @see cudppCreate, cudppDestroyHashTable, CUDPPHashTableType,
+ * CUDPPHashTableConfig, \ref hash_overview
  */
 CUDPP_DLL
 CUDPPResult
@@ -155,14 +284,17 @@ cudppHashTable(CUDPPHandle cudppHandle, CUDPPHandle *plan,
  *
  * Calls HashTable::Build internally.
  * 
+ * See \ref hash_overview for an overview of CUDPP's hash table support. 
+ *
  * @param[in] plan Handle to hash table instance
  * @param[in] d_keys GPU pointer to keys to be inserted
  * @param[in] d_vals GPU pointer to values to be inserted
  * @param[in] num Number of keys/values to be inserted
  * @returns CUDPPResult indicating if insertion was successful
  * 
- * @see cudppHashTable, cudppHashRetrieve, HashTable::Build,
- * CompactingHashTable::Build, MultivalueHashTable::Build
+ * @see cudppHashTable, cudppHashRetrieve,
+ * HashTable::Build, CompactingHashTable::Build,
+ * MultivalueHashTable::Build, \ref hash_overview
  */
 
 CUDPP_DLL
@@ -219,6 +351,8 @@ cudppHashInsert(CUDPPHandle plan, const void* d_keys, const void* d_vals,
  *
  * Calls HashTable::Retrieve internally.
  * 
+ * See \ref hash_overview for an overview of CUDPP's hash table support. 
+ *
  * @param[in] plan Handle to hash table instance
  * @param[in] d_keys GPU pointer to keys to be retrieved
  * @param[out] d_vals GPU pointer to values to be retrieved
@@ -226,7 +360,8 @@ cudppHashInsert(CUDPPHandle plan, const void* d_keys, const void* d_vals,
  * @returns CUDPPResult indicating if retrieval was successful
  * 
  * @see cudppHashTable, cudppHashBuild, HashTable::Retrieve,
- * CompactingHashTable::Retrieve, MultivalueHashTable::Retrieve
+ * CompactingHashTable::Retrieve, MultivalueHashTable::Retrieve, \ref
+ * hash_overview
  */
 CUDPP_DLL
 CUDPPResult
@@ -278,11 +413,13 @@ cudppHashRetrieve(CUDPPHandle plan, const void* d_keys, void* d_vals,
  * Requires a CUDPPHandle for the hash table instance; call
  * cudppHashTable() to get this handle.
  * 
+ * See \ref hash_overview for an overview of CUDPP's hash table support. 
+ *
  * @param[in] cudppHandle Handle to CUDPP instance
  * @param[in] plan Handle to hash table instance
  * @returns CUDPPResult indicating if destruction was successful
  * 
- * @see cudppHashTable
+ * @see cudppHashTable, \ref hash_overview
  */
 CUDPP_DLL
 CUDPPResult
@@ -327,11 +464,14 @@ cudppDestroyHashTable(CUDPPHandle cudppHandle, CUDPPHandle plan)
  * Requires a CUDPPHandle for the hash table instance; call
  * cudppHashTable() to get this handle.
  * 
+ * See \ref hash_overview for an overview of CUDPP's hash table support. 
+ *
  * @param[in] plan Handle to hash table instance
  * @param[out] size Pointer to size of multivalue hash table
  * @returns CUDPPResult indicating if operation was successful
  * 
- * @see cudppHashTable, cudppMultivalueHashGetAllValues
+ * @see cudppHashTable, cudppMultivalueHashGetAllValues, \ref
+ * hash_overview
  */
 CUDPP_DLL
 CUDPPResult
@@ -357,11 +497,14 @@ cudppMultivalueHashGetValuesSize(CUDPPHandle plan, unsigned int * size)
  * Requires a CUDPPHandle for the hash table instance; call
  * cudppHashTable() to get this handle.
  * 
+ * See \ref hash_overview for an overview of CUDPP's hash table support. 
+ *
  * @param[in] plan Handle to hash table instance
  * @param[out] d_vals Pointer to pointer of values (in GPU memory)
  * @returns CUDPPResult indicating if operation was successful
  * 
- * @see cudppHashTable, cudppMultivalueHashGetValuesSize
+ * @see cudppHashTable, cudppMultivalueHashGetValuesSize, \ref
+ * hash_overview
  */
 CUDPP_DLL
 CUDPPResult

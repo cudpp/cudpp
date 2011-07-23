@@ -1,5 +1,17 @@
-/*! @file hash_table.h
- *  @brief Header for a basic hash table that stores one value per key.
+// -------------------------------------------------------------
+// cuDPP -- CUDA Data Parallel Primitives library
+// -------------------------------------------------------------
+// $Revision:$
+// $Date:$
+// ------------------------------------------------------------- 
+// This source code is distributed under the terms of license.txt in
+// the root directory of this source distribution.
+// ------------------------------------------------------------- 
+
+/**
+ * @file hash_table.h
+ *
+ * @brief Header for a basic hash table that stores one value per key.
  */
 
 #ifndef CUDAHT__CUCKOO__SRC__LIBRARY__HASH_TABLE__H
@@ -56,7 +68,8 @@ unsigned ComputeMaxIterations(const unsigned num_keys,
 /*! The input consists of two unsigned arrays of keys and values.
  *  None of the keys are expected to be repeated.
  *
- *  @todo Templatize the interface without forcing the header file to have CUDA calls.
+ *  @todo Templatize the interface without forcing the header file to
+ *  have CUDA calls.
  *  @ingroup cudpp_app
  */
 class HashTable {
@@ -68,14 +81,22 @@ class HashTable {
 
   virtual ~HashTable() {Release();}
 
-  //! Initialize the hash table's memory.  Must be called before \ref Build() and after the random number generator has been seeded.
+  //! Initialize the hash table's memory. Must be called before \ref
+  //! Build() and after the random number generator has been seeded.
   /*! @param[in] max_input_size   Largest expected number of items in the input.
-   *  @param[in] space_usage      Size of the hash table relative to the input.  Bigger tables are faster to build and retrieve from.
-   *  @param[in] num_functions    Number of hash functions to use.  May be 2-5.  More hash functions make it easier to build the table, but increase retrieval times.
-   *  @returns Whether the hash table was initialized successfully (true) or not (false).
+   *  @param[in] space_usage Size of the hash table relative to the
+   *                         input. Bigger tables are faster to build
+   *                         and retrieve from.
+   *  @param[in] num_functions Number of hash functions to use. May be
+   *                           2-5. More hash functions make it easier
+   *                           to build the table, but increase
+   *                           retrieval times.
+   *  @returns Whether the hash table was initialized successfully (true) 
+   *           or not (false).
    *
-   *  The minimum space usage is dependent on the number of functions being used; for two through five functions, the
-   *  minimum space usage is 2.1, 1.1, 1.03, and 1.02 respectively.
+   *  The minimum space usage is dependent on the number of functions
+   *  being used; for two through five functions, the minimum space
+   *  usage is 2.1, 1.1, 1.03, and 1.02 respectively.
    */
   virtual bool Initialize(const unsigned max_input_size,
                           const float    space_usage    = 1.25,
@@ -86,14 +107,17 @@ class HashTable {
 
   //! Build the hash table.
   /*! @param[in] input_size   Number of key-value pairs being inserted.
-   *  @param[in] d_keys       Device memory array containing all of the input keys.
+   *  @param[in] d_keys       Device memory array containing all of the input 
+   *                          keys.
    *  @param[in] d_vals       Device memory array containing the keys' values.
-     *  @returns Whether the hash table was built successfully (true) or not (false).
+   *  @returns Whether the hash table was built successfully (true) or 
+   *           not (false).
    *
    *  Several attempts are allowed to build the hash table in case of failure.
    *  The input keys are expected to be completely unique.
-   *  To reduce the chance of a failure, increase the space usage or number of functions.
-   *  Keys are not allowed to be equal to \ref CudaHT::CuckooHashing::kKeyEmpty.
+   *  To reduce the chance of a failure, increase the space usage or number of 
+   *  functions.
+   *  Keys are not allowed to be equal to CudaHT::CuckooHashing::kKeyEmpty.
    */
   virtual bool Build(const unsigned  input_size,
                      const unsigned *d_keys,
@@ -101,17 +125,20 @@ class HashTable {
 
   //! Query the hash table.
   /*! @param[in] n_queries        Number of keys in the query set.
-   *  @param[in] d_query_keys     Device memory array containing all of the query keys.
+   *  @param[in] d_query_keys     Device memory array containing all of
+   *                              the query keys.
    *  @param[in] d_query_results  Values for the query keys.
    *
-   *  \ref kNotFound is returned for any query key that failed to be found in the table.
+   *  kNotFound is returned for any query key that failed to be found
+   *  in the table.
    */
   virtual void Retrieve(const unsigned  n_queries,
                         const unsigned *d_query_keys,
                               unsigned *d_query_results);
 
   //! @name Accessors
-  /// @brief Mainly needed to use the __device__ CudaHT::retrieve() function directly.
+  /// @brief Mainly needed to use the __device__ CudaHT::retrieve()
+  /// function directly.
   /// @{
 
   //! Returns how many slots the hash table has.
@@ -127,7 +154,8 @@ class HashTable {
   inline const Entry* get_contents()           const {return d_contents_;}
 
   //! Returns the number of hash functions being used.
-  inline unsigned     get_num_hash_functions() const {return num_hash_functions_;}
+  inline unsigned     get_num_hash_functions() const {return 
+                                                      num_hash_functions_;}
 
   //! When using two hash functions, returns the constants.
   inline Functions<2> get_constants_2()        const {return constants_2_;}

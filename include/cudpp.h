@@ -93,7 +93,7 @@
  * - CUDPP_REDUCE             NO LIMIT
  * - CUDPP_RAND               33,554,432 elements
  * - CUDPP_SPMVMULT           67,107,840 non-zero elements
- * - CUDPP_HASH               See hash docs
+ * - CUDPP_HASH               See \ref hash_space_limitations
  * - CUDPP_TRIDIAGONAL        1024 equations per system (Geforce 400 series), no limit on the number of systems 
  * 
  * \section opSys Operating System Support
@@ -154,11 +154,12 @@
  *        core data-parallel algorithms, typically by processing data within 
  *        shared (CUDA \c __shared__) memory.
  *
- * Programmers may use any of the lower three CUDPP layers in their own 
- * programs by building the source directly into their application.  However, 
- * the typical usage of CUDPP is to link to the library and invoke functions in 
- * the CUDPP \link publicInterface Public Interface\endlink, as in the 
- * \ref example_simpleCUDPP "simpleCUDPP", satGL, and cudpp_testrig application 
+ * Programmers may use any of the lower three CUDPP layers in their
+ * own programs by building the source directly into their
+ * application. However, the typical usage of CUDPP is to link to the
+ * library and invoke functions in the CUDPP \link publicInterface
+ * Public Interface\endlink, as in the \ref example_simpleCUDPP
+ * "simpleCUDPP", satGL, cudpp_testrig, and hash_testrig application
  * examples included in the CUDPP distribution.
  *
  * In the future, if and when CUDA supports building device-level libraries, we 
@@ -168,8 +169,8 @@
  * \subsection uses Use Cases
  * We expect the normal use of CUDPP will be in one of two ways:
  * -# Linking the CUDPP library against another application. 
- * -# Running our "test" application, cudpp_testrig, that exercises
- *   CUDPP functionality.
+ * -# Running our "test" applications, cudpp_testrig and
+ *   cudpp_hash_testrig, that exercise CUDPP functionality.
  *
  * \section references References
  * The following publications describe work incorporated in CUDPP.
@@ -261,13 +262,20 @@
  *
  * \section licenseBSD CUDPP License
  *
- * CUDPP is released under the 
- * <a href="http://www.opensource.org/licenses/bsd-license.php">BSD license</a>.
- * This CUDPP distribution also includes the <a
- * href="http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/emt.html"Mersenne
+ * CUDPP is released under the <a
+ * href="http://www.opensource.org/licenses/bsd-license.php">BSD
+ * license</a>. This CUDPP distribution also includes the <a
+ * href="http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/emt.html">Mersenne
  * twister code</a> of <a
  * href="http://www.math.sci.hiroshima-u.ac.jp/~m-mat/eindex.html">Makoto
- * Matsumoto</a>, also licensed under BSD, as the file <em>mt19937ar.c</em>. 
+ * Matsumoto</a>, also licensed under BSD, as the file
+ * <em>mt19937ar.c</em>, and a modified version of FindGLEW.cmake from
+ * <a
+ * href="http://code.google.com/p/nvidia-texture-tools/">nvidia-texture-tools</a>,
+ * licensed under the <a
+ * href="http://www.opensource.org/licenses/mit-license.php">MIT
+ * license.</a>
+
  * 
  * @include license.txt
  *

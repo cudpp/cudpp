@@ -1,5 +1,17 @@
-/*! @file hash_compacting.h
- *  @brief Include this file to create hash tables that assign each unique key an ID.
+// -------------------------------------------------------------
+// cuDPP -- CUDA Data Parallel Primitives library
+// -------------------------------------------------------------
+// $Revision:$
+// $Date:$
+// ------------------------------------------------------------- 
+// This source code is distributed under the terms of license.txt in
+// the root directory of this source distribution.
+// ------------------------------------------------------------- 
+
+/**
+ * @file hash_compacting.h
+ *
+ * @brief Header for hash tables that assign each unique key an ID.
  */
 
 #ifndef HASH_COMPACTING__H
@@ -19,7 +31,8 @@ namespace CudaHT {
 namespace CuckooHashing {
 
 //! @class CompactingHashTable
-/*! @brief Provides O(1) translation between keys and unique identifiers.
+/*! @brief Hash table that provides O(1) translation between keys and
+ *  unique identifiers.
  */
 class CompactingHashTable : public HashTable {
 public:
@@ -50,9 +63,11 @@ public:
      *  key an ID from 0 to K-1, where K is the number of unique keys.
      *  The values are not used with this structure and are ignored.
      *  @param[in] input_size   Number of key-value pairs being inserted.
-     *  @param[in] d_keys       Device memory array containing all of the input keys.
+     *  @param[in] d_keys       Device memory array containing all of the 
+     *                          input keys.
      *  @param[in] d_vals       Device memory array containing the keys' values.
-     *  @returns Whether the hash table was built successfully (true) or not (false).
+     *  @returns Whether the hash table was built successfully (true) 
+     *  or not (false).
      *  @see \ref HashTable::Build()
      */
     virtual bool Build(const unsigned  input_size,
@@ -65,8 +80,8 @@ public:
      *                              query keys.
      *  @param[in] d_query_results  Values for the query keys.
      *
-     *  \ref kNotFound is returned for any query key that failed to be
-     *  found in the table.
+     *  CUDPP_HASH_KEY_NOT_FOUND is returned for any query key that
+     *  failed to be found in the table.
      */
     virtual void Retrieve(const unsigned  n_queries,
                           const unsigned *d_query_keys,

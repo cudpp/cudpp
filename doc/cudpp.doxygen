@@ -714,7 +714,8 @@ EXCLUDE_SYMBOLS        =
 EXAMPLE_PATH           = ./example_simpleCUDPP.dox \
                          ../apps/simpleCUDPP \
                          ../src/cudpp \
-                         ./
+                         ./ \
+			 ../license.txt
 
 # If the value of the EXAMPLE_PATH tag contains directories, you can use the 
 # EXAMPLE_PATTERNS tag to specify one or more wildcard pattern (like *.cpp 

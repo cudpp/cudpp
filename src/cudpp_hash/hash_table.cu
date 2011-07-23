@@ -1,3 +1,19 @@
+// -------------------------------------------------------------
+// cuDPP -- CUDA Data Parallel Primitives library
+// -------------------------------------------------------------
+// $Revision:$
+// $Date:$
+// ------------------------------------------------------------- 
+// This source code is distributed under the terms of license.txt in
+// the root directory of this source distribution.
+// ------------------------------------------------------------- 
+
+/**
+ * @file hash_table.cu
+ *
+ * @brief Implements a basic hash table that stores one value per key.
+ */
+
 #include "hash_table.h"
 #include "debugging.cuh"
 

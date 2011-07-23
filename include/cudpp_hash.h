@@ -1,6 +1,20 @@
 #include "cudpp.h"
-
 #include "cudpp_config.h"
+
+/**
+ * @file
+ * cudpp_hash.h
+ * 
+ * @brief Main library header file for CUDPP hash tables. Defines public 
+ * interface.
+ *
+ * The CUDPP public interface is a C-only interface to enable 
+ * linking with code written in other languages (e.g. C, C++, 
+ * and Fortran).  While the internals of CUDPP are not limited 
+ * to C (C++ features are used), the public interface is 
+ * entirely C (thus it is declared "extern C").
+ */
+
 
 /**
  * @brief Supported types of hash tables
@@ -49,37 +63,47 @@ struct CUDPPHashTableConfig
 };
 
 /**
- * \defgroup cudpp_hash_data_structures Hash Table Data Structures
- * Internal hash table data structures used by CUDPP.
+ * \defgroup cudpp_hash_data_structures Hash Table Data Structures and Constants
+ * Internal hash table data structures and constants used by CUDPP.
  *
  * @{
  */
 
-/* @brief Internal structure used to store a generic CUDPP hash table */
+/** @brief Internal structure used to store a generic CUDPP hash table
+ * 
+ * @see CUDPPHashTableConfig, CudaHT::CuckooHashing::HashTable,
+ * CudaHT::CuckooHashing::CompactingHashTable,
+ * CudaHT::CuckooHashing::MultivalueHashTable
+ */
 template<class T>
 class CUDPPHashTableInternal
 {
 public:
+    //! @brief Constructor for CUDPPHashTableInternal
+    //! @param [in] c Pointer to configuration structure
+    //! @param [in] t Hash table pointer
     CUDPPHashTableInternal(const CUDPPHashTableConfig * c, T * t) : 
-      config(*c), hash_table(t) {}
-      CUDPPHashTableConfig config;
-      T * hash_table;
-      // template<typename T> T getHashTablePtr()
-      // {
-      // return reinterpret_cast<T>(hash_table);
-      // }
-      //! @internal Convert this pointer to an opaque handle
-      CUDPPHandle getHandle()
-      {
-          return reinterpret_cast<CUDPPHandle>(this);
-      }
-      ~CUDPPHashTableInternal() 
-      {
-          delete hash_table;
-      }
+        config(*c), hash_table(t) {}
+    CUDPPHashTableConfig config;
+    T * hash_table;
+    // template<typename T> T getHashTablePtr()
+    // {
+    // return reinterpret_cast<T>(hash_table);
+    // }
+    //! @brief Convert this pointer to an opaque handle
+    //! @returns Opaque handle for this structure
+    CUDPPHandle getHandle()
+    {
+        return reinterpret_cast<CUDPPHandle>(this);
+    }
+    //! @brief Destructor for CUDPPHashTableInternal
+    ~CUDPPHashTableInternal() 
+    {
+        delete hash_table;
+    }
 };
 
-/** @} */ // end hashDataStructures
+/** @} */ // end cudpp_hash_data_structures
 
 extern CUDPP_DLL const unsigned int CUDPP_HASH_KEY_NOT_FOUND;
 

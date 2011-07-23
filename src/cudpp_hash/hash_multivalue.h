@@ -1,5 +1,17 @@
-/*! @file hash_multivalue.h
- *  @brief Include this file to create hash tables that store multiple values per key.
+// -------------------------------------------------------------
+// cuDPP -- CUDA Data Parallel Primitives library
+// -------------------------------------------------------------
+// $Revision:$
+// $Date:$
+// ------------------------------------------------------------- 
+// This source code is distributed under the terms of license.txt in
+// the root directory of this source distribution.
+// ------------------------------------------------------------- 
+
+/**
+ * @file hash_multivalue.h
+ *
+ * @brief Header for hash tables that store multiple values per key.
  */
 
 #ifndef CUDAHT__CUCKOO__SRC__LIBRARY__HASH_MULTIVALUE__H
@@ -19,7 +31,7 @@ namespace CudaHT {
 namespace CuckooHashing {
 
 //! @class MultivalueHashTable
-/*! @brief Stores multiple values per key. 
+/*! @brief Hash table that stores multiple values per key. 
  * 
  *  A key with multiple values is represented by multiple key-value
  *  pairs in the input with the same key.

@@ -1,9 +1,22 @@
+// -------------------------------------------------------------
+// cuDPP -- CUDA Data Parallel Primitives library
+// -------------------------------------------------------------
+// $Revision:$
+// $Date:$
+// ------------------------------------------------------------- 
+// This source code is distributed under the terms of license.txt in
+// the root directory of this source distribution.
+// ------------------------------------------------------------- 
+
+/**
+ * @file
+ * debugging.cuh
+ *
+ * @brief Debugging/statistics/performance utilities header for hash tables.
+ */
+
 #ifndef CUDAHT__CUCKOO__SRC__LIBRARY___DEBUGGING__CUH
 #define CUDAHT__CUCKOO__SRC__LIBRARY___DEBUGGING__CUH
-
-/*! @file debugging.cuh
- *  @brief Functions for analyzing the hash table's performance.
- */
 
 #include "hash_table.cuh"
 #include <algorithm>

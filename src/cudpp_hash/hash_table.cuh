@@ -1,5 +1,17 @@
-/*! @file hash_table.cuh
- *  @brief Include this file if you want to access the kernel and __device__ functions directly.
+// -------------------------------------------------------------
+// cuDPP -- CUDA Data Parallel Primitives library
+// -------------------------------------------------------------
+// $Revision:$
+// $Date:$
+// ------------------------------------------------------------- 
+// This source code is distributed under the terms of license.txt in
+// the root directory of this source distribution.
+// ------------------------------------------------------------- 
+
+/**
+ * @file hash_table.cuh
+ *
+ * @brief Implements kernel and __device__ functions for a basic hash table.
  */
 
 #ifndef CUDAHT__CUCKOO__SRC__LIBRARY__HASH_TABLE__CUH

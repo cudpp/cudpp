@@ -1,5 +1,17 @@
-/*! @file definitions.h
- *  @brief Stores configuration flags and definitions for hard-coded values in hash table implementations.
+// -------------------------------------------------------------
+// cuDPP -- CUDA Data Parallel Primitives library
+// -------------------------------------------------------------
+// $Revision:$
+// $Date:$
+// ------------------------------------------------------------- 
+// This source code is distributed under the terms of license.txt in
+// the root directory of this source distribution.
+// ------------------------------------------------------------- 
+
+/**
+ * @file definitions.h
+ *
+ * @brief Stores configuration flags and definitions for hard-coded values in hash table implementations.
  */
 
 #ifndef CUDAHT__CUCKOO_STASH__H
@@ -57,6 +69,12 @@
 namespace CudaHT {
 namespace CuckooHashing {
 
+/**
+ * \addtogroup cudpp_hash_data_structures
+ *
+ * @{
+ */
+
 typedef unsigned long long Entry;                   //!< A key and its value are stored in a 64-bit number.  The key is stored in the upper 32 bits.
 
 const unsigned kMaxRestartAttempts = 10;            //!< Number of build attempts.
@@ -84,6 +102,8 @@ const float kMinimumSpaceUsages[] = {std::numeric_limits<float>::max(),
                                      1.1f,
                                      1.03f,
                                      1.02f};
+
+/** @} */ // end cudpp_hash_data_structures
 
 };  // namespace CuckooHashing
 };  // namespace CudaHT

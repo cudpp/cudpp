@@ -1,5 +1,5 @@
 /*! @file hash_testrig.cu
- *  @brief This file demonstrates how to use the basic hash table.
+ *  @brief This file demonstrates how to use all three hash tables in the CUDPP hash table distribution.
  */
 
 #include <cudpp_hash.h>
@@ -18,6 +18,7 @@
 #define CUDPP_APP_COMMON_IMPL
 #include "stopwatch.h"
 #include "commandline.h"
+
 
 using namespace cudpp_app;
 
@@ -226,6 +227,40 @@ int CheckResults_multivalue(const unsigned            kInputSize,
     return errors;
 }
 
+/*
+ * @brief Tests hash table implementations. 
+ * 
+ * <b>Simple hash table sample</b>
+ *
+ * This program builds a basic hash table using N random key-value
+ * pairs with unique keys, then queries it for N unique keys, where
+ * the queries are comprised of keys both inside the hash table and
+ * not in the hash table. Multiple copies of the hash table are built
+ * for each trial, where each hash table has a different number of
+ * slots.
+ * 
+ * After the construction of each hash table, it is queried multiple
+ * times with a different set of keys. Each query key set is composed
+ * of a portion of the original input keys (which can be found in the
+ * hash table), and keys that were not part of the original input
+ * (which cause the queries to fail).
+ * 
+ * <b>Compacting hash table example</b> 
+ * 
+ * This builds a compacting hash table, using N random keys. Multiple
+ * copies of a key in the input are all given the same unique ID by
+ * the hash table. In addition to the trials performed by the simple
+ * hash table sample, it also performs multiple trials with an
+ * increasing average number of copies for each key: the compacting
+ * hash table is always handed N keys, but it is possible that many
+ * keys will have a large number of copies.
+ *
+ * <b>Multi-value hash table example</b>
+ *
+ * This builds a multi-value hash table, using N random key-value
+ * pairs. A key with multiple values is represented by multiple
+ * key-value pairs in the input with the same key.
+ */
 int testHashTable(CUDPPHandle theCudpp,
                   CUDPPHashTableType htt,
                   unsigned int kMaxIterations,
