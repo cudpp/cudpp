@@ -21,7 +21,6 @@ set (HFILES
   hash_functions.h
   hash_multivalue.h
   hash_table.h
-  hash_table_doc.h
   mt19937ar.h
   )
 
