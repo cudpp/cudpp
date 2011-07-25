@@ -48,12 +48,8 @@ set (CUHFILES
   kernel/segmented_scan_kernel.cuh
   kernel/spmvmult_kernel.cuh
   kernel/vector_kernel.cuh
-  app/cr_app.cuh
   app/crpcr_app.cuh
-  app/pcr_app.cuh
-  kernel/cr_kernel.cuh
   kernel/crpcr_kernel.cuh
-  kernel/pcr_kernel.cuh
   )
 
 set(CUFILES
