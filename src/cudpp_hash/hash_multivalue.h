@@ -63,9 +63,9 @@ public:
     //! Don't call this.
     /*! @todo Remove this function entirely somehow.
      */
-    virtual void Retrieve(const unsigned  /* n_queries */,
-                          const unsigned */* d_keys */,
-                          unsigned       */* d_location_counts */)
+    virtual void Retrieve(const unsigned   /* n_queries */,
+                          const unsigned * /* d_keys */,
+                          unsigned       * /* d_location_counts */)
     { 
         fprintf(stderr, "Wrong retrieve function.\n"); exit(1);
     }

@@ -21,7 +21,7 @@ bool GenerateUniqueRandomNumbers(unsigned       *random_numbers,
   }
 
   // Generate a certain percentage extra of random numbers as a cushion.
-  unsigned  num_numbers  = num_random_numbers * 1.1;
+  unsigned  num_numbers  = (unsigned)(num_random_numbers * 1.1);
   unsigned *temp_numbers = new unsigned[num_numbers];
   if (temp_numbers == NULL) {
     fprintf(stderr, "Failed to allocate space.\n");
@@ -86,7 +86,7 @@ void GenerateQueries(const unsigned  size,
                      const float     failure_rate,
                            unsigned *number_pool,
                            unsigned *queries) {
-  unsigned num_failed_queries = failure_rate * size;
+  unsigned num_failed_queries = (unsigned)(failure_rate * size);
   unsigned num_good_queries   = size - num_failed_queries;
 
  /// Pick some of the input keys as queries.
