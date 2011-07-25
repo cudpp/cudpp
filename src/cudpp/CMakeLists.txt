@@ -91,8 +91,6 @@ cuda_add_library(cudpp ${LIB_TYPE}
   OPTIONS ${GENCODE_SM10} ${GENCODE_SM13} ${GENCODE_SM20} ${VERBOSE_PTXAS}
   )
   
-target_link_libraries(cudpp)
-
 install(FILES ${HFILES_PUBLIC}
   DESTINATION include
   )

@@ -390,7 +390,6 @@ enum CUDPPOption
  *
  * @see CUDPPConfiguration, cudppPlan
  */
-/* do not change this without also changing datatype_to_string in cudpp.cpp */
 enum CUDPPDatatype
 {
     CUDPP_CHAR,     //!< Character type (C char)
@@ -403,7 +402,6 @@ enum CUDPPDatatype
     CUDPP_ULONGLONG,//!< 64-bit unsigned integer type (C unsigned long long)
     CUDPP_DATATYPE_INVALID,  //!< invalid datatype (must be last in list)
 };
-extern CUDPP_DLL const char * datatype_to_string[];
 
 /** 
  * @brief Operators supported by CUDPP algorithms (currently scan and
@@ -413,7 +411,6 @@ extern CUDPP_DLL const char * datatype_to_string[];
  *
  * @see CUDPPConfiguration, cudppPlan
  */
-/* do not change this without also changing operator_to_string in cudpp.cpp */
 enum CUDPPOperator
 {
     CUDPP_ADD,      //!< Addition of two operands
@@ -422,7 +419,6 @@ enum CUDPPOperator
     CUDPP_MAX,      //!< Maximum of two operands
     CUDPP_OPERATOR_INVALID, //!< invalid operator (must be last in list)
 };
-extern CUDPP_DLL const char * operator_to_string[];
 
 /**
 * @brief Algorithms supported by CUDPP.  Used to create appropriate plans using

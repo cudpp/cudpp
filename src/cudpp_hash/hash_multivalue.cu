@@ -284,7 +284,7 @@ bool MultivalueHashTable::Initialize(const unsigned   max_table_entries,
                                      const float      space_usage,
                                      const unsigned   num_hash_functions)
 {                                    
-    unsigned success = HashTable::Initialize(max_table_entries, space_usage,
+    bool success = HashTable::Initialize(max_table_entries, space_usage,
                                              num_hash_functions);
     target_space_usage_ = space_usage;
 
@@ -294,8 +294,8 @@ bool MultivalueHashTable::Initialize(const unsigned   max_table_entries,
     CUDA_SAFE_CALL(cudaMalloc( (void**)&d_scratch_is_unique_,
                                sizeof(unsigned) * max_table_entries ));
 
-    success &= d_scratch_offsets_ != NULL;
-    success &= d_scratch_is_unique_ != NULL;
+    success &= (d_scratch_offsets_ != NULL);
+    success &= (d_scratch_is_unique_ != NULL);
 
     // Allocate memory for the scan.
     // + Unknown memory usage

@@ -487,33 +487,6 @@ CUDPPResult cudppRandSeed(const CUDPPHandle planHandle,
     return CUDPP_SUCCESS;
 }//end cudppRandSeed
 
-/**@brief Global array to map a CUDPP datatype to a string */
-/* do not change this without also changing the declaration in cudpp.h */
-const char * datatype_to_string[] =
-{
-    "char",
-    "uchar",
-    "int",
-    "uint",
-    "float",
-    "double",
-    "longlong",
-    "ulonglong",
-    "datatype_invalid",
-};
-
-/**@brief Global array to map a CUDPP operator to a string */
-/* do not change this without also changing the declaration in cudpp.h */
-const char * operator_to_string[] =
-{
-    "add",
-    "multiply",
-    "min",
-    "max",
-    "operator_invalid",
-};
-
-
 /**
  * @brief Solves a tridiagonal linear system
  *
