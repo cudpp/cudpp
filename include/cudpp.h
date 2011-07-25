@@ -61,7 +61,7 @@
  * depth of field blur.
  * - cudpp_testrig, a comprehensive test application for all the functionality 
  * of CUDPP
- * - hash_testrig, a comprehensive test application for CUDPP's hash table data structures
+ * - cudpp_hash_testrig, a comprehensive test application for CUDPP's hash table data structures
  *
  * We have also provided a code walkthrough of the 
  * \ref example_simpleCUDPP "simpleCUDPP" example.
@@ -159,7 +159,7 @@
  * application. However, the typical usage of CUDPP is to link to the
  * library and invoke functions in the CUDPP \link publicInterface
  * Public Interface\endlink, as in the \ref example_simpleCUDPP
- * "simpleCUDPP", satGL, cudpp_testrig, and hash_testrig application
+ * "simpleCUDPP", satGL, cudpp_testrig, and cudpp_hash_testrig application
  * examples included in the CUDPP distribution.
  *
  * In the future, if and when CUDA supports building device-level libraries, we 
