@@ -94,7 +94,7 @@
  * - CUDPP_RAND               33,554,432 elements
  * - CUDPP_SPMVMULT           67,107,840 non-zero elements
  * - CUDPP_HASH               See \ref hash_space_limitations
- * - CUDPP_TRIDIAGONAL        1024 equations per system (Geforce 400 series), no limit on the number of systems 
+ * - CUDPP_TRIDIAGONAL        65535 systems, 1024 equations per system (Geforce 400 series)
  * 
  * \section opSys Operating System Support
  * 
@@ -180,6 +180,7 @@
  * - Nadathur Satish, Mark Harris, and Michael Garland. "Designing Efficient Sorting Algorithms for Manycore GPUs". In <i>Proceedings of the 23rd IEEE International Parallel & Distributed Processing Symposium</i>, May 2009. http://mgarland.org/papers.html#gpusort
  * - Stanley Tzeng, Li-Yi Wei. "Parallel White Noise Generation on a GPU via Cryptographic Hash". In <i>Proceedings of the 2008 Symposium on Interactive 3D Graphics and Games</i>, pages 79&ndash;87, February 2008. http://research.microsoft.com/apps/pubs/default.aspx?id=70502
  * - Yao Zhang, Jonathan Cohen, and John D. Owens. Fast Tridiagonal Solvers on the GPU. In <i>Proceedings of the 15th ACM SIGPLAN Symposium on Principles and Practice of Parallel Programming (PPoPP 2010)</i>, pages 127&ndash;136, January 2010. http://www.cs.ucdavis.edu/publications/print_pub?pub_id=978
+ * - Yao Zhang, Jonathan Cohen, Andrew A. Davidson, and John D. Owens. A Hybrid Method for Solving Tridiagonal Systems on the GPU. In Wen-mei W. Hwu, editor, <i>GPU Computing Gems</i>. Morgan Kaufmann. July 2011.
  * - Shubhabrata Sengupta, Mark Harris, Michael Garland, and John D. Owens. "Efficient Parallel Scan Algorithms for many-core GPUs". In Jakub Kurzak, David A. Bader, and Jack Dongarra, editors, <i>Scientific Computing with Multicore and Accelerators</i>, Chapman & Hall/CRC Computational Science, chapter 19, pages 413&ndash;442. Taylor & Francis, January 2011. http://www.idav.ucdavis.edu/publications/print_pub?pub_id=1041
  * - Dan A. Alcantara, Andrei Sharf, Fatemeh Abbasinejad, Shubhabrata Sengupta, Michael Mitzenmacher, John D. Owens, and Nina Amenta. Real-Time Parallel Hashing on the GPU. ACM Transactions on Graphics, 28(5):154:1–154:9, December 2009. http://www.idav.ucdavis.edu/publications/print_pub?pub_id=973
  * - Dan A. Alcantara, Vasily Volkov, Shubhabrata Sengupta, Michael Mitzenmacher, John D. Owens, and Nina Amenta. Building an Efficient Hash Table on the GPU. In Wen-mei W. Hwu, editor, GPU Computing Gems, volume 2, chapter 1. Morgan Kaufmann, August 2011. 
@@ -203,7 +204,8 @@
  * matrix-vector multiply. The IPDPS paper (Satish et al.) describes
  * the radix sort used in CUDPP, and the I3D paper (Tzeng and Wei)
  * describes the random number generation algorithm. The two Alcantara
- * papers describe the hash algorithms. 
+ * papers describe the hash algorithms. The two Zhang papers describe 
+ * the tridiagonal solvers.
  *
  * \section credits Credits
  * \subsection developers CUDPP Developers
@@ -375,13 +377,6 @@ enum CUDPPOption
     CUDPP_OPTION_KEYS_ONLY = 0x20, /**< No associated value to a key 
                                     * (for global radix sort) */
     CUDPP_OPTION_KEY_VALUE_PAIRS = 0x40, /**< Each key has an associated value */
-
-    CUDPP_OPTION_TRIDIAGONAL_CR = 0x80,  /**< Tridiagonal solver using 
-                                          * cyclic reduction (CR) algorithm */
-    CUDPP_OPTION_TRIDIAGONAL_PCR = 0x100,/**< Tridiagonal solver using 
-                                          * parallel cyclic reduction (PCR) algorithm */
-    CUDPP_OPTION_TRIDIAGONAL_CRPCR = 0x200 /**< Tridiagonal solver using 
-                                            * hybrid CR-PCR algorithm */
 };
 
 

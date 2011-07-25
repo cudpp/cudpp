@@ -31,8 +31,6 @@
 #include <cstdio>
 #include <assert.h>
 
-#include "app/cr_app.cuh"
-#include "app/pcr_app.cuh"
 #include "app/crpcr_app.cuh"
 
 #ifdef __cplusplus
@@ -43,17 +41,14 @@ extern "C"
 /**
  * @brief Dispatches the tridiagonal function based on the plan
  *
- * This is the dispatch call which looks at the algorithm and datatype 
- * specified in \a plan, and calls the appropriate tridiagonal system 
- * solver. There are three algorithms available to choose from, which are 
- * cyclic reduction (CR), parallel cyclic reduction (PCR), and the hybrid 
- * CR-PCR  algorithm. Both float and double are supported datatypes.
+ * This is the dispatch call for the tridiagonal solver in either float 
+ * or double datatype. 
 
- * @param[out] x Solution vector
- * @param[in] a Lower diagonal
- * @param[in] b Main diagonal
- * @param[in] c Upper diagonal
- * @param[in] d Right hand side
+ * @param[out] d_x Solution vector
+ * @param[in] d_a Lower diagonal
+ * @param[in] d_b Main diagonal
+ * @param[in] d_c Upper diagonal
+ * @param[in] d_d Right hand side
  * @param[in] systemSize The size of the linear system
  * @param[in] numSystems The number of systems to be solved
  * @param[in] plan pointer to CUDPPTridiagonalPlan
@@ -71,73 +66,23 @@ void cudppTridiagonalDispatch(void *d_a,
     //figure out which algorithm to run
     if (plan->m_config.datatype == CUDPP_FLOAT)
     {
-        switch(plan->m_config.options)
-        {
-            case CUDPP_OPTION_TRIDIAGONAL_CR:
-                cr<float>((float *)d_a, 
-                          (float *)d_b, 
-                          (float *)d_c, 
-                          (float *)d_d, 
-                          (float *)d_x, 
-                          systemSize, 
-                          numSystems);
-                break;
-            case CUDPP_OPTION_TRIDIAGONAL_PCR:
-                pcr<float>((float *)d_a, 
-                           (float *)d_b, 
-                           (float *)d_c, 
-                           (float *)d_d, 
-                           (float *)d_x, 
-                           systemSize, 
-                           numSystems);
-                break;
-            case CUDPP_OPTION_TRIDIAGONAL_CRPCR:
-                crpcr<float>((float *)d_a, 
-                             (float *)d_b, 
-                             (float *)d_c, 
-                             (float *)d_d, 
-                             (float *)d_x, 
-                             systemSize, 
-                             numSystems);
-                break;
-            default:
-                break;
-        }
+        crpcr<float>((float *)d_a, 
+                     (float *)d_b, 
+                     (float *)d_c, 
+                     (float *)d_d, 
+                     (float *)d_x, 
+                     systemSize, 
+                     numSystems);
     }
     else if (plan->m_config.datatype == CUDPP_DOUBLE)
     {
-        switch(plan->m_config.options)
-        {
-            case CUDPP_OPTION_TRIDIAGONAL_CR:
-                cr<double>((double *)d_a, 
-                           (double *)d_b, 
-                           (double *)d_c, 
-                           (double *)d_d, 
-                           (double *)d_x, 
-                           systemSize, 
-                           numSystems);
-                break;
-            case CUDPP_OPTION_TRIDIAGONAL_PCR:
-                pcr<double>((double *)d_a, 
-                            (double *)d_b, 
-                            (double *)d_c, 
-                            (double *)d_d, 
-                            (double *)d_x, 
-                            systemSize, 
-                            numSystems);
-                break;
-            case CUDPP_OPTION_TRIDIAGONAL_CRPCR:
-                crpcr<double>((double *)d_a, 
-                              (double *)d_b, 
-                              (double *)d_c, 
-                              (double *)d_d, 
-                              (double *)d_x, 
-                              systemSize, 
-                              numSystems);
-                break;
-            default:
-                break;
-        }
+        crpcr<double>((double *)d_a, 
+                      (double *)d_b, 
+                      (double *)d_c, 
+                      (double *)d_d, 
+                      (double *)d_x, 
+                      systemSize, 
+                      numSystems);
     }
     else
         printf("datatype not specified\n");

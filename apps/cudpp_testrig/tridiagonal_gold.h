@@ -77,20 +77,6 @@ void testGeneration(T *a, T *b, T *c, T *d, T *x, int systemSize)
 }
 
 template <class T>
-void writeResultToFile(T *x,int numSystems,int systemSize, char *file_name)
-{
-    ofstream myfile;
-    myfile.open (file_name);
-    for(int i=0; i < numSystems * systemSize; i++)
-    {
-        if (i%systemSize==0)
-            myfile << "***The following is the result of the equation set " << i/systemSize << "\n";
-        myfile << x[i] << "\n";
-    }
-    myfile.close();
-}
-
-template <class T>
 T compare(T *x1, T *x2, int numElements)
 {
     T mean = 0;//mean error

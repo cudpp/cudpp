@@ -53,8 +53,8 @@ int testTridiagonalDataType(CUDPPConfiguration &config)
         exit(-1);
     }
 
-    int numSystems = 256;
-    int systemSize = 256;
+    int numSystems = 512;
+    int systemSize = 512;
     const unsigned int memSize = sizeof(T)*numSystems*systemSize;
 
     T* a = (T*) malloc(memSize);
@@ -91,24 +91,8 @@ int testTridiagonalDataType(CUDPPConfiguration &config)
 
     // warm up the GPU to avoid the overhead time for the next timing
     cudppTridiagonal(tridiagonalPlan, d_a, d_b, d_c, d_d, d_x, systemSize, numSystems);
-
-    switch(config.options)
-    {
-        case CUDPP_OPTION_TRIDIAGONAL_CR:
-            if (config.datatype == CUDPP_FLOAT) printf("Runing a CR tridiagonal solver solving %d systems with each of %d equations with SINGLE precision\n", numSystems, systemSize);
-            if (config.datatype == CUDPP_DOUBLE) printf("Runing a CR tridiagonal solver solving %d systems with each of %d equations with DOUBLE precision\n", numSystems, systemSize);            
-            break;
-        case CUDPP_OPTION_TRIDIAGONAL_PCR:
-            if (config.datatype == CUDPP_FLOAT) printf("Runing a PCR tridiagonal solver solving %d systems with each of %d equations with SINGLE precision\n", numSystems, systemSize);
-            if (config.datatype == CUDPP_DOUBLE) printf("Runing a PCR tridiagonal solver solving %d systems with each of %d equations with DOUBLE precision\n", numSystems, systemSize);            
-            break;
-        case CUDPP_OPTION_TRIDIAGONAL_CRPCR:
-            if (config.datatype == CUDPP_FLOAT) printf("Runing a CR-PCR tridiagonal solver solving %d systems with each of %d equations with SINGLE precision\n", numSystems, systemSize);
-            if (config.datatype == CUDPP_DOUBLE) printf("Runing a CR-PCR tridiagonal solver solving %d systems with each of %d equations with DOUBLE precision\n", numSystems, systemSize);            
-            break;
-        default:
-            break;
-    }
+    if (config.datatype == CUDPP_FLOAT) printf("Runing a CR-PCR tridiagonal solver solving %d systems with each of %d equations with SINGLE precision\n", numSystems, systemSize);
+    if (config.datatype == CUDPP_DOUBLE) printf("Runing a CR-PCR tridiagonal solver solving %d systems with each of %d equations with DOUBLE precision\n", numSystems, systemSize);            
     
     cudpp_app::StopWatch timer;
     timer.reset();
@@ -137,9 +121,6 @@ int testTridiagonalDataType(CUDPPConfiguration &config)
 
     timer.stop();            
     printf("CPU execution time: %f ms\n", timer.getTime());
-    
-    //writeResultToFile<T>(x1,numSystems,systemSize,"cpu_result.txt");
-    //writeResultToFile<T>(x2, numSystems, systemSize, "gpu_result.txt");
     
     retval = compareManySystems<T>(x1, x2, systemSize, numSystems, 0.001f);
     

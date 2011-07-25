@@ -488,28 +488,30 @@ CUDPPResult cudppRandSeed(const CUDPPHandle planHandle,
 }//end cudppRandSeed
 
 /**
- * @brief Solves a tridiagonal linear system
+ * @brief Solves tridiagonal linear systems
  *
- * We support three algorithms, cyclic reduction (CR), parallel cyclic 
- * reduction (PCR), and the hybrid CR-PCR  algorithm, in both the float 
- * and double datatype. By configuring a plan, you can select the algorithm 
- * and datatype to be used. 
+ * The solver uses a hybrid CR-PCR algorithm described in our papers "Fast
+ * Fast Tridiagonal Solvers on the GPU" and "A Hybrid Method for Solving 
+ * Tridiagonal Systems on the GPU". Please refer to the papers for a 
+ * complete description of the basic CR (Cyclic Reduction) and PCR 
+ * (Parallel Cyclic Reduction) algorithms and their hybrid variants.
  
- * The maximum system size could be limited by the maximum number of threads
+ * - Both the float and double datatype are supported. 
+ * - The maximum system size could be limited by the maximum number of threads
  * of a CUDA block, the number of registers per multiprocessor, and the 
  * amount of shared memory available. For example, on the GTX 280 GPU, the 
  * maximum system size is 512 for the float datatype, and 256 for the double 
- * datatype, which is determined by the size of shared memory in this case. 
- * There is virtually no limit on the number of systems to be solved, 
- * which depends on the maximum number of CUDA blocks that can be issued
- * for a kernel launch.
+ * datatype, which is limited by the size of shared memory in this case. 
+ * - The maximum number of systems is 65535, that is the maximum number of 
+ * one dimentional blocks that could be lauched in a kernel call. Users could 
+ * lauch the kernel multiple times to solve more systems if required. 
  *
- * @param[out] x Solution vector
+ * @param[out] d_x Solution vector
  * @param[in] planHandle Handle to plan for tridiagonal solver
- * @param[in] a Lower diagonal
- * @param[in] b Main diagonal
- * @param[in] c Upper diagonal
- * @param[in] d Right hand side
+ * @param[in] d_a Lower diagonal
+ * @param[in] d_b Main diagonal
+ * @param[in] d_c Upper diagonal
+ * @param[in] d_d Right hand side
  * @param[in] systemSize The size of the linear system
  * @param[in] numSystems The number of systems to be solved
  * @returns CUDPPResult indicating success or error condition

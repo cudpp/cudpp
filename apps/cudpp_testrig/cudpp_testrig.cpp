@@ -102,17 +102,6 @@ int testAllOptionsAndDatatypes(int argc,
                                bool multiRow = false)
 {
     int retval = 0;
-
-    if (config.algorithm == CUDPP_TRIDIAGONAL)
-    {
-        config.options = CUDPP_OPTION_TRIDIAGONAL_CR;
-        retval += testAllDatatypes(argc, argv, config, supportsDouble, multiRow);
-        config.options = CUDPP_OPTION_TRIDIAGONAL_PCR;
-        retval += testAllDatatypes(argc, argv, config, supportsDouble, multiRow);
-        config.options = CUDPP_OPTION_TRIDIAGONAL_CRPCR;
-        retval += testAllDatatypes(argc, argv, config, supportsDouble, multiRow);
-	return retval;
-    }
     
     if (config.algorithm == CUDPP_SORT_RADIX)
     {
@@ -339,7 +328,7 @@ int main(int argc, const char** argv)
         
         if (runTridiagonal) {
             config.algorithm = CUDPP_TRIDIAGONAL;
-            retval += testAllOptionsAndDatatypes(argc, argv, config, supportsDouble);
+            retval += testAllDatatypes(argc, argv, config, supportsDouble, false);
         }    
 
     }
