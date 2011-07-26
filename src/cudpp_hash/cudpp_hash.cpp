@@ -23,20 +23,27 @@
 /**
  * @page hash_overview Overview of CUDPP hash tables
  * 
+ * Hash tables are useful for efficiently storing and retrieving
+ * sparse data sets. Unlike dense representations, the size of a hash
+ * table is generally proportional to the number of elements stored in
+ * it rather than the size of the space of possible elements. Hash
+ * tables should also have a small cost to insert items and a small
+ * cost to retrieve items. CUDPP hash tables have these properties.
+ * 
  * CUDPP includes three different hash table types:
  * <table style="width:90%; margin: auto; border: 1px solid #dddddd;">
  *   <tr>
  *     <th class="classes" style="padding-right: 1em;">
- *       \ref CudaHT::CuckooHashing::HashTable
+ *       \ref CUDPP_BASIC_HASH_TABLE
  *     </th>
  *     <td>
- *       Stores a single value per key. Input is expected to be a set
- *       of key-value pairs, where the keys are all unique.
+ *       Stores a single value per key. The input is expected to be a
+ *       set of key-value pairs, where the keys are all unique.
  *     </td>
  *   </tr>
  *   <tr>
  *     <th class="classes" style="padding-right: 1em;">
- *       \ref CudaHT::CuckooHashing::CompactingHashTable
+ *       \ref CUDPP_COMPACTING_HASH_TABLE
  *     </th>
  *     <td>
  *       Assigns each key a unique identifier and allows O(1)
@@ -46,33 +53,69 @@
  *   </tr>
  *   <tr>
  *     <th class="classes" style="padding-right: 1em;">
- *       \ref CudaHT::CuckooHashing::MultivalueHashTable
+ *       \ref CUDPP_MULTIVALUE_HASH_TABLE
  *     </th>
  *     <td>
- *       Allows you to store multiple values for ach key. Multiple
+ *       Allows you to store multiple values for each key. Multiple
  *       values for the same key are represented by different
  *       key-value pairs in the input.
  *     </td>
  *   </tr>
  * </table>
  *
- * This library relies on a good random number generator to ensure
- * good hash function generation. CUDPP uses the Mesenne Twister
- * implementation provided by Makoto Matsumoto, <a
+ * \section hash_using Using CUDPP hash tables
+ *
+ * CUDPP supports four major routines for hash tables: creating a hash
+ * table (\ref cudppHashTable), inserting items (typically key/value
+ * pairs) into a hash table (\ref cudppHashInsert), retrieving values
+ * from a hash table given their keys (\ref cudppHashRetrieve), and
+ * destroying the hash table (\ref cudppDestroyHashTable). Each of
+ * these routines works with each of the 3 types of hash tables above.
+ *
+ * A typical use of a hash table might look like this (see the sample
+ * application cudpp_hash_testrig for a complete example):
+ *
+ * - Create and populate two arrays in GPU device memory, one of keys,
+ *   one of values.
+ * - Configure a CUDPPHashTableConfig data structure with:
+ *   - the type of hash table (\ref CUDPPHashTableType); 
+ *   - \a kInputSize, the number of items to be inserted into the hash
+ *     table; and
+ *   - the space usage multiplier \a space_usage; the hash table will
+ *     store kInputSize elements but require kInputSize * space_usage
+ *     elements of storage. Smaller space_usage factors use less space
+ *     overall but take longer to build. The cudpp_hash_testrig
+ *     example tests with five \a space_usage factors from 1.05 to
+ *     2.0. 
+ * - Initialize the table using \ref cudppHashTable.
+ * - Insert the keys and arrays into the hash table using \ref
+ *   cudppHashInsert. 
+ * - Create two arrays in GPU device memory, one populated with a list
+ *   of retrieval keys, and one empty to retrieve the value associated
+ *   with those keys.
+ * - Retrieve those values with \ref cudppHashRetrieve.
+ * - When you're done, destroy the hash table with \ref
+ *   cudppDestroyHashTable. 
+ *
+ * \section hash_other_software Other software used in CUDPP's hash tables
+ *
+ * CUDPP's hash table library relies on a good random number generator
+ * to ensure good hash function generation. CUDPP uses the Mersenne
+ * Twister implementation provided by Makoto Matsumoto, <a
  * href=http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/MT2002/emt19937ar.html>available
  * here</a> (and included in the CUDPP distribution). You may try
  * using your system's rand() function and srand() functions, but keep
  * in mind that Windows' generator produces numbers in a very small
  * range.
  * 
- * The compacting hash table and multivalue hash tables use CUDPP's
- * scan and sort functionality.
+ * The compacting hash table and multivalue hash table implementation
+ * use CUDPP's scan and sort functionality.
  * 
  * \section hash_space_limitations Hash table space limitations
  *
- * The hash table implementations are primarily limited by the size of
- * available memory. The figures below indicate the size of the hash
- * table as a function of:
+ * The maximum size of the hash table implementations are primarily
+ * limited by the size of available memory. The figures below indicate
+ * the size of the hash table as a function of:
  *
  * - N, the number of elements in the hash table;
  * - K, the number of unique keys in the input (for the multivalue  
