@@ -31,10 +31,10 @@
 #if 0
 #include "kernel/radixsort_kernel.cuh"
 #include "cudpp_maximal_launch.h"
-#endif
 #include <cstdlib>
 #include <cstdio>
 #include <assert.h>
+#endif
 
 #if 0
 typedef unsigned int uint;
@@ -876,7 +876,7 @@ void initDeviceParameters(CUDPPRadixSortPlan *plan)
 **/
 void allocRadixSortStorage(CUDPPRadixSortPlan *plan)
 {               
-      #if 0  
+#if 0
     unsigned int numElements = plan->m_numElements;
 
     unsigned int numBlocks = 
@@ -924,7 +924,7 @@ void allocRadixSortStorage(CUDPPRadixSortPlan *plan)
     }
         
     initDeviceParameters(plan);
-    #endif
+#endif
 }
 
 /** @brief Deallocates intermediate memory from allocRadixSortStorage.
@@ -934,13 +934,13 @@ void allocRadixSortStorage(CUDPPRadixSortPlan *plan)
 **/
 void freeRadixSortStorage(CUDPPRadixSortPlan* plan)
 {
-    #if 0
+#if 0
     CUDA_SAFE_CALL( cudaFree(plan->m_tempKeys));
     CUDA_SAFE_CALL( cudaFree(plan->m_tempValues));
     CUDA_SAFE_CALL( cudaFree(plan->m_counters));
     CUDA_SAFE_CALL( cudaFree(plan->m_countersSum));
     CUDA_SAFE_CALL( cudaFree(plan->m_blockOffsets));
-    #endif
+#endif
 }
 
 #include <thrust/sort.h>
@@ -987,7 +987,6 @@ void cudppRadixSortDispatch(void  *keys,
                             size_t numElements,
                             const CUDPPRadixSortPlan *plan)
 {
-   
     switch(plan->m_config.datatype)
     {
     case CUDPP_CHAR:
@@ -1016,18 +1015,17 @@ void cudppRadixSortDispatch(void  *keys,
         break;
     }
 
-    /*direction = direction;      // @todo: add capability to backward sort
-    if (plan->m_bKeysOnly)
+    /*if (plan->m_bKeysOnly)
     {
         switch(plan->m_config.datatype)
         {
         case CUDPP_UINT:
             radixSortKeysOnly((uint*)keys, plan, 
-                              numElements, false, keyBits);
+                              numElements, false, 32);
             break;
         case CUDPP_FLOAT:
             radixSortFloatKeysOnly((float*)keys, plan, 
-                                   numElements, true, keyBits);
+                                   numElements, true, 32);
         }
     }
     else
@@ -1036,11 +1034,11 @@ void cudppRadixSortDispatch(void  *keys,
         {
         case CUDPP_UINT:      
             radixSort((uint*)keys, (uint*) values, plan, 
-                      numElements, false, keyBits);
+                      numElements, false, 32);
             break;
         case CUDPP_FLOAT: 
             radixSortFloatKeys((float*)keys, (uint*) values, plan, 
-                               numElements, true, keyBits);
+                               numElements, true, 32);
         }
     }*/
     

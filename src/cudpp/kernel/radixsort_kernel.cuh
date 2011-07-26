@@ -11,7 +11,7 @@
 #include "cudpp_radixsort.h"
 #include <cudpp_globals.h>
 #include "sharedmem.h"
-#include "cta/radixsort_cta.cu"
+#include "cta/radixsort_cta.cuh"
 
 /**
  * @file

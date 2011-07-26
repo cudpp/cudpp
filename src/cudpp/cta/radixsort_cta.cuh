@@ -9,7 +9,7 @@
 // ------------------------------------------------------------- 
 #include <cudpp_globals.h>
 #include "cudpp_radixsort.h"
-#include "cta/scan_cta.cu"
+#include "cta/scan_cta.cuh"
 #include <cudpp.h>
 #include <stdio.h>
 
