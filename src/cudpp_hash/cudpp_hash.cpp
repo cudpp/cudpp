@@ -230,22 +230,21 @@ cudppHashTable(CUDPPHandle cudppHandle, CUDPPHandle *plan,
     int dev;
     if (cudaGetDevice(&dev) != cudaSuccess)
     {
-        fprintf(stderr, "Can't get current device (cudppHashTable)\n");
+        // Can't get current device (cudppHashTable)
         return CUDPP_ERROR_UNKNOWN;
     }
 
     cudaDeviceProp prop;
     if (cudaGetDeviceProperties(&prop, dev) != cudaSuccess)
     {
-        fprintf(stderr, "Can't get current device properties "
-                "(cudppHashTable)\n");
+        // Can't get current device properties (cudppHashTable)
         return CUDPP_ERROR_UNKNOWN;
     }
 
     if (prop.major < 2)
     {
-        fprintf(stderr, "Hash tables are only supported on devices with "
-                "compute capability 2.0 or greater.\n");
+        // Hash tables are only supported on devices with compute
+        // capability 2.0 or greater
         return CUDPP_ERROR_ILLEGAL_CONFIGURATION;
     }
 

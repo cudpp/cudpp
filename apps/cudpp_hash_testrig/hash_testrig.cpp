@@ -1,5 +1,16 @@
+// -------------------------------------------------------------
+// cuDPP -- CUDA Data Parallel Primitives library
+// -------------------------------------------------------------
+// $Revision: $
+// $Date: $
+// ------------------------------------------------------------- 
+// This source code is distributed under the terms of license.txt in
+// the root directory of this source distribution.
+// ------------------------------------------------------------- 
+
 /*! @file hash_testrig.cu
- *  @brief This file demonstrates how to use all three hash tables in the CUDPP hash table distribution.
+ *  @brief This file demonstrates how to use all three hash tables in
+ *  the CUDPP hash table distribution.
  */
 
 #include <cudpp_hash.h>
@@ -388,7 +399,8 @@ int testHashTable(CUDPPHandle theCudpp,
             }
 
 
-            const float kSpaceUsagesToTest[] = {1.05f, 1.15f, 1.25f, 1.5f, 2.0f};
+            const float kSpaceUsagesToTest[] = {1.05f, 1.15f, 1.25f, 1.5f, 
+                                                2.0f};
             const unsigned kNumSpaceUsagesToTest = 5;
 
             for (unsigned i = 0; i < kNumSpaceUsagesToTest; ++i)
@@ -423,15 +435,28 @@ int testHashTable(CUDPPHandle theCudpp,
                 config.kInputSize = kInputSize;
                 config.space_usage = space_usage;
                 CUDPPHandle hash_table_handle;
-                cudppHashTable(theCudpp, &hash_table_handle, &config);
- 
+                CUDPPResult result;
+                result = cudppHashTable(theCudpp, &hash_table_handle, &config);
+                if (result != CUDPP_SUCCESS)
+                {
+                    fprintf(stderr, "Error in cudppHashTable call in"
+                            "testHashTable (make sure your device is at"
+                            "least compute version 2.0\n");
+                }
+            
                 cudpp_app::StopWatch timer;
                 timer.reset();
                 timer.start();
-                
-                cudppHashInsert(hash_table_handle, d_test_keys, d_test_vals, kInputSize);
+            
+                result = cudppHashInsert(hash_table_handle, d_test_keys, 
+                                         d_test_vals, kInputSize);
                 cudaThreadSynchronize();
                 timer.stop();
+                if (result != CUDPP_SUCCESS)
+                {
+                    fprintf(stderr, "Error in cudppHashInsert call in"
+                            "testHashTable\n");                    
+                }
                 printf("\tHash table build: %f ms\n", timer.getTime());
                 /// -----------------------------------------------------------
 
@@ -487,12 +512,15 @@ int testHashTable(CUDPPHandle theCudpp,
                     {
                     case CUDPP_BASIC_HASH_TABLE:
                     case CUDPP_COMPACTING_HASH_TABLE:
-                        cudppHashRetrieve(hash_table_handle, d_test_keys, 
-                                          d_test_vals, kInputSize);
+                        result = cudppHashRetrieve(hash_table_handle, 
+                                                   d_test_keys, d_test_vals, 
+                                                   kInputSize);
                         break;                                          
                     case CUDPP_MULTIVALUE_HASH_TABLE:
-                        cudppHashRetrieve(hash_table_handle, d_test_keys, 
-                                          d_test_vals_multivalue, kInputSize);
+                        result = cudppHashRetrieve(hash_table_handle, 
+                                                   d_test_keys, 
+                                                   d_test_vals_multivalue, 
+                                                   kInputSize);
                         break;
                     default:
                         errors++;
@@ -502,6 +530,11 @@ int testHashTable(CUDPPHandle theCudpp,
                     }                 
                     cudaThreadSynchronize();
                     timer.stop();
+                    if (result != CUDPP_SUCCESS)
+                    {
+                        fprintf(stderr, "Error in cudppHashRetrieve call in"
+                                "testHashTable\n");                    
+                    }
                     printf("\tHash table retrieve with %3u%% chance of "
                            "failed queries: %f ms\n", failure * failure_trials, 
                            timer.getTime());
@@ -562,7 +595,13 @@ int testHashTable(CUDPPHandle theCudpp,
   
                 delete [] sorted_values;
                 /// -------------------------------------------- Free the table.
-                cudppDestroyHashTable(theCudpp, hash_table_handle);
+                result = cudppDestroyHashTable(theCudpp, hash_table_handle);
+                if (result != CUDPP_SUCCESS)
+                {
+                    fprintf(stderr, "Error in cudppDestroyHashTable call in"
+                            "testHashTable\n");                    
+                }
+
                 /// hash_table.Release();
                 /// ------------------------------------------------------------
             }

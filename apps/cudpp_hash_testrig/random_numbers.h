@@ -1,3 +1,13 @@
+// -------------------------------------------------------------
+// cuDPP -- CUDA Data Parallel Primitives library
+// -------------------------------------------------------------
+// $Revision: $
+// $Date: $
+// ------------------------------------------------------------- 
+// This source code is distributed under the terms of license.txt in
+// the root directory of this source distribution.
+// ------------------------------------------------------------- 
+
 #ifndef SIMPLE_SAMPLE__RANDOM_NUMBERS_H
 #define SIMPLE_SAMPLE__RANDOM_NUMBERS_H
 
@@ -23,3 +33,9 @@ void GenerateQueries(const unsigned  size,
                            unsigned *queries);
 
 #endif
+
+// Leave this at the end of the file
+// Local Variables:
+// mode:c++
+// c-file-style: "NVIDIA"
+// End:

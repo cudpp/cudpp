@@ -1,6 +1,16 @@
+// -------------------------------------------------------------
+// cuDPP -- CUDA Data Parallel Primitives library
+// -------------------------------------------------------------
+// $Revision: $
+// $Date: $
+// ------------------------------------------------------------- 
+// This source code is distributed under the terms of license.txt in
+// the root directory of this source distribution.
+// ------------------------------------------------------------- 
+
 #include <algorithm>
 #include <cstdio>
-#include <string.h>		// memcpy
+#include <string.h>             // memcpy
 #include <mt19937ar.h>
 
 void Shuffle(const unsigned  num_random_numbers,
@@ -105,3 +115,8 @@ void GenerateQueries(const unsigned  size,
   Shuffle(size, queries);
 }
 
+// Leave this at the end of the file
+// Local Variables:
+// mode:c++
+// c-file-style: "NVIDIA"
+// End:
