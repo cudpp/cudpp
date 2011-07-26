@@ -285,9 +285,11 @@ int testHashTable(CUDPPHandle theCudpp,
                   unsigned int * d_test_keys,
                   unsigned int * query_vals,
                   uint2 *        query_vals_multivalue,
-                  unsigned int * query_keys)
+                  unsigned int * query_keys,
+                  unsigned int   skipEveryNTests)
 {
     int total_errors = 0;
+    unsigned int testNumber = 0;
     for (unsigned iteration = 0; iteration < kMaxIterations; ++iteration)
     {       
         switch(htt)
@@ -490,6 +492,10 @@ int testHashTable(CUDPPHandle theCudpp,
                 unsigned int failure_trials = 10;
                 for (unsigned failure = 0; failure <= failure_trials; ++failure)
                 {
+                    if ((testNumber % skipEveryNTests) == 0)
+                    {
+                        continue;
+                    }
                     // Generate a set of queries comprised of keys both
                     // from and not from the input.
                     float failure_rate = failure / (float) failure_trials;
@@ -591,6 +597,7 @@ int testHashTable(CUDPPHandle theCudpp,
                         printf("No errors found, test passes\n");
                     }
                     total_errors += errors;
+                    testNumber++;
                 }
   
                 delete [] sorted_values;
@@ -639,9 +646,10 @@ int main(int argc, const char **argv)
 
     if (prop.major < 2)
     {
-        fprintf(stderr, "Hash tables are only supported on devices with "
-                "compute capability 2.0 or greater.\n");
-        // possibly should exit here?
+        fprintf(stderr, "ERROR: CUDPP hash tables are only supported on "
+                "devices with compute\n  capability 2.0 or greater; "
+                "exiting.\n");
+        exit(1);
     }
 
     int retval = 0;
@@ -661,6 +669,9 @@ int main(int argc, const char **argv)
 
     unsigned kMaxIterations = 1;
     commandLineArg(kMaxIterations, argc, argv, "iterations");
+
+    unsigned skipEveryNTests = 7;
+    commandLineArg(skipEveryNTests, argc, argv, "skip");
 
     /// Allocate memory.
     /* We will need a pool of random numbers to create test input and queries
@@ -721,7 +732,8 @@ int main(int argc, const char **argv)
                               d_test_keys,
                               query_vals, 
                               query_vals_multivalue,
-                              query_keys);
+                              query_keys,
+                              skipEveryNTests);
         }
     }
     if (total_errors == 0)
