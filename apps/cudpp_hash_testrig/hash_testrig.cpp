@@ -286,10 +286,10 @@ int testHashTable(CUDPPHandle theCudpp,
                   unsigned int * query_vals,
                   uint2 *        query_vals_multivalue,
                   unsigned int * query_keys,
-                  unsigned int   skipEveryNTests)
+                  unsigned int   skipEveryNTests,
+                  unsigned int & testNumber)
 {
     int total_errors = 0;
-    unsigned int testNumber = 0;
     for (unsigned iteration = 0; iteration < kMaxIterations; ++iteration)
     {       
         switch(htt)
@@ -407,6 +407,12 @@ int testHashTable(CUDPPHandle theCudpp,
 
             for (unsigned i = 0; i < kNumSpaceUsagesToTest; ++i)
             {
+
+                if ((testNumber++ % skipEveryNTests) != 0)
+                {
+                    continue;
+                }
+
                 float space_usage = kSpaceUsagesToTest[i];
                 printf("\tSpace usage: %f\n", space_usage);
 
@@ -492,10 +498,6 @@ int testHashTable(CUDPPHandle theCudpp,
                 unsigned int failure_trials = 10;
                 for (unsigned failure = 0; failure <= failure_trials; ++failure)
                 {
-                    if ((testNumber % skipEveryNTests) == 0)
-                    {
-                        continue;
-                    }
                     // Generate a set of queries comprised of keys both
                     // from and not from the input.
                     float failure_rate = failure / (float) failure_trials;
@@ -597,7 +599,6 @@ int testHashTable(CUDPPHandle theCudpp,
                         printf("No errors found, test passes\n");
                     }
                     total_errors += errors;
-                    testNumber++;
                 }
   
                 delete [] sorted_values;
@@ -709,6 +710,7 @@ int main(int argc, const char **argv)
     }
     
     int total_errors = 0;
+    unsigned int testNumber = 0;
     for (CUDPPHashTableType htt = CUDPP_BASIC_HASH_TABLE;
          htt != CUDPP_INVALID_HASH_TABLE;
          htt = (CUDPPHashTableType)((unsigned)htt+1))
@@ -733,7 +735,8 @@ int main(int argc, const char **argv)
                               query_vals, 
                               query_vals_multivalue,
                               query_keys,
-                              skipEveryNTests);
+                              skipEveryNTests,
+                              testNumber);
         }
     }
     if (total_errors == 0)
