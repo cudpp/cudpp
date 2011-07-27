@@ -37,6 +37,30 @@ namespace cudpp_app {
     }
 
     ////////////////////////////////////////////////////////////////////////////////
+    //! Conversion function for command line arguments of type char
+    ////////////////////////////////////////////////////////////////////////////////
+    template<>
+    inline char convertTo<char>( const std::string& element) 
+    {
+        std::istringstream ios( element);
+        char val;
+        ios >> val;
+        return val;
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////
+    //! Conversion function for command line arguments of type unsigned char
+    ////////////////////////////////////////////////////////////////////////////////
+    template<>
+    inline unsigned char convertTo<unsigned char>( const std::string& element) 
+    {
+        std::istringstream ios( element);
+        char val;
+        ios >> val;
+        return val;
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////
     //! Conversion function for command line arguments of type int
     ////////////////////////////////////////////////////////////////////////////////
     template<>
@@ -44,6 +68,42 @@ namespace cudpp_app {
     {
         std::istringstream ios( element);
         int val;
+        ios >> val;
+        return val;
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////
+    //! Conversion function for command line arguments of type unsigned int
+    ////////////////////////////////////////////////////////////////////////////////
+    template<>
+    inline unsigned int convertTo<unsigned int>( const std::string& element) 
+    {
+        std::istringstream ios( element);
+        int val;
+        ios >> val;
+        return val;
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////
+    //! Conversion function for command line arguments of type long long
+    ////////////////////////////////////////////////////////////////////////////////
+    template<>
+    inline long long convertTo<long long>( const std::string& element) 
+    {
+        std::istringstream ios( element);
+        long long val;
+        ios >> val;
+        return val;
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////
+    //! Conversion function for command line arguments of type unsigned long long
+    ////////////////////////////////////////////////////////////////////////////////
+    template<>
+    inline unsigned long long convertTo<unsigned long long>( const std::string& element) 
+    {
+        std::istringstream ios( element);
+        long long val;
         ios >> val;
         return val;
     }

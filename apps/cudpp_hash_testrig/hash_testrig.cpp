@@ -671,7 +671,7 @@ int main(int argc, const char **argv)
     unsigned kMaxIterations = 1;
     commandLineArg(kMaxIterations, argc, argv, "iterations");
 
-    unsigned skipEveryNTests = 7;
+    unsigned skipEveryNTests = 17;
     commandLineArg(skipEveryNTests, argc, argv, "skip");
 
     /// Allocate memory.
