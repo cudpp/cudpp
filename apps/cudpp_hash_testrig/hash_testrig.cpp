@@ -287,6 +287,7 @@ int testHashTable(CUDPPHandle theCudpp,
                   uint2 *        query_vals_multivalue,
                   unsigned int * query_keys,
                   unsigned int   skipEveryNTests,
+                  bool           skipHighMultiplicities,
                   unsigned int & testNumber)
 {
     int total_errors = 0;
@@ -315,7 +316,14 @@ int testHashTable(CUDPPHandle theCudpp,
         {
         case CUDPP_COMPACTING_HASH_TABLE:
         case CUDPP_MULTIVALUE_HASH_TABLE:
-            multiplicity_max = 2048;
+            if (skipHighMultiplicities)
+            {
+                multiplicity_max = 256;
+            }
+            else
+            {
+                multiplicity_max = 2048;
+            }
             break;
         default:
             break;
@@ -619,6 +627,20 @@ int testHashTable(CUDPPHandle theCudpp,
 }
 
 
+/**
+ * main in hash_testrig is a dispatch routine to exercise cudpp hash
+ * table functionality.
+ *
+ * - -all calls every regression routine (-basic, -compacting, -multivalue)
+ * - -basic calls basic_hash_table
+ * - -compacting calls compacting_hash_table
+ * - -multivalue calls multivalue_hash_table
+ * - -n=# sets the size of the dataset (default 1M)
+ * - -iterations=# sets the number of iterations to run (default 1)
+ * - -skip=# runs only every #th test (default 7)
+ * - -skiphighx=<true,false> skips the tests with high multiplicity
+ *      (since they take a *long* time to test) (default true)
+ */ 
 int main(int argc, const char **argv)
 {       
     bool quiet = checkCommandLineFlag(argc, argv, "quiet"); 
@@ -671,8 +693,11 @@ int main(int argc, const char **argv)
     unsigned kMaxIterations = 1;
     commandLineArg(kMaxIterations, argc, argv, "iterations");
 
-    unsigned skipEveryNTests = 17;
+    unsigned skipEveryNTests = 7;
     commandLineArg(skipEveryNTests, argc, argv, "skip");
+
+    bool skipHighMultiplicities = true;
+    commandLineArg(skipHighMultiplicities, argc, argv, "skiphighx");
 
     /// Allocate memory.
     /* We will need a pool of random numbers to create test input and queries
@@ -736,6 +761,7 @@ int main(int argc, const char **argv)
                               query_vals_multivalue,
                               query_keys,
                               skipEveryNTests,
+                              skipHighMultiplicities,
                               testNumber);
         }
     }
