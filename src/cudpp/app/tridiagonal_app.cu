@@ -18,7 +18,7 @@
 /** \addtogroup cudpp_app
   * @{
   */
-/** @name Tridiagonal dispatch function
+/** @name Tridiagonal functions
  * @{
  */
 
@@ -33,17 +33,12 @@
 
 #include "app/crpcr_app.cuh"
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-
 /**
  * @brief Dispatches the tridiagonal function based on the plan
  *
  * This is the dispatch call for the tridiagonal solver in either float 
  * or double datatype. 
-
+ *
  * @param[out] d_x Solution vector
  * @param[in] d_a Lower diagonal
  * @param[in] d_b Main diagonal
@@ -52,15 +47,16 @@ extern "C"
  * @param[in] systemSize The size of the linear system
  * @param[in] numSystems The number of systems to be solved
  * @param[in] plan pointer to CUDPPTridiagonalPlan
+ * @returns CUDPPResult indicating success or error condition
  */
-void cudppTridiagonalDispatch(void *d_a, 
-                              void *d_b, 
-                              void *d_c, 
-                              void *d_d, 
-                              void *d_x, 
-                              int systemSize, 
-                              int numSystems, 
-                              const CUDPPTridiagonalPlan * plan)
+CUDPPResult cudppTridiagonalDispatch(void *d_a, 
+                                     void *d_b, 
+                                     void *d_c, 
+                                     void *d_d, 
+                                     void *d_x, 
+                                     int systemSize, 
+                                     int numSystems, 
+                                     const CUDPPTridiagonalPlan * plan)
 {
   
     //figure out which algorithm to run
@@ -73,6 +69,7 @@ void cudppTridiagonalDispatch(void *d_a,
                      (float *)d_x, 
                      systemSize, 
                      numSystems);
+        return CUDPP_SUCCESS;
     }
     else if (plan->m_config.datatype == CUDPP_DOUBLE)
     {
@@ -83,14 +80,12 @@ void cudppTridiagonalDispatch(void *d_a,
                       (double *)d_x, 
                       systemSize, 
                       numSystems);
+        return CUDPP_SUCCESS;
     }
     else
-        printf("datatype not specified\n");
+        return CUDPP_ERROR_ILLEGAL_CONFIGURATION;
     
 }
 
-#ifdef __cplusplus
-}
-#endif
-/** @} */ // end Tridiagonal dispatch function
+/** @} */ // end Tridiagonal functions
 /** @} */ // end cudpp_app

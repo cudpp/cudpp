@@ -1,6 +1,8 @@
 #ifndef _CUDA_UTIL_H_
 #define _CUDA_UTIL_H_
 
+#include <stdio.h>
+
 #if CUDART_VERSION >= 4000
 #define CUDA_DEVICE_SYNCHRONIZE( )   cudaDeviceSynchronize();
 #else

@@ -492,19 +492,20 @@ CUDPPResult cudppRandSeed(const CUDPPHandle planHandle,
  *
  * The solver uses a hybrid CR-PCR algorithm described in our papers "Fast
  * Fast Tridiagonal Solvers on the GPU" and "A Hybrid Method for Solving 
- * Tridiagonal Systems on the GPU". Please refer to the papers for a 
- * complete description of the basic CR (Cyclic Reduction) and PCR 
- * (Parallel Cyclic Reduction) algorithms and their hybrid variants.
- 
- * - Both the float and double datatype are supported. 
+ * Tridiagonal Systems on the GPU". (See the \ref references bibliography).
+ * Please refer to the papers for a complete description of the basic CR 
+ * (Cyclic Reduction) and PCR (Parallel Cyclic Reduction) algorithms and their 
+ * hybrid variants.
+ *
+ * - float and double data types are supported. 
  * - The maximum system size could be limited by the maximum number of threads
  * of a CUDA block, the number of registers per multiprocessor, and the 
  * amount of shared memory available. For example, on the GTX 280 GPU, the 
  * maximum system size is 512 for the float datatype, and 256 for the double 
  * datatype, which is limited by the size of shared memory in this case. 
  * - The maximum number of systems is 65535, that is the maximum number of 
- * one dimentional blocks that could be lauched in a kernel call. Users could 
- * lauch the kernel multiple times to solve more systems if required. 
+ * one-dimensional blocks that could be launched in a kernel call. Users could 
+ * launch the kernel multiple times to solve more systems if required. 
  *
  * @param[out] d_x Solution vector
  * @param[in] planHandle Handle to plan for tridiagonal solver
@@ -534,11 +535,11 @@ CUDPPResult cudppTridiagonal(CUDPPHandle planHandle,
     if(plan != NULL)
     {
         //dispatch the tridiagonal solver here
-        cudppTridiagonalDispatch(d_a, d_b, d_c, d_d, d_x, systemSize, numSystems, plan);
-        return CUDPP_SUCCESS;
+        return cudppTridiagonalDispatch(d_a, d_b, d_c, d_d, d_x, 
+                                        systemSize, numSystems, plan);
     }
     else
-        return CUDPP_ERROR_UNKNOWN;
+        return CUDPP_ERROR_INVALID_HANDLE;
 }
 
 /** @} */ // end Algorithm Interface

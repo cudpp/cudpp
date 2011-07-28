@@ -16,11 +16,18 @@
 #include "cudpp_spmvmult.h"
 #include "cudpp_radixsort.h"
 #include "cudpp_reduce.h"
+#include "cuda_util.h"
+#include <cuda_runtime_api.h>
 
 #include <assert.h>
 
-CUDPPResult validateOptions(CUDPPConfiguration config, size_t /*numElements*/, size_t numRows, size_t /*rowPitch*/)
+CUDPPResult validateOptions(CUDPPConfiguration config, size_t numElements, size_t numRows, size_t /*rowPitch*/)
 {
+    int device = 0;
+    cudaDeviceProp prop;
+    CUDA_SAFE_CALL(cudaGetDevice(&device));
+    CUDA_SAFE_CALL(cudaGetDeviceProperties(&prop, device));
+
     CUDPPResult ret = CUDPP_SUCCESS;
     if ((config.options & CUDPP_OPTION_BACKWARD) && (config.options & CUDPP_OPTION_FORWARD))
         ret = CUDPP_ERROR_ILLEGAL_CONFIGURATION;
@@ -29,6 +36,18 @@ CUDPPResult validateOptions(CUDPPConfiguration config, size_t /*numElements*/, s
 
     if (config.algorithm == CUDPP_COMPACT && numRows > 1)
         ret = CUDPP_ERROR_ILLEGAL_CONFIGURATION; //!< @todo: add support for multi-row cudppCompact
+
+    if (config.algorithm == CUDPP_TRIDIAGONAL) {
+        if (config.datatype != CUDPP_FLOAT && config.datatype != CUDPP_DOUBLE) 
+            ret = CUDPP_ERROR_ILLEGAL_CONFIGURATION;
+
+        int dtSize = (config.datatype == CUDPP_FLOAT) ? sizeof(float) : sizeof(double);
+        if (numElements * dtSize >= prop.sharedMemPerBlock)
+            ret = CUDPP_ERROR_ILLEGAL_CONFIGURATION;
+
+        if (numElements > prop.maxThreadsPerBlock)
+            ret = CUDPP_ERROR_ILLEGAL_CONFIGURATION;
+    }
 
     return ret;
 }

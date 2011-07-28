@@ -18,7 +18,7 @@
 /** \addtogroup cudpp_kernel
   * @{
   */
-/** @name Hybrid CR-PCR solver (CRPCR)
+/** @name Tridiagonal functions
  * @{
  */
 
@@ -196,6 +196,6 @@ __global__ void crpcrKernel(T *d_a, T *d_b, T *d_c, T *d_d, T *d_x)
     d_x[thid + blockDim.x + blid * systemSize] = x[thid + blockDim.x];
 }
 
-/** @} */ // end crpcr functions
+/** @} */ // end Tridiagonal functions
 /** @} */ // end cudpp_kernel
 

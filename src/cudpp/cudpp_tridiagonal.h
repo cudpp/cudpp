@@ -22,14 +22,13 @@
 #include "cudpp.h"
 #include "cudpp_plan.h"
 
-extern "C"
-void cudppTridiagonalDispatch(void *d_a, 
-                              void *d_b, 
-                              void *d_c, 
-                              void *d_d, 
-                              void *d_x, 
-                              int systemSize, 
-                              int numSystems, 
-                              const CUDPPTridiagonalPlan * plan);
+CUDPPResult cudppTridiagonalDispatch(void *d_a, 
+                                     void *d_b, 
+                                     void *d_c, 
+                                     void *d_d, 
+                                     void *d_x, 
+                                     int systemSize, 
+                                     int numSystems, 
+                                     const CUDPPTridiagonalPlan * plan);
 
 #endif //__CUDPP_TRIDIAGONAL_H__

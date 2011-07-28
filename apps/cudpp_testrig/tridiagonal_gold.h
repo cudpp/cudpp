@@ -99,17 +99,15 @@ T compare(T *x1, T *x2, int numElements)
 template <class T>
 int compareManySystems(T *x1,T *x2, int systemSize, int numSystems, const T epsilon)
 {
-    int retval = 0;
-
     for (int i = 0; i < numSystems; i++)
     {
         T diff = compare<T>(&x1[i*systemSize], &x2[i*systemSize], systemSize);
         if(diff > epsilon || diff != diff) //if diff is QNAN/NAN, diff != diff will return true
         {
             cout << "test failed, error is larger than " << epsilon << "\n";
-            retval++;
+            return 1;
         }
     }
 
-    return retval;
+    return 0;
 }

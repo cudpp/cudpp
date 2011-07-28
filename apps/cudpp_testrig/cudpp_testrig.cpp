@@ -57,6 +57,20 @@ int testAllDatatypes(int argc,
                      bool multiRow)
 {
     int retval = 0;
+
+    if (config.algorithm == CUDPP_TRIDIAGONAL)
+    {
+        config.datatype = CUDPP_FLOAT;
+        retval += testTridiagonal(argc, argv, &config);
+
+        if (supportsDouble)
+        {
+            config.datatype = CUDPP_DOUBLE;
+            retval += testTridiagonal(argc, argv, &config);      
+        }
+        return retval;
+    }
+
     for (CUDPPDatatype dt = CUDPP_INT; dt != CUDPP_DATATYPE_INVALID; dt = CUDPPDatatype((int)dt+1))
     {
         config.datatype = dt;
@@ -80,18 +94,6 @@ int testAllDatatypes(int argc,
         }
     }
 
-    if (config.algorithm == CUDPP_TRIDIAGONAL)
-    {
-        config.datatype = CUDPP_FLOAT;
-        retval += testTridiagonal(argc, argv, &config);
-
-        if (supportsDouble)
-        {
-            config.datatype = CUDPP_DOUBLE;
-            retval += testTridiagonal(argc, argv, &config);      
-        }
-    }
-    
     return retval;
 }
 
@@ -290,6 +292,7 @@ int main(int argc, const char** argv)
         if (runReduce)    retval += testReduce(argc, argv, NULL);
         if (runSort)      retval += testRadixSort(argc, argv, NULL);
         if (runMultiScan) retval += testScan(argc, argv, NULL, true, devProps);
+        if (runTridiagonal) retval += testTridiagonal(argc, argv, NULL);
     }
     else
     {

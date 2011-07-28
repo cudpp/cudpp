@@ -94,7 +94,8 @@
  * - CUDPP_RAND               33,554,432 elements
  * - CUDPP_SPMVMULT           67,107,840 non-zero elements
  * - CUDPP_HASH               See \ref hash_space_limitations
- * - CUDPP_TRIDIAGONAL        65535 systems, 1024 equations per system (Geforce 400 series)
+ * - CUDPP_TRIDIAGONAL        65535 systems, 1024 equations per system (Compute capability 2.x),
+ *                                           512 equations per system (Compute capability < 2.0)
  * 
  * \section opSys Operating System Support
  * 

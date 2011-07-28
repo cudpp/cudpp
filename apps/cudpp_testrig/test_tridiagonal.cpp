@@ -25,14 +25,19 @@
 
 #include <cuda_runtime_api.h>
 #include "cuda_util.h"
+#include "commandline.h"
 
 #include "cudpp_testrig_options.h"
 #include "tridiagonal_gold.h"
 #include "stopwatch.h"
 
+using namespace cudpp_app;
+
 template <typename T>
-int testTridiagonalDataType(CUDPPConfiguration &config)
+int testTridiagonalDataType(int argc, const char** argv, CUDPPConfiguration &config)
 {
+    bool quiet = checkCommandLineFlag(argc, argv, "quiet");
+
     int retval = 0;
     CUDPPHandle tridiagonalPlan = 0;
     CUDPPResult result;
@@ -53,90 +58,123 @@ int testTridiagonalDataType(CUDPPConfiguration &config)
         exit(-1);
     }
 
+    bool oneTest = false;
     int numSystems = 512;
     int systemSize = 512;
-    const unsigned int memSize = sizeof(T)*numSystems*systemSize;
 
-    T* a = (T*) malloc(memSize);
-    T* b = (T*) malloc(memSize);
-    T* c = (T*) malloc(memSize);
-    T* d = (T*) malloc(memSize);
-    T* x1 = (T*) malloc(memSize);
-    T* x2 = (T*) malloc(memSize);
-
-    for (int i = 0; i < numSystems; i++)
+    if (commandLineArg(systemSize, argc, argv, "n"))
     {
-        testGeneration(&a[i*systemSize], &b[i*systemSize], &c[i*systemSize], &d[i*systemSize], &x1[i*systemSize], systemSize);
+        oneTest = true;
     }
 
-    // allocate device memory input and output arrays
-    T* d_a;
-    T* d_b;
-    T* d_c;
-    T* d_d;
-    T* d_x;
+    int systemSizes[] = { 5, 32, 39, 128, 177, 255, 256, 500, 512, 1024 };
+    int numTests = sizeof(systemSizes) / sizeof(int);
 
-    CUDA_SAFE_CALL( cudaMalloc( (void**) &d_a,memSize));
-    CUDA_SAFE_CALL( cudaMalloc( (void**) &d_b,memSize));
-    CUDA_SAFE_CALL( cudaMalloc( (void**) &d_c,memSize));
-    CUDA_SAFE_CALL( cudaMalloc( (void**) &d_d,memSize));
-    CUDA_SAFE_CALL( cudaMalloc( (void**) &d_x,memSize));
+    if (oneTest)
+    {
+        systemSizes[0] = systemSize;
+        numTests = 1;
+    }
 
-   // copy host memory to device input array
-    CUDA_SAFE_CALL( cudaMemcpy( d_a, a, memSize, cudaMemcpyHostToDevice));
-    CUDA_SAFE_CALL( cudaMemcpy( d_b, b, memSize, cudaMemcpyHostToDevice));
-    CUDA_SAFE_CALL( cudaMemcpy( d_c, c, memSize, cudaMemcpyHostToDevice));
-    CUDA_SAFE_CALL( cudaMemcpy( d_d, d, memSize, cudaMemcpyHostToDevice));
-    CUDA_SAFE_CALL( cudaMemcpy( d_x, x1, memSize, cudaMemcpyHostToDevice));
+    for (int k = 0; k < numTests; k++)
+    {
+        systemSize = systemSizes[k];
+        const unsigned int memSize = sizeof(T)*numSystems*systemSize;
 
-    // warm up the GPU to avoid the overhead time for the next timing
-    cudppTridiagonal(tridiagonalPlan, d_a, d_b, d_c, d_d, d_x, systemSize, numSystems);
-    if (config.datatype == CUDPP_FLOAT) printf("Runing a CR-PCR tridiagonal solver solving %d systems with each of %d equations with SINGLE precision\n", numSystems, systemSize);
-    if (config.datatype == CUDPP_DOUBLE) printf("Runing a CR-PCR tridiagonal solver solving %d systems with each of %d equations with DOUBLE precision\n", numSystems, systemSize);            
-    
-    cudpp_app::StopWatch timer;
-    timer.reset();
-    timer.start();
-    
-    cudppTridiagonal(tridiagonalPlan, d_a, d_b, d_c, d_d, d_x, systemSize, numSystems);
-    cudaThreadSynchronize();
+        T* a = (T*) malloc(memSize);
+        T* b = (T*) malloc(memSize);
+        T* c = (T*) malloc(memSize);
+        T* d = (T*) malloc(memSize);
+        T* x1 = (T*) malloc(memSize);
+        T* x2 = (T*) malloc(memSize);
 
-    timer.stop();            
-    printf("GPU execution time: %f ms\n", timer.getTime());
-    
-    // copy result from device to host
-    CUDA_SAFE_CALL( cudaMemcpy(x2, d_x, memSize, cudaMemcpyDeviceToHost));
+        for (int i = 0; i < numSystems; i++)
+        {
+            testGeneration(&a[i*systemSize], &b[i*systemSize], &c[i*systemSize], &d[i*systemSize], &x1[i*systemSize], systemSize);
+        }
 
-    // cleanup memory
-    CUDA_SAFE_CALL(cudaFree(d_a));
-    CUDA_SAFE_CALL(cudaFree(d_b));
-    CUDA_SAFE_CALL(cudaFree(d_c));
-    CUDA_SAFE_CALL(cudaFree(d_d));
-    CUDA_SAFE_CALL(cudaFree(d_x));
+        // allocate device memory input and output arrays
+        T* d_a;
+        T* d_b;
+        T* d_c;
+        T* d_d;
+        T* d_x;
 
-    timer.reset();
-    timer.start();
-    
-    serialManySystems<T>(a,b,c,d,x1,systemSize,numSystems);
+        CUDA_SAFE_CALL( cudaMalloc( (void**) &d_a,memSize));
+        CUDA_SAFE_CALL( cudaMalloc( (void**) &d_b,memSize));
+        CUDA_SAFE_CALL( cudaMalloc( (void**) &d_c,memSize));
+        CUDA_SAFE_CALL( cudaMalloc( (void**) &d_d,memSize));
+        CUDA_SAFE_CALL( cudaMalloc( (void**) &d_x,memSize));
 
-    timer.stop();            
-    printf("CPU execution time: %f ms\n", timer.getTime());
-    
-    retval = compareManySystems<T>(x1, x2, systemSize, numSystems, 0.001f);
-    
-    if (retval == 0)
-        printf("test PASSED\n");
-    else
-        printf("test FAILED\n");
-    
-    printf("\n");
-    
-    free(a);
-    free(b);
-    free(c);
-    free(d);
-    free(x1);
-    free(x2);
+       // copy host memory to device input array
+        CUDA_SAFE_CALL( cudaMemcpy( d_a, a, memSize, cudaMemcpyHostToDevice));
+        CUDA_SAFE_CALL( cudaMemcpy( d_b, b, memSize, cudaMemcpyHostToDevice));
+        CUDA_SAFE_CALL( cudaMemcpy( d_c, c, memSize, cudaMemcpyHostToDevice));
+        CUDA_SAFE_CALL( cudaMemcpy( d_d, d, memSize, cudaMemcpyHostToDevice));
+        CUDA_SAFE_CALL( cudaMemcpy( d_x, x1, memSize, cudaMemcpyHostToDevice));
+
+        // warm up the GPU to avoid the overhead time for the next timing
+        cudppTridiagonal(tridiagonalPlan, 
+                         d_a, d_b, d_c, d_d, d_x, systemSize, numSystems);
+        
+        if (!quiet)
+            printf("Runing a %s CR-PCR tridiagonal solver solving %d "
+                   "systems of %d equations\n", 
+                   config.datatype == CUDPP_FLOAT ? "fp32" : "fp64",
+                   numSystems, systemSize);
+        
+        cudpp_app::StopWatch timer;
+        timer.reset();
+        timer.start();
+        
+        cudppTridiagonal(tridiagonalPlan, 
+                         d_a, d_b, d_c, d_d, d_x, systemSize, numSystems);
+        cudaThreadSynchronize();
+
+        timer.stop();            
+        if (!quiet)
+            printf("GPU execution time: %f ms\n", timer.getTime());
+        else
+            printf("%f\n", timer.getTime());
+        
+        // copy result from device to host
+        CUDA_SAFE_CALL( cudaMemcpy(x2, d_x, memSize, cudaMemcpyDeviceToHost));
+
+        // cleanup memory
+        CUDA_SAFE_CALL(cudaFree(d_a));
+        CUDA_SAFE_CALL(cudaFree(d_b));
+        CUDA_SAFE_CALL(cudaFree(d_c));
+        CUDA_SAFE_CALL(cudaFree(d_d));
+        CUDA_SAFE_CALL(cudaFree(d_x));
+
+        timer.reset();
+        timer.start();
+        
+        serialManySystems<T>(a,b,c,d,x1,systemSize,numSystems);
+
+        timer.stop();            
+        if (!quiet)
+            printf("CPU execution time: %f ms\n", timer.getTime());
+        
+        int failed = compareManySystems<T>(x1, x2, systemSize, numSystems, 0.001f);
+        retval += failed;
+        
+        if (!quiet)
+        {
+            if (failed == 0)
+                printf("test PASSED\n");
+            else
+                printf("test FAILED\n");
+            printf("\n");
+        }
+                
+        free(a);
+        free(b);
+        free(c);
+        free(d);
+        free(x1);
+        free(x2);
+    }
 
     return retval;
     
@@ -150,10 +188,10 @@ int testTridiagonal(int argc, const char** argv, const CUDPPConfiguration *confi
     config = *configPtr;
     
     if ((*configPtr).datatype == CUDPP_FLOAT)
-        retval = testTridiagonalDataType<float>(config);
+        retval = testTridiagonalDataType<float>(argc, argv, config);
     
     if ((*configPtr).datatype == CUDPP_DOUBLE)
-        retval = testTridiagonalDataType<double>(config);  
+        retval = testTridiagonalDataType<double>(argc, argv, config);  
     
     return retval;
     

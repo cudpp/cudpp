@@ -18,7 +18,7 @@
 /** \addtogroup cudpp_app
   * @{
   */
-/** @name Hybrid CR-PCR solver (CRPCR)
+/** @name Tridiagonal functions
  * @{
  */
 
@@ -49,7 +49,9 @@ void crpcr(T *d_a, T *d_b, T *d_c, T *d_d, T *d_x, int systemSize, int numSystem
     dim3  threads(num_threads_block, 1, 1);
 
     crpcrKernel<<< grid, threads,(systemSize+1)*5*sizeof(T)+restSystemSize*(5+0)*sizeof(float)>>>(d_a, d_b, d_c, d_d, d_x);
+
+    CUDA_CHECK_ERROR("crpcr");
 }
-/** @} */ // end Hybrid CR-PCR solver (CRPCR)
+/** @} */ // end Tridiagonal functions
 /** @} */ // end cudpp_app
 
