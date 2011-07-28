@@ -15,13 +15,6 @@
  * @brief CUDPP app-level CR-PCR tridiagonal solver
  */
 
-/** \addtogroup cudpp_app
-  * @{
-  */
-/** @name Tridiagonal functions
- * @{
- */
-
 #include "kernel/crpcr_kernel.cuh"
 
 /**
@@ -52,6 +45,4 @@ void crpcr(T *d_a, T *d_b, T *d_c, T *d_d, T *d_x, int systemSize, int numSystem
 
     CUDA_CHECK_ERROR("crpcr");
 }
-/** @} */ // end Tridiagonal functions
-/** @} */ // end cudpp_app
 
