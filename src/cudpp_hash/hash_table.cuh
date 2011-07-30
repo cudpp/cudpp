@@ -17,9 +17,10 @@
 #ifndef CUDAHT__CUCKOO__SRC__LIBRARY__HASH_TABLE__CUH
 #define CUDAHT__CUCKOO__SRC__LIBRARY__HASH_TABLE__CUH
 
+#include "definitions.h"
 #include "hash_table.h"
+
 #include <driver_types.h>
-// #include <cuda_runtime.h>
 
 namespace CudaHT {
 namespace CuckooHashing {

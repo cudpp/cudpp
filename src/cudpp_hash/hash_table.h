@@ -17,11 +17,12 @@
 #ifndef CUDAHT__CUCKOO__SRC__LIBRARY__HASH_TABLE__H
 #define CUDAHT__CUCKOO__SRC__LIBRARY__HASH_TABLE__H
 
-#include <cudpp.h>
-#include "definitions.h"
 
+#include "definitions.h"
 #include "hash_functions.h"
+
 #include <cstdio>
+#include <cudpp.h>
 
 /** \addtogroup cudpp_app 
   * @{
@@ -74,10 +75,7 @@ unsigned ComputeMaxIterations(const unsigned num_keys,
  */
 class HashTable {
  public:
-  HashTable() : table_size_(0),
-                d_contents_(NULL),
-                stash_count_(0),
-                d_failures_(NULL) {}
+  HashTable();
 
   virtual ~HashTable() {Release();}
 
@@ -190,6 +188,49 @@ class HashTable {
 
   CUDPPHandle  theCudpp;               //!< CUDPP instance
 };
+
+
+/*! @name Internal
+ *  @{
+ */
+namespace CUDAWrapper {
+//! Fills a 64-bit array with a particular value.
+void ClearTable(const unsigned  slots_in_table,
+                const Entry     fill_value,
+                      Entry    *d_array);
+
+//! Calls the Cuckoo Hash construction kernel.
+void CallCuckooHash(const unsigned      n_entries,
+                    const unsigned      num_hash_functions,
+                    const unsigned     *d_keys,
+                    const unsigned     *d_values,
+                    const unsigned      table_size,
+                    const Functions<2>  constants_2,
+                    const Functions<3>  constants_3,
+                    const Functions<4>  constants_4,
+                    const Functions<5>  constants_5,
+                    const unsigned      max_iteration_attempts,
+                          Entry        *d_contents,
+                          uint2         stash_constants,
+                          unsigned     *d_stash_count,
+                          unsigned     *d_failures,
+                          unsigned     *d_iterations_taken);
+
+//! Calls the kernel that performs retrievals.
+void CallHashRetrieve(const unsigned      n_queries,
+                      const unsigned      num_hash_functions,
+                      const unsigned     *keys_in,
+                      const unsigned      table_size,
+                      const Entry        *table,
+                      const Functions<2>  constants_2,
+                      const Functions<3>  constants_3,
+                      const Functions<4>  constants_4,
+                      const Functions<5>  constants_5,
+                      const uint2         stash_constants,
+                      const unsigned      stash_count,
+                            unsigned     *values_out);
+};
+/// @}
 
 };  // namespace CuckooHashing
 };  // namespace CudaHT

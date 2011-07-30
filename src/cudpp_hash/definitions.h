@@ -14,8 +14,8 @@
  * @brief Stores configuration flags and definitions for hard-coded values in hash table implementations.
  */
 
-#ifndef CUDAHT__CUCKOO_STASH__H
-#define CUDAHT__CUCKOO_STASH__H
+#ifndef CUDAHT__CUCKOO__SRC__LIBRARY__DEFINITIONS__H
+#define CUDAHT__CUCKOO__SRC__LIBRARY__DEFINITIONS__H
 
 #include <cstdio>
 #include <limits>

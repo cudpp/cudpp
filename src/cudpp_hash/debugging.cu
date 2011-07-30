@@ -15,9 +15,9 @@
  * @brief Debugging/statistics/performance utilities for hash tables.
  */
 
-#include "debugging.cuh"
-
-#include "hash_table.h"
+#include "debugging.h"
+#include "definitions.h"
+#include "hash_table.cuh"
 
 #include <algorithm>
 #include "cuda_util.h"
@@ -25,21 +25,22 @@
 namespace CudaHT {
 namespace CuckooHashing {
 
+
 //! Debugging function: Takes statistics on the hash functions' distribution.
 /*! Determines:
  *    - How many unique slots each key has.
  *    - How many keys hash into each slot.
  *    - Whether any keys failed to get a full set of slots.
  */
-static __global__
-void take_hash_function_statistics(const unsigned  *keys,
-                                   const unsigned   n_entries,
-                                   const unsigned   table_size,
-                                   const uint2     *constants,
-                                   const unsigned   num_functions,
-                                         unsigned  *num_slots_available,
-                                         unsigned  *num_hashing_in,
-                                         unsigned  *failed) {
+__global__
+void take_hash_function_statistics_kernel(const unsigned  *keys,
+                                          const unsigned   n_entries,
+                                          const unsigned   table_size,
+                                          const uint2     *constants,
+                                          const unsigned   num_functions,
+                                                unsigned  *num_slots_available,
+                                                unsigned  *num_hashing_in,
+                                                unsigned  *failed) {
   unsigned thread_index = threadIdx.x +
                           blockIdx.x * blockDim.x +
                           blockIdx.y * blockDim.x * gridDim.x;
@@ -113,14 +114,14 @@ void TakeHashFunctionStatistics(const unsigned   num_keys,
   CUDA_SAFE_CALL(cudaMalloc((void**)&d_constants, sizeof(uint2) * kNumHashFunctions));
   CUDA_SAFE_CALL(cudaMemcpy(d_constants, constants, sizeof(uint2) * kNumHashFunctions, cudaMemcpyHostToDevice));
 
-  take_hash_function_statistics<<<ComputeGridDim(num_keys), kBlockSize>>>
-                               (d_keys, num_keys,
-                                table_size,
-                                d_constants,
-                                kNumHashFunctions,
-                                d_num_slots_available,
-                                d_num_hashing_in,
-                                NULL);
+  take_hash_function_statistics_kernel<<<ComputeGridDim(num_keys), kBlockSize>>>
+                                      (d_keys, num_keys,
+                                       table_size,
+                                       d_constants,
+                                       kNumHashFunctions,
+                                       d_num_slots_available,
+                                       d_num_hashing_in,
+                                       NULL);
   CUDA_SAFE_CALL(cudaFree(d_constants));
 
  #ifdef COUNT_HOW_MANY_HASH_INTO_EACH_SLOT
@@ -195,74 +196,38 @@ void TakeHashFunctionStatistics(const unsigned   num_keys,
  #endif
 }
 
+bool CheckAssignedSameSlot(const unsigned  N,
+                           const unsigned  num_keys,
+                           const unsigned *d_keys,
+                           const unsigned  table_size,
+                                 uint2    *constants) {
+  unsigned *d_cycle_exists = NULL;
+  uint2    *d_constants    = NULL;
 
-void OutputRetrievalStatistics(const unsigned  n_queries,
-                               const unsigned *d_retrieval_probes,
-                               const unsigned  n_functions)
-{
-  unsigned *retrieval_probes = new unsigned[n_queries];
-  CUDA_SAFE_CALL(cudaMemcpy(retrieval_probes,
-                            d_retrieval_probes,
-                            sizeof(unsigned) * n_queries,
+  CUDA_SAFE_CALL(cudaMalloc((void**)&d_cycle_exists, sizeof(unsigned)));
+  CUDA_SAFE_CALL(cudaMalloc((void**)&d_constants, sizeof(uint2) * N));
+
+  CUDA_SAFE_CALL(cudaMemset(d_cycle_exists, 0, sizeof(unsigned)));
+  CUDA_SAFE_CALL(cudaMemcpy(d_constants,
+                            constants,
+                            sizeof(uint2) * N,
+                            cudaMemcpyHostToDevice));
+
+  // Check if all keys were given a full set of N slots by the functions.
+  take_hash_function_statistics_kernel<<<ComputeGridDim(num_keys), kBlockSize>>>
+                                      (d_keys, num_keys, table_size, d_constants, N,
+                                       NULL, NULL, d_cycle_exists);
+
+  unsigned cycle_exists;
+  CUDA_SAFE_CALL(cudaMemcpy(&cycle_exists,
+                            d_cycle_exists,
+                            sizeof(unsigned),
                             cudaMemcpyDeviceToHost));
 
-  // Create a histogram showing how many items needed how many probes to be found.
-  unsigned possible_probes = n_functions + 2;
-  unsigned *histogram = new unsigned[possible_probes];
-  memset(histogram, 0, sizeof(unsigned) * (possible_probes));
-  for (unsigned i = 0; i < n_queries; ++i) {
-    histogram[retrieval_probes[i]]++;
-  }
+  CUDA_SAFE_CALL(cudaFree(d_cycle_exists));
+  CUDA_SAFE_CALL(cudaFree(d_constants));
 
-  // Dump it.
-  char buffer[10000];
-  sprintf(buffer, "Probes for retrieval: ");
-  PrintMessage(buffer);
-  for (unsigned i = 0; i < possible_probes; ++i) {
-    sprintf(buffer, "\t(%u, %u)", i, histogram[i]);
-    PrintMessage(buffer);
-  }
-  delete [] retrieval_probes;
-  delete [] histogram;
-}
-
-void OutputBuildStatistics(const unsigned  n,
-                           const unsigned *d_iterations_taken) {
-  // Output how many iterations each thread took until it found an empty slot.
-  unsigned *iterations_taken = new unsigned[n];
-  CUDA_SAFE_CALL(cudaMemcpy(iterations_taken, d_iterations_taken, sizeof(unsigned) * n, cudaMemcpyDeviceToHost));
-  std::sort(iterations_taken, iterations_taken + n);
-  unsigned total_iterations = 0;
-  unsigned max_iterations_taken = 0;
-  for (unsigned i = 0; i < n; ++i) {
-    total_iterations += iterations_taken[i];
-    max_iterations_taken = std::max(max_iterations_taken, iterations_taken[i]);
-  }
-
-  unsigned current_value = iterations_taken[0];
-  unsigned count = 1;
-  char buffer[10000];
-  sprintf(buffer, "Iterations taken:\n");
-  for (unsigned i = 1; i < n; ++i) {
-    if (iterations_taken[i] != current_value) {
-      sprintf(buffer, "%s\t(%u, %u)\n", buffer, current_value, count);
-      current_value = iterations_taken[i];
-      count = 1;
-    } else {
-      count++;
-    }
-  }
-  sprintf(buffer, "%s\t(%u, %u)", buffer, current_value, count);
-  PrintMessage(buffer);
-  sprintf(buffer, "Total iterations: %u", total_iterations);
-  PrintMessage(buffer);
-  sprintf(buffer, "Avg/Med/Max iterations: (%f %u %u)", (float)total_iterations / n, iterations_taken[n/2], iterations_taken[n-1]);
-  PrintMessage(buffer);
-  delete [] iterations_taken;
-
-  // Print the length of the longest eviction chain.
-  sprintf(buffer, "Max iterations: %u", max_iterations_taken);
-  PrintMessage(buffer);
+  return (cycle_exists != 0);
 }
 
 

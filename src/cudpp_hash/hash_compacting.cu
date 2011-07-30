@@ -14,10 +14,7 @@
  * @brief Implements hash tables that assign each unique key an ID.
  */
 
-#ifndef CUDAHT__CUCKOO__SRC__LIBRARY__HASH_COMPACTING__CUH
-#define CUDAHT__CUCKOO__SRC__LIBRARY__HASH_COMPACTING__CUH
-
-#include "debugging.cuh"
+#include "debugging.h"
 #include "hash_compacting.h"
 #include "hash_functions.h"
 #include "hash_table.cuh"
@@ -438,312 +435,196 @@ __global__ void hash_compact_down(const unsigned  table_size,
 }
 //! @}
 
-bool CompactingHashTable::Build(const unsigned  n,
-                                const unsigned *d_keys,
-                                const unsigned *d_values)
-{
-    CUDA_CHECK_ERROR("Failed before attempting to build.");
 
-    unsigned num_failures = 1;
-    unsigned num_attempts = 0;
-    unsigned max_iterations = ComputeMaxIterations(n, table_size_,
-                                                   num_hash_functions_);
-    unsigned total_table_size = table_size_ + kStashSize;
-
-    while (num_failures && ++num_attempts < kMaxRestartAttempts) {
-        if (num_hash_functions_ == 2)
-            constants_2_.Generate(n, d_keys, table_size_);
-        else if (num_hash_functions_ == 3)
-            constants_3_.Generate(n, d_keys, table_size_);
-        else if (num_hash_functions_ == 4)
-            constants_4_.Generate(n, d_keys, table_size_);
-        else
-            constants_5_.Generate(n, d_keys, table_size_);
-
-        // Initialize the cuckoo hash table.
-        clear_table<<<ComputeGridDim(total_table_size), kBlockSize>>>
-            (total_table_size,
-             kKeyEmpty,
-             d_scratch_cuckoo_keys_);
-        num_failures = 0;
-        CUDA_SAFE_CALL(cudaMemcpy(d_failures_,
-                                  &num_failures,
-                                  sizeof(unsigned),
-                                  cudaMemcpyHostToDevice));
-        unsigned *d_stash_count = NULL;
-        CUDA_SAFE_CALL(cudaMalloc((void**)&d_stash_count, sizeof(unsigned)));
-        CUDA_SAFE_CALL(cudaMemset(d_stash_count, 0, sizeof(unsigned)));
-
-        if (num_hash_functions_ == 2) {
-            hash_build_compacting <<<ComputeGridDim(n), kBlockSize>>>
-                (n, 
-                 d_keys,
-                 table_size_,
-                 constants_2_,
-                 stash_constants_,
-                 max_iterations,
-                 d_scratch_cuckoo_keys_,
-                 d_stash_count,
-                 d_failures_);
-        } else if (num_hash_functions_ == 3) {
-            hash_build_compacting <<<ComputeGridDim(n), kBlockSize>>>
-                (n, 
-                 d_keys,
-                 table_size_,
-                 constants_3_,
-                 stash_constants_,
-                 max_iterations,
-                 d_scratch_cuckoo_keys_,
-                 d_stash_count,
-                 d_failures_);
-        } else if (num_hash_functions_ == 4) {
-            hash_build_compacting <<<ComputeGridDim(n), kBlockSize>>>
-                (n, 
-                 d_keys,
-                 table_size_,
-                 constants_4_,
-                 stash_constants_,
-                 max_iterations,
-                 d_scratch_cuckoo_keys_,
-                 d_stash_count,
-                 d_failures_);
-        } else {                             
-            hash_build_compacting <<<ComputeGridDim(n), kBlockSize>>>
-                (n, 
-                 d_keys,
-                 table_size_,
-                 constants_5_,
-                 stash_constants_,
-                 max_iterations,
-                 d_scratch_cuckoo_keys_,
-                 d_stash_count,
-                 d_failures_);
-        }
-
-        CUDA_SAFE_CALL(cudaMemcpy(&stash_count_, d_stash_count, 
-                                  sizeof(unsigned), cudaMemcpyDeviceToHost));
-        if (stash_count_) {
-            char buffer[256];
-            sprintf(buffer, "Stash count: %u", stash_count_);
-            PrintMessage(buffer, true);
-        }
-        CUDA_SAFE_CALL(cudaFree(d_stash_count));
-
-        CUDA_CHECK_ERROR("!!! Failed to cuckoo hash.\n");
-
-        CUDA_SAFE_CALL(cudaMemcpy(&num_failures,
-                                  d_failures_,
-                                  sizeof(unsigned),
-                                  cudaMemcpyDeviceToHost));
-
-#ifdef COUNT_UNINSERTED
-        if (num_failures > 0) {
-            char buffer[256];
-            sprintf(buffer, "Num failures: %u", num_failures);
-            PrintMessage(buffer, true);
-        }
-#endif
+namespace CUDAWrapper {
+void CallHashBuildCompacting(const int           n,
+                             const unsigned      num_hash_functions,
+                             const unsigned     *d_keys,
+                             const unsigned      table_size,
+                             const Functions<2>  constants_2,
+                             const Functions<3>  constants_3,
+                             const Functions<4>  constants_4,
+                             const Functions<5>  constants_5,
+                             const uint2         stash_constants,
+                             const unsigned      max_iterations,
+                             unsigned           *d_scratch_cuckoo_keys,
+                             unsigned           *d_stash_count,
+                             unsigned           *d_failures) {
+    if (num_hash_functions == 2) {
+        hash_build_compacting <<<ComputeGridDim(n), kBlockSize>>>
+            (n, 
+             d_keys,
+             table_size,
+             constants_2,
+             stash_constants,
+             max_iterations,
+             d_scratch_cuckoo_keys,
+             d_stash_count,
+             d_failures);
+    } else if (num_hash_functions == 3) {
+        hash_build_compacting <<<ComputeGridDim(n), kBlockSize>>>
+            (n, 
+             d_keys,
+             table_size,
+             constants_3,
+             stash_constants,
+             max_iterations,
+             d_scratch_cuckoo_keys,
+             d_stash_count,
+             d_failures);
+    } else if (num_hash_functions == 4) {
+        hash_build_compacting <<<ComputeGridDim(n), kBlockSize>>>
+            (n, 
+             d_keys,
+             table_size,
+             constants_4,
+             stash_constants,
+             max_iterations,
+             d_scratch_cuckoo_keys,
+             d_stash_count,
+             d_failures);
+    } else {                             
+        hash_build_compacting <<<ComputeGridDim(n), kBlockSize>>>
+            (n, 
+             d_keys,
+             table_size,
+             constants_5,
+             stash_constants,
+             max_iterations,
+             d_scratch_cuckoo_keys,
+             d_stash_count,
+             d_failures);
     }
 
-    if (num_attempts >= kMaxRestartAttempts) {
-        PrintMessage("Completely failed to build.", true);
-        return false;
-    } else if (num_attempts > 1) {
-        char buffer[256];
-        sprintf(buffer, "Needed %u attempts", num_attempts);
-        PrintMessage(buffer);
+    CUDA_CHECK_ERROR("Failed to build.\n");
+}    
+
+void CallHashRemoveDuplicates(const unsigned      num_hash_functions,
+                              const unsigned      table_size,
+                              const unsigned      total_table_size,
+                              const Functions<2>  constants_2,
+                              const Functions<3>  constants_3,
+                              const Functions<4>  constants_4,
+                              const Functions<5>  constants_5,
+                              const uint2         stash_constants,
+                              unsigned           *d_scratch_cuckoo_keys,
+                              unsigned           *d_scratch_counts) {
+    // Remove any duplicated keys from the hash table and set values to one.
+    if (num_hash_functions == 2) {
+        hash_remove_duplicates <<<ComputeGridDim(total_table_size),
+            kBlockSize>>>
+            (table_size,
+             total_table_size,
+             constants_2,
+             stash_constants,
+             d_scratch_cuckoo_keys,
+             d_scratch_counts);
+    } else if (num_hash_functions == 3) {
+        hash_remove_duplicates <<<ComputeGridDim(total_table_size),
+            kBlockSize>>>
+            (table_size,
+             total_table_size,
+             constants_3,
+             stash_constants,
+             d_scratch_cuckoo_keys,
+             d_scratch_counts);
+    } else if (num_hash_functions == 4) {
+        hash_remove_duplicates <<<ComputeGridDim(total_table_size),
+            kBlockSize>>>
+            (table_size,
+             total_table_size,
+             constants_4,
+             stash_constants,
+             d_scratch_cuckoo_keys,
+             d_scratch_counts);
+    } else {                              
+        hash_remove_duplicates <<<ComputeGridDim(total_table_size),
+            kBlockSize>>>
+            (table_size,
+             total_table_size,
+             constants_5,
+             stash_constants,
+             d_scratch_cuckoo_keys,
+             d_scratch_counts);
     }
+    CUDA_CHECK_ERROR("!!! Failed to remove duplicates. \n");
+}                                  
 
-    if (num_failures == 0) {
-        // Remove any duplicated keys from the hash table and set values to one.
-        if (num_hash_functions_ == 2) {
-            hash_remove_duplicates <<<ComputeGridDim(total_table_size),
-                kBlockSize>>>
-                (table_size_,
-                 total_table_size,
-                 constants_2_,
-                 stash_constants_,
-                 d_scratch_cuckoo_keys_,
-                 d_scratch_counts_);
-        } else if (num_hash_functions_ == 3) {
-            hash_remove_duplicates <<<ComputeGridDim(total_table_size),
-                kBlockSize>>>
-                (table_size_,
-                 total_table_size,
-                 constants_3_,
-                 stash_constants_,
-                 d_scratch_cuckoo_keys_,
-                 d_scratch_counts_);
-        } else if (num_hash_functions_ == 4) {
-            hash_remove_duplicates <<<ComputeGridDim(total_table_size),
-                kBlockSize>>>
-                (table_size_,
-                 total_table_size,
-                 constants_4_,
-                 stash_constants_,
-                 d_scratch_cuckoo_keys_,
-                 d_scratch_counts_);
-        } else {                              
-            hash_remove_duplicates <<<ComputeGridDim(total_table_size),
-                kBlockSize>>>
-                (table_size_,
-                 total_table_size,
-                 constants_5_,
-                 stash_constants_,
-                 d_scratch_cuckoo_keys_,
-                 d_scratch_counts_);
-        }
-        CUDA_CHECK_ERROR("!!! Failed to remove duplicates. \n");
+void CallHashCompactDown(const unsigned  table_size,
+                         Entry          *d_contents,
+                         unsigned       *d_unique_keys,
+                         const unsigned *d_scratch_cuckoo_keys,
+                         const unsigned *d_scratch_unique_ids) {
+    hash_compact_down <<<ComputeGridDim(table_size), kBlockSize>>>
+        (table_size, 
+         d_contents, 
+         d_unique_keys, 
+         d_scratch_cuckoo_keys, 
+         d_scratch_unique_ids);
 
-        // Do a prefix-sum over the values to assign each key a unique index.
-        CUDPPConfiguration config;
-        config.op        = CUDPP_ADD;
-        config.datatype  = CUDPP_UINT;
-        config.algorithm = CUDPP_SCAN;
-        config.options   = CUDPP_OPTION_FORWARD | CUDPP_OPTION_INCLUSIVE;
-
-        CUDPPResult result = cudppPlan(theCudpp, &scanplan_, config, 
-                                       total_table_size, 1, 0);
-        if (CUDPP_SUCCESS == result) {
-            cudppScan(scanplan_, d_scratch_unique_ids_, d_scratch_counts_,
-                      total_table_size);
-        } else {
-            PrintMessage("!!! Failed to create plan.", true);
-        }
-        CUDA_CHECK_ERROR("!!! Scan failed.\n");
-
-        // Determine how many unique values there are.
-        CUDA_SAFE_CALL(cudaMemcpy(&unique_keys_size_,
-                                  d_scratch_unique_ids_ + total_table_size - 1,
-                                  sizeof(unsigned),
-                                  cudaMemcpyDeviceToHost));
-
-        // Copy the unique indices back and compact down the neighbors.
-        CUDA_SAFE_CALL(cudaMalloc((void**)&d_unique_keys_,
-                                  sizeof(unsigned) * unique_keys_size_));
-        CUDA_SAFE_CALL(cudaMemset(d_unique_keys_,
-                                  0xff,
-                                  sizeof(unsigned) * unique_keys_size_));
-        hash_compact_down <<<ComputeGridDim(total_table_size), kBlockSize>>>
-            (total_table_size, 
-             d_contents_, 
-             d_unique_keys_, 
-             d_scratch_cuckoo_keys_, 
-             d_scratch_unique_ids_);
-    }
-
-    CUDA_CHECK_ERROR("Error occurred during hash table build.\n");
-
-    return true;
+    CUDA_CHECK_ERROR("Compact down failed.\n");
 }
 
-CompactingHashTable::CompactingHashTable() :
-    d_unique_keys_(NULL),
-    d_scratch_cuckoo_keys_(NULL),
-    d_scratch_counts_(NULL),
-    d_scratch_unique_ids_(NULL),
-    scanplan_(0),
-    HashTable()
-{
-}
-
-bool CompactingHashTable::Initialize(const unsigned   max_table_entries,
-                                     const float      space_usage,
-                                     const unsigned   num_functions)
-{                                    
-    bool success = HashTable::Initialize(max_table_entries, space_usage, 
-                                         num_functions);
-
-    unsigned slots_to_allocate = table_size_ + kStashSize;
-    CUDA_SAFE_CALL(cudaMalloc( (void**)&d_scratch_cuckoo_keys_, 
-                               sizeof(unsigned) * slots_to_allocate ));
-    CUDA_SAFE_CALL(cudaMalloc( (void**)&d_scratch_counts_,      
-                               sizeof(unsigned) * slots_to_allocate ));
-    CUDA_SAFE_CALL(cudaMalloc( (void**)&d_scratch_unique_ids_,  
-                               sizeof(unsigned) * slots_to_allocate ));
-
-    success &= d_scratch_cuckoo_keys_ != NULL;
-    success &= d_scratch_counts_      != NULL;
-    success &= d_scratch_unique_ids_  != NULL;
-
-    return success;
-}
-
-CompactingHashTable::~CompactingHashTable() {
-    Release();
-}
-
-void CompactingHashTable::Release() {
-    HashTable::Release();
-
-    cudaFree(d_unique_keys_);
-    cudaFree(d_scratch_cuckoo_keys_);
-    cudaFree(d_scratch_counts_);
-    cudaFree(d_scratch_unique_ids_);
-
-    d_unique_keys_         = NULL;
-    d_scratch_cuckoo_keys_ = NULL;
-    d_scratch_counts_      = NULL;
-    d_scratch_unique_ids_  = NULL;
-
-    if (scanplan_) {
-      cudppDestroyPlan(scanplan_);
-    }
-    scanplan_         = 0;
-    unique_keys_size_ = 0;
-}
-
-void CompactingHashTable::Retrieve(const unsigned  n_queries,
-                                   const unsigned *d_keys,
-                                   unsigned *d_values) {
+void CallHashRetrieveCompacting(const unsigned      n_queries,
+                                const unsigned      num_hash_functions,
+                                const unsigned     *d_keys,
+                                const unsigned      table_size,
+                                const Entry        *d_contents,
+                                const Functions<2>  constants_2,
+                                const Functions<3>  constants_3,
+                                const Functions<4>  constants_4,
+                                const Functions<5>  constants_5,
+                                const uint2         stash_constants,
+                                const unsigned      stash_count,
+                                unsigned           *d_values) {
     unsigned *d_retrieval_probes = NULL;
 #ifdef TRACK_ITERATIONS
     CUDA_SAFE_CALL(cudaMalloc((void**)&d_retrieval_probes, 
                               sizeof(unsigned) * n_queries));
 #endif
 
-    if (num_hash_functions_ == 2) {
+    if (num_hash_functions == 2) {
         hash_retrieve_compacting<<<ComputeGridDim(n_queries), kBlockSize>>>
             (n_queries,
              d_keys,
-             table_size_,
-             d_contents_,
-             constants_2_,
-             stash_constants_,
-             stash_count_,
+             table_size,
+             d_contents,
+             constants_2,
+             stash_constants,
+             stash_count,
              d_values,
              d_retrieval_probes);
-    } else if (num_hash_functions_ == 3) {
+    } else if (num_hash_functions == 3) {
         hash_retrieve_compacting<<<ComputeGridDim(n_queries), kBlockSize>>>
             (n_queries,
              d_keys,
-             table_size_,
-             d_contents_,
-             constants_3_,
-             stash_constants_,
-             stash_count_,
+             table_size,
+             d_contents,
+             constants_3,
+             stash_constants,
+             stash_count,
              d_values,
              d_retrieval_probes);
-    } else if (num_hash_functions_ == 4) {
+    } else if (num_hash_functions == 4) {
         hash_retrieve_compacting<<<ComputeGridDim(n_queries), kBlockSize>>>
             (n_queries,
              d_keys,
-             table_size_,
-             d_contents_,
-             constants_4_,
-             stash_constants_,
-             stash_count_,
+             table_size,
+             d_contents,
+             constants_4,
+             stash_constants,
+             stash_count,
              d_values,
              d_retrieval_probes);
     } else {
         hash_retrieve_compacting<<<ComputeGridDim(n_queries), kBlockSize>>>
             (n_queries,
              d_keys,
-             table_size_,
-             d_contents_,
-             constants_5_,
-             stash_constants_,
-             stash_count_,
+             table_size,
+             d_contents,
+             constants_5,
+             stash_constants,
+             stash_count,
              d_values,
              d_retrieval_probes);
     }
@@ -753,15 +634,23 @@ void CompactingHashTable::Retrieve(const unsigned  n_queries,
 #ifdef TRACK_ITERATIONS
     OutputRetrievalStatistics(n_queries,
                               d_retrieval_probes,
-                              num_hash_functions_);
+                              num_hash_functions);
     CUDA_SAFE_CALL(cudaFree(d_retrieval_probes));
 #endif
 }
 
+void ClearTable(const unsigned  slots_in_table,
+                const unsigned  fill_value,
+                      unsigned *d_contents) {
+    clear_table<<<ComputeGridDim(slots_in_table), kBlockSize>>>
+        (slots_in_table, fill_value, d_contents);
+    CUDA_CHECK_ERROR("Error occurred during hash table clear.\n");
+}
+
+};  // namespace CUDAWrapper
+
 };  // namespace CuckooHashing
 };  // namespace CudaHT
-
-#endif
 
 // Leave this at the end of the file
 // Local Variables:

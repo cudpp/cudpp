@@ -116,6 +116,62 @@ private:
     unsigned *d_scratch_unique_ids_;
 };
 
+
+namespace CUDAWrapper {
+//! Fills an array with a particular value.
+void ClearTable(const unsigned  slots_in_table,
+                const unsigned  fill_value,
+                      unsigned *d_contents);
+
+//! Calls the compacting cuckoo hash construction kernel.
+void CallHashBuildCompacting(const int           n,
+                             const unsigned      num_hash_functions,
+                             const unsigned     *keys,
+                             const unsigned      table_size,
+                             const Functions<2>  constants_2,
+                             const Functions<3>  constants_3,
+                             const Functions<4>  constants_4,
+                             const Functions<5>  constants_5,
+                             const uint2         stash_constants,
+                             const unsigned      max_iteration_attempts,
+                             unsigned           *table,
+                             unsigned           *stash_count,
+                             unsigned           *failures);
+
+//! Removes any duplicate keys from the table.
+void CallHashRemoveDuplicates(const unsigned      num_hash_functions,
+                              const unsigned      table_size,
+                              const unsigned      total_table_size,
+                              const Functions<2>  constants_2,
+                              const Functions<3>  constants_3,
+                              const Functions<4>  constants_4,
+                              const Functions<5>  constants_5,
+                              const uint2         stash_constants,
+                              unsigned           *keys,
+                              unsigned           *is_unique);
+
+//! Creates a compacted list of the unique keys and sets up the keys with their unique IDs.
+void CallHashCompactDown(const unsigned  table_size,
+                         Entry          *table_entry,
+                         unsigned       *unique_keys,
+                         const unsigned *table,
+                         const unsigned *indices);
+
+//! Calls the retrieval kernel.
+void CallHashRetrieveCompacting(const unsigned      n_queries,
+                                const unsigned      num_hash_functions,
+                                const unsigned     *keys_in,
+                                const unsigned      table_size,
+                                const Entry        *table,
+                                const Functions<2>  constants_2,
+                                const Functions<3>  constants_3,
+                                const Functions<4>  constants_4,
+                                const Functions<5>  constants_5,
+                                const uint2         stash_constants,
+                                const unsigned      stash_count,
+                                unsigned           *values_out);
+};  // namespace CUDAWrapper
+
 };  // namespace CuckooHashing
 };  // namespace CudaHT
 

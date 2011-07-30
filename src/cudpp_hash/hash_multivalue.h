@@ -12,6 +12,7 @@
  * @file hash_multivalue.h
  *
  * @brief Header for hash tables that store multiple values per key.
+ * @todo Figure out why there are still issues when running under Windows.
  */
 
 #ifndef CUDAHT__CUCKOO__SRC__LIBRARY__HASH_MULTIVALUE__H
@@ -123,6 +124,51 @@ private:
     unsigned *d_scratch_is_unique_;
     unsigned *d_scratch_offsets_;
 };
+
+
+/*! @name Internal
+ *  @{
+ */
+namespace CUDAWrapper {
+
+//! Calls the kernel that checks if neighboring keys are different.
+void CallCheckIfUnique(const unsigned *d_sorted_keys,
+                       const size_t    n,
+                             unsigned *d_is_unique);
+
+//! Calls the kernel that compacts down the unique keys.
+void CallCompactKeys(const unsigned *d_keys,
+                     const unsigned *d_is_unique,
+                     const unsigned *d_locations,
+                     const size_t    kSize,
+                           uint2    *d_index_counts,
+                           unsigned *d_compacted);
+
+//! Calls the kernel that counts how many values each key has.
+void CallCountValues(uint2    *d_index_counts,
+                     unsigned  kSize,
+                     unsigned  num_unique);
+
+//! Calls the kernel that crease an array containing 0 to num_unique_keys - 1.
+void CallPrepareIndices(const unsigned  num_unique_keys,
+                              unsigned *d_indices);
+
+//! Calls the kernel that performs the retrieval from the table.
+void CallHashRetrieveMultiSorted(const unsigned      n_queries,
+                                 const unsigned      num_hash_functions,
+                                 const unsigned     *d_query_keys, 
+                                 const unsigned      table_size, 
+                                 const Entry        *d_table, 
+                                 const uint2        *d_index_counts, 
+                                 const Functions<2>  constants_2,
+                                 const Functions<3>  constants_3,
+                                 const Functions<4>  constants_4,
+                                 const Functions<5>  constants_5,
+                                 const uint2         stash_constants,
+                                 const unsigned      stash_count,
+                                       uint2        *d_location_count);
+
+};  // namespace CUDAWrapper
 
 };  // namespace CuckooHashing
 };  // namespace CudaHT

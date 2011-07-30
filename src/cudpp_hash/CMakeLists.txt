@@ -12,10 +12,15 @@ include_directories(
 
 set(CCFILES
   cudpp_hash.cpp
+  debugging.cpp
+  hash_compacting.cpp
+  hash_multivalue.cpp
+  hash_table.cpp
   mt19937ar.cpp
   )
 
 set (HFILES
+  debugging.h
   definitions.h
   hash_compacting.h
   hash_functions.h
@@ -25,7 +30,6 @@ set (HFILES
   )
 
 set (CUHFILES
-  debugging.cuh
   hash_table.cuh
   )
 

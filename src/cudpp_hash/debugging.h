@@ -10,15 +10,18 @@
 
 /**
  * @file
- * debugging.cuh
+ * debugging.h
  *
  * @brief Debugging/statistics/performance utilities header for hash tables.
  */
 
-#ifndef CUDAHT__CUCKOO__SRC__LIBRARY___DEBUGGING__CUH
-#define CUDAHT__CUCKOO__SRC__LIBRARY___DEBUGGING__CUH
+#ifndef CUDAHT__CUCKOO__SRC__LIBRARY__DEBUGGING__H
+#define CUDAHT__CUCKOO__SRC__LIBRARY__DEBUGGING__H
 
-#include "hash_table.cuh"
+#include "definitions.h"
+#include <cuda_runtime_api.h>
+#include <vector_types.h>
+
 #include <algorithm>
 
 namespace CudaHT {
@@ -54,6 +57,13 @@ void OutputBuildStatistics(const unsigned  n,
 
 //! Prints out the contents of the stash.
 void PrintStashContents(const Entry *d_stash);
+
+//! Checks if a key is assigned the same slot by different hash functions.
+bool CheckAssignedSameSlot(const unsigned  N,
+                           const unsigned  num_keys,
+                           const unsigned *d_keys,
+                           const unsigned  table_size,
+                                 uint2    *constants);
 
 /// @}
 

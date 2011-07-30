@@ -252,6 +252,7 @@ cudppHashTable(CUDPPHandle cudppHandle, CUDPPHandle *plan,
     {
     case CUDPP_BASIC_HASH_TABLE:
     {
+        printf("Size outside: %lu\n", sizeof(CudaHT::CuckooHashing::HashTable));
         CudaHT::CuckooHashing::HashTable * basic_table = 
             new CudaHT::CuckooHashing::HashTable();
         basic_table->setTheCudpp(cudppHandle);
