@@ -41,7 +41,7 @@ void crpcr(T *d_a, T *d_b, T *d_c, T *d_d, T *d_x, int systemSize, int numSystem
     dim3  grid(numSystems, 1, 1);
     dim3  threads(num_threads_block, 1, 1);
 
-    crpcrKernel<<< grid, threads,(systemSize+1)*5*sizeof(T)+restSystemSize*(5+0)*sizeof(float)>>>(d_a, d_b, d_c, d_d, d_x);
+    crpcrKernel<<< grid, threads,(systemSize+1)*5*sizeof(T)+restSystemSize*(5+0)*sizeof(T)>>>(d_a, d_b, d_c, d_d, d_x);
 
     CUDA_CHECK_ERROR("crpcr");
 }
