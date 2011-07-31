@@ -67,7 +67,7 @@ int testTridiagonalDataType(int argc, const char** argv, CUDPPConfiguration &con
         oneTest = true;
     }
 
-    int systemSizes[] = { 5, 32, 39, 128, 177, 255, 256, 500, 512, 1024 };
+    int systemSizes[] = { 4, 8, 16, 32, 64, 128, 256, 512 };
     int numTests = sizeof(systemSizes) / sizeof(int);
 
     if (oneTest)
