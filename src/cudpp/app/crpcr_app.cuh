@@ -31,9 +31,23 @@
  * @param[in] numSystems The number of systems to be solved
  */
 
-template <class T>
-void crpcr(T *d_a, T *d_b, T *d_c, T *d_d, T *d_x, int systemSize, int numSystems)
+unsigned int roundUpToNextPowerOfTwo(unsigned int x)
 {
+    x--;
+    x |= x >> 1;  // handle  2 bit numbers
+    x |= x >> 2;  // handle  4 bit numbers
+    x |= x >> 4;  // handle  8 bit numbers
+    x |= x >> 8;  // handle 16 bit numbers
+    x |= x >> 16; // handle 32 bit numbers
+    x++; 
+    return x;
+}
+
+template <class T>
+void crpcr(T *d_a, T *d_b, T *d_c, T *d_d, T *d_x, int systemSizeOriginal, int numSystems)
+{
+    int systemSize = roundUpToNextPowerOfTwo((unsigned int)systemSizeOriginal);
+    
     const unsigned int num_threads_block = systemSize/2;
     int restSystemSize = systemSize/2;
   
@@ -41,7 +55,7 @@ void crpcr(T *d_a, T *d_b, T *d_c, T *d_d, T *d_x, int systemSize, int numSystem
     dim3  grid(numSystems, 1, 1);
     dim3  threads(num_threads_block, 1, 1);
 
-    crpcrKernel<<< grid, threads,(systemSize+1)*5*sizeof(T)+restSystemSize*(5+0)*sizeof(T)>>>(d_a, d_b, d_c, d_d, d_x);
+    crpcrKernel<<< grid, threads,(systemSize+1)*5*sizeof(T)+restSystemSize*(5+0)*sizeof(T)>>>(d_a, d_b, d_c, d_d, d_x, systemSizeOriginal);
 
     CUDA_CHECK_ERROR("crpcr");
 }

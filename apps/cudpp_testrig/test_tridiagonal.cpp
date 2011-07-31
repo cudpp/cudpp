@@ -67,7 +67,8 @@ int testTridiagonalDataType(int argc, const char** argv, CUDPPConfiguration &con
         oneTest = true;
     }
 
-    int systemSizes[] = { 4, 8, 16, 32, 64, 128, 256, 512 };
+    int systemSizes[] = { 5, 32, 39, 128, 177, 255, 256, 500 };
+
     int numTests = sizeof(systemSizes) / sizeof(int);
 
     if (oneTest)
@@ -167,7 +168,7 @@ int testTridiagonalDataType(int argc, const char** argv, CUDPPConfiguration &con
                 printf("test FAILED\n");
             printf("\n");
         }
-                
+
         free(a);
         free(b);
         free(c);

@@ -39,7 +39,7 @@
  */
 
 template <class T>
-__global__ void crpcrKernel(T *d_a, T *d_b, T *d_c, T *d_d, T *d_x)
+__global__ void crpcrKernel(T *d_a, T *d_b, T *d_c, T *d_d, T *d_x, int systemSizeOriginal)
 {
     int thid = threadIdx.x;
     int blid = blockIdx.x;
@@ -59,18 +59,25 @@ __global__ void crpcrKernel(T *d_a, T *d_b, T *d_c, T *d_d, T *d_x)
     T* d = (T*)&c[systemSize+1];
     T* x = (T*)&d[systemSize+1];
 
-    a[thid] = d_a[thid + blid * systemSize];
-    a[thid + blockDim.x] = d_a[thid + blockDim.x + blid * systemSize];
-
-    b[thid] = d_b[thid + blid * systemSize];
-    b[thid + blockDim.x] = d_b[thid + blockDim.x + blid * systemSize];
-
-    c[thid] = d_c[thid + blid * systemSize];
-    c[thid + blockDim.x] = d_c[thid + blockDim.x + blid * systemSize];
-
-    d[thid] = d_d[thid + blid * systemSize];
-    d[thid + blockDim.x] = d_d[thid + blockDim.x + blid * systemSize];
-
+    a[thid] = d_a[thid + blid * systemSizeOriginal];
+    b[thid] = d_b[thid + blid * systemSizeOriginal];
+    c[thid] = d_c[thid + blid * systemSizeOriginal];
+    d[thid] = d_d[thid + blid * systemSizeOriginal];
+    
+    if(thid < (systemSizeOriginal - systemSize/2))
+    {
+        d[thid + blockDim.x] = d_d[thid + blockDim.x + blid * systemSizeOriginal];
+        b[thid + blockDim.x] = d_b[thid + blockDim.x + blid * systemSizeOriginal];
+        c[thid + blockDim.x] = d_c[thid + blockDim.x + blid * systemSizeOriginal];
+        a[thid + blockDim.x] = d_a[thid + blockDim.x + blid * systemSizeOriginal];
+    }
+    else
+    {
+        d[thid + blockDim.x] = 0;
+        b[thid + blockDim.x] = 1;
+        c[thid + blockDim.x] = 0;
+        a[thid + blockDim.x] = 1;    
+    }
     __syncthreads();
 
     for (int j = 0; j <(iteration-restIteration); j++)
@@ -192,8 +199,10 @@ __global__ void crpcrKernel(T *d_a, T *d_b, T *d_c, T *d_d, T *d_x)
 
     __syncthreads();    
 
-    d_x[thid + blid * systemSize] = x[thid];
-    d_x[thid + blockDim.x + blid * systemSize] = x[thid + blockDim.x];
+    d_x[thid + blid * systemSizeOriginal] = x[thid];
+    
+    if(thid < (systemSizeOriginal - systemSize/2))
+        d_x[thid + blockDim.x + blid * systemSizeOriginal] = x[thid + blockDim.x];
 }
 
 /** @} */ // end Tridiagonal functions

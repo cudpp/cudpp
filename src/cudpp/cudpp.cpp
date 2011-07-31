@@ -498,7 +498,7 @@ CUDPPResult cudppRandSeed(const CUDPPHandle planHandle,
  * hybrid variants.
  *
  * - Both float and double data types are supported. 
- * - Only power-of-two system sizes are supported.
+ * - Both power-of-two and non-power-of-two system sizes are supported.
  * - The maximum system size could be limited by the maximum number of threads
  * of a CUDA block, the number of registers per multiprocessor, and the 
  * amount of shared memory available. For example, on the GTX 280 GPU, the 
