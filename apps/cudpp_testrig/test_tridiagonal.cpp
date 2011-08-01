@@ -28,6 +28,7 @@
 #include "commandline.h"
 
 #include "cudpp_testrig_options.h"
+#include "cudpp_testrig_utils.h"
 #include "tridiagonal_gold.h"
 #include "stopwatch.h"
 
@@ -67,7 +68,7 @@ int testTridiagonalDataType(int argc, const char** argv, CUDPPConfiguration &con
         oneTest = true;
     }
 
-    int systemSizes[] = { 5, 32, 39, 128, 177, 255, 256, 500 };
+    int systemSizes[] = { 5, 32, 39, 128, 177, 255, 256, 500, 512 };
 
     int numTests = sizeof(systemSizes) / sizeof(int);
 
@@ -185,13 +186,26 @@ int testTridiagonal(int argc, const char** argv, const CUDPPConfiguration *confi
 {
     int retval = 0;
 
+    testrigOptions testOptions;
+    setOptions(argc, argv, testOptions);
+
     CUDPPConfiguration config;
-    config = *configPtr;
+    config.algorithm = CUDPP_TRIDIAGONAL;
+    config.options = 0;
+
+    if (configPtr != NULL)
+    {
+        config = *configPtr;
+    }
+    else
+    {    
+        config.datatype = getDatatypeFromArgv(argc, argv);
+    }
     
-    if ((*configPtr).datatype == CUDPP_FLOAT)
+    
+    if (config.datatype == CUDPP_FLOAT)
         retval = testTridiagonalDataType<float>(argc, argv, config);
-    
-    if ((*configPtr).datatype == CUDPP_DOUBLE)
+    else if (config.datatype == CUDPP_DOUBLE)
         retval = testTridiagonalDataType<double>(argc, argv, config);  
     
     return retval;

@@ -42,6 +42,8 @@ void setOptions(int argc, const char **argv, testrigOptions &testOptions)
         testOptions.algorithm = "spmv";
     else if (checkCommandLineFlag(argc, argv, "rand"))
         testOptions.algorithm = "rand";
+    else if (checkCommandLineFlag(argc, argv, "tridiagonal"))
+        testOptions.algorithm = "tridiagonal";
             
     testOptions.op = "sum";
     commandLineArg(testOptions.op, argc, argv, "op");

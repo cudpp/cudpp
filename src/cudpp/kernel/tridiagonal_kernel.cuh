@@ -10,7 +10,7 @@
 
 /**
  * @file
- * crpcr_kernel.cu
+ * tridiagonal_kernel.cu
  *
  * @brief CUDPP kernel-level CR-PCR tridiagonal solver
  */
@@ -23,7 +23,7 @@
  */
 
 /**
- * @brief Hybrid CR-PCR solver (CRPCR)
+ * @brief Hybrid CR-PCR Tridiagonal linear system solver (CRPCR)
  *
  * This kernel solves a tridiagonal linear system using a hybrid CR-PCR algorithm.
  * The solver first reduces the system size using
@@ -90,15 +90,15 @@ __global__ void crpcrKernel(T *d_a, T *d_b, T *d_c, T *d_d, T *d_x, int systemSi
             if(i == systemSize - 1)
             {
                 T tmp = a[i] / b[i-delta];
-                 b[i] = b[i] - c[i-delta] * tmp;
-                 d[i] = d[i] - d[i-delta] * tmp;
-                 a[i] = -a[i-delta] * tmp;
-                 c[i] = 0;
+                b[i] = b[i] - c[i-delta] * tmp;
+                d[i] = d[i] - d[i-delta] * tmp;
+                a[i] = -a[i-delta] * tmp;
+                c[i] = 0;
             }
             else
             {
-                 T tmp1 = a[i] / b[i-delta];
-                 T tmp2 = c[i] / b[i+delta];
+                T tmp1 = a[i] / b[i-delta];
+                T tmp2 = c[i] / b[i+delta];
                 b[i] = b[i] - c[i-delta] * tmp1 - a[i+delta] * tmp2;
                 d[i] = d[i] - d[i-delta] * tmp1 - d[i+delta] * tmp2;
                 a[i] = -a[i-delta] * tmp1;

@@ -280,7 +280,7 @@ int main(int argc, const char** argv)
     bool runSort = runAll || checkCommandLineFlag(argc, argv, "sort");
     bool runRand = runAll || checkCommandLineFlag(argc, argv, "rand");
     bool runSpmv = checkCommandLineFlag(argc, argv, "spmv");
-    bool runTridiagonal = checkCommandLineFlag(argc, argv, "tridiagonal");
+    bool runTridiagonal = runAll ||  checkCommandLineFlag(argc, argv, "tridiagonal");
     
     bool hasopts = hasOptions(argc, argv);
 
