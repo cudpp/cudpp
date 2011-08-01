@@ -115,22 +115,25 @@ __global__ void crpcrKernel(T *d_a, T *d_b, T *d_c, T *d_d, T *d_x, int systemSi
     T* dd = (T*)&cc[restSystemSize];
     T* xx = (T*)&dd[restSystemSize];
 
+    T aNew, bNew, cNew, dNew;
+    int delta = 1;
+    int i = thid;
+                    
     if(thid<restSystemSize)
     {
         aa[thid] = a[thid*stride+stride-1];
         bb[thid] = b[thid*stride+stride-1];
         cc[thid] = c[thid*stride+stride-1];
         dd[thid] = d[thid*stride+stride-1];
+    }
 
-        T aNew, bNew, cNew, dNew;
-        int delta = 1;
+    __syncthreads();
 
-        __syncthreads();
-
-        //parallel cyclic reduction
-        for (int j = 0; j <restIteration; j++)
+    //parallel cyclic reduction
+    for (int j = 0; j <restIteration; j++)
+    {
+        if(thid<restSystemSize)
         {
-            int i = thid;
             if(i < delta)
             {
                 T tmp2 = cc[i] / bb[i+delta];
@@ -156,26 +159,34 @@ __global__ void crpcrKernel(T *d_a, T *d_b, T *d_c, T *d_d, T *d_x, int systemSi
                 aNew = -aa[i-delta] * tmp1;
                 cNew = -cc[i+delta] * tmp2;
             }
-            __syncthreads();
-
+        }
+        __syncthreads();
+        
+        if(thid<restSystemSize)
+        {
             bb[i] = bNew;
             dd[i] = dNew;
             aa[i] = aNew;
             cc[i] = cNew;
             delta *=2;
-            __syncthreads();
         }
+        __syncthreads();
+        
+    }
 
-        if (thid < delta)
-        {
-            int addr1 = thid;
-            int addr2 = thid+delta;
-            T tmp3 = bb[addr2]*bb[addr1]-cc[addr1]*aa[addr2];
-            xx[addr1] = (bb[addr2]*dd[addr1]-cc[addr1]*dd[addr2])/tmp3;
-            xx[addr2] = (dd[addr2]*bb[addr1]-dd[addr1]*aa[addr2])/tmp3;
-        }
-    __syncthreads(); 
-    x[thid*stride+stride-1]=xx[thid];
+    if (thid < delta)
+    {
+        int addr1 = thid;
+        int addr2 = thid+delta;
+        T tmp3 = bb[addr2]*bb[addr1]-cc[addr1]*aa[addr2];
+        xx[addr1] = (bb[addr2]*dd[addr1]-cc[addr1]*dd[addr2])/tmp3;
+        xx[addr2] = (dd[addr2]*bb[addr1]-dd[addr1]*aa[addr2])/tmp3;
+    }
+    __syncthreads();
+    
+    if(thid<restSystemSize)
+    {
+        x[thid*stride+stride-1]=xx[thid];
     }
   
     //backward substitution
