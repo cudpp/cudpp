@@ -31,6 +31,7 @@
 #include "cudpp.h"
 #include "cudpp_util.h"
 #include "cudpp_plan.h"
+#include "cudpp_manager.h"
 #include "kernel/segmented_scan_kernel.cuh"
 #include "kernel/vector_kernel.cuh"
 
@@ -87,7 +88,8 @@ void segmentedScanArrayRecursive(T                  *d_out,
                                  unsigned int       **d_blockFlags,
                                  unsigned int       **d_blockIndices,
                                  int                numElements,
-                                 int                level)
+                                 int                level,
+                                 bool               sm12OrBetterHw)
 {
     unsigned int numBlocks = 
         max(1, (int)ceil((double)numElements / 
@@ -117,16 +119,6 @@ void segmentedScanArrayRecursive(T                  *d_out,
 
     bool fullBlock = (numElements == 
         (numBlocks * SEGSCAN_ELTS_PER_THREAD * SCAN_CTA_SIZE));    
-
-    bool sm12OrBetterHw;
-    cudaDeviceProp deviceProp;
-    int dev;
-    CUDA_SAFE_CALL(cudaGetDevice(&dev));
-    CUDA_SAFE_CALL(cudaGetDeviceProperties(&deviceProp, dev));
-    if (deviceProp.minor >= 2)
-        sm12OrBetterHw = true;
-    else
-        sm12OrBetterHw = false;
 
     unsigned int traitsCode = 0;
     if (numBlocks > 1)  traitsCode |= 1;
@@ -206,7 +198,7 @@ void segmentedScanArrayRecursive(T                  *d_out,
             ((T*)d_blockSums[level], (const T*)d_blockSums[level], 
             d_blockFlags[level], (T **)d_blockSums,
             d_blockFlags, d_blockIndices,
-            numBlocks, level + 1);
+            numBlocks, level + 1, sm12OrBetterHw);
             
         if (isBackward)
         {
@@ -385,27 +377,33 @@ void cudppSegmentedScanDispatchOperator(void                         *d_out,
                                         const CUDPPSegmentedScanPlan *plan
                                         )
 {
+    cudaDeviceProp deviceProp;
+    plan->m_planManager->getDeviceProps(deviceProp);
+    bool sm12OrBetterHw = false;
+    if ((deviceProp.major * 10 + deviceProp.minor) >= 12)
+        sm12OrBetterHw = true;
+    
     switch(plan->m_config.op)
     {
     case CUDPP_MAX:
         segmentedScanArrayRecursive<T, OperatorMax<T>, isBackward, isExclusive, isBackward>
             ((T *)d_out, (const T *)d_in, d_iflags, (T **)plan->m_blockSums, plan->m_blockFlags,
-            plan->m_blockIndices, numElements, 0);
+            plan->m_blockIndices, numElements, 0, sm12OrBetterHw);
         break;
     case CUDPP_ADD:
         segmentedScanArrayRecursive<T, OperatorAdd<T>, isBackward, isExclusive, isBackward>
             ((T *)d_out, (const T *)d_in, d_iflags, (T **)plan->m_blockSums, plan->m_blockFlags,
-            plan->m_blockIndices, numElements, 0);
+            plan->m_blockIndices, numElements, 0, sm12OrBetterHw);
         break;
     case CUDPP_MULTIPLY:
         segmentedScanArrayRecursive<T, OperatorMultiply<T>, isBackward, isExclusive, isBackward>
             ((T *)d_out, (const T *)d_in, d_iflags, (T **)plan->m_blockSums, plan->m_blockFlags,
-            plan->m_blockIndices, numElements, 0);
+            plan->m_blockIndices, numElements, 0, sm12OrBetterHw);
         break;
     case CUDPP_MIN:
         segmentedScanArrayRecursive<T, OperatorMin<T>, isBackward, isExclusive, isBackward>
             ((T *)d_out, (const T *)d_in, d_iflags, (T **)plan->m_blockSums, plan->m_blockFlags,
-            plan->m_blockIndices, numElements, 0);
+            plan->m_blockIndices, numElements, 0, sm12OrBetterHw);
         break;
     default:
         break;

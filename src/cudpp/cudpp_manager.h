@@ -10,6 +10,8 @@
 #ifndef __CUDPP_MANAGER_H__
 #define __CUDPP_MANAGER_H__
 
+#include <cuda_runtime_api.h>
+
 /** @brief Internal manager class for CUDPPP resources
   * 
   */
@@ -28,12 +30,17 @@ public:
         return reinterpret_cast<CUDPPManager*>(cudppHandle);
     }
 
+    void getDeviceProps(cudaDeviceProp & props) { props = m_deviceProps; }
+
     //! @internal Get an opaque handle for this manager
     //! @returns CUDPP handle for this manager
     CUDPPHandle getHandle()
     {
         return reinterpret_cast<CUDPPHandle>(this);
     }
+
+private:
+    cudaDeviceProp m_deviceProps;
 };
 
 #endif // __CUDPP_PLAN_MANAGER_H__

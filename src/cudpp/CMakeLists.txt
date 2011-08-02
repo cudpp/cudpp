@@ -16,7 +16,6 @@ set(CCFILES
   cudpp.cpp
   cudpp_plan.cpp
   cudpp_manager.cpp
-  cudpp_maximal_launch.cpp
   )
 
 set (HFILES
@@ -25,7 +24,6 @@ set (HFILES
   cuda_util.h
   cudpp_util.h
   cudpp_globals.h
-  cudpp_maximal_launch.h
   cudpp_compact.h
   cudpp_radixsort.h
   cudpp_rand.h

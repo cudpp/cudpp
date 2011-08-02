@@ -25,6 +25,7 @@
 #include "cudpp.h"
 #include "cudpp_util.h"
 #include "cudpp_plan.h"
+#include "cudpp_manager.h"
 #include "cuda_util.h"
 
 #include <cstdlib>
@@ -32,6 +33,14 @@
 #include <assert.h>
 
 #include "kernel/tridiagonal_kernel.cuh"
+
+template <typename T>
+inline unsigned int crpcrSharedSize(unsigned int systemSizeOriginal)
+{
+    const unsigned int systemSize = ceilPow2(systemSizeOriginal);
+    const unsigned int restSystemSize = systemSize/2;
+    return (systemSize + 1 + restSystemSize) * 5 * sizeof(T);
+}
 
 /**
  * @brief Hybrid CR-PCR solver (CRPCR)
@@ -46,7 +55,7 @@
  * @param[in] systemSize The size of the linear system
  * @param[in] numSystems The number of systems to be solved
  */
-template <class T>
+template <typename T>
 void crpcr(T *d_a, 
            T *d_b, 
            T *d_c, 
@@ -63,8 +72,7 @@ void crpcr(T *d_a,
     // setup execution parameters
     dim3  grid(numSystems, 1, 1);
     dim3  threads(num_threads_block, 1, 1);
-    const unsigned int smemSize = 
-        (systemSize + 1 + restSystemSize) * 5 * sizeof(T);
+    const unsigned int smemSize = crpcrSharedSize<T>(systemSizeOriginal);
 
     crpcrKernel<<< grid, threads, smemSize>>>(d_a, 
                                               d_b, 
@@ -103,10 +111,19 @@ CUDPPResult cudppTridiagonalDispatch(void *d_a,
                                      int numSystems, 
                                      const CUDPPTridiagonalPlan * plan)
 {
-  
+    cudaDeviceProp prop;
+    plan->m_planManager->getDeviceProps(prop);
+
+    if (ceilPow2(systemSize) > (unsigned)prop.maxThreadsPerBlock)
+        return CUDPP_ERROR_ILLEGAL_CONFIGURATION;
+
     //figure out which algorithm to run
     if (plan->m_config.datatype == CUDPP_FLOAT)
     {
+        // check necessary memory
+        if (crpcrSharedSize<float>(systemSize) > prop.sharedMemPerBlock)
+            return CUDPP_ERROR_ILLEGAL_CONFIGURATION;
+
         crpcr<float>((float *)d_a, 
                      (float *)d_b, 
                      (float *)d_c, 
@@ -118,6 +135,10 @@ CUDPPResult cudppTridiagonalDispatch(void *d_a,
     }
     else if (plan->m_config.datatype == CUDPP_DOUBLE)
     {
+        // check necessary memory
+        if (crpcrSharedSize<double>(systemSize) > prop.sharedMemPerBlock)
+            return CUDPP_ERROR_ILLEGAL_CONFIGURATION;
+
         crpcr<double>((double *)d_a, 
                       (double *)d_b, 
                       (double *)d_c, 

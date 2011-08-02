@@ -116,8 +116,21 @@ int testTridiagonalDataType(int argc, const char** argv, CUDPPConfiguration &con
         CUDA_SAFE_CALL( cudaMemcpy( d_x, x1, memSize, cudaMemcpyHostToDevice));
 
         // warm up the GPU to avoid the overhead time for the next timing
-        cudppTridiagonal(tridiagonalPlan, 
-                         d_a, d_b, d_c, d_d, d_x, systemSize, numSystems);
+        CUDPPResult err = cudppTridiagonal(tridiagonalPlan, 
+                                           d_a, 
+                                           d_b, 
+                                           d_c, 
+                                           d_d, 
+                                           d_x, 
+                                           systemSize, 
+                                           numSystems);
+
+        if (err!= CUDPP_SUCCESS) 
+        {
+            printf("Error running cudppTridiagonal\n");
+            retval++;
+            continue;
+        }
         
         if (!quiet)
             printf("Runing a %s CR-PCR tridiagonal solver solving %d "
@@ -129,8 +142,21 @@ int testTridiagonalDataType(int argc, const char** argv, CUDPPConfiguration &con
         timer.reset();
         timer.start();
         
-        cudppTridiagonal(tridiagonalPlan, 
-                         d_a, d_b, d_c, d_d, d_x, systemSize, numSystems);
+        err = cudppTridiagonal(tridiagonalPlan, 
+                               d_a, 
+                               d_b, 
+                               d_c, 
+                               d_d, 
+                               d_x, 
+                               systemSize, 
+                               numSystems);
+
+        if (err != CUDPP_SUCCESS) 
+        {
+            printf("Error running cudppTridiagonal\n");
+            retval++;
+            continue;
+        }
         cudaThreadSynchronize();
 
         timer.stop();            

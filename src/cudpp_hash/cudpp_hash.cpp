@@ -170,6 +170,7 @@
 #include <cuda_runtime.h>
 #include "cudpp_hash.h"
 #include "cudpp_plan.h"
+#include "cudpp_manager.h"
 
 #include "hash_table.h"         // HashTable class
 #include "hash_compacting.h"    // CompactingHashTable class
@@ -226,21 +227,11 @@ CUDPPResult
 cudppHashTable(CUDPPHandle cudppHandle, CUDPPHandle *plan,
                const CUDPPHashTableConfig *config)
 {
-    /* first check: is this device >= 2.0? if not, say so and exit. */
-    int dev;
-    if (cudaGetDevice(&dev) != cudaSuccess)
-    {
-        // Can't get current device (cudppHashTable)
-        return CUDPP_ERROR_UNKNOWN;
-    }
-
+    // first check: is this device >= 2.0? if not, return error
+    CUDPPManager *mgr = CUDPPManager::getManagerFromHandle(cudppHandle);
     cudaDeviceProp prop;
-    if (cudaGetDeviceProperties(&prop, dev) != cudaSuccess)
-    {
-        // Can't get current device properties (cudppHashTable)
-        return CUDPP_ERROR_UNKNOWN;
-    }
-
+    mgr->getDeviceProps(prop);
+    
     if (prop.major < 2)
     {
         // Hash tables are only supported on devices with compute
@@ -252,7 +243,7 @@ cudppHashTable(CUDPPHandle cudppHandle, CUDPPHandle *plan,
     {
     case CUDPP_BASIC_HASH_TABLE:
     {
-        printf("Size outside: %lu\n", sizeof(CudaHT::CuckooHashing::HashTable));
+        //printf("Size outside: %lu\n", sizeof(CudaHT::CuckooHashing::HashTable));
         CudaHT::CuckooHashing::HashTable * basic_table = 
             new CudaHT::CuckooHashing::HashTable();
         basic_table->setTheCudpp(cudppHandle);

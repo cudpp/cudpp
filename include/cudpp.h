@@ -78,6 +78,12 @@
  * \section release-notes Release Notes
  *
  * For specific release details see the \ref changelog "Change Log".
+ * 
+ * There is a known issue that the compile time for CUDPP is very long and the
+ * compiled library file size is very large.  On some systems with < 4GB of 
+ * available memory (or virtual memory), the CUDA compiler can run out of 
+ * memory and compilation can fail.  We will be working on these issues for the
+ * next release.
  *
  * \subsection size-limits Algorithm Input Size Limitations
  * 
@@ -97,20 +103,21 @@
  * - CUDPP_TRIDIAGONAL        65535 systems, 1024 equations per system (Compute capability 2.x),
  *                                           512 equations per system (Compute capability < 2.0)
  * 
- * \section opSys Operating System Support
+ * \section opSys Operating System Support and Requirements
  * 
- * This release (1.1.1) has been thoroughly tested on the following OSes.
- * - Windows XP (32-bit) (CUDA 2.2, 3.0)
- * - Windows 7 (64-bit) (CUDA 3.0)
- * - Redhat Enterprise Linux 5 (64-bit) (CUDA 3.0)
- * - and Mac OS X 10.6 (Snow Leopard, 64-bit) (CUDA 3.0)
+ * This release (2.0) has been thoroughly tested on the following OSes.
+ * - Windows 7 (64-bit) (CUDA 4.0)
+ * - CentOS Linux (64-bit) (CUDA 4.0)
+ * - Mac OS X 10.6.8 and 10.8 (Snow Leopard/Lion, 64-bit) (CUDA 4.0)
  *
- * We expect CUDPP to build and run correctly on other flavors of Linux 
- * and Windows, but these are not actively tested by the developers at 
+ * We expect CUDPP to build and run correctly on other flavors of Linux and 
+ * Windows, including 32-bit OSes, but only the above are actively tested at 
  * this time.
  *
- * Notes: CUDPP is not compatible with CUDA 2.1.  A compiler bug in 2.1 
- * causes the compiler to crash.  
+ * \subsection Requirements 
+ * 
+ * CUDPP 2.0 requires at least CUDA 3.0, but has not been tested with any
+ * CUDA version < 3.2.  CUDA 4.0 or higher is preferred.
  *
  * \section cuda CUDA
  * CUDPP is implemented in

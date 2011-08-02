@@ -11,6 +11,7 @@
 #include "cudpp_plan.h"
 #include "cudpp_manager.h"
 #include "cudpp_maximal_launch.h"
+#include "cuda_util.h"
 
 typedef void* KernelPointer;
 
@@ -62,6 +63,9 @@ CUDPPResult cudppDestroy(CUDPPHandle theCudpp)
 //! @brief CUDPP Manager constructor
 CUDPPManager::CUDPPManager()
 {
+    int device = -1;
+    CUDA_SAFE_CALL(cudaGetDevice(&device));
+    CUDA_SAFE_CALL(cudaGetDeviceProperties(&m_deviceProps, device));
 }
 
 /** @brief CUDPP Manager destructor 

@@ -802,7 +802,7 @@ void initDeviceParameters(CUDPPRadixSortPlan *plan)
     if (cudaSuccess == cudaGetDevice(&deviceID))
     {
         cudaDeviceProp devprop;
-        cudaGetDeviceProperties(&devprop, deviceID);
+        plan->m_planManager->getDeviceProps(devprop);
 
         int smVersion = devprop.major * 10 + devprop.minor;
 
