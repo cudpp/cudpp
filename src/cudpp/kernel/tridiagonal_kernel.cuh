@@ -25,11 +25,11 @@
 /**
  * @brief Hybrid CR-PCR Tridiagonal linear system solver (CRPCR)
  *
- * This kernel solves a tridiagonal linear system using a hybrid CR-PCR algorithm.
- * The solver first reduces the system size using
- * cyclic reduction, then solves the intermediate system using parallel cyclic 
- * reduction to reduce shared memory bank conflicts and algorithmic steps, and 
- * finally switch back to cyclic reduction to solve all unknowns.
+ * This kernel solves a tridiagonal linear system using a hybrid CR-PCR 
+ * algorithm. The solver first reduces the system size using cyclic reduction, 
+ * then solves the intermediate system using parallel cyclic reduction to 
+ * reduce shared memory bank conflicts and algorithmic steps, and finally 
+ * switches back to  cyclic reduction to solve all unknowns.
  *
  * @param[out] d_x Solution vector
  * @param[in] d_a Lower diagonal
@@ -37,22 +37,22 @@
  * @param[in] d_c Upper diagonal
  * @param[in] d_d Right hand side
  */
-
 template <class T>
-__global__ void crpcrKernel(T *d_a, T *d_b, T *d_c, T *d_d, T *d_x, int systemSizeOriginal)
+__global__ void crpcrKernel(T *d_a, 
+                            T *d_b, 
+                            T *d_c, 
+                            T *d_d, 
+                            T *d_x, 
+                            unsigned int systemSizeOriginal,
+                            unsigned int iterations)
 {
-    int thid = threadIdx.x;
-    int blid = blockIdx.x;
-    int stride = 1;
-    int numThreads = blockDim.x;
+    const unsigned int thid = threadIdx.x;
+    const unsigned int blid = blockIdx.x;
     const unsigned int systemSize = blockDim.x * 2;
-    int iteration = (int)log2(T(systemSize/2));
-    int restSystemSize = systemSize/2;
-    int restIteration = (int)log2(T(restSystemSize/2));
-
-    __syncthreads();
-
+    const unsigned int restSystemSize = blockDim.x;
+    
     extern __shared__ char shared[];
+
     T* a = (T*)shared;
     T* b = (T*)&a[systemSize+1];
     T* c = (T*)&b[systemSize+1];
@@ -79,35 +79,27 @@ __global__ void crpcrKernel(T *d_a, T *d_b, T *d_c, T *d_d, T *d_x, int systemSi
         a[thid + blockDim.x] = 1;    
     }
     __syncthreads();
-
-    for (int j = 0; j <(iteration-restIteration); j++)
+      
+    int i = 2 * thid + 1;
+    if(i == systemSize - 1)
     {
-        stride *= 2;
-        int delta = stride/2;
-        if (thid < numThreads)
-        {
-            int i = stride * thid + stride - 1;
-            if(i == systemSize - 1)
-            {
-                T tmp = a[i] / b[i-delta];
-                b[i] = b[i] - c[i-delta] * tmp;
-                d[i] = d[i] - d[i-delta] * tmp;
-                a[i] = -a[i-delta] * tmp;
-                c[i] = 0;
-            }
-            else
-            {
-                T tmp1 = a[i] / b[i-delta];
-                T tmp2 = c[i] / b[i+delta];
-                b[i] = b[i] - c[i-delta] * tmp1 - a[i+delta] * tmp2;
-                d[i] = d[i] - d[i-delta] * tmp1 - d[i+delta] * tmp2;
-                a[i] = -a[i-delta] * tmp1;
-                c[i] = -c[i+delta] * tmp2;
-            }
-        }
-        numThreads /= 2;
-        __syncthreads();    
+        T tmp = a[i] / b[i-1];
+        b[i] = b[i] - c[i-1] * tmp;
+        d[i] = d[i] - d[i-1] * tmp;
+        a[i] = -a[i-1] * tmp;
+        c[i] = 0;
     }
+    else
+    {
+        T tmp1 = a[i] / b[i-1];
+        T tmp2 = c[i] / b[i+1];
+        b[i] = b[i] - c[i-1] * tmp1 - a[i+1] * tmp2;
+        d[i] = d[i] - d[i-1] * tmp1 - d[i+1] * tmp2;
+        a[i] = -a[i-1] * tmp1;
+        c[i] = -c[i+1] * tmp2;
+    }
+    
+    __syncthreads();    
     
     T* aa = (T*)&x[systemSize+1];
     T* bb = (T*)&aa[restSystemSize];
@@ -115,63 +107,56 @@ __global__ void crpcrKernel(T *d_a, T *d_b, T *d_c, T *d_d, T *d_x, int systemSi
     T* dd = (T*)&cc[restSystemSize];
     T* xx = (T*)&dd[restSystemSize];
 
-    T aNew, bNew, cNew, dNew;
-    int delta = 1;
-    int i = thid;
-                    
-    if(thid<restSystemSize)
-    {
-        aa[thid] = a[thid*stride+stride-1];
-        bb[thid] = b[thid*stride+stride-1];
-        cc[thid] = c[thid*stride+stride-1];
-        dd[thid] = d[thid*stride+stride-1];
-    }
+    
+    aa[thid] = a[thid*2+1];
+    bb[thid] = b[thid*2+1];
+    cc[thid] = c[thid*2+1];
+    dd[thid] = d[thid*2+1];
 
     __syncthreads();
 
+    T aNew, bNew, cNew, dNew;
+    int delta = 1;
+
     //parallel cyclic reduction
-    for (int j = 0; j <restIteration; j++)
+    for (unsigned int j = 0; j < iterations; j++)
     {
-        if(thid<restSystemSize)
+        int i = thid;
+        if(i < delta)
         {
-            if(i < delta)
-            {
-                T tmp2 = cc[i] / bb[i+delta];
-                bNew = bb[i] - aa[i+delta] * tmp2;
-                dNew = dd[i] - dd[i+delta] * tmp2;
-                aNew = 0;
-                cNew = -cc[i+delta] * tmp2;
-            }
-            else if((restSystemSize-i-1) < delta)
-            {
-                T tmp = aa[i] / bb[i-delta];
-                bNew = bb[i] - cc[i-delta] * tmp;
-                dNew = dd[i] - dd[i-delta] * tmp;
-                aNew = -aa[i-delta] * tmp;
-                cNew = 0;
-            }
-            else
-            {
-                T tmp1 = aa[i] / bb[i-delta];
-                T tmp2 = cc[i] / bb[i+delta];
-                bNew = bb[i] - cc[i-delta] * tmp1 - aa[i+delta] * tmp2;
-                dNew = dd[i] - dd[i-delta] * tmp1 - dd[i+delta] * tmp2;
-                aNew = -aa[i-delta] * tmp1;
-                cNew = -cc[i+delta] * tmp2;
-            }
+            T tmp2 = cc[i] / bb[i+delta];
+            bNew = bb[i] - aa[i+delta] * tmp2;
+            dNew = dd[i] - dd[i+delta] * tmp2;
+            aNew = 0;
+            cNew = -cc[i+delta] * tmp2;
+        }
+        else if((restSystemSize-i-1) < delta)
+        {
+            T tmp = aa[i] / bb[i-delta];
+            bNew = bb[i] - cc[i-delta] * tmp;
+            dNew = dd[i] - dd[i-delta] * tmp;
+            aNew = -aa[i-delta] * tmp;
+            cNew = 0;
+        }
+        else
+        {
+            T tmp1 = aa[i] / bb[i-delta];
+            T tmp2 = cc[i] / bb[i+delta];
+            bNew = bb[i] - cc[i-delta] * tmp1 - aa[i+delta] * tmp2;
+            dNew = dd[i] - dd[i-delta] * tmp1 - dd[i+delta] * tmp2;
+            aNew = -aa[i-delta] * tmp1;
+            cNew = -cc[i+delta] * tmp2;
         }
         __syncthreads();
+
+        bb[i] = bNew;
+        dd[i] = dNew;
+        aa[i] = aNew;
+        cc[i] = cNew;
+
+        delta *=2;
         
-        if(thid<restSystemSize)
-        {
-            bb[i] = bNew;
-            dd[i] = dNew;
-            aa[i] = aNew;
-            cc[i] = cNew;
-            delta *=2;
-        }
         __syncthreads();
-        
     }
 
     if (thid < delta)
@@ -182,32 +167,20 @@ __global__ void crpcrKernel(T *d_a, T *d_b, T *d_c, T *d_d, T *d_x, int systemSi
         xx[addr1] = (bb[addr2]*dd[addr1]-cc[addr1]*dd[addr2])/tmp3;
         xx[addr2] = (dd[addr2]*bb[addr1]-dd[addr1]*aa[addr2])/tmp3;
     }
-    __syncthreads();
     
-    if(thid<restSystemSize)
-    {
-        x[thid*stride+stride-1]=xx[thid];
-    }
-  
-    //backward substitution
-    numThreads = restSystemSize;
+    __syncthreads(); 
     
-    for (int j = 0; j <(iteration-restIteration); j++)
-    {
-        int delta = stride/2;
-        __syncthreads();
-        if (thid < numThreads)
-        {
-            int i = stride * thid + stride/2 - 1;
-            if(i == delta - 1)
-            x[i] = (d[i] - c[i]*x[i+delta])/b[i];
-            else
-            x[i] = (d[i] - a[i]*x[i-delta] - c[i]*x[i+delta])/b[i];
-        }
-        stride /= 2;
-        numThreads *= 2;
-    }
+    x[thid*2+1]=xx[thid];
 
+    __syncthreads();
+  
+    //backward substitution    
+    i = 2 * thid;
+    if(i == 0)
+        x[i] = (d[i] - c[i]*x[i+1]) / b[i];
+    else
+        x[i] = (d[i] - a[i]*x[i-1] - c[i]*x[i+1]) / b[i];
+    
     __syncthreads();    
 
     d_x[thid + blid * systemSizeOriginal] = x[thid];

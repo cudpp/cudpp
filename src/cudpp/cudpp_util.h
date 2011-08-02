@@ -86,6 +86,23 @@ floorPow2(unsigned int x)
     return ceilPow2(x) >> 1;
 }
 
+
+/** @brief Compute the base 2 logarithm of a power-of-2 integer\a x.
+  * Taken from: http://graphics.stanford.edu/~seander/bithacks.html#IntegerLog
+  * @param x Input value
+  * @returns The log base 2 of \a x.
+  */
+inline unsigned int 
+logBase2Pow2(unsigned int x) 
+{
+    static const unsigned int b[] = {0xAAAAAAAA, 0xCCCCCCCC, 0xF0F0F0F0, 
+                                     0xFF00FF00, 0xFFFF0000};
+    unsigned int r = (x & b[0]) != 0;
+    for (unsigned int i = 4; i > 0; i--) { r |= ((x & b[i]) != 0) << i; }
+    return r;
+}
+
+
 /** @brief Returns the maximum value for type \a T.
  * @returns Maximum value for type \a T.
  * 

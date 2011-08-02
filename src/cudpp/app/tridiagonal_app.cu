@@ -58,6 +58,7 @@ void crpcr(T *d_a,
     const unsigned int systemSize = ceilPow2(systemSizeOriginal);
     const unsigned int num_threads_block = systemSize/2;
     const unsigned int restSystemSize = systemSize/2;
+    const unsigned int iterations = logBase2Pow2(restSystemSize/2);
   
     // setup execution parameters
     dim3  grid(numSystems, 1, 1);
@@ -70,7 +71,8 @@ void crpcr(T *d_a,
                                               d_c, 
                                               d_d, 
                                               d_x, 
-                                              systemSizeOriginal);
+                                              systemSizeOriginal,
+                                              iterations);
 
     CUDA_CHECK_ERROR("crpcr");
 }
