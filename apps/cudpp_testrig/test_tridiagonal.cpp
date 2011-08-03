@@ -133,7 +133,7 @@ int testTridiagonalDataType(int argc, const char** argv, CUDPPConfiguration &con
         }
         
         if (!quiet)
-            printf("Runing a %s CR-PCR tridiagonal solver solving %d "
+            printf("Running a %s CR-PCR tridiagonal solver solving %d "
                    "systems of %d equations\n", 
                    config.datatype == CUDPP_FLOAT ? "fp32" : "fp64",
                    numSystems, systemSize);
