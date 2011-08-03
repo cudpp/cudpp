@@ -356,6 +356,10 @@ enum CUDPPResult
     CUDPP_ERROR_INVALID_PLAN,          /**< The plan is not configured properly.
                                             For example, passing a plan for scan
                                             to cudppSegmentedScan. */
+    CUDPP_ERROR_INSUFFICIENT_RESOURCES,/**< The function could not complete due to
+                                            insufficient resources (typically CUDA
+                                            device resources such as shared memory)
+                                            for the specified problem size. */
     CUDPP_ERROR_UNKNOWN = 9999         /**< Unknown or untraceable error. */
 };
 

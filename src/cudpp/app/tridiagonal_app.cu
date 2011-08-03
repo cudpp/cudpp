@@ -122,7 +122,7 @@ CUDPPResult cudppTridiagonalDispatch(void *d_a,
     {
         // check necessary memory
         if (crpcrSharedSize<float>(systemSize) > prop.sharedMemPerBlock)
-            return CUDPP_ERROR_ILLEGAL_CONFIGURATION;
+            return CUDPP_ERROR_INSUFFICIENT_RESOURCES;
 
         crpcr<float>((float *)d_a, 
                      (float *)d_b, 
@@ -137,7 +137,7 @@ CUDPPResult cudppTridiagonalDispatch(void *d_a,
     {
         // check necessary memory
         if (crpcrSharedSize<double>(systemSize) > prop.sharedMemPerBlock)
-            return CUDPP_ERROR_ILLEGAL_CONFIGURATION;
+            return CUDPP_ERROR_INSUFFICIENT_RESOURCES;
 
         crpcr<double>((double *)d_a, 
                       (double *)d_b, 

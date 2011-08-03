@@ -125,12 +125,18 @@ int testTridiagonalDataType(int argc, const char** argv, CUDPPConfiguration &con
                                            systemSize, 
                                            numSystems);
 
-        if (err!= CUDPP_SUCCESS) 
-        {
-            printf("Error running cudppTridiagonal\n");
-            retval++;
-            continue;
-        }
+       if (err == CUDPP_ERROR_INSUFFICIENT_RESOURCES)
+       {
+           printf("System size %d (%s) is too large for this GPU -- skipping (PASSED)\n", 
+                  systemSize, config.datatype == CUDPP_FLOAT ? "fp32" : "fp64");
+           continue;
+       }
+       else if (err!= CUDPP_SUCCESS) 
+       {
+           printf("Error running cudppTridiagonal\n");
+           retval++;
+           continue;
+       }
         
         if (!quiet)
             printf("Running a %s CR-PCR tridiagonal solver solving %d "
