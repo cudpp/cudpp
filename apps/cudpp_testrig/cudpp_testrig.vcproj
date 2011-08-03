@@ -1,616 +1,362 @@
-<?xml version="1.0" encoding="Windows-1252"?>
+<?xml version="1.0" encoding = "Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8.00"
+	Version="9.00"
 	Name="cudpp_testrig"
-	ProjectGUID="{5D3BA9F7-A2A2-48CA-A6C9-1641820DBEC3}"
-	RootNamespace="cudpp_testrig"
-	Keyword="Win32Proj"
-	>
+	ProjectGUID="{3B1A130B-99DC-4B33-9184-3AF62645E69D}"
+	Keyword="Win32Proj">
 	<Platforms>
 		<Platform
-			Name="Win32"
-		/>
+			Name="Win32"/>
 	</Platforms>
-	<ToolFiles>
-		<ToolFile
-			RelativePath="..\..\common\Cuda.rules"
-		/>
-	</ToolFiles>
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="../../bin/win32/$(ConfigurationName)"
-			IntermediateDirectory="$(ConfigurationName)"
+			OutputDirectory="Debug"
+			IntermediateDirectory="cudpp_testrig.dir\Debug"
 			ConfigurationType="1"
-			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
-			CharacterSet="2"
-			>
-			<Tool
-				Name="VCPreBuildEventTool"
-			/>
-			<Tool
-				Name="VCCustomBuildTool"
-			/>
-			<Tool
-				Name="CUDA Build Rule"
-				Include="./;../../common/inc;../../cudpp/include"
-				Debug="true"
-				Optimization="0"
-			/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"
-			/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"
-			/>
-			<Tool
-				Name="VCMIDLTool"
-			/>
+			UseOfMFC="0"
+			ATLMinimizesCRunTimeLibraryUsage="FALSE"
+			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="0"
-				AdditionalIncludeDirectories="../../cudpp/include;../../common/inc;$(CUDA_INC_PATH)"
-				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;"
-				MinimalRebuild="true"
+				AdditionalOptions=" /Zm1000"
+				AdditionalIncludeDirectories="C:\Users\ucdavis2\Desktop\cudpp_fresh\include;C:\Users\ucdavis2\Desktop\cudpp_fresh\apps\cudpp_testrig\..\common\include;&quot;C:\Program Files (x86)\NVIDIA GPU Computing Toolkit\CUDA\v3.2\include&quot;;"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="1"
-				UsePrecompiledHeader="0"
+				CompileAs="2"
+				DebugInformationFormat="3"
+				ExceptionHandling="1"
+				InlineFunctionExpansion="0"
+				Optimization="0"
+				RuntimeLibrary="3"
+				RuntimeTypeInfo="TRUE"
 				WarningLevel="3"
-				Detect64BitPortabilityProblems="true"
-				DebugInformationFormat="4"
-			/>
+				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;_CRT_SECURE_NO_WARNINGS;CMAKE_INTDIR=\&quot;Debug\&quot;"
+				AssemblerListingLocation="Debug"
+				ObjectFile="$(IntDir)\"
+				ProgramDataBaseFileName="C:\Users\ucdavis2\Desktop\cudpp_fresh\bin/cudpp_testrig.pdb"
+/>
 			<Tool
-				Name="VCManagedResourceCompilerTool"
-			/>
+				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCResourceCompilerTool"
-			/>
+				AdditionalIncludeDirectories="C:\Users\ucdavis2\Desktop\cudpp_fresh\include;C:\Users\ucdavis2\Desktop\cudpp_fresh\apps\cudpp_testrig\..\common\include;&quot;C:\Program Files (x86)\NVIDIA GPU Computing Toolkit\CUDA\v3.2\include&quot;;"
+				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;_CRT_SECURE_NO_WARNINGS;CMAKE_INTDIR=\&quot;Debug\&quot;"/>
+			<Tool
+				Name="VCMIDLTool"
+				MkTypLibCompatible="FALSE"
+				TargetEnvironment="1"
+				GenerateStublessProxies="TRUE"
+				TypeLibraryName="$(InputName).tlb"
+				OutputDirectory="$(IntDir)"
+				HeaderFileName="$(InputName).h"
+				DLLDataFileName=""
+				InterfaceIdentifierFileName="$(InputName)_i.c"
+				ProxyFileName="$(InputName)_p.c"/>
+			<Tool
+				Name="VCPreBuildEventTool"/>
 			<Tool
 				Name="VCPreLinkEventTool"
-			/>
+CommandLine="&quot;C:\Program Files (x86)\CMake 2.8\bin\cmake.exe&quot; -E make_directory C:/Users/ucdavis2/Desktop/cudpp_fresh/lib&#x0D;&#x0A;if errorlevel 1 goto :VCReportError"/>
+			<Tool
+				Name="VCPostBuildEventTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="cudart.lib cutil32D.lib cudpp32d.lib"
-				OutputFile="$(OutDir)/cudpp_testrig.exe"
+				LinkLibraryDependencies="false"
+				AdditionalOptions=" /STACK:10000000 /machine:X86 /debug"
+				AdditionalDependencies="$(NOINHERIT) kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib  &quot;C:\Program Files (x86)\NVIDIA GPU Computing Toolkit\CUDA\v3.2\lib\Win32\cudart.lib&quot; &quot;C:\Program Files (x86)\NVIDIA GPU Computing Toolkit\CUDA\v3.2\lib\Win32\cuda.lib&quot; ..\..\lib\cudpp32d.lib &quot;C:\Program Files (x86)\NVIDIA GPU Computing Toolkit\CUDA\v3.2\lib\Win32\cudart.lib&quot; &quot;C:\Program Files (x86)\NVIDIA GPU Computing Toolkit\CUDA\v3.2\lib\Win32\cuda.lib&quot; "
+				OutputFile="C:\Users\ucdavis2\Desktop\cudpp_fresh\bin\cudpp_testrig.exe"
+				Version="0.0"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="&quot;$(CUDA_LIB_PATH)&quot;;../../cudpp/lib;../../common/lib"
-				GenerateDebugInformation="true"
-				ProgramDatabaseFile="$(OutDir)/$(ProjectName).pdb"
+				AdditionalLibraryDirectories=""
+				ProgramDatabaseFile="C:\Users\ucdavis2\Desktop\cudpp_fresh\bin/cudpp_testrig.pdb"
+				GenerateDebugInformation="TRUE"
 				SubSystem="1"
-				TargetMachine="1"
-			/>
-			<Tool
-				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCManifestTool"
-			/>
-			<Tool
-				Name="VCXDCMakeTool"
-			/>
-			<Tool
-				Name="VCBscMakeTool"
-			/>
-			<Tool
-				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCWebDeploymentTool"
-			/>
-			<Tool
-				Name="VCPostBuildEventTool"
-			/>
+				ImportLibrary="C:\Users\ucdavis2\Desktop\cudpp_fresh\lib\cudpp_testrig.lib"/>
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="../../bin/win32/$(ConfigurationName)"
-			IntermediateDirectory="$(ConfigurationName)"
+			OutputDirectory="Release"
+			IntermediateDirectory="cudpp_testrig.dir\Release"
 			ConfigurationType="1"
-			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
-			CharacterSet="2"
-			>
-			<Tool
-				Name="VCPreBuildEventTool"
-			/>
-			<Tool
-				Name="VCCustomBuildTool"
-			/>
-			<Tool
-				Name="CUDA Build Rule"
-				Include="./;../../common/inc;../../cudpp/include"
-			/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"
-			/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"
-			/>
-			<Tool
-				Name="VCMIDLTool"
-			/>
+			UseOfMFC="0"
+			ATLMinimizesCRunTimeLibraryUsage="FALSE"
+			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="../../cudpp/include;../../common/inc; $(CUDA_INC_PATH)"
-				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
-				RuntimeLibrary="0"
-				UsePrecompiledHeader="0"
+				AdditionalOptions=" /Zm1000"
+				AdditionalIncludeDirectories="C:\Users\ucdavis2\Desktop\cudpp_fresh\include;C:\Users\ucdavis2\Desktop\cudpp_fresh\apps\cudpp_testrig\..\common\include;&quot;C:\Program Files (x86)\NVIDIA GPU Computing Toolkit\CUDA\v3.2\include&quot;;"
+				CompileAs="2"
+				ExceptionHandling="1"
+				InlineFunctionExpansion="2"
+				Optimization="2"
+				RuntimeLibrary="2"
+				RuntimeTypeInfo="TRUE"
 				WarningLevel="3"
-				Detect64BitPortabilityProblems="true"
-				DebugInformationFormat="3"
-			/>
+				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;_CRT_SECURE_NO_WARNINGS;CMAKE_INTDIR=\&quot;Release\&quot;"
+				AssemblerListingLocation="Release"
+				ObjectFile="$(IntDir)\"
+				ProgramDataBaseFileName="C:\Users\ucdavis2\Desktop\cudpp_fresh\bin/cudpp_testrig.pdb"
+/>
 			<Tool
-				Name="VCManagedResourceCompilerTool"
-			/>
+				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCResourceCompilerTool"
-			/>
+				AdditionalIncludeDirectories="C:\Users\ucdavis2\Desktop\cudpp_fresh\include;C:\Users\ucdavis2\Desktop\cudpp_fresh\apps\cudpp_testrig\..\common\include;&quot;C:\Program Files (x86)\NVIDIA GPU Computing Toolkit\CUDA\v3.2\include&quot;;"
+				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;_CRT_SECURE_NO_WARNINGS;CMAKE_INTDIR=\&quot;Release\&quot;"/>
+			<Tool
+				Name="VCMIDLTool"
+				MkTypLibCompatible="FALSE"
+				TargetEnvironment="1"
+				GenerateStublessProxies="TRUE"
+				TypeLibraryName="$(InputName).tlb"
+				OutputDirectory="$(IntDir)"
+				HeaderFileName="$(InputName).h"
+				DLLDataFileName=""
+				InterfaceIdentifierFileName="$(InputName)_i.c"
+				ProxyFileName="$(InputName)_p.c"/>
+			<Tool
+				Name="VCPreBuildEventTool"/>
 			<Tool
 				Name="VCPreLinkEventTool"
-			/>
+CommandLine="&quot;C:\Program Files (x86)\CMake 2.8\bin\cmake.exe&quot; -E make_directory C:/Users/ucdavis2/Desktop/cudpp_fresh/lib&#x0D;&#x0A;if errorlevel 1 goto :VCReportError"/>
+			<Tool
+				Name="VCPostBuildEventTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalOptions="&#x0D;&#x0A;&#x0D;&#x0A;"
-				AdditionalDependencies="cudart.lib cutil32.lib cudpp32.lib"
-				OutputFile="$(OutDir)/cudpp_testrig.exe"
+				LinkLibraryDependencies="false"
+				AdditionalOptions=" /STACK:10000000 /machine:X86"
+				AdditionalDependencies="$(NOINHERIT) kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib  &quot;C:\Program Files (x86)\NVIDIA GPU Computing Toolkit\CUDA\v3.2\lib\Win32\cudart.lib&quot; &quot;C:\Program Files (x86)\NVIDIA GPU Computing Toolkit\CUDA\v3.2\lib\Win32\cuda.lib&quot; ..\..\lib\cudpp32.lib &quot;C:\Program Files (x86)\NVIDIA GPU Computing Toolkit\CUDA\v3.2\lib\Win32\cudart.lib&quot; &quot;C:\Program Files (x86)\NVIDIA GPU Computing Toolkit\CUDA\v3.2\lib\Win32\cuda.lib&quot; "
+				OutputFile="C:\Users\ucdavis2\Desktop\cudpp_fresh\bin\cudpp_testrig.exe"
+				Version="0.0"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="&quot;$(CUDA_LIB_PATH)&quot;;../../cudpp/lib;../../common/lib"
-				GenerateDebugInformation="true"
-				ProgramDatabaseFile="$(OutDir)/$(ProjectName).pdb"
+				AdditionalLibraryDirectories=""
+				ProgramDatabaseFile="C:\Users\ucdavis2\Desktop\cudpp_fresh\bin/cudpp_testrig.pdb"
 				SubSystem="1"
-				OptimizeReferences="2"
-				EnableCOMDATFolding="2"
-				TargetMachine="1"
-			/>
-			<Tool
-				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCManifestTool"
-			/>
-			<Tool
-				Name="VCXDCMakeTool"
-			/>
-			<Tool
-				Name="VCBscMakeTool"
-			/>
-			<Tool
-				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCWebDeploymentTool"
-			/>
-			<Tool
-				Name="VCPostBuildEventTool"
-			/>
+				ImportLibrary="C:\Users\ucdavis2\Desktop\cudpp_fresh\lib\cudpp_testrig.lib"/>
 		</Configuration>
 		<Configuration
-			Name="EmuDebug|Win32"
-			OutputDirectory="../../bin/win32/$(ConfigurationName)"
-			IntermediateDirectory="$(ConfigurationName)"
+			Name="MinSizeRel|Win32"
+			OutputDirectory="MinSizeRel"
+			IntermediateDirectory="cudpp_testrig.dir\MinSizeRel"
 			ConfigurationType="1"
-			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
-			CharacterSet="2"
-			>
-			<Tool
-				Name="VCPreBuildEventTool"
-			/>
-			<Tool
-				Name="VCCustomBuildTool"
-			/>
-			<Tool
-				Name="CUDA Build Rule"
-				Include="./;../../common/inc;../../cudpp/include"
-				Debug="true"
-				Emulation="true"
-				Optimization="0"
-			/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"
-			/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"
-			/>
-			<Tool
-				Name="VCMIDLTool"
-			/>
+			UseOfMFC="0"
+			ATLMinimizesCRunTimeLibraryUsage="FALSE"
+			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="0"
-				AdditionalIncludeDirectories="../../cudpp/include;../../common/inc; $(CUDA_INC_PATH)"
-				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
-				MinimalRebuild="true"
-				BasicRuntimeChecks="3"
-				RuntimeLibrary="1"
-				UsePrecompiledHeader="0"
+				AdditionalOptions=" /Zm1000"
+				AdditionalIncludeDirectories="C:\Users\ucdavis2\Desktop\cudpp_fresh\include;C:\Users\ucdavis2\Desktop\cudpp_fresh\apps\cudpp_testrig\..\common\include;&quot;C:\Program Files (x86)\NVIDIA GPU Computing Toolkit\CUDA\v3.2\include&quot;;"
+				CompileAs="2"
+				ExceptionHandling="1"
+				InlineFunctionExpansion="1"
+				Optimization="1"
+				RuntimeLibrary="2"
+				RuntimeTypeInfo="TRUE"
 				WarningLevel="3"
-				Detect64BitPortabilityProblems="true"
-				DebugInformationFormat="4"
-			/>
+				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;_CRT_SECURE_NO_WARNINGS;CMAKE_INTDIR=\&quot;MinSizeRel\&quot;"
+				AssemblerListingLocation="MinSizeRel"
+				ObjectFile="$(IntDir)\"
+				ProgramDataBaseFileName="C:\Users\ucdavis2\Desktop\cudpp_fresh\bin/cudpp_testrig.pdb"
+/>
 			<Tool
-				Name="VCManagedResourceCompilerTool"
-			/>
+				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCResourceCompilerTool"
-			/>
+				AdditionalIncludeDirectories="C:\Users\ucdavis2\Desktop\cudpp_fresh\include;C:\Users\ucdavis2\Desktop\cudpp_fresh\apps\cudpp_testrig\..\common\include;&quot;C:\Program Files (x86)\NVIDIA GPU Computing Toolkit\CUDA\v3.2\include&quot;;"
+				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;_CRT_SECURE_NO_WARNINGS;CMAKE_INTDIR=\&quot;MinSizeRel\&quot;"/>
+			<Tool
+				Name="VCMIDLTool"
+				MkTypLibCompatible="FALSE"
+				TargetEnvironment="1"
+				GenerateStublessProxies="TRUE"
+				TypeLibraryName="$(InputName).tlb"
+				OutputDirectory="$(IntDir)"
+				HeaderFileName="$(InputName).h"
+				DLLDataFileName=""
+				InterfaceIdentifierFileName="$(InputName)_i.c"
+				ProxyFileName="$(InputName)_p.c"/>
+			<Tool
+				Name="VCPreBuildEventTool"/>
 			<Tool
 				Name="VCPreLinkEventTool"
-			/>
+CommandLine="&quot;C:\Program Files (x86)\CMake 2.8\bin\cmake.exe&quot; -E make_directory C:/Users/ucdavis2/Desktop/cudpp_fresh/lib&#x0D;&#x0A;if errorlevel 1 goto :VCReportError"/>
+			<Tool
+				Name="VCPostBuildEventTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="cudart.lib cutil32D.lib cudpp32d_emu.lib"
-				OutputFile="$(OutDir)/cudpp_testrig.exe"
+				LinkLibraryDependencies="false"
+				AdditionalOptions=" /STACK:10000000 /machine:X86"
+				AdditionalDependencies="$(NOINHERIT) kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib  &quot;C:\Program Files (x86)\NVIDIA GPU Computing Toolkit\CUDA\v3.2\lib\Win32\cudart.lib&quot; &quot;C:\Program Files (x86)\NVIDIA GPU Computing Toolkit\CUDA\v3.2\lib\Win32\cuda.lib&quot; ..\..\lib\cudpp32.lib &quot;C:\Program Files (x86)\NVIDIA GPU Computing Toolkit\CUDA\v3.2\lib\Win32\cudart.lib&quot; &quot;C:\Program Files (x86)\NVIDIA GPU Computing Toolkit\CUDA\v3.2\lib\Win32\cuda.lib&quot; "
+				OutputFile="C:\Users\ucdavis2\Desktop\cudpp_fresh\bin\cudpp_testrig.exe"
+				Version="0.0"
+				LinkIncremental="1"
+				AdditionalLibraryDirectories=""
+				ProgramDatabaseFile="C:\Users\ucdavis2\Desktop\cudpp_fresh\bin/cudpp_testrig.pdb"
+				SubSystem="1"
+				ImportLibrary="C:\Users\ucdavis2\Desktop\cudpp_fresh\lib\cudpp_testrig.lib"/>
+		</Configuration>
+		<Configuration
+			Name="RelWithDebInfo|Win32"
+			OutputDirectory="RelWithDebInfo"
+			IntermediateDirectory="cudpp_testrig.dir\RelWithDebInfo"
+			ConfigurationType="1"
+			UseOfMFC="0"
+			ATLMinimizesCRunTimeLibraryUsage="FALSE"
+			CharacterSet="2">
+			<Tool
+				Name="VCCLCompilerTool"
+				AdditionalOptions=" /Zm1000"
+				AdditionalIncludeDirectories="C:\Users\ucdavis2\Desktop\cudpp_fresh\include;C:\Users\ucdavis2\Desktop\cudpp_fresh\apps\cudpp_testrig\..\common\include;&quot;C:\Program Files (x86)\NVIDIA GPU Computing Toolkit\CUDA\v3.2\include&quot;;"
+				CompileAs="2"
+				DebugInformationFormat="3"
+				ExceptionHandling="1"
+				InlineFunctionExpansion="1"
+				Optimization="2"
+				RuntimeLibrary="2"
+				RuntimeTypeInfo="TRUE"
+				WarningLevel="3"
+				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;_CRT_SECURE_NO_WARNINGS;CMAKE_INTDIR=\&quot;RelWithDebInfo\&quot;"
+				AssemblerListingLocation="RelWithDebInfo"
+				ObjectFile="$(IntDir)\"
+				ProgramDataBaseFileName="C:\Users\ucdavis2\Desktop\cudpp_fresh\bin/cudpp_testrig.pdb"
+/>
+			<Tool
+				Name="VCCustomBuildTool"/>
+			<Tool
+				Name="VCResourceCompilerTool"
+				AdditionalIncludeDirectories="C:\Users\ucdavis2\Desktop\cudpp_fresh\include;C:\Users\ucdavis2\Desktop\cudpp_fresh\apps\cudpp_testrig\..\common\include;&quot;C:\Program Files (x86)\NVIDIA GPU Computing Toolkit\CUDA\v3.2\include&quot;;"
+				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;_CRT_SECURE_NO_WARNINGS;CMAKE_INTDIR=\&quot;RelWithDebInfo\&quot;"/>
+			<Tool
+				Name="VCMIDLTool"
+				MkTypLibCompatible="FALSE"
+				TargetEnvironment="1"
+				GenerateStublessProxies="TRUE"
+				TypeLibraryName="$(InputName).tlb"
+				OutputDirectory="$(IntDir)"
+				HeaderFileName="$(InputName).h"
+				DLLDataFileName=""
+				InterfaceIdentifierFileName="$(InputName)_i.c"
+				ProxyFileName="$(InputName)_p.c"/>
+			<Tool
+				Name="VCPreBuildEventTool"/>
+			<Tool
+				Name="VCPreLinkEventTool"
+CommandLine="&quot;C:\Program Files (x86)\CMake 2.8\bin\cmake.exe&quot; -E make_directory C:/Users/ucdavis2/Desktop/cudpp_fresh/lib&#x0D;&#x0A;if errorlevel 1 goto :VCReportError"/>
+			<Tool
+				Name="VCPostBuildEventTool"/>
+			<Tool
+				Name="VCLinkerTool"
+				LinkLibraryDependencies="false"
+				AdditionalOptions=" /STACK:10000000 /machine:X86 /debug"
+				AdditionalDependencies="$(NOINHERIT) kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib  &quot;C:\Program Files (x86)\NVIDIA GPU Computing Toolkit\CUDA\v3.2\lib\Win32\cudart.lib&quot; &quot;C:\Program Files (x86)\NVIDIA GPU Computing Toolkit\CUDA\v3.2\lib\Win32\cuda.lib&quot; ..\..\lib\cudpp32.lib &quot;C:\Program Files (x86)\NVIDIA GPU Computing Toolkit\CUDA\v3.2\lib\Win32\cudart.lib&quot; &quot;C:\Program Files (x86)\NVIDIA GPU Computing Toolkit\CUDA\v3.2\lib\Win32\cuda.lib&quot; "
+				OutputFile="C:\Users\ucdavis2\Desktop\cudpp_fresh\bin\cudpp_testrig.exe"
+				Version="0.0"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="&quot;$(CUDA_LIB_PATH)&quot;;../../cudpp/lib;../../common/lib"
-				GenerateDebugInformation="true"
-				ProgramDatabaseFile="$(OutDir)/$(ProjectName).pdb"
+				AdditionalLibraryDirectories=""
+				ProgramDatabaseFile="C:\Users\ucdavis2\Desktop\cudpp_fresh\bin/cudpp_testrig.pdb"
+				GenerateDebugInformation="TRUE"
 				SubSystem="1"
-				TargetMachine="1"
-			/>
-			<Tool
-				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCManifestTool"
-			/>
-			<Tool
-				Name="VCXDCMakeTool"
-			/>
-			<Tool
-				Name="VCBscMakeTool"
-			/>
-			<Tool
-				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCWebDeploymentTool"
-			/>
-			<Tool
-				Name="VCPostBuildEventTool"
-			/>
-		</Configuration>
-		<Configuration
-			Name="EmuRelease|Win32"
-			OutputDirectory="../../bin/win32/$(ConfigurationName)"
-			IntermediateDirectory="$(ConfigurationName)"
-			ConfigurationType="1"
-			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
-			CharacterSet="2"
-			>
-			<Tool
-				Name="VCPreBuildEventTool"
-			/>
-			<Tool
-				Name="VCCustomBuildTool"
-			/>
-			<Tool
-				Name="CUDA Build Rule"
-				Include="./;../../common/inc;../../cudpp/include"
-				Emulation="true"
-			/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"
-			/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"
-			/>
-			<Tool
-				Name="VCMIDLTool"
-			/>
-			<Tool
-				Name="VCCLCompilerTool"
-				AdditionalOptions="-o cudpp_testrig.exe&#x0D;&#x0A;"
-				AdditionalIncludeDirectories="../../cudpp/include;../../common/inc;$(CUDA_INC_PATH)"
-				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
-				RuntimeLibrary="0"
-				UsePrecompiledHeader="0"
-				WarningLevel="3"
-				Detect64BitPortabilityProblems="true"
-				DebugInformationFormat="3"
-			/>
-			<Tool
-				Name="VCManagedResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCPreLinkEventTool"
-			/>
-			<Tool
-				Name="VCLinkerTool"
-				AdditionalDependencies="cudart.lib cutil32.lib cudpp32_emu.lib"
-				ShowProgress="0"
-				OutputFile="$(OutDir)/cudpp_testrig.exe"
-				LinkIncremental="1"
-				AdditionalLibraryDirectories="&quot;$(CUDA_LIB_PATH)&quot;;../../cudpp/lib;../../common/lib"
-				GenerateDebugInformation="true"
-				ProgramDatabaseFile="$(OutDir)/$(ProjectName).pdb"
-				SubSystem="1"
-				OptimizeReferences="2"
-				EnableCOMDATFolding="2"
-				TargetMachine="1"
-			/>
-			<Tool
-				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCManifestTool"
-			/>
-			<Tool
-				Name="VCXDCMakeTool"
-			/>
-			<Tool
-				Name="VCBscMakeTool"
-			/>
-			<Tool
-				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCWebDeploymentTool"
-			/>
-			<Tool
-				Name="VCPostBuildEventTool"
-			/>
+				ImportLibrary="C:\Users\ucdavis2\Desktop\cudpp_fresh\lib\cudpp_testrig.lib"/>
 		</Configuration>
 	</Configurations>
-	<References>
-	</References>
 	<Files>
+			<File
+				RelativePath="C:\Users\ucdavis2\Desktop\cudpp_fresh\apps\cudpp_testrig\CMakeLists.txt">
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+					Name="VCCustomBuildTool"
+					Description="Building Custom Rule C:/Users/ucdavis2/Desktop/cudpp_fresh/apps/cudpp_testrig/CMakeLists.txt"
+					CommandLine="&quot;C:\Program Files (x86)\CMake 2.8\bin\cmake.exe&quot; -HC:/Users/ucdavis2/Desktop/cudpp_fresh -BC:/Users/ucdavis2/Desktop/cudpp_fresh --check-stamp-file C:\Users\ucdavis2\Desktop\cudpp_fresh\apps\cudpp_testrig\CMakeFiles\generate.stamp&#x0D;&#x0A;if errorlevel 1 goto :VCReportError"
+					AdditionalDependencies="C:\Users\ucdavis2\Desktop\cudpp_fresh\apps\cudpp_testrig\CMakeLists.txt;C:\Users\ucdavis2\Desktop\cudpp_fresh\apps\cudpp_testrig\CMakeLists.txt;"
+					Outputs="C:\Users\ucdavis2\Desktop\cudpp_fresh\apps\cudpp_testrig\CMakeFiles\generate.stamp"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+					Name="VCCustomBuildTool"
+					Description="Building Custom Rule C:/Users/ucdavis2/Desktop/cudpp_fresh/apps/cudpp_testrig/CMakeLists.txt"
+					CommandLine="&quot;C:\Program Files (x86)\CMake 2.8\bin\cmake.exe&quot; -HC:/Users/ucdavis2/Desktop/cudpp_fresh -BC:/Users/ucdavis2/Desktop/cudpp_fresh --check-stamp-file C:\Users\ucdavis2\Desktop\cudpp_fresh\apps\cudpp_testrig\CMakeFiles\generate.stamp&#x0D;&#x0A;if errorlevel 1 goto :VCReportError"
+					AdditionalDependencies="C:\Users\ucdavis2\Desktop\cudpp_fresh\apps\cudpp_testrig\CMakeLists.txt;C:\Users\ucdavis2\Desktop\cudpp_fresh\apps\cudpp_testrig\CMakeLists.txt;"
+					Outputs="C:\Users\ucdavis2\Desktop\cudpp_fresh\apps\cudpp_testrig\CMakeFiles\generate.stamp"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="MinSizeRel|Win32">
+					<Tool
+					Name="VCCustomBuildTool"
+					Description="Building Custom Rule C:/Users/ucdavis2/Desktop/cudpp_fresh/apps/cudpp_testrig/CMakeLists.txt"
+					CommandLine="&quot;C:\Program Files (x86)\CMake 2.8\bin\cmake.exe&quot; -HC:/Users/ucdavis2/Desktop/cudpp_fresh -BC:/Users/ucdavis2/Desktop/cudpp_fresh --check-stamp-file C:\Users\ucdavis2\Desktop\cudpp_fresh\apps\cudpp_testrig\CMakeFiles\generate.stamp&#x0D;&#x0A;if errorlevel 1 goto :VCReportError"
+					AdditionalDependencies="C:\Users\ucdavis2\Desktop\cudpp_fresh\apps\cudpp_testrig\CMakeLists.txt;C:\Users\ucdavis2\Desktop\cudpp_fresh\apps\cudpp_testrig\CMakeLists.txt;"
+					Outputs="C:\Users\ucdavis2\Desktop\cudpp_fresh\apps\cudpp_testrig\CMakeFiles\generate.stamp"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="RelWithDebInfo|Win32">
+					<Tool
+					Name="VCCustomBuildTool"
+					Description="Building Custom Rule C:/Users/ucdavis2/Desktop/cudpp_fresh/apps/cudpp_testrig/CMakeLists.txt"
+					CommandLine="&quot;C:\Program Files (x86)\CMake 2.8\bin\cmake.exe&quot; -HC:/Users/ucdavis2/Desktop/cudpp_fresh -BC:/Users/ucdavis2/Desktop/cudpp_fresh --check-stamp-file C:\Users\ucdavis2\Desktop\cudpp_fresh\apps\cudpp_testrig\CMakeFiles\generate.stamp&#x0D;&#x0A;if errorlevel 1 goto :VCReportError"
+					AdditionalDependencies="C:\Users\ucdavis2\Desktop\cudpp_fresh\apps\cudpp_testrig\CMakeLists.txt;C:\Users\ucdavis2\Desktop\cudpp_fresh\apps\cudpp_testrig\CMakeLists.txt;"
+					Outputs="C:\Users\ucdavis2\Desktop\cudpp_fresh\apps\cudpp_testrig\CMakeFiles\generate.stamp"/>
+				</FileConfiguration>
+			</File>
 		<Filter
 			Name="Source Files"
-			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx"
-			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
-			>
+			Filter="">
 			<File
-				RelativePath=".\compact_gold.cpp"
-				>
+				RelativePath="C:\Users\ucdavis2\Desktop\cudpp_fresh\apps\cudpp_testrig\cudpp_testrig.cpp">
 			</File>
 			<File
-				RelativePath=".\cudpp_testrig.cu"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="CUDA Build Rule"
-						Runtime="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="EmuDebug|Win32"
-					>
-					<Tool
-						Name="CUDA Build Rule"
-						Runtime="1"
-					/>
-				</FileConfiguration>
+				RelativePath="C:\Users\ucdavis2\Desktop\cudpp_fresh\apps\cudpp_testrig\cudpp_testrig_options.cpp">
 			</File>
 			<File
-				RelativePath=".\cudpp_testrig_options.cpp"
-				>
+				RelativePath="C:\Users\ucdavis2\Desktop\cudpp_fresh\apps\cudpp_testrig\rand_gold.cpp">
 			</File>
 			<File
-				RelativePath=".\rand_gold.cpp"
-				>
+				RelativePath="C:\Users\ucdavis2\Desktop\cudpp_fresh\apps\cudpp_testrig\spmvmult_gold.cpp">
 			</File>
 			<File
-				RelativePath=".\scan_gold.cpp"
-				>
+				RelativePath="C:\Users\ucdavis2\Desktop\cudpp_fresh\apps\cudpp_testrig\test_compact.cpp">
 			</File>
 			<File
-				RelativePath=".\spmvmult_gold.cpp"
-				>
+				RelativePath="C:\Users\ucdavis2\Desktop\cudpp_fresh\apps\cudpp_testrig\test_radixsort.cpp">
 			</File>
 			<File
-				RelativePath=".\test_compact.cu"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="EmuDebug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="EmuRelease|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
+				RelativePath="C:\Users\ucdavis2\Desktop\cudpp_fresh\apps\cudpp_testrig\test_rand.cpp">
 			</File>
 			<File
-				RelativePath=".\test_radixsort.cu"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="EmuDebug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="EmuRelease|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
+				RelativePath="C:\Users\ucdavis2\Desktop\cudpp_fresh\apps\cudpp_testrig\test_reduce.cpp">
 			</File>
 			<File
-				RelativePath=".\test_rand.cu"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="EmuDebug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="EmuRelease|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
+				RelativePath="C:\Users\ucdavis2\Desktop\cudpp_fresh\apps\cudpp_testrig\test_scan.cpp">
 			</File>
 			<File
-				RelativePath=".\test_scan.cu"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="EmuDebug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="EmuRelease|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
+				RelativePath="C:\Users\ucdavis2\Desktop\cudpp_fresh\apps\cudpp_testrig\test_spmvmult.cpp">
 			</File>
 			<File
-				RelativePath=".\test_spmvmult.cu"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="EmuDebug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="EmuRelease|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
+				RelativePath="C:\Users\ucdavis2\Desktop\cudpp_fresh\apps\cudpp_testrig\test_tridiagonal.cpp">
 			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
-			Filter="h;hpp;hxx;hm;inl;inc;xsd"
-			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
-			>
+			Filter="">
 			<File
-				RelativePath=".\arraycompare.h"
-				>
+				RelativePath="C:\Users\ucdavis2\Desktop\cudpp_fresh\apps\cudpp_testrig\cudpp_testrig_options.h">
 			</File>
 			<File
-				RelativePath=".\cudpp_testrig_options.h"
-				>
+				RelativePath="C:\Users\ucdavis2\Desktop\cudpp_fresh\apps\cudpp_testrig\cudpp_testrig_utils.h">
 			</File>
 			<File
-				RelativePath=".\sparse.h"
-				>
+				RelativePath="C:\Users\ucdavis2\Desktop\cudpp_fresh\apps\cudpp_testrig\compact_gold.h">
+			</File>
+			<File
+				RelativePath="C:\Users\ucdavis2\Desktop\cudpp_fresh\apps\cudpp_testrig\scan_gold.h">
+			</File>
+			<File
+				RelativePath="C:\Users\ucdavis2\Desktop\cudpp_fresh\apps\cudpp_testrig\tridiagonal_gold.h">
+			</File>
+			<File
+				RelativePath="C:\Users\ucdavis2\Desktop\cudpp_fresh\apps\cudpp_testrig\sparse.h">
 			</File>
 		</Filter>
 	</Files>

@@ -150,7 +150,7 @@ int CheckResults_compacting(const unsigned            kInputSize,
     }
 
     std::sort(ids.begin(), ids.end());
-    if (ids.back() >= pairs.size())
+    if (ids.size()>0 && ids.back() >= pairs.size())
     {
         fprintf(stderr, "\t\t\t\t!!! Biggest ID >= number of input items\n");
         errors++;
