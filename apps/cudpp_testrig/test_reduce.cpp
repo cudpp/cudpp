@@ -96,17 +96,17 @@ int reduceTest(int argc, const char **argv, const CUDPPConfiguration &config,
     T* i_data = new T[numElements];
 
     // initialize the input data on the host
-    T range = 100;
+    float range = 100.f;
     if (config.op == CUDPP_MULTIPLY)
     {
 
         if ((config.datatype == CUDPP_FLOAT) ||
-            (config.datatype == CUDPP_DOUBLE))   range = 1;
-        else                                     range = 2;
+            (config.datatype == CUDPP_DOUBLE))   range = 1.f;
+        else                                     range = 2.f;
     }
     
     if (config.datatype != CUDPP_FLOAT && config.datatype != CUDPP_DOUBLE)
-        range = sizeof(T)*8;
+        range = (float)(sizeof(T)*8);
         
     VectorSupport<T>::fillVector(i_data, numElements, range);
     

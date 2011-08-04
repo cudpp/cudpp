@@ -79,7 +79,11 @@ configure_file(
 
 # copy WIN32 DLLs
 if (WIN32)
+if (bits EQUAL 64)
+file(COPY bin/win32/glut32.dll bin/win64/glew64.dll DESTINATION bin/)
+elseif (bits EQUAL 32)  
 file(COPY bin/win32/glut32.dll bin/win32/glew32.dll DESTINATION bin/)
+endif (bits EQUAL 64)
 endif (WIN32)
 
 # copy data files
@@ -97,7 +101,7 @@ if (BUILD_APPLICATIONS)
   add_subdirectory(apps/cudpp_testrig)
   add_subdirectory(apps/cudpp_hash_testrig)
   add_subdirectory(apps/simpleCUDPP)
-  add_subdirectory(apps/satGL)
+  #add_subdirectory(apps/satGL)
 endif (BUILD_APPLICATIONS)
 
 # Make files that store configuration to help dependent CMake files use

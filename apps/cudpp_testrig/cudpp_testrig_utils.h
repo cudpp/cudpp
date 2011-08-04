@@ -53,8 +53,8 @@ template <typename T>
 class VectorSupport
 {
 public:
-    static void fillVector(T *a, size_t numElements, T info);
-    //! @todo should this really be T info? instead unsigned int or float? 
+    static void fillVectorKeys(T *a, size_t numElements, unsigned int keybits);
+    static void fillVector(T *a, size_t numElements, float range);
     static int verifySort(T *keysSorted, unsigned int *valuesSorted, T *keysUnsorted, 
                           size_t len, bool reverse);
 };
@@ -118,10 +118,8 @@ long long OperatorMin<long long>::identity() const { return LLONG_MAX; }
 template <> inline
 unsigned long long OperatorMin<unsigned long long>::identity() const { return ULLONG_MAX; }
     
-
-// "info" is the number of key bits
 template<> inline
-void VectorSupport<unsigned int>::fillVector(unsigned int *a, size_t numElements, unsigned int keybits)
+void VectorSupport<unsigned int>::fillVectorKeys(unsigned int *a, size_t numElements, unsigned int keybits)
 {
     // Fill up with some random data
     int keyshiftmask = 0;
@@ -136,9 +134,8 @@ void VectorSupport<unsigned int>::fillVector(unsigned int *a, size_t numElements
     }
 }
 
-// "info" is the number of key bits
 template<> inline
-void VectorSupport<unsigned long long>::fillVector(unsigned long long *a, size_t numElements, unsigned long long keybits)
+void VectorSupport<unsigned long long>::fillVectorKeys(unsigned long long *a, size_t numElements, unsigned int keybits)
 {
     // Fill up with some random data
     unsigned long long keyshiftmask16 = 0;
@@ -162,44 +159,60 @@ void VectorSupport<unsigned long long>::fillVector(unsigned long long *a, size_t
 }
 
 template<> inline
-void VectorSupport<char>::fillVector(char *a, size_t numElements,char keybits)
+void VectorSupport<char>::fillVectorKeys(char *a, size_t numElements, unsigned int  keybits)
 {
-    VectorSupport<unsigned int>::fillVector((unsigned int *)a, 
-                                            numElements, 
-                                            keybits);
+    VectorSupport<unsigned int>::fillVectorKeys((unsigned int *)a, 
+                                                numElements, 
+                                                keybits);
 }
 
 template<> inline
-void VectorSupport<unsigned char>::fillVector(unsigned char *a, size_t numElements,unsigned char keybits)
+void VectorSupport<unsigned char>::fillVectorKeys(unsigned char *a, size_t numElements, unsigned int keybits)
 {
-    VectorSupport<unsigned int>::fillVector((unsigned int *)a, 
-                                            numElements, 
-                                            keybits);
+    VectorSupport<unsigned int>::fillVectorKeys((unsigned int *)a, 
+                                                numElements, 
+                                                keybits);
 }
 
 template<> inline
-void VectorSupport<int>::fillVector(int *a, size_t numElements,int keybits)
+void VectorSupport<int>::fillVectorKeys(int *a, size_t numElements, unsigned int keybits)
 {
-    VectorSupport<unsigned int>::fillVector((unsigned int *)a, 
-                                            numElements, 
-                                            keybits);
+    VectorSupport<unsigned int>::fillVectorKeys((unsigned int *)a, 
+                                                numElements, 
+                                                keybits);
 }
 
-// "info" is the number of key bits
 template<> inline
-void VectorSupport<long long>::fillVector(long long *a, size_t numElements,long long keybits)
+void VectorSupport<long long>::fillVectorKeys(long long *a, size_t numElements, unsigned int keybits)
 {
-    VectorSupport<unsigned long long>::fillVector((unsigned long long *)a, 
-                                                  numElements, 
-                                                  keybits);
+    VectorSupport<unsigned long long>::fillVectorKeys((unsigned long long *)a, 
+                                                      numElements, 
+                                                      keybits);
 }
 
-// "info" is the range
+template<> inline
+void VectorSupport<float>::fillVectorKeys(float *a, size_t numElements, unsigned int keybits)
+{
+    VectorSupport<unsigned int>::fillVectorKeys((unsigned int *)a, 
+                                                numElements, 
+                                                keybits);
+}
+
+template<> inline
+void VectorSupport<double>::fillVectorKeys(double *a, size_t numElements, unsigned int keybits)
+{
+    VectorSupport<unsigned long long>::fillVectorKeys((unsigned long long *)a, 
+                                                      numElements, 
+                                                      keybits);
+}
+
+
+
 template<> inline
 void VectorSupport<float>::fillVector(float *a, size_t numElements, float range)
 {
     srand(95123);
-    for(unsigned int j = 0; j < numElements; j++)
+    for(size_t j = 0; j < numElements; j++)
     {
         a[j] = pow(-1, (float)j) * (range * (rand() / (float)RAND_MAX));
     }
@@ -207,14 +220,79 @@ void VectorSupport<float>::fillVector(float *a, size_t numElements, float range)
 
 // "info" is the range
 template<> inline
-void VectorSupport<double>::fillVector(double *a, size_t numElements, double range)
+void VectorSupport<double>::fillVector(double *a, size_t numElements, float range)
 {
     srand(95123);
-    for(unsigned int j = 0; j < numElements; j++)
+    for(size_t j = 0; j < numElements; j++)
     {
         a[j] = pow(-1, (double)j) * (range * (rand() / (double)RAND_MAX));
     }
 }
+
+template<> inline
+void VectorSupport<unsigned char>::fillVector(unsigned char *a, size_t numElements, float range)
+{
+    srand(95123);
+    for(size_t j = 0; j < numElements; j++)
+    {
+        a[j] = (unsigned char)(range * (rand() / (double)RAND_MAX));
+    }
+}
+
+template<> inline
+void VectorSupport<char>::fillVector(char *a, size_t numElements, float range)
+{
+    VectorSupport<unsigned char>::fillVector((unsigned char*)a, numElements, range);
+}
+
+template<> inline
+void VectorSupport<unsigned short>::fillVector(unsigned short *a, size_t numElements, float range)
+{
+    srand(95123);
+    for(size_t j = 0; j < numElements; j++)
+    {
+        a[j] = (unsigned short)(range * (rand() / (double)RAND_MAX));
+    }
+}
+
+template<> inline
+void VectorSupport<short>::fillVector(short *a, size_t numElements, float range)
+{
+    VectorSupport<unsigned short>::fillVector((unsigned short*)a, numElements, range);
+}
+
+template<> inline
+void VectorSupport<unsigned int>::fillVector(unsigned int *a, size_t numElements, float range)
+{
+    srand(95123);
+    for(size_t j = 0; j < numElements; j++)
+    {
+        a[j] = (unsigned int)(range * (rand() / (double)RAND_MAX));
+    }
+}
+
+template<> inline
+void VectorSupport<int>::fillVector(int *a, size_t numElements, float range)
+{
+    VectorSupport<unsigned int>::fillVector((unsigned int*)a, numElements, range);
+}
+
+template<> inline
+void VectorSupport<unsigned long long>::fillVector(unsigned long long *a, size_t numElements, float range)
+{
+    srand(95123);
+    for(size_t j = 0; j < numElements; j++)
+    {
+        a[j] = (unsigned long long)(range * (rand() / (double)RAND_MAX));
+    }
+}
+
+template<> inline
+void VectorSupport<long long>::fillVector(long long *a, size_t numElements, float range)
+{
+    VectorSupport<unsigned long long>::fillVector((unsigned long long*)a, numElements, range);
+}
+
 
 // assumes the values were initially indices into the array, for simplicity of 
 // checking correct order of values

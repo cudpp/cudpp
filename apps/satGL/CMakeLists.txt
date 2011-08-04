@@ -14,6 +14,7 @@ set(CUFILES
 
 source_group("CUDA Source Files" FILES ${CUFILES})
   
+# to help find libs...
 set(CMAKE_PREFIX_PATH ../common)
   
 find_package(OpenGL REQUIRED)

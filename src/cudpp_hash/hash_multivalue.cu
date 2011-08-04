@@ -129,7 +129,7 @@ namespace CUDAWrapper {
 void CallCheckIfUnique(const unsigned *d_sorted_keys,
                        const size_t    n,
                              unsigned *d_scratch_is_unique) {
-    dim3 gridDim = ComputeGridDim(n);
+    dim3 gridDim = ComputeGridDim((unsigned int)n);
     check_if_unique <<<gridDim, kBlockSize>>> (d_sorted_keys,
                                                d_scratch_is_unique,
                                                n);
@@ -142,7 +142,7 @@ void CallCompactKeys(const unsigned *d_sorted_keys,
                      const size_t    kSize,
                            uint2    *d_index_counts,
                            unsigned *d_compacted_keys) {
-    dim3 gridDim = ComputeGridDim(kSize);
+    dim3 gridDim = ComputeGridDim((unsigned int)kSize);
     compact_keys<<<gridDim, 512>>> (d_sorted_keys,
                                     d_is_unique,
                                     d_offsets,

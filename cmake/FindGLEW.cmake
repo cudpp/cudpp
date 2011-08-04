@@ -7,15 +7,21 @@
 # GLEW_LIBRARY
 # 
 IF (WIN32)
-	FIND_PATH( GLEW_INCLUDE_PATH GL/glew.h
-		${GLEW_ROOT_DIR}/include
-		DOC "The directory where GL/glew.h resides")
-	FIND_LIBRARY( GLEW_LIBRARY
-		NAMES glew GLEW glew32 glew32s
-		PATHS
-		${GLEW_ROOT_DIR}/bin
-		${GLEW_ROOT_DIR}/lib
-		DOC "The GLEW library")
+    FIND_PATH( GLEW_INCLUDE_PATH GL/glew.h
+        ${GLEW_ROOT_DIR}/include
+        DOC "The directory where GL/glew.h resides")
+    if (CMAKE_SIZEOF_VOID_P EQUAL 8)
+        set(GLEWNAMES glew GLEW glew64 glew64s)
+    else ()
+        set(GLEWNAMES glew GLEW glew32 glew32s)
+    endif (CMAKE_SIZEOF_VOID_P EQUAL 8)  
+    
+    FIND_LIBRARY( GLEW_LIBRARY
+        NAMES ${GLEWNAMES}
+	PATHS
+        ${GLEW_ROOT_DIR}/bin
+        ${GLEW_ROOT_DIR}/lib
+        DOC "The GLEW library")
 ELSE (WIN32)
   FIND_PATH( GLEW_INCLUDE_PATH GL/glew.h
 		/usr/include

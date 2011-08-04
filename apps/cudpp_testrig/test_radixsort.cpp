@@ -18,6 +18,14 @@
 #include "cuda_util.h"
 #include "commandline.h"
 
+#ifdef WIN32
+#undef min
+#undef max
+#endif
+
+#include <limits>
+
+
 using namespace cudpp_app;
 
 template <typename T>
@@ -45,7 +53,10 @@ int radixSortTest(CUDPPHandle theCudpp, CUDPPConfiguration config, size_t *tests
     }                                                                                                                                   
 
     // Fill up with some random data   
-    VectorSupport<T>::fillVector(h_keys, numElements, 32);         
+    if (config.datatype != CUDPP_FLOAT && config.datatype != CUDPP_DOUBLE)
+        VectorSupport<T>::fillVectorKeys(h_keys, numElements, 32);         
+    else
+        VectorSupport<T>::fillVector(h_keys, numElements, std::numeric_limits<float>::max() );         
 
     CUDA_SAFE_CALL(cudaMalloc((void **)&d_keys, numElements*sizeof(T)));
     if (config.options & CUDPP_OPTION_KEY_VALUE_PAIRS)

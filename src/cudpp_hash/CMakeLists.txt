@@ -54,6 +54,10 @@ if (CUDA_VERBOSE_PTXAS)
   set(VERBOSE_PTXAS --ptxas-options=-v)
 endif (CUDA_VERBOSE_PTXAS)
 
+if (WIN32)
+    add_definitions(-D_CRT_SECURE_NO_DEPRECATE)
+endif (WIN32)
+
 cuda_add_library(cudpp_hash ${LIB_TYPE} 
   ${CCFILES} 
   ${HFILES}
