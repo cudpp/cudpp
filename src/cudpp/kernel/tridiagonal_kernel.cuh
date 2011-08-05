@@ -36,6 +36,8 @@
  * @param[in] d_b Main diagonal
  * @param[in] d_c Upper diagonal
  * @param[in] d_d Right hand side
+ * @param[in] systemSizeOriginal The size of each system
+ * @param[in] iterations The computed number of PCR iterations
  */
 template <class T>
 __global__ void crpcrKernel(T *d_a, 

@@ -52,7 +52,7 @@ inline unsigned int crpcrSharedSize(unsigned int systemSizeOriginal)
  * @param[in] d_b Main diagonal
  * @param[in] d_c Upper diagonal
  * @param[in] d_d Right hand side
- * @param[in] systemSize The size of the linear system
+ * @param[in] systemSizeOriginal The size of the linear system
  * @param[in] numSystems The number of systems to be solved
  */
 template <typename T>

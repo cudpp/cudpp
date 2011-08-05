@@ -50,7 +50,8 @@
  *
  * You may want to start by browsing the \link publicInterface CUDPP Public 
  * Interface\endlink. For information on building CUDPP, see 
- * \ref building-cudpp "Building CUDPP".
+ * \ref building-cudpp "Building CUDPP".  See \ref hash_overview for an 
+ * overview of CUDPP's hash table support. 
  *
  * The "apps" subdirectory included with CUDPP has a few source code samples 
  * that use CUDPP:
@@ -79,11 +80,19 @@
  *
  * For specific release details see the \ref changelog "Change Log".
  * 
- * There is a known issue that the compile time for CUDPP is very long and the
- * compiled library file size is very large.  On some systems with < 4GB of 
- * available memory (or virtual memory), the CUDA compiler can run out of 
- * memory and compilation can fail.  We will be working on these issues for the
- * next release.
+ * \subsection known-issues Known Issues
+ * 
+ * For a complete list of issues, see the 
+ * <a href="http://code.google.com/p/cudpp/issues/list">issues list</a> on 
+ * the Google code site.
+ * 
+ * - cudppRand tests (in cudpp_testrig) fail on OS X 10.6.8 with CUDA 3.2 and 
+ *   CUDA 4.0 on Quadro FX 4800 (and possibly other GT200 GPUs):  
+ * - There is a known issue that the compile time for CUDPP is very long and 
+ *   the compiled library file size is very large.  On some systems with < 4GB 
+ *   of available memory (or virtual memory), the CUDA compiler can run out of 
+ *   memory and compilation can fail.  We will be working on these issues for 
+ *   future releases. 
  *
  * \subsection size-limits Algorithm Input Size Limitations
  * 
@@ -227,14 +236,15 @@
  * 
  * \subsection contributors Other CUDPP Contributors
  * - <a href="http://idav.ucdavis.edu/~dfalcant/research.php">Dan Alcantara</a>, University of California, Davis [hash tables]
- * - <a href="http://www.eecs.berkeley.edu/~nrsatish/">Nadatur Satish</a>,  University of California, Berkeley [radix sort]
+ * - <a href="http://idav.ucdavis.edu/~anjul/">Anjul Patney</a>,  University of California, Davis [general help]
+ * - <a href="http://www.eecs.berkeley.edu/~nrsatish/">Nadatur Satish</a>,  University of California, Berkeley [(old)radix sort]
  *
  * \subsection acknowledgments Acknowledgments
  *
  * Thanks to Jim Ahrens, Timo Aila, Nathan Bell, Ian Buck, Guy Blelloch, 
  * Jeff Bolz, Michael Garland, Jeff Inman, Eric Lengyel, Samuli Laine, 
- * David Luebke, Pat McCormick, and Richard Vuduc for their contributions 
- * during the development of this library. 
+ * David Luebke, Pat McCormick, Duane Merrill, and Richard Vuduc for their 
+ * contributions during the development of this library. 
  * 
  * CUDPP Developers from UC Davis thank their funding agencies:
  * - National Science Foundation (grants CCF-0541448, IIS-0964357, and particularly OCI-1032859)
@@ -250,6 +260,11 @@
  * released under the BSD license, designed to encourage reuse of this software 
  * in other projects, both commercial and non-commercial.  For details, please 
  * see the \ref license page. 
+ *
+ * Non source-code content (such as documentation, web pages, etc.) from CUDPP
+ * is distributed under a 
+ * <a href="http://creativecommons.org/licenses/by-sa/3.0/">Creative Commons 
+ * Attribution-ShareAlike 3.0 (CC BY-SA 3.0)</a> license.
  * 
  * Note that prior to release 1.1 of CUDPP, the license used was a modified
  * BSD license.  With release 1.1, this license was replaced with the pure BSD
@@ -261,6 +276,11 @@
  * href="http://www.math.sci.hiroshima-u.ac.jp/~m-mat/eindex.html">Makoto
  * Matsumoto</a>, also licensed under BSD. 
  *
+ * CUDPP also calls functions in the 
+ * <a href="http://thrust.googlecode.com">Thrust</a> template library, which
+ * is included with CUDA 4.0 and licensed under the Apache 2.0 open source 
+ * license.
+ * 
  * CUDPP also includes a modified version of FindGLEW.cmake from
  * <a href="http://code.google.com/p/nvidia-texture-tools/">nvidia-texture-tools</a>,
  * licensed under the 
@@ -274,7 +294,14 @@
  *
  * CUDPP is released under the <a
  * href="http://www.opensource.org/licenses/bsd-license.php">BSD
- * license</a>. This CUDPP distribution also includes the <a
+ * license</a>. 
+ *
+ * Non source-code content (such as documentation, web pages, etc.) from CUDPP
+ * is distributed under a 
+ * <a href="http://creativecommons.org/licenses/by-sa/3.0/">Creative Commons 
+ * Attribution-ShareAlike 3.0 (CC BY-SA 3.0)</a> license.
+ * 
+ * This CUDPP distribution also includes the <a
  * href="http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/emt.html">Mersenne
  * twister code</a> of <a
  * href="http://www.math.sci.hiroshima-u.ac.jp/~m-mat/eindex.html">Makoto
@@ -285,6 +312,12 @@
  * licensed under the <a
  * href="http://www.opensource.org/licenses/mit-license.php">MIT
  * license.</a>
+ *
+ * CUDPP also calls functions in the 
+ * <a href="http://thrust.googlecode.com">Thrust</a> template library, which
+ * is included with CUDA 4.0 and licensed under the Apache 2.0 open source 
+ * license.
+ * 
 
  * 
  * @include license.txt

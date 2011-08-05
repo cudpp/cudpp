@@ -6,7 +6,7 @@ DATE HERE
   with cudppCreate, and passing it to all functions
 - Added cudppReduce parallel reductions
 - Added cudppTridiagonal parallel tridiagonal linear system solver
-- Added cudppHash parallel hash table data structure
+- Added cudppHashTable parallel hash table data structure
 - Added 64-bit type support (double, long long, and unsigned long long), 
   implemented in cudppReduce, cudppScan, cudppMultiscan, cudppSegmentedScan, 
   cudppCompact, cudppRadixSort, cudppTridiagonal
