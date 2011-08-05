@@ -20,6 +20,10 @@ typedef void* KernelPointer;
   * @{
   */
 
+/** @name Library Management Interface
+ * @{
+ */
+
 /**
  * @brief Creates an instance of the CUDPP library, and returns a handle.
  *
@@ -57,6 +61,8 @@ CUDPPResult cudppDestroy(CUDPPHandle theCudpp)
     mgr = 0;
     return CUDPP_SUCCESS;
 }
+
+/** @} */ // end Library Management Interface
 
 /** @} */ // end publicInterface
 

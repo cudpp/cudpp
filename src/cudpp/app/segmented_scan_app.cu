@@ -79,6 +79,7 @@
 * element of a min operator)
 * @param[in] numElements The number of elements in the array to scan
 * @param[in] level The current recursive level of the scan
+* @param[in] sm12OrBetterHw True if running on sm_12 or higher GPU, false otherwise
 */
 template <typename T, class Op, bool isBackward, bool isExclusive, bool doShiftFlagsLeft>
 void segmentedScanArrayRecursive(T                  *d_out, 
