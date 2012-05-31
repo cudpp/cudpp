@@ -16,6 +16,7 @@
 #include "cudpp_spmvmult.h"
 #include "cudpp_radixsort.h"
 #include "cudpp_reduce.h"
+#include "cudpp_compress.h"
 #include "cuda_util.h"
 #include <cuda_runtime_api.h>
 
@@ -129,6 +130,11 @@ CUDPPResult cudppPlan(const CUDPPHandle  cudppHandle,
             plan = new CUDPPReducePlan(mgr, config, numElements);
             break;
         }
+    case CUDPP_COMPRESS:
+        {
+            plan = new CUDPPCompressPlan(mgr, config, numElements);
+            break;
+        }
     default:
         return CUDPP_ERROR_ILLEGAL_CONFIGURATION; 
         break;
@@ -194,6 +200,11 @@ CUDPPResult cudppDestroyPlan(CUDPPHandle planHandle)
     case CUDPP_REDUCE:
         {
             delete static_cast<CUDPPReducePlan*>(plan);
+            break;
+        }
+    case CUDPP_COMPRESS:
+        {
+            delete static_cast<CUDPPCompressPlan*>(plan);
             break;
         }
     default:
@@ -556,4 +567,21 @@ CUDPPTridiagonalPlan::CUDPPTridiagonalPlan(CUDPPManager *mgr, CUDPPConfiguration
  : CUDPPPlan(mgr, config, 0, 0, 0)
 {
     
+}
+
+/** @brief CUDPP Compress Plan Constructor
+  *
+  * @param[in]  mgr pointer to the CUDPPManager
+  * @param[in] config The configuration struct specifying options
+  */
+CUDPPCompressPlan::CUDPPCompressPlan(CUDPPManager *mgr, CUDPPConfiguration config, size_t numElements) 
+ : CUDPPPlan(mgr, config, numElements, 1, 0)
+{
+    allocCompressStorage(this);
+}
+
+/** @brief Compress plan destructor */
+CUDPPCompressPlan::~CUDPPCompressPlan()
+{
+    freeCompressStorage(this);
 }

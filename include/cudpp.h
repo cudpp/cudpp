@@ -103,6 +103,7 @@
  * - CUDPP_SCAN               67,107,840 elements
  * - CUDPP_SEGMENTED_SCAN     67,107,840 elements
  * - CUDPP_COMPACT            67,107,840 elements
+ * - CUDPP_COMPRESS           1,048,576 elements
  * - CUDPP_SORT               2,147,450,880 elements
  * - CUDPP_REDUCE             NO LIMIT
  * - CUDPP_RAND               33,554,432 elements
@@ -227,7 +228,7 @@
  * - <a href="http://wwwcsif.cs.ucdavis.edu/~tzeng/">Stanley Tzeng</a>,   University of California, Davis
  * - <a href="http://www.ece.ucdavis.edu/~yaozhang/">Yao Zhang</a>,       University of California, Davis
  * - <a href="http://www.ece.ucdavis.edu/~aaldavid/">Andrew Davidson</a>, University of California, Davis
- * - Ritesh Patel, University of California, Davis
+ * - <a href="http://www.ece.ucdavis.edu/~ritesh88/">Ritesh Patel</a>, University of California, Davis
  * 
  * \subsection contributors Other CUDPP Contributors
  * - <a href="http://idav.ucdavis.edu/~dfalcant/research.php">Dan Alcantara</a>, University of California, Davis [hash tables]
@@ -477,7 +478,8 @@ enum CUDPPAlgorithm
     CUDPP_SORT_RADIX,        //!< Radix sort
     CUDPP_SPMVMULT,          //!< Sparse matrix-dense vector multiplication
     CUDPP_RAND_MD5,          //!< Pseudorandom number generator using MD5 hash algorithm
-    CUDPP_TRIDIAGONAL,    //!< Tridiagonal solver algorithm
+    CUDPP_TRIDIAGONAL,       //!< Tridiagonal solver algorithm
+    CUDPP_COMPRESS,          //!< Lossless data compression
     CUDPP_ALGORITHM_INVALID, //!< Placeholder at end of enum
 };
 
@@ -616,6 +618,18 @@ CUDPPResult cudppTridiagonal(CUDPPHandle planHandle,
                              void *x, 
                              int systemSize, 
                              int numSystems);
+
+// lossless data compression algorithms
+CUDPP_DLL
+CUDPPResult cudppCompress(CUDPPHandle planHandle, 
+                          void *d_a, 
+                          void *d_x, 
+                          void *d_y, 
+                          void *d_z, 
+                          void *d_w,
+                          void *d_xx,
+                          void *d_yy,
+                          size_t numElements);
 
 #ifdef __cplusplus
 }

@@ -221,4 +221,14 @@ public:
     CUDPPTridiagonalPlan(CUDPPManager *mgr, CUDPPConfiguration config);
 };
 
+/** @brief Plan class for compressor
+*
+*/
+class CUDPPCompressPlan : public CUDPPPlan
+{
+public:
+    CUDPPCompressPlan(CUDPPManager *mgr, CUDPPConfiguration config, size_t numElements);
+    virtual ~CUDPPCompressPlan();
+};
+
 #endif // __CUDPP_PLAN_H__

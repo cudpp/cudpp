@@ -50,6 +50,7 @@
 #include "cudpp_rand.h"
 #include "cudpp_reduce.h"
 #include "cudpp_tridiagonal.h"
+#include "cudpp_compress.h"
 
 /**
  * @brief Performs a scan operation of numElements on its input in
@@ -538,6 +539,48 @@ CUDPPResult cudppTridiagonal(CUDPPHandle planHandle,
         //dispatch the tridiagonal solver here
         return cudppTridiagonalDispatch(d_a, d_b, d_c, d_d, d_x, 
                                         systemSize, numSystems, plan);
+    }
+    else
+        return CUDPP_ERROR_INVALID_HANDLE;
+}
+
+/**
+ * @brief Compresses data stream
+ *
+ * @todo
+ *
+ * @param[out] d_x BWT Index
+ * @param[out] d_y Histogram size
+ * @param[out] d_z Histogram
+ * @param[out] d_w Encoded offset table
+ * @param[out] d_xx Size of compressed data
+ * @param[out] d_yy Compressed data
+ * @param[in] planHandle Handle to plan for compressor
+ * @param[in] d_a Uncompressed data
+ * @param[in] numElements Number of elements to compress
+ * @returns CUDPPResult indicating success or error condition
+ *
+ * @see cudppPlan, CUDPPConfiguration, CUDPPAlgorithm
+ */
+CUDPP_DLL
+CUDPPResult cudppCompress(CUDPPHandle planHandle, 
+                          void *d_a, 
+                          void *d_x, 
+                          void *d_y, 
+                          void *d_z, 
+                          void *d_w,
+                          void *d_xx,
+                          void *d_yy,
+                          size_t numElements)
+{   
+    CUDPPCompressPlan * plan = 
+        (CUDPPCompressPlan *) getPlanPtrFromHandle<CUDPPCompressPlan>(planHandle);
+    
+    if(plan != NULL)
+    {
+        //dispatch the tridiagonal solver here
+        return cudppCompressDispatch(d_a, d_x, d_y, d_z, d_w, 
+            d_xx, d_yy, numElements, plan);
     }
     else
         return CUDPP_ERROR_INVALID_HANDLE;
