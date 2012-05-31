@@ -578,9 +578,13 @@ CUDPPResult cudppCompress(CUDPPHandle planHandle,
     
     if(plan != NULL)
     {
+        if (plan->m_config.algorithm != CUDPP_COMPRESS)
+            return CUDPP_ERROR_INVALID_PLAN;
+
         //dispatch the tridiagonal solver here
-        return cudppCompressDispatch(d_a, d_x, d_y, d_z, d_w, 
+        cudppCompressDispatch(d_a, d_x, d_y, d_z, d_w, 
             d_xx, d_yy, numElements, plan);
+        return CUDPP_SUCCESS;
     }
     else
         return CUDPP_ERROR_INVALID_HANDLE;

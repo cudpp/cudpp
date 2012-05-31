@@ -31,6 +31,14 @@
  * @{
  */
 
+
+
+
+#ifdef __cplusplus
+extern "C" 
+{
+#endif
+
 /** @brief Allocate intermediate arrays used by compression.
   *
   * @todo
@@ -84,6 +92,10 @@ void cudppCompressDispatch(void *d_uncompressed,
                            const CUDPPCompressPlan *plan)
 {
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 /** @} */ // end compress functions
 /** @} */ // end cudpp_app

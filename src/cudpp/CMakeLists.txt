@@ -25,6 +25,7 @@ set (HFILES
   cudpp_util.h
   cudpp_globals.h
   cudpp_compact.h
+  cudpp_compress.h
   cudpp_radixsort.h
   cudpp_rand.h
   cudpp_reduce.h
@@ -52,6 +53,7 @@ set (CUHFILES
 set(CUFILES
   app/reduce_app.cu
   app/compact_app.cu
+  app/compress_app.cu
   app/scan_app.cu
   app/segmented_scan_app.cu
   app/spmvmult_app.cu
