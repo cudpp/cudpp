@@ -229,6 +229,28 @@ class CUDPPCompressPlan : public CUDPPPlan
 public:
     CUDPPCompressPlan(CUDPPManager *mgr, CUDPPConfiguration config, size_t numElements);
     virtual ~CUDPPCompressPlan();
+
+    // BWT
+    unsigned char *m_d_bwtIn; // User provided
+    unsigned int *m_d_keys;
+    unsigned int *m_d_values;
+    unsigned char *m_d_bwtOut;
+    int *m_d_bwtIndex;
+
+    unsigned int *m_d_bwtInRef;
+    unsigned int *m_d_bwtInRef2;
+    unsigned int *m_d_keys_dev;
+    unsigned int *m_d_values_dev;
+    int *m_d_partitionBeginA;
+    int *m_d_partitionSizeA;
+    int *m_d_partitionBeginB;
+    int *m_d_partitionSizeB;
+
+    // MTF
+    unsigned char *m_d_mtfIn;
+    unsigned char *m_d_mtfOut;
+    unsigned char *m_d_lists;
+    unsigned short *m_d_list_sizes;
 };
 
 #endif // __CUDPP_PLAN_H__

@@ -49,7 +49,29 @@ extern "C"
   */
 void allocCompressStorage(CUDPPReducePlan *plan)
 {
-    //todo
+    size_t numElts = plan->m_numElements;
+
+    // BWT
+    CUDA_SAFE_CALL(cudaMalloc((void**) &(plan->m_d_keys), numElts*sizeof(unsigned int) ));
+    CUDA_SAFE_CALL(cudaMalloc((void**) &(plan->m_d_values), numElts*sizeof(unsigned int) ));
+    CUDA_SAFE_CALL(cudaMalloc((void**) &(plan->m_d_bwtIndex), sizeof(int) ));
+    CUDA_SAFE_CALL(cudaMalloc( (void**) &(plan->m_d_bwtOut), numElts*sizeof(unsigned char) ));
+
+    CUDA_SAFE_CALL(cudaMalloc((void**) &(plan->m_d_bwtInRef), numElts*sizeof(unsigned int) ));
+    CUDA_SAFE_CALL(cudaMalloc((void**) &(plan->m_d_bwtInRef2), numElts*sizeof(unsigned int) ));
+    CUDA_SAFE_CALL(cudaMalloc((void**) &(plan->m_d_keys_dev), numElts*sizeof(unsigned int) ));
+    CUDA_SAFE_CALL(cudaMalloc((void**) &(plan->m_d_values_dev), numElts*sizeof(unsigned int) ));
+
+    CUDA_SAFE_CALL(cudaMalloc((void**)&(plan->m_d_partitionBeginA), 1024*sizeof(int)) );
+    CUDA_SAFE_CALL(cudaMalloc((void**)&(plan->m_d_partitionSizeA), 1024*sizeof(int)) );
+    CUDA_SAFE_CALL(cudaMalloc((void**)&(plan->m_d_partitionBeginB), 1024*sizeof(int)) );
+    CUDA_SAFE_CALL(cudaMalloc((void**)&(plan->m_d_partitionSizeB), 1024*sizeof(int)) );
+
+    // MTF
+    CUDA_SAFE_CALL(cudaMalloc( (void**) &(plan->m_d_lists), (numElts/PER_THREAD)*256*sizeof(unsigned char)));
+    CUDA_SAFE_CALL(cudaMalloc( (void**) &(plan->m_d_list_sizes), (numElts/PER_THREAD)*sizeof(unsigned short)));
+    CUDA_SAFE_CALL(cudaMalloc( (void**) &(plan->m_d_mtfOut), numElts*sizeof(unsigned char) ));
+
     CUDA_CHECK_ERROR("allocCompressStorage");
 }
 
@@ -91,6 +113,7 @@ void cudppCompressDispatch(void *d_uncompressed,
                            size_t numElements,
                            const CUDPPCompressPlan *plan)
 {
+    plan->m_d_mtfIn = plan->m_d_bwtOut;
 }
 
 #ifdef __cplusplus
