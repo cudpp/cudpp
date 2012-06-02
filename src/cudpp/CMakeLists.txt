@@ -36,11 +36,13 @@ set (HFILES
   )
 
 set (CUHFILES
+  cta/compress_cta.cuh
   cta/radixsort_cta.cuh
   cta/rand_cta.cuh
   cta/scan_cta.cuh
   cta/segmented_scan_cta.cuh
   kernel/compact_kernel.cuh
+  kernel/compress_kernel.cuh
   kernel/radixsort_kernel.cuh
   kernel/rand_kernel.cuh
   kernel/reduce_kernel.cuh
