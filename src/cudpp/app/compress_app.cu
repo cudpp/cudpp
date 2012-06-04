@@ -211,7 +211,25 @@ void allocCompressStorage(CUDPPCompressPlan *plan)
   */
 void freeCompressStorage(CUDPPCompressPlan *plan)
 {
-    //todo
+    CUDA_SAFE_CALL( cudaFree(plan->m_d_keys));
+    CUDA_SAFE_CALL( cudaFree(plan->m_d_values));
+    CUDA_SAFE_CALL( cudaFree(plan->m_d_bwtIndex));
+    CUDA_SAFE_CALL( cudaFree(plan->m_d_bwtOut));
+
+    CUDA_SAFE_CALL( cudaFree(plan->m_d_bwtInRef));
+    CUDA_SAFE_CALL( cudaFree(plan->m_d_bwtInRef2));
+    CUDA_SAFE_CALL( cudaFree(plan->m_d_keys_dev));
+    CUDA_SAFE_CALL( cudaFree(plan->m_d_values_dev));
+
+    CUDA_SAFE_CALL( cudaFree(plan->m_d_partitionBeginA));
+    CUDA_SAFE_CALL( cudaFree(plan->m_d_partitionSizeA));
+    CUDA_SAFE_CALL( cudaFree(plan->m_d_partitionBeginB));
+    CUDA_SAFE_CALL( cudaFree(plan->m_d_partitionSizeB));
+
+    CUDA_SAFE_CALL( cudaFree(plan->m_d_lists));
+    CUDA_SAFE_CALL( cudaFree(plan->m_d_list_sizes));
+    CUDA_SAFE_CALL( cudaFree(plan->m_d_mtfOut));
+
     CUDA_CHECK_ERROR("freeCompressStorage");
 }
 
