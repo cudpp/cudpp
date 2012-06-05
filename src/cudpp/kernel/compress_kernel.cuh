@@ -30,6 +30,7 @@
 
 typedef unsigned int uint;
 typedef unsigned char uchar;
+typedef unsigned short ushort;
 
 /** @brief Compute final BWT
 * @todo
@@ -1262,4 +1263,653 @@ bwt_keys_construct_kernel(uchar4    *d_bwtIn,
         d_bwtInRef2[start+2] = keys[2];
         d_bwtInRef2[start+3] = keys[3];
     }
+}
+
+
+
+__global__ void
+mtf_reduction_kernel(uchar      *d_mtfIn,
+                     uchar      *d_lists,
+                     ushort     *d_list_sizes,
+                     uint       nLists,
+                     uint       offset)
+{
+    __shared__ uchar shared[(MTF_PER_THREAD+256)*(MTF_THREADS_BLOCK/2)*sizeof(uchar) + MTF_THREADS_BLOCK*sizeof(ushort)];
+    __shared__ int FLAG;
+
+    // Global, local IDs
+    uint idx = threadIdx.x + (blockIdx.x * blockDim.x);
+    uint lid = threadIdx.x;
+
+    // Shared mem setup
+    uchar* sdata = (uchar*)&shared[0];
+    ushort* s_sizes = (ushort*)&sdata[(MTF_PER_THREAD+256)*(blockDim.x/2)*sizeof(uchar)];
+
+    if(lid == 0) {
+        FLAG = 0;
+    }
+    __syncthreads();
+
+    int C[8];
+#pragma unroll
+    for(int i=0; i<8; i++)
+        C[i] = 0;
+
+    ushort list_size = 0;
+    uint sdata_index = (lid%2 == 0) ? (lid/2*(256+MTF_PER_THREAD)) : ((lid+1)/2*(256+MTF_PER_THREAD) - 256);
+
+    uchar mtfVal;
+    uchar C_ID;
+    uchar C_bit;
+
+    if(idx < nLists)
+    {
+        // Take initial input and generate initial 
+        // MTF lists every PER_THREAD elements
+
+        uint start = (idx+1)*MTF_PER_THREAD-1;
+        uint finish = idx*MTF_PER_THREAD;
+        uint list_start = idx*256;
+        int j = 0;
+
+        for(int i=(int)start; i>=(int)finish; i--)
+        {
+            // Each working thread traverses through PER_THREAD elements,
+            // and generate nLists (numElements/PER_THREAD) lists
+            mtfVal = d_mtfIn[i];
+            C_ID = mtfVal/32;
+            C_bit = mtfVal%32;
+
+            int bit_to_set = 1 << (31-C_bit);
+            if( !((C[C_ID]<<C_bit) & 0x80000000) )
+            {
+                d_lists[list_start] = mtfVal;   // Add to device list
+                sdata[sdata_index+j] = mtfVal;  // Also store copy of list in shared memory, later used for reduction
+                list_start++;
+                list_size++;
+                j++;
+                C[C_ID] |= bit_to_set;          // Set bit so this value is not added to list again
+            }
+
+        }
+
+        d_list_sizes[idx] = list_size;      // Store each initial list's size
+        s_sizes[lid] = list_size;           // Store list size in smem for reduction phase
+    }
+
+    __syncthreads();
+
+    uint    l_offset = offset;              // Initial offset for reduction phase
+    uchar   done = 0;
+    uchar   working = 0;
+    ushort  initListSize = list_size;       // Init size of list being added to
+    uint    liveThreads = blockDim.x/2;     // Keep track of max number of working threads
+
+    ushort  listSize1 = 0;                  // Size of list being added from
+    ushort  listSize2 = list_size;          // Size of list being added to
+    uint    tid1 = 0;                       // Used for location in smem of list being added from
+
+    while(FLAG < blockDim.x)
+    {
+        if( ((lid+1)%l_offset == 0) && (idx < nLists) && (liveThreads > 0) )
+        {
+            tid1 = lid-l_offset/2;
+            listSize1 = s_sizes[tid1];
+
+            for(uint i=0; i<listSize1; i++)
+            {
+                if(tid1%2 == 0) {
+                    mtfVal = sdata[(256+MTF_PER_THREAD)*(tid1/2)+i];
+                } else {
+                    mtfVal = sdata[(tid1+1)/2*(256+MTF_PER_THREAD) - 256 + i];
+                }
+
+                C_ID = mtfVal/32;
+                C_bit = mtfVal%32;
+
+                int bit_to_set = 1 << (31-C_bit);
+                if( !((C[C_ID]<<C_bit) & 0x80000000) )
+                {
+                    C[C_ID] |= bit_to_set;
+                    sdata[sdata_index+listSize2] = mtfVal;  // Add to list if value is not present in list
+                    listSize2++;                            // Increment size of list being added to
+                }
+            }
+
+            liveThreads = liveThreads/2;
+            working = 1;
+
+            // Update list size for next list
+            s_sizes[lid] = listSize2;
+
+        } else if(!done) {
+            // Idle thread
+            done = 1;
+            atomicAdd(&FLAG, 1);
+        }
+        l_offset *= 2;
+        __syncthreads();
+    }
+
+    if(working && ((lid+1)%(l_offset/4))==0)
+    {
+        // This thread was the last one to do any work
+        // Update d_lists with it's reduced value
+        for(ushort i=initListSize; i<listSize2; i++)
+        {
+            d_lists[256*idx+i] = sdata[sdata_index+i];
+        }
+        d_list_sizes[idx] = listSize2;
+    }
+}
+
+__global__ void
+mtf_GLreduction_kernel(uchar     *d_lists,
+                       ushort    *d_list_sizes,
+                       uint      offset,
+                       uint      tThreads,
+                       uint      nLists)
+{
+    __shared__ uchar sdata[256*MTF_THREADS_BLOCK];
+    __shared__ int FLAG;
+
+    uint idx = threadIdx.x + (blockIdx.x * blockDim.x);
+    uint lid = threadIdx.x;
+
+    if(lid == 0) {
+        FLAG = 0;
+    }
+    __syncthreads();
+
+    uint liveThreads = blockDim.x;
+    uint l_offset = offset;
+    uint listID2 = ((idx+1)*(l_offset)-1);
+    uint listID1 = listID2 - l_offset/2;
+
+    int C[8];
+#pragma unroll
+    for(int i=0; i<8; i++)
+        C[i] = 0;
+
+    uchar mtfVal = 0;
+    uchar C_ID = 0;
+    uchar C_bit = 0;
+
+    ushort listSize1 = 0;
+    ushort listSize2 = 0;
+    ushort initListSize = 0;
+
+    uchar done = 0;
+    uchar working = 0;
+    ushort loopCnt = 1;
+
+    if( ((listID2+1)%l_offset == 0) && (listID2 < nLists) && (idx < tThreads) )
+    {
+        listSize1 = d_list_sizes[listID1];
+        listSize2 = d_list_sizes[listID2];
+        initListSize = listSize2;
+
+        for(ushort i=0; i<listSize2; i++)
+        {
+            mtfVal = d_lists[256*listID2+i];
+            sdata[256*lid+i] = mtfVal;
+
+            C_ID = mtfVal/32;
+            C_bit = mtfVal%32;
+
+            int bit_to_set = 1 << (31-C_bit);
+            C[C_ID] |= ( !((C[C_ID]<<C_bit) & 0x80000000) ) ? bit_to_set : 0;
+        }
+
+    }
+    __syncthreads();
+
+    while(FLAG < blockDim.x)
+    {
+        if( ((listID2+1)%l_offset == 0) && (liveThreads > 0) && (listID2 < nLists) && (idx < tThreads) )
+        {
+            listSize1 = d_list_sizes[listID2 - l_offset/2];
+
+            for(uint i=0; i<listSize1; i++)
+            {
+                if(loopCnt>1)
+                    mtfVal = sdata[256*(lid-loopCnt/2)+i];
+                else
+                    mtfVal = d_lists[256*listID1+i];
+
+                C_ID = mtfVal/32;
+                C_bit = mtfVal%32;
+
+                int bit_to_set = 1 << (31-C_bit);
+                if( !((C[C_ID]<<C_bit) & 0x80000000) )
+                {
+                    C[C_ID] |= bit_to_set;
+                    sdata[256*(lid)+listSize2] = mtfVal;
+                    listSize2++;
+                }
+
+            }
+
+            l_offset *= 2;
+            liveThreads = liveThreads/2;
+            working = 1;
+            loopCnt *= 2;
+
+            // Update list size for next thread
+            d_list_sizes[listID2] = listSize2;
+
+        } else if(working && !done) {
+
+            // This thread is done working
+            // Update d_lists at end
+            for(uint i=initListSize; i<listSize2; i++)
+            {
+                d_lists[256*listID2+i] = sdata[256*(lid)+i];
+            }
+            atomicAdd(&FLAG, 1);
+            done = 1;
+        } else if(!done) {
+            // Idle thread
+            atomicAdd(&FLAG, 1);
+            done = 1;
+        }
+        __syncthreads();
+    }
+}
+
+__global__ void
+mtf_GLdownsweep_kernel(uchar    *d_lists,
+                       ushort   *d_list_sizes,
+                       uint     offset,
+                       uint     lastLevel,
+                       uint     nLists,
+                       uint     tThreads)
+{
+    __shared__ uchar sdata[256*MTF_THREADS_BLOCK];
+
+    uint idx = threadIdx.x + (blockIdx.x * blockDim.x);
+    uint lid = threadIdx.x;
+
+    uint l_offset = offset;
+    uint listID = ((idx+1)*lastLevel*2-1-lastLevel);
+
+    if( (listID >= lastLevel) && (listID < (nLists-1)) && ((listID+1)%lastLevel == 0) && (idx<tThreads) )
+    {
+        ushort listSize1 = d_list_sizes[listID-lastLevel];
+
+        for(ushort i=0; i<listSize1; i++)
+        {
+            sdata[256*lid+i] = d_lists[256*(listID-lastLevel)+i];
+        }
+    }
+    __syncthreads();
+
+    while(l_offset>=lastLevel)
+    {
+        if( (((listID-lastLevel+1)%l_offset == 0) && ((listID-lastLevel+1)%(l_offset*2) != 0) &&
+            (listID >= lastLevel+l_offset) && (listID < (nLists-1)) && (idx<tThreads)) ||
+            ( (l_offset==lastLevel) &&  (listID >= lastLevel+l_offset) && (listID < (nLists-1)) &&
+            (idx<tThreads) )
+            )
+        {
+            int C[8];
+#pragma unroll
+            for(int i=0; i<8; i++)
+                C[i] = 0;
+
+            ushort listSize1 = 0;
+            ushort listSize2 = 0;
+            uchar mtfVal = 0;
+
+            if(l_offset == lastLevel) 
+            {
+                listSize2 = d_list_sizes[listID-lastLevel];
+                listSize1 = d_list_sizes[listID];
+            }
+            else 
+            {
+                listSize2 = d_list_sizes[listID-lastLevel-l_offset];
+                listSize1 = d_list_sizes[listID-lastLevel];
+            }
+
+            for(uint i=0; i<listSize1; i++)
+            {
+                if(l_offset == lastLevel)
+                    mtfVal = d_lists[256*listID+i];
+                else
+                    mtfVal = sdata[256*lid+i];
+
+                uchar C_ID = mtfVal/32;
+                uchar C_bit = mtfVal%32;
+
+                C[C_ID] |= 1<<(31-C_bit);
+
+            }
+
+            for(uint i=0; i<listSize2; i++)
+            {
+                if(l_offset == lastLevel)
+                    mtfVal = sdata[256*lid+i];
+                else
+                    mtfVal = sdata[256*(lid-l_offset/(2*lastLevel))+i];
+
+                uchar C_ID = mtfVal/32;
+                uchar C_bit = mtfVal%32;
+
+                if( !((C[C_ID]<<C_bit) & 0x80000000) )
+                {
+                    C[C_ID] |= 1<<(31-C_bit);
+                    if(l_offset == lastLevel) {
+                        d_lists[256*listID+listSize1] = mtfVal;
+                    } else {
+                        sdata[256*(lid)+listSize1] = mtfVal;
+                        d_lists[256*(listID-lastLevel)+listSize1] = mtfVal;
+                    }
+                    listSize1++;
+                }
+            }
+
+            // Update list size for next thread
+            if(l_offset == lastLevel) {
+                d_list_sizes[listID] = listSize1;
+            } else {
+                d_list_sizes[listID-lastLevel] = listSize1;
+            }
+
+        }
+
+        l_offset = l_offset/2;
+        __syncthreads();
+
+    }
+}
+
+__global__ void
+mtf_localscan_lists_kernel(uchar    *d_mtfIn,
+                           uchar    *d_mtfOut,
+                           uchar    *d_lists,
+                           ushort   *d_list_sizes,
+                           uint     nLists,
+                           uint     offset)
+{
+    uint idx = threadIdx.x + (blockIdx.x * blockDim.x);
+    uint lid = threadIdx.x;
+
+    __shared__ uchar shared[MTF_LIST_SIZE*MTF_THREADS_BLOCK*sizeof(uchar) + MTF_THREADS_BLOCK*sizeof(ushort)];
+    __shared__ uchar s_mtfIn[MTF_THREADS_BLOCK*MTF_PER_THREAD];
+
+    // Each thread has it's own MTF list, stored in sLists (each list is 256-bytes)
+    uchar* sLists = (uchar*)shared;
+    uchar* sMyList = (uchar*)&shared[MTF_LIST_SIZE*lid];
+
+    // The number of elements present in each MTF list (max = 256)
+    ushort* s_sizes = (ushort*)&sLists[MTF_LIST_SIZE*blockDim.x*sizeof(uchar)];
+
+    __shared__ int FLAG;
+
+    if(lid == 0) {
+        FLAG = 0;
+    }
+    __syncthreads();
+
+    int C[8];
+#pragma unroll
+    for(int i=0; i<8; i++)
+        C[i] = 0;
+
+    ushort list_size = 0;
+    
+    uchar mtfVal;
+    uchar C_ID;
+    uchar C_bit;
+
+    // There is no unique MTF list at the start of the input sequence
+    // The MTF list at the beg is simply all characters placed in order, e.g. [0, 1, 2, .. 255]
+    if(idx==0)
+        s_sizes[0] = 0;
+
+    // Use this are a temporary storage for C0, C1, etc.
+    int* tmpPreviouslySeen = (int*)&s_mtfIn[0];
+
+    // Clear tmpPreviouslySeen[] + s_sdata_index[]
+    for(int i=lid; i<(MTF_THREADS_BLOCK*MTF_PER_THREAD/4); i += blockDim.x)
+        tmpPreviouslySeen[i] = 0;
+    __syncthreads();
+
+    for(int tid = 0; tid < blockDim.x; tid++)
+    {
+        if(tid == 0 && blockIdx.x == 0) continue;
+
+        uint sd_tid = 0;
+        int* C = &tmpPreviouslySeen[tid*8];
+        ushort tid_list_size = d_list_sizes[tid+blockIdx.x*blockDim.x-1];
+
+        if(lid == tid)
+        {
+            list_size = tid_list_size;
+            s_sizes[lid] = tid_list_size;
+        }
+        
+        for(int i = (int)lid; i < tid_list_size; i += blockDim.x)
+        {
+            mtfVal = d_lists[(tid+blockIdx.x*blockDim.x-1)*256+i];
+            
+            if(i < MTF_LIST_SIZE) {
+                sd_tid++;
+                sLists[tid*MTF_LIST_SIZE+i] = mtfVal;
+            }
+
+            // Finds which bit needs to be set to '1'
+            C_ID = mtfVal/32;
+            C_bit = mtfVal%32;
+
+            int bit_to_set = 1 << (31-C_bit);
+            atomicOr(&C[C_ID], bit_to_set);
+        }
+    }
+
+    __syncthreads();
+
+    // Copy tmpPreviouslySeen into respective registers
+    if(idx>0)
+    {
+#pragma unroll
+        for(int i=0; i<8; i++)
+            C[i] = tmpPreviouslySeen[lid*8+i];
+    }
+
+    //===================================================================================================
+    //                                      MTF Local Scan
+    // Each thread now has a copy of its own list. From prior steps, we have also computed the MTF list
+    // at block intervals. Using these lists, we are able to construct each thread's MTF list using 
+    // a local parallel scan (Reduction + "down-sweep" phases).
+    //===================================================================================================
+
+    //==========================
+    //  Local Reduction Phase
+    //==========================
+
+    uint l_offset = offset;
+    uchar done = 0;
+
+    while(FLAG < blockDim.x)
+    {
+        if(idx<nLists && (lid+1)%l_offset==0) {
+
+            int add_threadId = lid-l_offset/2;                  // The ID of the list we are appending to current list
+            ushort add_size = s_sizes[add_threadId];            // The size of the list we are appending to current list
+            int add_data_index = add_threadId*MTF_LIST_SIZE;    // The location of the list we are appending to current list
+
+            // Start appending previous MTF list with current MTF list
+            // We only append the characters that are not
+            // present in our the list we are appending to
+            for(int i=0; i<(int)add_size; i++) {
+
+                mtfVal = (i<MTF_LIST_SIZE) ?
+                    sLists[add_data_index+i] : d_lists[256*(add_threadId+blockIdx.x*blockDim.x-1)+i];
+
+                C_ID = mtfVal/32;
+                C_bit = mtfVal%32;
+
+                int bit_to_set = 1 << (31-C_bit);
+
+                if(!((C[C_ID]<<C_bit) & 0x80000000))
+                {
+                    C[C_ID] |= bit_to_set;
+                    if(list_size < MTF_LIST_SIZE) {
+                        sMyList[list_size] = mtfVal;      // Append to current MTF list if value is not present in the list
+                    } else
+                        d_lists[256*(idx-1)+list_size] = mtfVal;
+                    list_size++;
+                }
+            }
+
+            // Update the size of current MTF list
+            // current size += sizeof(list that was appended)
+            s_sizes[lid] = list_size;
+
+        } else if(!done) {
+            atomicAdd(&FLAG, 1);
+            done = 1;
+        }
+
+        l_offset *= 2;
+        __syncthreads();
+    }
+
+    //==========================================================================
+    //                  Local "Down-Sweep" Phase
+    // Now we are done with the reduction phase. We now continue to build our
+    // final MTF lists by performing the down-sweep phase.
+    //==========================================================================
+
+    l_offset = l_offset/16;
+    while(l_offset>0)
+    {
+        if(lid>=l_offset && (lid+1)%l_offset==0 && (lid+1)%(l_offset*2)!=0) {
+
+            int add_threadId = lid-l_offset;                // The ID of the list we are appending to current list
+            ushort add_size = s_sizes[add_threadId];        // The size of the list we are appending to current list
+            int add_data_index = add_threadId*MTF_LIST_SIZE;    // The location of the list we are appending to current list
+
+            for(int i=0; i<add_size; i++) {
+
+                mtfVal = (i<MTF_LIST_SIZE) ?
+                    sLists[add_data_index+i] : d_lists[256*(add_threadId+blockIdx.x*blockDim.x-1)+i];
+                
+                C_ID = mtfVal/32;
+                C_bit = mtfVal%32;
+
+                int bit_to_set = 1 << (31-C_bit);
+
+                if(!((C[C_ID]<<C_bit) & 0x80000000))
+                {
+                    if(list_size < MTF_LIST_SIZE) {
+                        sMyList[list_size] = mtfVal;      // Append to current MTF list if value is not present in the list
+                    } else
+                        d_lists[256*(idx-1)+list_size] = mtfVal;
+                    list_size++;
+                    C[C_ID] |= bit_to_set;
+                }
+            }
+
+            // Update the size of current MTF list
+            // current size += sizeof(list that was appended)
+            s_sizes[lid] = list_size;
+
+        }
+
+        l_offset = l_offset/2;
+        __syncthreads();
+    }
+
+    // Read in d_mtfIn to s_mtfIn
+    for(int i = 0; i < MTF_PER_THREAD; i++)
+    {
+        // Coalesced reads
+        s_mtfIn[lid+MTF_THREADS_BLOCK*i] = d_mtfIn[blockIdx.x*MTF_PER_THREAD*MTF_THREADS_BLOCK + lid+MTF_THREADS_BLOCK*i];
+    }
+    __syncthreads();
+
+    //========================================================================
+    //                      Final MTF
+    // Done computing each MTF list. Now, compute final MTF values
+    // using these MTF lists. Each MTF list can be a maximum of 256 chars
+    //========================================================================
+
+    if(idx < nLists)
+    {
+        for(int i=0; i<MTF_PER_THREAD; i++)
+        {
+            uchar mtfOut = 0;
+            bool found = false;
+
+            // Read next MTF inpute
+            mtfVal = s_mtfIn[lid*MTF_PER_THREAD + i];
+            C_ID = mtfVal/32;
+            C_bit = mtfVal%32;
+
+            int bit_to_set = 1 << (31-C_bit);
+            if( !((C[C_ID]<<C_bit) & 0x80000000) ) C[C_ID] |= bit_to_set;
+            else found = true;
+
+            if(found)
+            {
+                // Element already exists in list, Moving to front
+                uint tmp1 = mtfVal;
+                uint tmp2;
+
+                for(int j=0; j<(int)list_size; j++)
+                {
+                    if(j < MTF_LIST_SIZE) {
+                        tmp2 = sMyList[j];
+                        sMyList[j] = tmp1;
+                    } else {
+                        tmp2 = d_lists[256*(idx-1)+j];
+                        d_lists[256*(idx-1)+j] = tmp1;
+                    }
+
+                    tmp1 = tmp2;
+                    if(tmp1 == mtfVal) {
+                        mtfOut = j;
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                // Adding new element to front of the list, shift all other elements
+                uchar greater_cnt = 0;
+                for(int j=(int)list_size; j>0; j--)
+                {
+                    if(j > MTF_LIST_SIZE) {
+                        d_lists[256*(idx-1)+j] = d_lists[256*(idx-1)+j-1];
+                        if(d_lists[256*(idx-1)+j] > mtfVal) greater_cnt++;
+                    } else if(j == MTF_LIST_SIZE) {
+                        d_lists[256*(idx-1)+j] = sMyList[j-1]; // Shifting elements
+                        if(sMyList[j-1] > mtfVal) greater_cnt++;
+                    } else if(j < MTF_LIST_SIZE) {
+                        sMyList[j] = sMyList[j-1]; // shifting elements
+                        if(sMyList[j] > mtfVal) greater_cnt++;
+                    }
+                }
+                sMyList[0] = mtfVal;
+                list_size++;
+                mtfOut = mtfVal+greater_cnt;
+            }
+
+            // Write MTF output
+            s_mtfIn[lid*MTF_PER_THREAD + i] = mtfOut;
+        }
+        
+    }
+
+    __syncthreads();
+
+    for(int i = 0; i < MTF_PER_THREAD; i++)
+    {
+        // Coalesced writes
+        d_mtfOut[blockIdx.x*MTF_PER_THREAD*MTF_THREADS_BLOCK + lid+MTF_THREADS_BLOCK*i] = s_mtfIn[lid+MTF_THREADS_BLOCK*i];
+    }
+
 }

@@ -50,6 +50,8 @@ const int SEGSCAN_ELTS_PER_THREAD = 8;           /**< Number of elements per seg
 #define BWT_INTERSECT_B_BLOCK_SIZE_multi    2*BWT_DEPTH_multi*BWT_CTASIZE_multi
 
 #define MTF_PER_THREAD      64
+#define MTF_THREADS_BLOCK   64
+#define MTF_LIST_SIZE       25
 
 #endif // __CUDPP_GLOBALS_H__
 

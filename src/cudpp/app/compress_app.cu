@@ -34,15 +34,111 @@
  * @{
  */
 
+/** @brief Perform the MTF
+  * 
+  * @todo
+  *
+  */
+void moveToFrontTransform(size_t                    numElements,
+                          const CUDPPCompressPlan   *plan)
+{
+    // set ptrs
+    unsigned char* d_mtfIn = plan->m_d_bwtOut;
+
+    unsigned int nThreads = MTF_THREADS_BLOCK; 
+    unsigned int nLists = numElements/MTF_PER_THREAD;
+    unsigned int tThreads = numElements/MTF_PER_THREAD;
+    unsigned int offset = 2;
+
+    bool fullBlocks = (tThreads%nThreads == 0);
+    unsigned int nBlocks = (fullBlocks) ? (tThreads/nThreads) : (tThreads/nThreads + 1);
+
+    //-------------------------------------------
+    //  Initial MTF lists + Initial Reduction
+    //-------------------------------------------
+
+    // Set work-item dimensions
+    dim3 grid(nBlocks, 1, 1);
+    dim3 threads(nThreads, 1, 1);
+
+    // Kernel call
+    mtf_reduction_kernel<<< grid, threads>>>
+        (d_mtfIn, plan->m_d_lists, plan->m_d_list_sizes, nLists, offset);
+    CUDA_SAFE_CALL(cudaThreadSynchronize());
+
+    if(nBlocks > 1) 
+    {
+        //----------------------
+        //  MTF Global Reduce
+        //----------------------
+
+        unsigned int init_offset = offset * nThreads;
+        offset = init_offset;
+        tThreads = nBlocks/2;
+        fullBlocks = (tThreads%nThreads == 0);
+        nBlocks = (fullBlocks) ? (tThreads/nThreads) : (tThreads/nThreads + 1);
+
+        // Set work dimensions
+        dim3 grid_GLred(nBlocks, 1, 1);
+        dim3 threads_GLred(nThreads, 1, 1);
+
+        while(offset <= nLists)
+        {
+            mtf_GLreduction_kernel<<< grid_GLred, threads_GLred>>>
+                (plan->m_d_lists, plan->m_d_list_sizes, offset, tThreads, nLists);
+            CUDA_SAFE_CALL(cudaThreadSynchronize());
+            offset *= 2*nThreads;
+        }
+
+        //-----------------------------
+        //  MTF Global Down-sweep
+        //-----------------------------
+        offset = nLists/4;
+        unsigned int lastLevel = 0;
+
+        // Work-dimensions
+        dim3 grid_GLsweep(nBlocks, 1, 1);
+        dim3 threads_GLsweep(nThreads, 1, 1);
+
+        while(offset >= init_offset/2)
+        {
+            lastLevel = offset/nThreads;
+            lastLevel = (lastLevel>=(init_offset/2)) ? lastLevel : init_offset/2;
+
+            mtf_GLdownsweep_kernel<<< grid_GLsweep, threads_GLsweep>>>
+                (plan->m_d_lists, plan->m_d_list_sizes, offset, lastLevel, nLists, tThreads);
+            CUDA_SAFE_CALL(cudaThreadSynchronize());
+
+            offset = lastLevel/2;
+        }
+    }
+
+    //------------------------
+    //      Local Scan
+    //------------------------
+    tThreads = numElements/MTF_PER_THREAD;
+    offset = 2;
+    fullBlocks = (tThreads%nThreads == 0);
+    nBlocks = (fullBlocks) ? (tThreads/nThreads) : (tThreads/nThreads + 1);
+
+    dim3 grid_loc(nBlocks, 1, 1);
+    dim3 threads_loc(nThreads, 1, 1);
+
+    mtf_localscan_lists_kernel<<< grid_loc, threads_loc>>>
+        (d_mtfIn, plan->m_d_mtfOut, plan->m_d_lists, plan->m_d_list_sizes, nLists, offset);
+    CUDA_SAFE_CALL(cudaThreadSynchronize());
+
+}
+
 /** @brief Perform the BWT
   * 
   * @todo
   *
   */
-void burrowsWheelerTransform(unsigned char *d_uncompressed,
-                             int *d_bwtIndex,
-                             size_t numElements,
-                             const CUDPPCompressPlan *plan)
+void burrowsWheelerTransform(unsigned char              *d_uncompressed,
+                             int                        *d_bwtIndex,
+                             size_t                     numElements,
+                             const CUDPPCompressPlan    *plan)
 {
     // set ptrs
     d_bwtIndex = plan->m_d_bwtIndex;
@@ -264,7 +360,7 @@ void cudppCompressDispatch(void *d_uncompressed,
         numElements, plan);
 
     // Call to perform the move-to-front transform
-    //moveToFrontTransform();
+    moveToFrontTransform(numElements, plan);
 }
 
 #ifdef __cplusplus
