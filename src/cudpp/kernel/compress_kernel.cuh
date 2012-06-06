@@ -15,9 +15,9 @@
 
 /**
 * @file
-* compact_kernel.cu
+* compress_kernel.cu
 * 
-* @brief CUDPP kernel-level compact routines
+* @brief CUDPP kernel-level compress routines
 */
 
 /** \addtogroup cudpp_kernel
@@ -1912,4 +1912,802 @@ mtf_localscan_lists_kernel(uchar    *d_mtfIn,
         d_mtfOut[blockIdx.x*MTF_PER_THREAD*MTF_THREADS_BLOCK + lid+MTF_THREADS_BLOCK*i] = s_mtfIn[lid+MTF_THREADS_BLOCK*i];
     }
 
+}
+
+
+
+
+
+
+
+
+
+__global__ void
+huffman_build_histogram_kernel(uint     *d_input, // Read in as words, instead of bytes
+                               uint     *d_histograms,
+                               uint     numElements)
+{
+    // Per-thread Histogram - Each "bin" will be 1 byte
+    __shared__ uchar threadHist[HUFF_THREADS_PER_BLOCK_HIST*256]; // Each thread has 256 1-byte bins
+
+    uint* blockHist = &d_histograms[blockIdx.x*256];
+
+    // Global, local IDs
+    uint lid = threadIdx.x;
+
+    // Clear thread histograms
+    for(uint i=0; i<256; i++)
+    {
+        threadHist[lid*256+i] = 0;
+    }
+
+    // Clear block histogram
+    for(uint i=0; i<(256/HUFF_THREADS_PER_BLOCK_HIST); i++)
+    {
+        blockHist[lid*(256/HUFF_THREADS_PER_BLOCK_HIST)+i] = 0;
+    }
+    __syncthreads();
+
+    uint wordsPerThread = HUFF_WORK_PER_THREAD_HIST/4;   // We can change this later, possibly increase?
+
+    for(uint i=0; i<wordsPerThread; i++)
+    {
+        // Coalesced reads
+        uint word = d_input[blockIdx.x*wordsPerThread*HUFF_THREADS_PER_BLOCK_HIST + lid+HUFF_THREADS_PER_BLOCK_HIST*i];
+
+        // Extract each byte from word
+        uchar bin1 = (uchar)(word & 0xff);
+        uchar bin2 = (uchar)((word >> 8) & 0xff);
+        uchar bin3 = (uchar)((word >> 16) & 0xff);
+        uchar bin4 = (uchar)((word >> 24) & 0xff);
+
+        // Update thread histograms + spill to shared if overflowing
+        if(threadHist[lid*256+bin1]==255)
+        {
+            atomicAdd(&blockHist[bin1], 255);
+            threadHist[lid*256+bin1] = 0;
+        }
+        threadHist[lid*256+bin1]++;
+
+        if(threadHist[lid*256+bin2]==255)
+        {
+            atomicAdd(&blockHist[bin2], 255);
+            threadHist[lid*256+bin2] = 0;
+        }
+        threadHist[lid*256+bin2]++;
+
+        if(threadHist[lid*256+bin3]==255)
+        {
+            atomicAdd(&blockHist[bin3], 255);
+            threadHist[lid*256+bin3] = 0;
+        }
+        threadHist[lid*256+bin3]++;
+
+        if(threadHist[lid*256+bin4]==255)
+        {
+            atomicAdd(&blockHist[bin4], 255);
+            threadHist[lid*256+bin4] = 0;
+        }
+        threadHist[lid*256+bin4]++;
+    }
+
+    __syncthreads();
+
+    // Merge thread histograms into a block histogram
+    for(uint i=0; i<(256/HUFF_THREADS_PER_BLOCK_HIST); i++)
+    {
+        uint count = 0;
+        for(uint j=0; j<HUFF_THREADS_PER_BLOCK_HIST; j++)
+        {
+            count += threadHist[lid*(256/HUFF_THREADS_PER_BLOCK_HIST)+i + j*256];
+        }
+
+        blockHist[lid*(256/HUFF_THREADS_PER_BLOCK_HIST)+i] += count;
+    }
+}
+
+__global__ void
+huffman_build_tree_kernel(uchar     *d_input,
+                          uchar     *d_huffCodesPacked,
+                          uint      *d_huffCodeLocations,
+                          uchar     *d_huffCodeLengths,
+                          uint      *d_histograms,
+                          uint      *d_histogram,
+                          uint      *d_nCodesPacked,
+                          uint      *d_totalEncodedSize,
+                          uint      histBlocks,
+                          uint      numElements)
+{
+    // Global, local IDs
+    uint idx = threadIdx.x + (blockIdx.x * blockDim.x);
+    uint lid = threadIdx.x;
+
+    __shared__ uint histogram[HUFF_NUM_CHARS];
+    __shared__ my_huffman_node_t h_huffmanArray[HUFF_NUM_CHARS*2-1];
+
+    // Used during building of Huffman codes
+    __shared__ huffman_code tempCode;
+    __shared__ huffman_code tempCode2;
+
+    // Huffman codes packed together + lengths
+    __shared__ uchar s_codesPacked[(HUFF_NUM_CHARS*(HUFF_NUM_CHARS+1)/2)/8+1]; // Array size [4145] -- estimating the average bit code is no more than 8 bits
+    __shared__ uchar s_codeLengths[HUFF_NUM_CHARS];
+
+    // Set codesPacked and codeLocations to 0
+    uint workPerThread = (idx == (blockDim.x-1) ) ? 81 : 32; // Only works for 128 threads
+
+    if(idx==0)
+    {
+        *d_nCodesPacked = 0; // Only works when 1 thread block is present
+        *d_totalEncodedSize = 0;
+    }
+
+    for(uint i = 0; i < workPerThread; i++)
+    {
+        s_codesPacked[idx*32+i] = 0;
+    }
+
+    __syncthreads();
+
+    // Set codes to 0
+    if(idx==0)
+    {
+        for(int j=0; j<HUFF_NUM_CHARS; j++)
+        {
+            histogram[j] = 0;
+            s_codeLengths[j] = 0;
+        }
+        histogram[HUFF_EOF_CHAR] = 1;
+
+        for(int j=0; j<HUFF_NUM_CHARS; j++)
+        {
+            h_huffmanArray[j].iter = (uint)j;
+            h_huffmanArray[j].value = j;
+            h_huffmanArray[j].ignore = HUFF_TRUE;
+            h_huffmanArray[j].count = 0;
+            h_huffmanArray[j].level = 0;
+            h_huffmanArray[j].left = -1;
+            h_huffmanArray[j].right = -1;
+            h_huffmanArray[j].parent = -1;
+        }
+        for(int j=HUFF_NUM_CHARS; j<HUFF_NUM_CHARS*2-1; j++)
+        {
+            h_huffmanArray[j].iter = (uint)j;
+            h_huffmanArray[j].value = 0;
+            h_huffmanArray[j].ignore = HUFF_TRUE;
+            h_huffmanArray[j].count = 0;
+            h_huffmanArray[j].level = 0;
+            h_huffmanArray[j].left = -1;
+            h_huffmanArray[j].right = -1;
+            h_huffmanArray[j].parent = -1;
+        }
+
+    }
+    __syncthreads();
+
+    // Merge block histograms into final histogram
+    workPerThread = 256/blockDim.x;
+    for(uint i=0; i<workPerThread; i++)
+    {
+        uint count = 0;
+        for(uint j=0; j<histBlocks; j++)
+        {
+            count += d_histograms[lid+(blockDim.x)*i + j*256]; // Coalesced Reads
+        }
+        histogram[lid+(blockDim.x)*i] += count;
+    }
+
+    __syncthreads();
+
+    // Update global histogram (used during decode)
+    for(int i=idx; i<256; i+=blockDim.x)
+        d_histogram[i] = histogram[i];
+
+    //--------------------------------------------------------------------------
+    //          Huffman tree: Build the Huffman tree
+    //--------------------------------------------------------------------------
+
+    __shared__ uint nNodes;
+    __shared__ ushort2 mins[129];
+    __shared__ uchar complete;
+    __shared__ uint addedNodes;
+
+    __shared__ int min1, min2; // two nodes with the lowest count
+    __shared__ int head_node; // root of tree
+    __shared__ int current_node; // location on the tree
+
+    if(idx == 0)
+    {
+        complete = 0;
+        nNodes = 0;
+        addedNodes = 0;
+        min1 = HUFF_NONE;
+        min2 = HUFF_NONE;
+
+        for(int j=0; j<(HUFF_NUM_CHARS); j++)
+        {
+            if(histogram[j] > 0)
+            {
+                h_huffmanArray[nNodes].count = histogram[j];
+                h_huffmanArray[nNodes].ignore = 0;
+                h_huffmanArray[nNodes].value = j;
+                nNodes++;
+            }
+        }
+        mins[128].x = 256;
+        mins[128].y = 257;
+    }
+
+    mins[idx].x = idx*2;
+    mins[idx].y = idx*2+1;
+
+    __threadfence();
+    __syncthreads();
+
+    // Find minimums using reduction
+
+    uint workingThreads = (nNodes%2==0) ? nNodes/2 : nNodes/2+1;
+
+    for(uint x=0;;x++)
+    {
+        __syncthreads();
+
+        uint offset = 1;
+
+        // Initial stage - created initial pairs
+        if(idx < workingThreads)
+        {
+            mins[idx].x = idx*2;
+            mins[idx].y = idx*2+1;
+
+            if( ((!h_huffmanArray[mins[idx].x].ignore) && (!h_huffmanArray[mins[idx].y].ignore)) &&
+                ((h_huffmanArray[mins[idx].y].count < h_huffmanArray[mins[idx].x].count) ||
+                (h_huffmanArray[mins[idx].x].count == h_huffmanArray[mins[idx].y].count && h_huffmanArray[mins[idx].y].level < h_huffmanArray[mins[idx].x].level) ) )
+            {
+                // swap
+                ushort tmp = mins[idx].x;
+                mins[idx].x = mins[idx].y;
+                mins[idx].y = tmp;
+            }
+            else if(h_huffmanArray[mins[idx].x].ignore && !h_huffmanArray[mins[idx].y].ignore)
+            {
+                // swap
+                ushort tmp = mins[idx].x;
+                mins[idx].x = mins[idx].y;
+                mins[idx].y = tmp;
+            }
+
+            if(workingThreads > blockDim.x && idx == 0)
+            {
+                mins[128].x = 256;
+                mins[128].y = 257;
+            }
+        }
+
+        __threadfence();
+        __syncthreads();
+
+        uint scaledID = idx;
+
+        while(offset*2 < nNodes)
+        {
+            uchar check = 0;
+
+            offset *= 2;
+            scaledID *= 2;
+
+            if(scaledID < workingThreads && scaledID%offset==0)
+            {
+                if(scaledID == workingThreads-1)
+                    goto skip;
+
+                if(!h_huffmanArray[mins[scaledID+offset/2].x].ignore)
+                {
+                    // 2nd 'x' not ignored
+
+                    if(!h_huffmanArray[mins[scaledID].y].ignore)
+                    {
+                        // 1st 'y' not ignored, implies 1st 'x' not ignored
+                        if( (h_huffmanArray[mins[scaledID+offset/2].x].count < h_huffmanArray[mins[scaledID].y].count) ||
+                            (h_huffmanArray[mins[scaledID+offset/2].x].count == h_huffmanArray[mins[scaledID].y].count &&
+                            h_huffmanArray[mins[scaledID+offset/2].x].level < h_huffmanArray[mins[scaledID].y].level) )
+                        {
+                            // Replace 1st 'y' with 2nd 'x'
+                            mins[scaledID].y = mins[scaledID+offset/2].x;
+
+                            if(!h_huffmanArray[mins[scaledID+offset/2].y].ignore)
+                            {
+                                // 2nd 'y' not ignored
+                                if( (h_huffmanArray[mins[scaledID+offset/2].y].count < h_huffmanArray[mins[scaledID].x].count) ||
+                                    (h_huffmanArray[mins[scaledID+offset/2].y].count == h_huffmanArray[mins[scaledID].x].count &&
+                                    h_huffmanArray[mins[scaledID+offset/2].y].level < h_huffmanArray[mins[scaledID].x].level) )
+                                {
+                                    // Replace both 1st with 2nd
+                                    mins[scaledID].x = mins[scaledID].y;
+                                    mins[scaledID].y = mins[scaledID+offset/2].y;
+                                } else {
+                                    // 1st 'x' < 2nd 'y'
+                                    check = 1;
+                                }
+                            } else {
+                                // 2nd  'y' ignored
+                                check = 1;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // 1st 'y' ignored
+                        // replace 1st 'y' with 2nd 'x'
+                        mins[scaledID].y = mins[scaledID+offset/2].x;
+
+                        if(!h_huffmanArray[mins[scaledID+offset/2].y].ignore)
+                        { 
+                            // 2nd 'y' not ignored
+                            if(!h_huffmanArray[mins[scaledID].x].ignore)
+                            { 
+                                // 1st 'x' not ignored
+                                if( (h_huffmanArray[mins[scaledID+offset/2].y].count < h_huffmanArray[mins[scaledID].x].count) ||
+                                    (h_huffmanArray[mins[scaledID+offset/2].y].count == h_huffmanArray[mins[scaledID].x].count &&
+                                    h_huffmanArray[mins[scaledID+offset/2].y].level < h_huffmanArray[mins[scaledID].x].level) )
+                                {
+                                    // Replace both 1st with 2nd
+                                    mins[scaledID].x = mins[scaledID].y;
+                                    mins[scaledID].y = mins[scaledID+offset/2].y;
+                                } else {
+                                    // 1st 'x' < 2nd 'y'
+                                    check = 1;
+                                }
+                            }
+                            else
+                            {
+                                // 1st 'x' ignored
+                                // Replace both 1st with 2nd
+                                mins[scaledID].x = mins[scaledID].y;
+                                mins[scaledID].y = mins[scaledID+offset/2].y;
+                            }
+                        } else {
+                            // 2nd 'y' ignored
+                            check = 1;
+                        }
+                    }
+
+                    // one last check for re-ordering
+                    if(check)
+                    {
+                        if(!h_huffmanArray[mins[scaledID].x].ignore)
+                        { // 1st 'x' not ignored
+                            if((h_huffmanArray[mins[scaledID].y].count < h_huffmanArray[mins[scaledID].x].count) ||
+                                (h_huffmanArray[mins[scaledID].y].count == h_huffmanArray[mins[scaledID].x].count &&
+                                h_huffmanArray[mins[scaledID].y].level < h_huffmanArray[mins[scaledID].x].level))
+                            {
+                                // swap
+                                ushort tmp = mins[scaledID].x;
+                                mins[scaledID].x = mins[scaledID].y;
+                                mins[scaledID].y = tmp;
+                            }
+                        } else { // 1st 'x' ignored
+                            // swap
+                            ushort tmp = mins[scaledID].x;
+                            mins[scaledID].x = mins[scaledID].y;
+                            mins[scaledID].y = tmp;
+                        }
+                    }
+
+                }
+            }
+
+skip:
+
+            __threadfence();
+            __syncthreads();
+
+        }
+
+        if(idx == 0)
+        {
+            min1 = HUFF_NONE;
+            min2 = HUFF_NONE;
+
+            if(!h_huffmanArray[mins[0].x].ignore)
+                min1 = (int)h_huffmanArray[mins[0].x].iter;
+
+            if(!h_huffmanArray[mins[0].y].ignore)
+                min2 = (int)h_huffmanArray[mins[0].y].iter;
+
+            if (min1 == HUFF_NONE) {
+                // No more nodes to combine
+                complete = 1;
+                head_node = min1;
+                goto end;
+            }
+
+            if (min2 == HUFF_NONE) {
+                // No more nodes to combine
+                complete = 1;
+                head_node = min1;
+                goto end;
+            }
+
+            h_huffmanArray[min2].ignore = 1;
+            h_huffmanArray[min1].ignore = 0;
+
+            for(int i = (int)nNodes+addedNodes; i<(HUFF_NUM_CHARS*2-1); i++)
+            {
+                if(h_huffmanArray[i].count==0)
+                {
+                    // Found next available slot
+                    h_huffmanArray[i] = h_huffmanArray[min1];
+                    h_huffmanArray[i].iter = (uint)i;
+                    h_huffmanArray[i].ignore = 1;
+                    h_huffmanArray[i].parent = h_huffmanArray[min1].iter;
+
+                    if(h_huffmanArray[i].left >= 0)
+                        h_huffmanArray[h_huffmanArray[i].left].parent = i;
+                    if(h_huffmanArray[i].right >= 0)
+                        h_huffmanArray[h_huffmanArray[i].right].parent = i;
+
+                    h_huffmanArray[min1].left = i;
+
+                    addedNodes++;
+                    break;
+                }
+            }
+
+            h_huffmanArray[min2].ignore = 1;
+
+            // Combines both nodes into composite node
+            h_huffmanArray[min1].value = HUFF_COMPOSITE_NODE;
+            h_huffmanArray[min1].ignore = 0;
+            h_huffmanArray[min1].count = h_huffmanArray[min1].count + h_huffmanArray[min2].count;
+            h_huffmanArray[min1].level = max(h_huffmanArray[min1].level, h_huffmanArray[min2].level) + 1;
+
+            h_huffmanArray[min1].right = h_huffmanArray[min2].iter;
+            h_huffmanArray[min2].parent =  h_huffmanArray[min1].iter;
+            h_huffmanArray[min1].parent = -1;
+        }
+end:
+        __threadfence();
+        __syncthreads();
+
+        if(complete) break;
+    }
+    __syncthreads();
+
+
+    //--------------------------------------------------------------------------
+    //      Huffman Codes: Use the tree that is build to create
+    //                     the Huffman codes -- MakeCodeList() on the CPU
+    //      Store huff. codes in codes[] and length in code_lengths[]
+    //--------------------------------------------------------------------------
+
+    if(idx == 0)
+    {
+        uint writeBit = 0; // Use for d_huffCodesPacked
+        uchar buffer = 8;
+        uint section = 0;
+        uint offset = 0;
+        uint numBits = 0;
+
+        uchar depth = 0;
+        current_node = head_node;
+        tempCode.numBits = 256;
+        memset(&tempCode.code, 0, 32*sizeof(uchar)); // clear code
+
+        for(;;)
+        {
+            // Follow tree branch all of the way to the left
+            // Going left = 0, Going right = 1
+
+            while (h_huffmanArray[current_node].left != -1)
+            { // Moving Left
+                BitArrayShiftLeft(&tempCode, 1);
+                current_node = h_huffmanArray[current_node].left;
+                depth++;
+            }
+
+            if (h_huffmanArray[current_node].value != HUFF_COMPOSITE_NODE)
+            { // Enter results in list
+                memcpy((void *)(&tempCode2.code[0]), (void *)(&tempCode.code[0]), BITS_TO_CHARS(tempCode.numBits));
+                tempCode2.numBits = tempCode.numBits;
+
+                // Left justify code
+                BitArrayShiftLeft(&tempCode2, 256 - depth);
+
+                // Pack Huffman codes into char array
+                s_codeLengths[h_huffmanArray[current_node].value] = depth;
+                d_huffCodeLocations[h_huffmanArray[current_node].value] = writeBit;
+                writeBit += depth;
+                offset = 0;
+                numBits = depth;
+
+
+                while(numBits >= 8)
+                {
+                    if(buffer < numBits) {
+                        s_codesPacked[section] |= tempCode2.code[offset] >> (8-buffer);
+                        section++;
+                        s_codesPacked[section] |= tempCode2.code[offset] << (buffer);
+                    } else {
+                        s_codesPacked[section] |= tempCode2.code[offset];
+                        section++;
+                    }
+                    numBits -= 8;
+                    offset++;
+                }
+
+                if(numBits > 0)
+                {
+                    uchar tmp = tempCode2.code[offset];
+                    while(numBits > 0)
+                    {
+                        s_codesPacked[section] |= (tmp&0x80) >> (8-buffer);
+                        tmp <<= 1;
+                        buffer--;
+                        numBits--;
+                        if(buffer == 0) {
+                            buffer = 8;
+                            section++;
+                        }
+                    }
+                }
+
+            }
+
+            while (h_huffmanArray[current_node].parent != -1)
+            {
+                if (current_node != h_huffmanArray[h_huffmanArray[current_node].parent].right)
+                { // try the parent's right
+                    BitArraySetBit(&tempCode, 255);
+                    current_node = h_huffmanArray[h_huffmanArray[current_node].parent].right;
+                    break;
+                }
+                else
+                { // parent's right tried, go up one level yet
+                    depth--;
+                    BitArrayShiftRight(&tempCode, 1);
+                    current_node = h_huffmanArray[current_node].parent;
+                }
+            }
+
+            if (h_huffmanArray[current_node].parent == -1)
+            { // we're at the top with nowhere to go
+                break;
+            }
+        }
+
+        *d_nCodesPacked = (writeBit%8 == 0) ? (writeBit/8) : (writeBit/8+1);
+
+        for(int i=0; i <= section; i++)
+        {
+            d_huffCodesPacked[i] = s_codesPacked[i];
+        }
+
+        for(uint i=0; i<HUFF_NUM_CHARS; i++)
+        {
+            if(histogram[i] > 0) d_huffCodeLengths[i] = s_codeLengths[i];
+        }
+
+    }    
+}
+
+
+__global__ void
+huffman_kernel_en(uchar4    *d_input,              // Input to encode
+                  uchar     *d_codes,               // Packed Huffman Codes
+                  uint      *d_code_locations,       // Location of each huffman code
+                  uchar     *d_huffCodeLengths,
+                  encoded   *d_encoded,
+                  uint      *d_nCodesPacked,
+                  uint      nThreads)
+{
+    // Global, local IDs
+    uint idx = threadIdx.x + (blockIdx.x * blockDim.x);
+    uint lid = threadIdx.x;
+
+    // Shared mem setup
+    extern __shared__ uchar s_codes[];              // Huffman codes
+    __shared__ uint s_locations[HUFF_NUM_CHARS];         // Which bit to find the huffman codes
+    __shared__ uint s_codeLengths[HUFF_NUM_CHARS];
+
+    __shared__ uchar4 s_input[HUFF_THREADS_PER_BLOCK*HUFF_WORK_PER_THREAD/sizeof(uchar4)];    // Input data to encode
+    __shared__ uint s_write_locations[HUFF_THREADS_PER_BLOCK];                           // Starting write location for each thread
+    __shared__ uint s_encoded[HUFF_THREADS_PER_BLOCK*HUFF_WORK_PER_THREAD/4];                   // Encoded data
+    __shared__ uint total_bits_block;
+
+    encoded* my_encoded = (encoded*)&d_encoded[blockIdx.x];
+    uint nCodesPacked = *d_nCodesPacked;
+
+    //-----------------------------------------------
+    //    Copy data from global to shared memory
+    //-----------------------------------------------
+
+    s_write_locations[lid] = 0;
+    uint total_bits = 0; // Keep track of the total number of bits each thread encodes
+
+    // Store the packed codes into shared memory
+    if(lid == 0) {
+        total_bits_block = 0;
+        my_encoded->block_size = 0;
+    }
+
+#pragma unroll
+    for(uint i = lid; i < HUFF_CODE_BYTES; i += blockDim.x)
+        my_encoded->code[i] = 0;
+
+#pragma unroll
+    for(uint i = lid; i < nCodesPacked; i += blockDim.x)
+        s_codes[i] = d_codes[i];
+
+    // Store code locations into shared memory
+#pragma unroll
+    for(uint i = lid; i < HUFF_NUM_CHARS; i += blockDim.x) {
+        s_locations[i] = d_code_locations[i];
+        s_codeLengths[i] = d_huffCodeLengths[i];
+    }
+
+    __syncthreads();
+
+    // Clear encoded-data array in shared memory
+    for(uint i=lid; i<HUFF_THREADS_PER_BLOCK*HUFF_WORK_PER_THREAD/4; i += blockDim.x)
+        s_encoded[i] = 0;
+
+    // Store un-encoded input data and calculate starting write-locations for each thread into shared memory
+    if(idx < nThreads)
+    {
+        for(uint i=0; i<(HUFF_WORK_PER_THREAD/sizeof(uchar4)); i++)
+        {
+            uchar4 val = d_input[idx*(HUFF_WORK_PER_THREAD/sizeof(uchar4))+i];
+
+            s_input[lid*(HUFF_WORK_PER_THREAD/sizeof(uchar4))+i].x = val.x;
+            s_input[lid*(HUFF_WORK_PER_THREAD/sizeof(uchar4))+i].y = val.y;
+            s_input[lid*(HUFF_WORK_PER_THREAD/sizeof(uchar4))+i].z = val.z;
+            s_input[lid*(HUFF_WORK_PER_THREAD/sizeof(uchar4))+i].w = val.w;
+
+            s_write_locations[lid] += s_codeLengths[val.x];
+            total_bits += s_codeLengths[val.x];
+
+            s_write_locations[lid] += s_codeLengths[val.y];
+            total_bits += s_codeLengths[val.y];
+
+            s_write_locations[lid] += s_codeLengths[val.z];
+            total_bits += s_codeLengths[val.z];
+
+            s_write_locations[lid] += s_codeLengths[val.w];
+            total_bits += s_codeLengths[val.w];
+
+        }
+
+        // Add up total bits of this block in shared memory
+        atomicAdd(&total_bits_block, total_bits);
+    }
+
+    __syncthreads();
+
+    // Write the total amount of 4-bytes for this block
+    if(lid==0)
+        my_encoded->block_size = (total_bits_block%32==0) ? total_bits_block/32 : total_bits_block/32+1;
+
+    //-------------------------------------------------------------------
+    //  SCAN - Need to perform a scan operation on 's_write_locations' 
+    //         to determine where to start writing the encoded data
+    //-------------------------------------------------------------------
+
+    if(lid==0)
+    {
+        uint sum = s_write_locations[0];
+        for(uint i=1; i<HUFF_THREADS_PER_BLOCK; i++)
+        {
+            sum += s_write_locations[i];
+            s_write_locations[i] = sum;
+        }
+    }
+
+    __syncthreads();
+
+
+    //--------------------------
+    //     Huffman Encoding
+    //--------------------------
+
+    if(idx < nThreads)
+    {
+        uint WR = 0;
+        uint my_write_loc = (lid==0) ? 0 : s_write_locations[lid-1];
+        uint write_block = my_write_loc/32;
+        uint write_bit = my_write_loc%32;
+
+        for(uint i=0; i<(HUFF_WORK_PER_THREAD/sizeof(uchar4)); i++)
+        {
+            uchar val[4];
+            val[0] = s_input[lid*(HUFF_WORK_PER_THREAD/sizeof(uchar4))+i].x;
+            val[1] = s_input[lid*(HUFF_WORK_PER_THREAD/sizeof(uchar4))+i].y;
+            val[2] = s_input[lid*(HUFF_WORK_PER_THREAD/sizeof(uchar4))+i].z;
+            val[3] = s_input[lid*(HUFF_WORK_PER_THREAD/sizeof(uchar4))+i].w;
+
+            for(uchar j=0; j<4; j++)
+            {
+                uint CodeLen = s_codeLengths[val[j]];
+
+                uint CodeBlock = s_locations[val[j]]/8;
+                uint CodeOffset = s_locations[val[j]]%8+24;
+                uint Code = (uint)s_codes[CodeBlock];
+
+                // Encoding
+                for(uint k=0; k<CodeLen; k++)
+                {
+                    if(write_bit == 32) 
+                    {
+                        write_bit = 0;
+                        if(write_block < (HUFF_THREADS_PER_BLOCK*HUFF_WORK_PER_THREAD/4)) {
+                            atomicOr(&s_encoded[write_block], WR);
+                        } else {
+                            atomicOr(&my_encoded->code[write_block], WR);
+                        }
+                        WR = 0;
+                        write_block++;
+                    }
+
+                    if(CodeOffset == 32)
+                    {
+                        CodeOffset = 24;
+                        CodeBlock++;
+                        Code = (uint)s_codes[CodeBlock];
+                    }
+
+                    WR |= ((Code<<CodeOffset)&0x80000000) >> write_bit;
+                    write_bit++;
+                    CodeOffset++;
+
+                }
+            }
+        }
+        if(write_bit > 0) 
+        {
+            if(write_block < (HUFF_THREADS_PER_BLOCK*HUFF_WORK_PER_THREAD/4)) {
+                atomicOr(&s_encoded[write_block], WR);
+            } else {
+                atomicOr(&my_encoded->code[write_block], WR);
+            }
+        }
+    }
+    __syncthreads();
+
+    for(int i=lid; i<(HUFF_THREADS_PER_BLOCK*HUFF_WORK_PER_THREAD/4); i += blockDim.x)
+        my_encoded->code[i] = s_encoded[i];
+}
+
+__global__ void
+huffman_datapack_kernel(encoded     *d_encoded,
+                        uint        *d_encodedData,
+                        uint        *d_totalEncodedSize,
+                        uint        *d_eOffsets,
+                        uint        nBlocks)
+{
+    // Global, local IDs
+   uint lid = threadIdx.x;
+
+    __shared__ uint prevWords;
+    encoded* my_encodedData = (encoded*)&d_encoded[blockIdx.x];
+    uint nWords = my_encodedData[0].block_size;
+
+    if(lid==0)
+    {
+        prevWords = 0;
+        for(uint i=0; i<blockIdx.x; i++) {
+            prevWords += 1+d_encoded[i].block_size;
+        }
+        d_eOffsets[blockIdx.x] = prevWords;
+        d_encodedData[prevWords] = my_encodedData[0].block_size;
+        atomicAdd(&d_totalEncodedSize[0], 1+nWords);
+    }
+
+    __syncthreads();
+
+    uint j = lid;
+    while(j<nWords)
+    {
+        d_encodedData[prevWords+1+j] = my_encodedData->code[j];
+        j += blockDim.x;
+    }
 }

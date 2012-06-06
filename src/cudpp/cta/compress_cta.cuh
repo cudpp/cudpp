@@ -8,7 +8,23 @@
 // in the root directory of this source distribution.
 // -------------------------------------------------------------
 
+/**
+* @file
+* compress_cta.cu
+*
+* @brief CUDPP CTA-level compress routines
+*/
+
+/** \addtogroup cudpp_cta 
+* @{
+*/
+
+/** @name Compress Functions
+* @{
+*/
+
 #include <stdio.h>
+#include <cudpp_globals.h>
 
 template<class T, int depth>
 __device__  void 
@@ -413,5 +429,120 @@ compareSwapVal(T            &A1,
             scratch[index1] = scratch[index2];
             scratch[index2] = tmp;
         }
+    }
+}
+
+__device__ void BitArraySetBit(huffman_code *ba, unsigned int bit)
+{
+    if (ba->numBits <= bit)
+    {
+        return; // bit out of range
+    }
+
+    ba->code[bit/8] |= BIT_IN_CHAR(bit);
+}
+
+__device__ void BitArrayShiftLeft(huffman_code *ba, unsigned int shifts)
+{
+    int i, j;
+    int chars = shifts / 8;  // number of whole byte shifts
+    shifts = shifts % 8;     // number of bit shifts remaining
+
+    if (shifts >= ba->numBits)
+    {
+        // all bits have been shifted off
+        // set bits in all bytes to 0
+        memset((void *)(ba->code), 0, BITS_TO_CHARS(ba->numBits));
+        return;
+    }
+
+    // first handle big jumps of bytes
+    if (chars > 0)
+    {
+        for (i = 0; (i + chars) <  (int)BITS_TO_CHARS(ba->numBits); i++)
+        {
+            ba->code[i] = ba->code[i + chars];
+        }
+
+        // now zero out new bytes on the right
+        for (i = BITS_TO_CHARS(ba->numBits); chars > 0; chars--)
+        {
+            ba->code[i - chars] = 0;
+        }
+    }
+
+    // now we have at most CHAR_BIT - 1 bit shifts across the whole array
+    for (i = 0; i < (int)shifts; i++)
+    {
+        for (j = 0; j < (int)BIT_CHAR(ba->numBits - 1); j++)
+        {
+            ba->code[j] <<= 1;
+
+            // handle shifts across byte bounds
+            if (ba->code[j + 1] & MS_BIT)
+            {
+                ba->code[j] |= 0x01;
+            }
+        }
+
+        ba->code[BIT_CHAR(ba->numBits - 1)] <<= 1;
+    }
+}
+
+__device__ void BitArrayShiftRight(huffman_code *ba, unsigned int shifts)
+{
+    int i, j;
+    unsigned char mask;
+    int chars = shifts / CHAR_BIT;  // number of whole byte shifts
+    shifts = shifts % CHAR_BIT;     // number of bit shifts remaining
+
+    if (shifts >= ba->numBits)
+    {
+        // all bits have been shifted off
+        memset((void *)(ba->code), 0, BITS_TO_CHARS(ba->numBits));
+        return;
+    }
+
+    // first handle big jumps of bytes
+    if (chars > 0)
+    {
+        for (i = BIT_CHAR(ba->numBits - 1); (i - chars) >= 0; i--)
+        {
+            ba->code[i] = ba->code[i - chars];
+        }
+
+        // now zero out new bytes on the right
+        for (; chars > 0; chars--)
+        {
+            ba->code[chars - 1] = 0;
+        }
+    }
+
+    // now we have at most CHAR_BIT - 1 bit shifts across the whole array
+    for (i = 0; i < (int)shifts; i++)
+    {
+        for (j = BIT_CHAR(ba->numBits - 1); j > 0; j--)
+        {
+            ba->code[j] >>= 1;
+
+            // handle shifts across byte bounds
+            if (ba->code[j - 1] & 0x01)
+            {
+                ba->code[j] |= MS_BIT;
+            }
+        }
+
+        ba->code[0] >>= 1;
+    }
+
+    /***********************************************************************
+    * zero any spare bits that are beyond the end of the bit array so
+    * increment and decrement are consistent.
+    ***********************************************************************/
+    i = ba->numBits % CHAR_BIT;
+    if (i != 0)
+    {
+        mask = UCHAR_MAX << (CHAR_BIT - i);
+        ba->code[BIT_CHAR(ba->numBits - 1)] &= mask;
     }
 }

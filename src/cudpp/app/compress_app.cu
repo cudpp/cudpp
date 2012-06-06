@@ -34,6 +34,74 @@
  * @{
  */
 
+/** @brief Perform Huffman encoding
+  * 
+  * @todo
+  *
+  */
+void huffmanEncoding(unsigned int               *d_hist,
+                     unsigned int               *d_encodeOffset,
+                     unsigned int               *d_compressedSize,
+                     unsigned int               *d_compressed,
+                     size_t                     numElements,
+                     const CUDPPCompressPlan    *plan)
+{
+    unsigned char* d_input  = plan->m_d_mtfOut;
+    d_hist                  = plan->m_d_histogram;
+    d_encodeOffset          = plan->m_d_encodeOffset;
+    d_compressedSize        = plan->m_d_totalEncodedSize;
+    d_compressed            = plan->m_d_encodedData;
+
+    // Set work dimensions
+    size_t nCodesPacked;
+    size_t histBlocks = (numElements%(HUFF_WORK_PER_THREAD_HIST*HUFF_THREADS_PER_BLOCK_HIST)==0) ?
+        numElements/(HUFF_WORK_PER_THREAD_HIST*HUFF_THREADS_PER_BLOCK_HIST) : numElements%(HUFF_WORK_PER_THREAD_HIST*HUFF_THREADS_PER_BLOCK_HIST)+1;
+    size_t tThreads = ((numElements%HUFF_WORK_PER_THREAD) == 0) ? numElements/HUFF_WORK_PER_THREAD : numElements/HUFF_WORK_PER_THREAD+1;
+    size_t nBlocks = ( (tThreads%HUFF_THREADS_PER_BLOCK) == 0) ? tThreads/HUFF_THREADS_PER_BLOCK : tThreads/HUFF_THREADS_PER_BLOCK+1;
+
+    dim3 grid_hist(histBlocks, 1, 1);
+    dim3 threads_hist(HUFF_THREADS_PER_BLOCK_HIST, 1, 1);
+
+    dim3 grid_tree(1, 1, 1);
+    dim3 threads_tree(128, 1, 1);
+
+    dim3 grid_huff(nBlocks, 1, 1);
+    dim3 threads_huff(HUFF_THREADS_PER_BLOCK, 1, 1);
+
+    //---------------------------------------
+    //  1) Build histogram from MTF output
+    //---------------------------------------
+    huffman_build_histogram_kernel<<< grid_hist, threads_hist>>>
+        ((unsigned int*)d_input, plan->m_d_histograms, numElements);
+    CUDA_SAFE_CALL(cudaThreadSynchronize());
+
+    //----------------------------------------------------
+    //  2) Compute final Histogram + Build Huffman codes
+    //----------------------------------------------------
+    huffman_build_tree_kernel<<< grid_tree, threads_tree>>>
+        (d_input, plan->m_d_huffCodesPacked, plan->m_d_huffCodeLocations, plan->m_d_huffCodeLengths, plan->m_d_histograms,
+        plan->m_d_histogram, plan->m_d_nCodesPacked, plan->m_d_totalEncodedSize, histBlocks, numElements);
+    CUDA_SAFE_CALL(cudaThreadSynchronize());
+
+    //----------------------------------------------
+    //  3) Main Huffman encoding step (encode data)
+    //----------------------------------------------
+    CUDA_SAFE_CALL(cudaMemcpy((void*)&nCodesPacked,  plan->m_d_nCodesPacked, sizeof(size_t), cudaMemcpyDeviceToHost));
+    huffman_kernel_en<<< grid_huff, threads_huff, nCodesPacked*sizeof(unsigned char)>>>
+        ((uchar4*)d_input, plan->m_d_huffCodesPacked, plan->m_d_huffCodeLocations, plan->m_d_huffCodeLengths,
+        plan->m_d_encoded, plan->m_d_nCodesPacked, tThreads);
+    CUDA_SAFE_CALL(cudaThreadSynchronize());
+
+    //--------------------------------------------------
+    //  4) Pack together encoded data to determine how
+    //     much encoded data needs to be transferred
+    //--------------------------------------------------
+    huffman_datapack_kernel<<<grid_huff, threads_huff>>>
+        (plan->m_d_encoded, plan->m_d_encodedData, plan->m_d_totalEncodedSize, d_encodeOffset, nBlocks);
+    CUDA_SAFE_CALL(cudaThreadSynchronize());
+}
+
+
 /** @brief Perform the MTF
   * 
   * @todo
@@ -296,6 +364,25 @@ void allocCompressStorage(CUDPPCompressPlan *plan)
     CUDA_SAFE_CALL(cudaMalloc( (void**) &(plan->m_d_list_sizes), (numElts/MTF_PER_THREAD)*sizeof(unsigned short)));
     CUDA_SAFE_CALL(cudaMalloc( (void**) &(plan->m_d_mtfOut), numElts*sizeof(unsigned char) ));
 
+    // Huffman
+    size_t numBitsAlloc = HUFF_NUM_CHARS*(HUFF_NUM_CHARS+1)/2;
+    size_t numCharsAlloc = (numBitsAlloc%8 == 0) ? numBitsAlloc/8 : numBitsAlloc/8 + 1;
+    size_t histBlocks = (numElts%(HUFF_WORK_PER_THREAD_HIST*HUFF_THREADS_PER_BLOCK_HIST)==0) ?
+        numElts/(HUFF_WORK_PER_THREAD_HIST*HUFF_THREADS_PER_BLOCK_HIST) : numElts%(HUFF_WORK_PER_THREAD_HIST*HUFF_THREADS_PER_BLOCK_HIST)+1;
+    size_t tThreads = ((numElts%HUFF_WORK_PER_THREAD) == 0) ? numElts/HUFF_WORK_PER_THREAD : numElts/HUFF_WORK_PER_THREAD+1;
+    size_t nBlocks = ( (tThreads%HUFF_THREADS_PER_BLOCK) == 0) ? tThreads/HUFF_THREADS_PER_BLOCK : tThreads/HUFF_THREADS_PER_BLOCK+1;
+
+    CUDA_SAFE_CALL(cudaMalloc( (void**) &(plan->m_d_huffCodesPacked), numCharsAlloc*sizeof(unsigned char) ));
+    CUDA_SAFE_CALL(cudaMalloc( (void**) &(plan->m_d_huffCodeLocations), HUFF_NUM_CHARS*sizeof(size_t) ));
+    CUDA_SAFE_CALL(cudaMalloc( (void**) &(plan->m_d_huffCodeLengths), HUFF_NUM_CHARS*sizeof(unsigned char) ));
+    CUDA_SAFE_CALL(cudaMalloc( (void**) &(plan->m_d_histograms), histBlocks*256*sizeof(size_t) ));
+    CUDA_SAFE_CALL(cudaMalloc( (void**) &(plan->m_d_histogram), 256*sizeof(size_t) ));
+    CUDA_SAFE_CALL(cudaMalloc( (void**) &(plan->m_d_totalEncodedSize), sizeof(size_t)));
+    CUDA_SAFE_CALL(cudaMalloc( (void**) &(plan->m_d_encodedData), sizeof(size_t)*(HUFF_CODE_BYTES+1)*nBlocks));
+    CUDA_SAFE_CALL(cudaMalloc( (void**) &(plan->m_d_nCodesPacked), sizeof(size_t)));
+    CUDA_SAFE_CALL(cudaMalloc( (void**) &(plan->m_d_encoded), sizeof(encoded)*nBlocks));
+    CUDA_SAFE_CALL(cudaMalloc( (void**) &(plan->m_d_encodeOffset), sizeof(size_t)*nBlocks));
+
     CUDA_CHECK_ERROR("allocCompressStorage");
 }
 
@@ -307,6 +394,7 @@ void allocCompressStorage(CUDPPCompressPlan *plan)
   */
 void freeCompressStorage(CUDPPCompressPlan *plan)
 {
+    // BWT
     CUDA_SAFE_CALL( cudaFree(plan->m_d_keys));
     CUDA_SAFE_CALL( cudaFree(plan->m_d_values));
     CUDA_SAFE_CALL( cudaFree(plan->m_d_bwtIndex));
@@ -322,9 +410,22 @@ void freeCompressStorage(CUDPPCompressPlan *plan)
     CUDA_SAFE_CALL( cudaFree(plan->m_d_partitionBeginB));
     CUDA_SAFE_CALL( cudaFree(plan->m_d_partitionSizeB));
 
+    // MTF
     CUDA_SAFE_CALL( cudaFree(plan->m_d_lists));
     CUDA_SAFE_CALL( cudaFree(plan->m_d_list_sizes));
     CUDA_SAFE_CALL( cudaFree(plan->m_d_mtfOut));
+
+    // Huffman
+    CUDA_SAFE_CALL(cudaFree(plan->m_d_histograms));
+    CUDA_SAFE_CALL(cudaFree(plan->m_d_histogram));
+    CUDA_SAFE_CALL(cudaFree(plan->m_d_huffCodeLengths));
+    CUDA_SAFE_CALL(cudaFree(plan->m_d_huffCodesPacked));
+    CUDA_SAFE_CALL(cudaFree(plan->m_d_huffCodeLocations));
+    CUDA_SAFE_CALL(cudaFree(plan->m_d_totalEncodedSize));
+    CUDA_SAFE_CALL(cudaFree(plan->m_d_encodedData));
+    CUDA_SAFE_CALL(cudaFree(plan->m_d_nCodesPacked));
+    CUDA_SAFE_CALL(cudaFree(plan->m_d_encoded));
+    CUDA_SAFE_CALL(cudaFree(plan->m_d_encodeOffset));
 
     CUDA_CHECK_ERROR("freeCompressStorage");
 }
@@ -347,7 +448,7 @@ void freeCompressStorage(CUDPPCompressPlan *plan)
  */
 void cudppCompressDispatch(void *d_uncompressed,
                            void *d_bwtIndex,
-                           void *d_histSize,
+                           void *d_histSize, // ignore
                            void *d_hist,
                            void *d_encodeOffset,
                            void *d_compressedSize,
@@ -361,6 +462,10 @@ void cudppCompressDispatch(void *d_uncompressed,
 
     // Call to perform the move-to-front transform
     moveToFrontTransform(numElements, plan);
+
+    // Call to perform the Huffman encoding
+    huffmanEncoding((unsigned int*)d_hist, (unsigned int*)d_encodeOffset,
+        (unsigned int*)d_compressedSize, (unsigned int*)d_compressed, numElements, plan);
 }
 
 #ifdef __cplusplus

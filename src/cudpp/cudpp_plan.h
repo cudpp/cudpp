@@ -224,6 +224,7 @@ public:
 /** @brief Plan class for compressor
 *
 */
+struct encoded;
 class CUDPPCompressPlan : public CUDPPPlan
 {
 public:
@@ -251,6 +252,19 @@ public:
     unsigned char *m_d_mtfOut;
     unsigned char *m_d_lists;
     unsigned short *m_d_list_sizes;
+
+    // Huffman
+    unsigned char *m_d_huffCodesPacked;   // tightly pack together all huffman codes
+    unsigned int *m_d_huffCodeLocations;  // keep track of where each huffman code starts
+    unsigned char *m_d_huffCodeLengths;   // lengths of each huffman codes (in bits)
+    unsigned int *m_d_histograms;         // histogram used to build huffman tree
+    unsigned int *m_d_encodedData;        // encoded data only
+    unsigned int *m_d_totalEncodedSize;   // total words we need to read
+    unsigned int *m_d_nCodesPacked;       // Size of all Huffman codes packed together (in bytes)
+    unsigned int *m_d_histogram;          // Final histogram
+    unsigned int *m_d_encodeOffset;
+    encoded *m_d_encoded;
+
 };
 
 #endif // __CUDPP_PLAN_H__
