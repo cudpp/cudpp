@@ -47,10 +47,10 @@ void huffmanEncoding(unsigned int               *d_hist,
                      const CUDPPCompressPlan    *plan)
 {
     unsigned char* d_input  = plan->m_d_mtfOut;
-    d_hist                  = plan->m_d_histogram;
-    d_encodeOffset          = plan->m_d_encodeOffset;
-    d_compressedSize        = plan->m_d_totalEncodedSize;
-    d_compressed            = plan->m_d_encodedData;
+    //d_hist                  = plan->m_d_histogram;
+    //d_encodeOffset          = plan->m_d_encodeOffset;
+    //d_compressedSize        = plan->m_d_totalEncodedSize;
+    //d_compressed            = plan->m_d_encodedData;
 
     // Set work dimensions
     size_t nCodesPacked;
@@ -80,7 +80,7 @@ void huffmanEncoding(unsigned int               *d_hist,
     //----------------------------------------------------
     huffman_build_tree_kernel<<< grid_tree, threads_tree>>>
         (d_input, plan->m_d_huffCodesPacked, plan->m_d_huffCodeLocations, plan->m_d_huffCodeLengths, plan->m_d_histograms,
-        plan->m_d_histogram, plan->m_d_nCodesPacked, plan->m_d_totalEncodedSize, histBlocks, numElements);
+        d_hist, plan->m_d_nCodesPacked, d_compressedSize, histBlocks, numElements);
     CUDA_SAFE_CALL(cudaThreadSynchronize());
 
     //----------------------------------------------
@@ -97,7 +97,7 @@ void huffmanEncoding(unsigned int               *d_hist,
     //     much encoded data needs to be transferred
     //--------------------------------------------------
     huffman_datapack_kernel<<<grid_huff, threads_huff>>>
-        (plan->m_d_encoded, plan->m_d_encodedData, plan->m_d_totalEncodedSize, d_encodeOffset, nBlocks);
+        (plan->m_d_encoded, d_compressed, d_compressedSize, d_encodeOffset, nBlocks);
     CUDA_SAFE_CALL(cudaThreadSynchronize());
 }
 
@@ -209,7 +209,7 @@ void burrowsWheelerTransform(unsigned char              *d_uncompressed,
                              const CUDPPCompressPlan    *plan)
 {
     // set ptrs
-    d_bwtIndex = plan->m_d_bwtIndex;
+    //d_bwtIndex = plan->m_d_bwtIndex;
 
     size_t tThreads = (numElements%4 == 0) ? numElements/4 : numElements/4 + 1;
     size_t nThreads = BWT_CTA_BLOCK;
