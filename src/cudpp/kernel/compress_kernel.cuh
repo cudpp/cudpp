@@ -1274,6 +1274,7 @@ mtf_reduction_kernel(uchar      *d_mtfIn,
                      uint       nLists,
                      uint       offset)
 {
+#if (__CUDA_ARCH__ >= 200)
     __shared__ uchar shared[(MTF_PER_THREAD+256)*(MTF_THREADS_BLOCK/2)*sizeof(uchar) + MTF_THREADS_BLOCK*sizeof(ushort)];
     __shared__ int FLAG;
 
@@ -1401,6 +1402,7 @@ mtf_reduction_kernel(uchar      *d_mtfIn,
         }
         d_list_sizes[idx] = listSize2;
     }
+#endif
 }
 
 __global__ void
@@ -1410,6 +1412,7 @@ mtf_GLreduction_kernel(uchar     *d_lists,
                        uint      tThreads,
                        uint      nLists)
 {
+#if (__CUDA_ARCH__ >= 200)
     __shared__ uchar sdata[256*MTF_THREADS_BLOCK];
     __shared__ int FLAG;
 
@@ -1515,6 +1518,7 @@ mtf_GLreduction_kernel(uchar     *d_lists,
         }
         __syncthreads();
     }
+#endif
 }
 
 __global__ void
@@ -1525,6 +1529,7 @@ mtf_GLdownsweep_kernel(uchar    *d_lists,
                        uint     nLists,
                        uint     tThreads)
 {
+#if (__CUDA_ARCH__ >= 200)
     __shared__ uchar sdata[256*MTF_THREADS_BLOCK];
 
     uint idx = threadIdx.x + (blockIdx.x * blockDim.x);
@@ -1622,6 +1627,7 @@ mtf_GLdownsweep_kernel(uchar    *d_lists,
         __syncthreads();
 
     }
+#endif
 }
 
 __global__ void
@@ -1632,6 +1638,7 @@ mtf_localscan_lists_kernel(uchar    *d_mtfIn,
                            uint     nLists,
                            uint     offset)
 {
+#if (__CUDA_ARCH__ >= 200)
     uint idx = threadIdx.x + (blockIdx.x * blockDim.x);
     uint lid = threadIdx.x;
 
@@ -1911,7 +1918,7 @@ mtf_localscan_lists_kernel(uchar    *d_mtfIn,
         // Coalesced writes
         d_mtfOut[blockIdx.x*MTF_PER_THREAD*MTF_THREADS_BLOCK + lid+MTF_THREADS_BLOCK*i] = s_mtfIn[lid+MTF_THREADS_BLOCK*i];
     }
-
+#endif
 }
 
 
@@ -1927,6 +1934,7 @@ huffman_build_histogram_kernel(uint     *d_input, // Read in as words, instead o
                                uint     *d_histograms,
                                uint     numElements)
 {
+#if (__CUDA_ARCH__ >= 200)
     // Per-thread Histogram - Each "bin" will be 1 byte
     __shared__ uchar threadHist[HUFF_THREADS_PER_BLOCK_HIST*256]; // Each thread has 256 1-byte bins
 
@@ -2004,6 +2012,7 @@ huffman_build_histogram_kernel(uint     *d_input, // Read in as words, instead o
 
         blockHist[lid*(256/HUFF_THREADS_PER_BLOCK_HIST)+i] += count;
     }
+#endif
 }
 
 __global__ void
@@ -2018,6 +2027,7 @@ huffman_build_tree_kernel(uchar     *d_input,
                           uint      histBlocks,
                           uint      numElements)
 {
+#if (__CUDA_ARCH__ >= 200)
     // Global, local IDs
     uint idx = threadIdx.x + (blockIdx.x * blockDim.x);
     uint lid = threadIdx.x;
@@ -2489,6 +2499,7 @@ end:
         }
 
     }    
+#endif
 }
 
 
@@ -2501,6 +2512,7 @@ huffman_kernel_en(uchar4    *d_input,              // Input to encode
                   uint      *d_nCodesPacked,
                   uint      nThreads)
 {
+#if (__CUDA_ARCH__ >= 200)
     // Global, local IDs
     uint idx = threadIdx.x + (blockIdx.x * blockDim.x);
     uint lid = threadIdx.x;
@@ -2675,6 +2687,7 @@ huffman_kernel_en(uchar4    *d_input,              // Input to encode
 
     for(int i=lid; i<(HUFF_THREADS_PER_BLOCK*HUFF_WORK_PER_THREAD/4); i += blockDim.x)
         my_encoded->code[i] = s_encoded[i];
+#endif
 }
 
 __global__ void
@@ -2684,6 +2697,7 @@ huffman_datapack_kernel(encoded     *d_encoded,
                         uint        *d_eOffsets,
                         uint        nBlocks)
 {
+#if (__CUDA_ARCH__ >= 200)
     // Global, local IDs
    uint lid = threadIdx.x;
 
@@ -2710,4 +2724,5 @@ huffman_datapack_kernel(encoded     *d_encoded,
         d_encodedData[prevWords+1+j] = my_encodedData->code[j];
         j += blockDim.x;
     }
+#endif
 }

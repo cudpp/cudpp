@@ -37,4 +37,17 @@ void cudppCompressDispatch(void *d_uncompressed,
                            size_t numElements,
                            const CUDPPCompressPlan *plan);
 
+extern "C"
+void allocBwtStorage(CUDPPBwtPlan* plan);
+
+extern "C"
+void freeBwtStorage(CUDPPBwtPlan* plan);
+
+extern "C"
+void cudppBwtDispatch(void *d_bwtIn,
+                      void *d_bwtOut,
+                      void *d_bwtIndex,
+                      size_t numElements,
+                      const CUDPPBwtPlan *plan);
+
 #endif // _CUDPP_COMPRESS_H_

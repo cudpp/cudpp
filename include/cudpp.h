@@ -480,6 +480,7 @@ enum CUDPPAlgorithm
     CUDPP_RAND_MD5,          //!< Pseudorandom number generator using MD5 hash algorithm
     CUDPP_TRIDIAGONAL,       //!< Tridiagonal solver algorithm
     CUDPP_COMPRESS,          //!< Lossless data compression
+    CUDPP_BWT,               //!< Burrows-Wheeler transform
     CUDPP_ALGORITHM_INVALID, //!< Placeholder at end of enum
 };
 
@@ -630,6 +631,14 @@ CUDPPResult cudppCompress(CUDPPHandle planHandle,
                           void *d_xx,
                           void *d_yy,
                           size_t numElements);
+
+// Burrows-Wheeler Transform
+CUDPP_DLL
+CUDPPResult cudppBurrowsWheelerTransform(CUDPPHandle planHandle,
+                                         void *d_a,
+                                         void *d_x,
+                                         void *d_y,
+                                         size_t numElements);
 
 #ifdef __cplusplus
 }
