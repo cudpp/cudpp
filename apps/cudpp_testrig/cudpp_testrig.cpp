@@ -49,6 +49,7 @@ int testReduce(int argc, const char ** argv, const CUDPPConfiguration *config);
 int testSparseMatrixVectorMultiply(int argc, const char ** argv);
 int testRandMD5(int argc, const char ** argv);
 int testTridiagonal(int argc, const char** argv, const CUDPPConfiguration *config);
+int testMtf(int argc, const char** argv, const CUDPPConfiguration *config);
 
 int testAllDatatypes(int argc, 
                      const char** argv, 
@@ -69,6 +70,20 @@ int testAllDatatypes(int argc,
             retval += testTridiagonal(argc, argv, &config);      
         }
         return retval;
+    }
+
+    if (config.algorithm == CUDPP_MTF)
+    {
+        config.datatype = CUDPP_UCHAR;
+        retval += testMtf(argc, argv, &config);
+        return retval;
+    }
+
+    if (config.algorithm == CUDPP_BWT)
+    {
+        //config.datatype = CUDPP_UCHAR;
+        //retval += testBwt(argc, argv, &config);
+        //return retval;
     }
 
     for (CUDPPDatatype dt = CUDPP_INT; dt != CUDPP_DATATYPE_INVALID; dt = CUDPPDatatype((int)dt+1))
@@ -243,7 +258,9 @@ int main(int argc, const char** argv)
         printf("compact: Run compact test(s)\n\n");
         printf("reduce: Run reduce test(s)\n\n");
         printf("rand: Run random number generator test(s)\n\n");
-        printf("tridiagonal: Run tridiagonal solver test(s)\n\n");	
+        printf("tridiagonal: Run tridiagonal solver test(s)\n\n");
+        printf("mtf: Run move-to-front transform test(s)\n\n");	
+        printf("bwt: Run Burrows-Wheeler transform test(s)\n\n");	
         printf("--- Global Options ---\n");
         printf("iterations=<N>: Number of times to run each test\n");
         printf("n=<N>: Number of values to use in a single test\n");
@@ -281,6 +298,8 @@ int main(int argc, const char** argv)
     bool runRand = runAll || checkCommandLineFlag(argc, argv, "rand");
     bool runSpmv = checkCommandLineFlag(argc, argv, "spmv");
     bool runTridiagonal = runAll ||  checkCommandLineFlag(argc, argv, "tridiagonal");
+    bool runMtf = runAll || checkCommandLineFlag(argc, argv, "mtf");
+    bool runBwt = runAll || checkCommandLineFlag(argc, argv, "bwt");
     
     bool hasopts = hasOptions(argc, argv);
 
@@ -293,6 +312,8 @@ int main(int argc, const char** argv)
         if (runSort)      retval += testRadixSort(argc, argv, NULL);
         if (runMultiScan) retval += testScan(argc, argv, NULL, true, devProps);
         if (runTridiagonal) retval += testTridiagonal(argc, argv, NULL);
+        if (runMtf)       retval += testMtf(argc, argv, NULL);
+        //if (runBwt)       retval += testBwt(argc, argv, NULL);
     }
     else
     {
@@ -332,7 +353,17 @@ int main(int argc, const char** argv)
         if (runTridiagonal) {
             config.algorithm = CUDPP_TRIDIAGONAL;
             retval += testAllDatatypes(argc, argv, config, supportsDouble, false);
-        }    
+        }
+
+        if (runMtf) {
+            config.algorithm = CUDPP_MTF;
+            retval += testAllDatatypes(argc, argv, config, supportsDouble, false);
+        } 
+
+        if (runBwt) {
+            config.algorithm = CUDPP_BWT;
+            retval += testAllDatatypes(argc, argv, config, supportsDouble, false);
+        } 
 
     }
 

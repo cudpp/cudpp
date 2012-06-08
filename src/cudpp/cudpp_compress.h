@@ -19,7 +19,10 @@
 #define _CUDPP_COMPRESS_H_
 
 class CUDPPCompressPlan;
+class CUDPPBwtPlan;
+class CUDPPMtfPlan;
 
+// Compress
 extern "C"
 void allocCompressStorage(CUDPPCompressPlan* plan);
 
@@ -37,6 +40,7 @@ void cudppCompressDispatch(void *d_uncompressed,
                            size_t numElements,
                            const CUDPPCompressPlan *plan);
 
+// BWT
 extern "C"
 void allocBwtStorage(CUDPPBwtPlan* plan);
 
@@ -49,5 +53,18 @@ void cudppBwtDispatch(void *d_bwtIn,
                       void *d_bwtIndex,
                       size_t numElements,
                       const CUDPPBwtPlan *plan);
+
+// MTF
+extern "C"
+void allocMtfStorage(CUDPPMtfPlan* plan);
+
+extern "C"
+void freeMtfStorage(CUDPPMtfPlan* plan);
+
+extern "C"
+void cudppMtfDispatch(void *d_mtfIn,
+                      void *d_mtfOut,
+                      size_t numElements,
+                      const CUDPPMtfPlan *plan);
 
 #endif // _CUDPP_COMPRESS_H_

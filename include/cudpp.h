@@ -481,6 +481,7 @@ enum CUDPPAlgorithm
     CUDPP_TRIDIAGONAL,       //!< Tridiagonal solver algorithm
     CUDPP_COMPRESS,          //!< Lossless data compression
     CUDPP_BWT,               //!< Burrows-Wheeler transform
+    CUDPP_MTF,               //!< Move-to-Front transform
     CUDPP_ALGORITHM_INVALID, //!< Placeholder at end of enum
 };
 
@@ -639,6 +640,13 @@ CUDPPResult cudppBurrowsWheelerTransform(CUDPPHandle planHandle,
                                          void *d_x,
                                          void *d_y,
                                          size_t numElements);
+
+// Move-to-Front Transform
+CUDPP_DLL
+CUDPPResult cudppMoveToFrontTransform(CUDPPHandle planHandle,
+                                      void *d_a,
+                                      void *d_x,
+                                      size_t numElements);
 
 #ifdef __cplusplus
 }

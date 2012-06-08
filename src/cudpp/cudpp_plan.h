@@ -289,4 +289,18 @@ public:
 
 };
 
+/** @brief Plan class for BWt
+*
+*/
+class CUDPPMtfPlan : public CUDPPPlan
+{
+public:
+    CUDPPMtfPlan(CUDPPManager *mgr, CUDPPConfiguration config, size_t numElements);
+    virtual ~CUDPPMtfPlan();
+
+    // MTF
+    unsigned char *m_d_lists;
+    unsigned short *m_d_list_sizes;
+};
+
 #endif // __CUDPP_PLAN_H__

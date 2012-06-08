@@ -598,7 +598,7 @@ CUDPPResult cudppCompress(CUDPPHandle planHandle,
  *
  * @param[out] d_y BWT Index
  * @param[out] d_x Output data
- * @param[in] d_a Input darta
+ * @param[in] d_a Input data
  * @param[in] numElements Number of elements
  * @returns CUDPPResult indicating success or error condition
  *
@@ -622,6 +622,41 @@ CUDPPResult cudppBurrowsWheelerTransform(CUDPPHandle planHandle,
             return CUDPP_ERROR_ILLEGAL_CONFIGURATION;
 
         cudppBwtDispatch(d_a, d_x, d_y, numElements, plan);
+        return CUDPP_SUCCESS;
+    }
+    else
+        return CUDPP_ERROR_INVALID_HANDLE;
+}
+
+/**
+ * @brief Performs the Move-to-Front Transform
+ *
+ * @todo
+ *
+ * @param[out] d_x Output data
+ * @param[in] d_a Input data
+ * @param[in] numElements Number of elements
+ * @returns CUDPPResult indicating success or error condition
+ *
+ * @see cudppPlan, CUDPPConfiguration, CUDPPAlgorithm
+ */
+CUDPP_DLL
+CUDPPResult cudppMoveToFrontTransform(CUDPPHandle planHandle,
+                                      void *d_a,
+                                      void *d_x,
+                                      size_t numElements)
+{   
+    CUDPPMtfPlan * plan = 
+        (CUDPPMtfPlan *) getPlanPtrFromHandle<CUDPPMtfPlan>(planHandle);
+    
+    if(plan != NULL)
+    {
+        if (plan->m_config.algorithm != CUDPP_MTF)
+            return CUDPP_ERROR_INVALID_PLAN;
+        if (plan->m_config.datatype != CUDPP_UCHAR)
+            return CUDPP_ERROR_ILLEGAL_CONFIGURATION;
+
+        cudppMtfDispatch(d_a, d_x, numElements, plan);
         return CUDPP_SUCCESS;
     }
     else

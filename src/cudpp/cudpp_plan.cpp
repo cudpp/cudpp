@@ -140,6 +140,11 @@ CUDPPResult cudppPlan(const CUDPPHandle  cudppHandle,
             plan = new CUDPPBwtPlan(mgr, config, numElements);
             break;
         }
+    case CUDPP_MTF:
+        {
+            plan = new CUDPPMtfPlan(mgr, config, numElements);
+            break;
+        }
     default:
         return CUDPP_ERROR_ILLEGAL_CONFIGURATION; 
         break;
@@ -215,6 +220,11 @@ CUDPPResult cudppDestroyPlan(CUDPPHandle planHandle)
     case CUDPP_BWT:
         {
             delete static_cast<CUDPPBwtPlan*>(plan);
+            break;
+        }
+    case CUDPP_MTF:
+        {
+            delete static_cast<CUDPPMtfPlan*>(plan);
             break;
         }
     default:
@@ -611,4 +621,21 @@ CUDPPBwtPlan::CUDPPBwtPlan(CUDPPManager *mgr, CUDPPConfiguration config, size_t 
 CUDPPBwtPlan::~CUDPPBwtPlan()
 {
     freeBwtStorage(this);
+}
+
+/** @brief CUDPP MTF Plan Constructor
+  *
+  * @param[in]  mgr pointer to the CUDPPManager
+  * @param[in] config The configuration struct specifying options
+  */
+CUDPPMtfPlan::CUDPPMtfPlan(CUDPPManager *mgr, CUDPPConfiguration config, size_t numElements) 
+ : CUDPPPlan(mgr, config, numElements, 1, 0)
+{
+    allocMtfStorage(this);
+}
+
+/** @brief Compress plan destructor */
+CUDPPMtfPlan::~CUDPPMtfPlan()
+{
+    freeMtfStorage(this);
 }

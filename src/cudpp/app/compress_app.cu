@@ -107,12 +107,12 @@ void huffmanEncoding(unsigned int               *d_hist,
   * @todo
   *
   */
-void moveToFrontTransform(size_t                    numElements,
-                          const CUDPPCompressPlan   *plan)
+template <class T>
+void moveToFrontTransform(unsigned char             *d_mtfIn,
+                          unsigned char             *d_mtfOut,
+                          size_t                    numElements,
+                          const T                   *plan)
 {
-    // set ptrs
-    unsigned char* d_mtfIn = plan->m_d_bwtOut;
-
     unsigned int nThreads = MTF_THREADS_BLOCK; 
     unsigned int nLists = numElements/MTF_PER_THREAD;
     unsigned int tThreads = numElements/MTF_PER_THREAD;
@@ -193,7 +193,7 @@ void moveToFrontTransform(size_t                    numElements,
     dim3 threads_loc(nThreads, 1, 1);
 
     mtf_localscan_lists_kernel<<< grid_loc, threads_loc>>>
-        (d_mtfIn, plan->m_d_mtfOut, plan->m_d_lists, plan->m_d_list_sizes, nLists, offset);
+        (d_mtfIn, d_mtfOut, plan->m_d_lists, plan->m_d_list_sizes, nLists, offset);
     CUDA_SAFE_CALL(cudaThreadSynchronize());
 
 }
@@ -344,6 +344,21 @@ void burrowsWheelerTransformWrapper(unsigned char *d_in,
     burrowsWheelerTransform<CUDPPBwtPlan>(d_in, d_bwtIndex, d_bwtOut, numElements, plan);
 }
 
+// Wrapper for MTF
+void moveToFrontTransformWrapper(size_t numElements,
+                                 const CUDPPCompressPlan *plan)
+{
+    moveToFrontTransform<CUDPPCompressPlan>(plan->m_d_bwtOut, plan->m_d_mtfOut, numElements, plan);
+}
+
+void moveToFrontTransformWrapper(unsigned char *d_in,
+                                 unsigned char *d_mtfOut,
+                                 size_t numElements,
+                                 const CUDPPMtfPlan *plan)
+{
+    moveToFrontTransform<CUDPPMtfPlan>(d_in, d_mtfOut, numElements, plan);
+}
+
 #ifdef __cplusplus
 extern "C" 
 {
@@ -353,7 +368,7 @@ extern "C"
   *
   * @todo
   *
-  * @param [in,out] plan Pointer to CUDPPCompressPlan object containing options and number 
+  * @param [in,out] plan Pointer to CUDPPBwtPlan object containing options and number 
   *                      of elements, which is used to compute storage requirements, and
   *                      within which intermediate storage is allocated.
   */
@@ -374,6 +389,23 @@ void allocBwtStorage(CUDPPBwtPlan *plan)
     CUDA_SAFE_CALL(cudaMalloc((void**)&(plan->m_d_partitionSizeA), 1024*sizeof(int)) );
     CUDA_SAFE_CALL(cudaMalloc((void**)&(plan->m_d_partitionBeginB), 1024*sizeof(int)) );
     CUDA_SAFE_CALL(cudaMalloc((void**)&(plan->m_d_partitionSizeB), 1024*sizeof(int)) );
+}
+
+/** @brief Allocate intermediate arrays used by MTF.
+  *
+  * @todo
+  *
+  * @param [in,out] plan Pointer to CUDPPMtfPlan object containing options and number 
+  *                      of elements, which is used to compute storage requirements, and
+  *                      within which intermediate storage is allocated.
+  */
+void allocMtfStorage(CUDPPMtfPlan *plan)
+{
+    size_t numElts = plan->m_numElements;
+
+    // MTF
+    CUDA_SAFE_CALL(cudaMalloc( (void**) &(plan->m_d_lists), (numElts/MTF_PER_THREAD)*256*sizeof(unsigned char)));
+    CUDA_SAFE_CALL(cudaMalloc( (void**) &(plan->m_d_list_sizes), (numElts/MTF_PER_THREAD)*sizeof(unsigned short)));
 }
 
 /** @brief Allocate intermediate arrays used by compression.
@@ -496,6 +528,19 @@ void freeBwtStorage(CUDPPBwtPlan *plan)
     CUDA_SAFE_CALL( cudaFree(plan->m_d_partitionSizeB));
 }
 
+/** @brief Deallocate intermediate block arrays in a CUDPPMtfPlan object.
+  *
+  * @todo 
+  *
+  * @param[in,out] plan Pointer to CUDPPMtfPlan object initialized by allocMtfStorage().
+  */
+void freeMtfStorage(CUDPPMtfPlan *plan)
+{
+    // MTF
+    CUDA_SAFE_CALL( cudaFree(plan->m_d_lists));
+    CUDA_SAFE_CALL( cudaFree(plan->m_d_list_sizes));
+}
+
 /** @brief Dispatch function to perform parallel compression on an
  * array with the specified configuration.
  *
@@ -527,12 +572,13 @@ void cudppCompressDispatch(void *d_uncompressed,
         numElements, plan);
 
     // Call to perform the move-to-front transform
-    moveToFrontTransform(numElements, plan);
+    moveToFrontTransformWrapper(numElements, plan);
 
     // Call to perform the Huffman encoding
     huffmanEncoding((unsigned int*)d_hist, (unsigned int*)d_encodeOffset,
         (unsigned int*)d_compressedSize, (unsigned int*)d_compressed, numElements, plan);
 }
+
 
 /** @brief Dispatch function to perform the Burrows-Wheeler transform
  *
@@ -542,7 +588,7 @@ void cudppCompressDispatch(void *d_uncompressed,
  * @param[out] d_x Transformed data
  * @param[out] d_y BWT Index
  * @param[in]  numElements Number of elements to compress
- * @param[in]  plan     Pointer to CUDPPCompressPlan object containing
+ * @param[in]  plan     Pointer to CUDPPBwtPlan object containing
  *                      compress options and intermediate storage
  */
 void cudppBwtDispatch(void *d_bwtIn,
@@ -553,6 +599,27 @@ void cudppBwtDispatch(void *d_bwtIn,
 {
     // Call to perform the Burrows-Wheeler transform
     burrowsWheelerTransformWrapper((unsigned char*)d_bwtIn, (int*)d_bwtIndex, (unsigned char*) d_bwtOut,
+        numElements, plan);
+}
+
+
+/** @brief Dispatch function to perform the Move-to-Front transform
+ *
+ * @todo
+ * 
+ * @param[in]  d_a Input data
+ * @param[out] d_x Transformed data
+ * @param[in]  numElements Number of elements to compress
+ * @param[in]  plan     Pointer to CUDPPMtfPlan object containing
+ *                      compress options and intermediate storage
+ */
+void cudppMtfDispatch(void *d_mtfIn,
+                      void *d_mtfOut,
+                      size_t numElements,
+                      const CUDPPMtfPlan *plan)
+{
+    // Call to perform the Burrows-Wheeler transform
+    moveToFrontTransformWrapper((unsigned char*)d_mtfIn, (unsigned char*) d_mtfOut,
         numElements, plan);
 }
 
