@@ -50,6 +50,7 @@ int testSparseMatrixVectorMultiply(int argc, const char ** argv);
 int testRandMD5(int argc, const char ** argv);
 int testTridiagonal(int argc, const char** argv, const CUDPPConfiguration *config);
 int testMtf(int argc, const char** argv, const CUDPPConfiguration *config);
+int testBwt(int argc, const char** argv, const CUDPPConfiguration *config);
 
 int testAllDatatypes(int argc, 
                      const char** argv, 
@@ -81,9 +82,9 @@ int testAllDatatypes(int argc,
 
     if (config.algorithm == CUDPP_BWT)
     {
-        //config.datatype = CUDPP_UCHAR;
-        //retval += testBwt(argc, argv, &config);
-        //return retval;
+        config.datatype = CUDPP_UCHAR;
+        retval += testBwt(argc, argv, &config);
+        return retval;
     }
 
     for (CUDPPDatatype dt = CUDPP_INT; dt != CUDPP_DATATYPE_INVALID; dt = CUDPPDatatype((int)dt+1))
@@ -313,7 +314,7 @@ int main(int argc, const char** argv)
         if (runMultiScan) retval += testScan(argc, argv, NULL, true, devProps);
         if (runTridiagonal) retval += testTridiagonal(argc, argv, NULL);
         if (runMtf)       retval += testMtf(argc, argv, NULL);
-        //if (runBwt)       retval += testBwt(argc, argv, NULL);
+        if (runBwt)       retval += testBwt(argc, argv, NULL);
     }
     else
     {
