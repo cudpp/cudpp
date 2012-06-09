@@ -51,6 +51,7 @@ int testRandMD5(int argc, const char ** argv);
 int testTridiagonal(int argc, const char** argv, const CUDPPConfiguration *config);
 int testMtf(int argc, const char** argv, const CUDPPConfiguration *config);
 int testBwt(int argc, const char** argv, const CUDPPConfiguration *config);
+int testCompress(int argc, const char** argv, const CUDPPConfiguration *config);
 
 int testAllDatatypes(int argc, 
                      const char** argv, 
@@ -84,6 +85,13 @@ int testAllDatatypes(int argc,
     {
         config.datatype = CUDPP_UCHAR;
         retval += testBwt(argc, argv, &config);
+        return retval;
+    }
+
+    if (config.algorithm == CUDPP_COMPRESS)
+    {
+        config.datatype = CUDPP_UCHAR;
+        retval += testCompress(argc, argv, &config);
         return retval;
     }
 
@@ -261,7 +269,8 @@ int main(int argc, const char** argv)
         printf("rand: Run random number generator test(s)\n\n");
         printf("tridiagonal: Run tridiagonal solver test(s)\n\n");
         printf("mtf: Run move-to-front transform test(s)\n\n");	
-        printf("bwt: Run Burrows-Wheeler transform test(s)\n\n");	
+        printf("bwt: Run Burrows-Wheeler transform test(s)\n\n");
+        printf("compress: Run compression test(s)\n\n");
         printf("--- Global Options ---\n");
         printf("iterations=<N>: Number of times to run each test\n");
         printf("n=<N>: Number of values to use in a single test\n");
@@ -301,6 +310,7 @@ int main(int argc, const char** argv)
     bool runTridiagonal = runAll ||  checkCommandLineFlag(argc, argv, "tridiagonal");
     bool runMtf = runAll || checkCommandLineFlag(argc, argv, "mtf");
     bool runBwt = runAll || checkCommandLineFlag(argc, argv, "bwt");
+    bool runCompress = runAll || checkCommandLineFlag(argc, argv, "compress");
     
     bool hasopts = hasOptions(argc, argv);
 
@@ -315,6 +325,7 @@ int main(int argc, const char** argv)
         if (runTridiagonal) retval += testTridiagonal(argc, argv, NULL);
         if (runMtf)       retval += testMtf(argc, argv, NULL);
         if (runBwt)       retval += testBwt(argc, argv, NULL);
+        if (runCompress)  retval += testCompress(argc, argv, NULL);
     }
     else
     {
@@ -365,6 +376,11 @@ int main(int argc, const char** argv)
             config.algorithm = CUDPP_BWT;
             retval += testAllDatatypes(argc, argv, config, supportsDouble, false);
         } 
+
+        if (runCompress) {
+            config.algorithm = CUDPP_COMPRESS;
+            retval += testAllDatatypes(argc, argv, config, supportsDouble, false);
+        }
 
     }
 

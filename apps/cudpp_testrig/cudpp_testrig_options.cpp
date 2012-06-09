@@ -48,6 +48,8 @@ void setOptions(int argc, const char **argv, testrigOptions &testOptions)
         testOptions.algorithm = "mtf";
     else if (checkCommandLineFlag(argc, argv, "bwt"))
         testOptions.algorithm = "bwt";
+    else if (checkCommandLineFlag(argc, argv, "compress"))
+        testOptions.algorithm = "compress";
             
     testOptions.op = "sum";
     commandLineArg(testOptions.op, argc, argv, "op");
