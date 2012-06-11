@@ -210,8 +210,6 @@ void burrowsWheelerTransform(unsigned char              *d_uncompressed,
                              size_t                     numElements,
                              const T    *plan)
 {
-    // set ptrs
-
     size_t tThreads = (numElements%4 == 0) ? numElements/4 : numElements/4 + 1;
     size_t nThreads = BWT_CTA_BLOCK;
     bool fullBlocks = (tThreads%nThreads == 0);
@@ -326,7 +324,11 @@ void burrowsWheelerTransform(unsigned char              *d_uncompressed,
 
 }
 
-// Wrapper for BWT
+/** @brief Wrapper to call for calling BWT.
+  *
+  * @todo
+  *
+  */
 void burrowsWheelerTransformWrapper(unsigned char *d_in,
                                     int *d_bwtIndex,
                                     size_t numElements,
@@ -335,6 +337,11 @@ void burrowsWheelerTransformWrapper(unsigned char *d_in,
     burrowsWheelerTransform<CUDPPCompressPlan>(d_in, d_bwtIndex, plan->m_d_bwtOut, numElements, plan);
 }
 
+/** @brief Wrapper to call for calling BWT.
+  *
+  * @todo
+  *
+  */
 void burrowsWheelerTransformWrapper(unsigned char *d_in,
                                     int *d_bwtIndex,
                                     unsigned char *d_bwtOut,
@@ -344,13 +351,22 @@ void burrowsWheelerTransformWrapper(unsigned char *d_in,
     burrowsWheelerTransform<CUDPPBwtPlan>(d_in, d_bwtIndex, d_bwtOut, numElements, plan);
 }
 
-// Wrapper for MTF
+/** @brief Wrapper to call for calling MTF.
+  *
+  * @todo
+  *
+  */
 void moveToFrontTransformWrapper(size_t numElements,
                                  const CUDPPCompressPlan *plan)
 {
     moveToFrontTransform<CUDPPCompressPlan>(plan->m_d_bwtOut, plan->m_d_mtfOut, numElements, plan);
 }
 
+/** @brief Wrapper to call for calling MTF.
+  *
+  * @todo
+  *
+  */
 void moveToFrontTransformWrapper(unsigned char *d_in,
                                  unsigned char *d_mtfOut,
                                  size_t numElements,

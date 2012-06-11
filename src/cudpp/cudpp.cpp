@@ -547,13 +547,33 @@ CUDPPResult cudppTridiagonal(CUDPPHandle planHandle,
 /**
  * @brief Compresses data stream
  *
- * @todo
+ * Performs compression using a three stage pipeline consisting of the Burrows-Wheeler
+ * transform, the move-to-front transform, and Huffman encoding.
+ * The compression algorithms are described in our paper "Parallel Lossless
+ * Data Compression on the GPU". (See the \ref references bibliography).
  *
- * @param[out] d_x BWT Index
- * @param[out] d_y Histogram size
- * @param[out] d_z Histogram
- * @param[out] d_w Encoded offset table
- * @param[out] d_xx Size of compressed data
+ * - Only unsigned char type is supported.
+ * - Currently, the input stream (d_a) must be a buffer of 1,048,576 (uchar) elements.
+ * - The BWT Index (d_x) is an integer number (int). This is used during the reverse-BWT stage.
+ * - The Histogram size pointer (d_y) can be ignored and can be passed a null pointer.
+ * - The Histrogram (d_z) is a 256-entry (unsigned int) buffer. The histogram is used to
+ * construct the Huffman tree during decoding.
+ * - The Encoded offset table (d_w) is a 256-entry (unsigned int) buffer. Since the input
+ * stream is compressed in blocks of 4096 characters, the offset table gives the starting offset of
+ * where each block starts in the compressed data (d_xx). The very first uint at each starting offset
+ * gives the size (in words) of that corresponding compressed block. This allows us to decompress each 4096
+ * character-block in parallel.
+ * - The size of compressed data (d_xx) is a uint and gives the final size (in words)
+ * of the compressed data.
+ * - The compress data stream (d_yy) is a uint buffer. The user should allocate enough
+ * memory for worst-case (no compression occurs).
+ * - \a numElements is a uint and must be set to 1048576.
+ *
+ * @param[out] d_x BWT Index (int)
+ * @param[out] d_y Histogram size (ignored, null ptr)
+ * @param[out] d_z Histogram (256-entry, uint)
+ * @param[out] d_w Encoded offset table (256-entry, uint)
+ * @param[out] d_xx Size of compressed data (uint)
  * @param[out] d_yy Compressed data
  * @param[in] planHandle Handle to plan for compressor
  * @param[in] d_a Uncompressed data
@@ -573,6 +593,21 @@ CUDPPResult cudppCompress(CUDPPHandle planHandle,
                           void *d_yy,
                           size_t numElements)
 {   
+    // first check: is this device >= 2.0? if not, return error
+    int deviceCount;
+    int dev = 0;
+    cudaDeviceProp devProps;
+    cudaGetDeviceCount(&deviceCount);
+    dev = deviceCount - 1;
+    cudaSetDevice(dev);
+    cudaGetDeviceProperties(&devProps, dev);
+
+    if((int)devProps.major < 2) {
+        // Only supported on devices with compute
+        // capability 2.0 or greater
+        return CUDPP_ERROR_ILLEGAL_CONFIGURATION;
+    }
+    
     CUDPPCompressPlan * plan = 
         (CUDPPCompressPlan *) getPlanPtrFromHandle<CUDPPCompressPlan>(planHandle);
     
@@ -581,6 +616,8 @@ CUDPPResult cudppCompress(CUDPPHandle planHandle,
         if (plan->m_config.algorithm != CUDPP_COMPRESS)
             return CUDPP_ERROR_INVALID_PLAN;
         if (plan->m_config.datatype != CUDPP_UCHAR)
+            return CUDPP_ERROR_ILLEGAL_CONFIGURATION;
+        if (numElements != 1048576)
             return CUDPP_ERROR_ILLEGAL_CONFIGURATION;
 
         cudppCompressDispatch(d_a, d_x, d_y, d_z, d_w, 
@@ -594,7 +631,14 @@ CUDPPResult cudppCompress(CUDPPHandle planHandle,
 /**
  * @brief Performs the Burrows-Wheeler Transform
  *
- * @todo
+ * Performs a parallel Burrows-Wheeler transform on 1,048,576 elements.
+ * The BWT leverages a string-sort algorithm based on merge-sort.
+ *
+ * - Currently, the BWT can only be performed on 1,048,576 (uchar) elements.
+ * - The transformed string is written to \a d_x.
+ * - The BWT index (used during the reverse-BWT) is recorded as an int 
+ * in \a d_y.
+ *
  *
  * @param[out] d_y BWT Index
  * @param[out] d_x Output data
@@ -610,15 +654,32 @@ CUDPPResult cudppBurrowsWheelerTransform(CUDPPHandle planHandle,
                                          void *d_x,
                                          void *d_y,
                                          size_t numElements)
-{   
+{
+    // first check: is this device >= 2.0? if not, return error
+    int deviceCount;
+    int dev = 0;
+    cudaDeviceProp devProps;
+    cudaGetDeviceCount(&deviceCount);
+    dev = deviceCount - 1;
+    cudaSetDevice(dev);
+    cudaGetDeviceProperties(&devProps, dev);
+
+    if((int)devProps.major < 2) {
+        // Only supported on devices with compute
+        // capability 2.0 or greater
+        return CUDPP_ERROR_ILLEGAL_CONFIGURATION;
+    }
+
     CUDPPBwtPlan * plan = 
         (CUDPPBwtPlan *) getPlanPtrFromHandle<CUDPPBwtPlan>(planHandle);
-    
+
     if(plan != NULL)
     {
         if (plan->m_config.algorithm != CUDPP_BWT)
             return CUDPP_ERROR_INVALID_PLAN;
         if (plan->m_config.datatype != CUDPP_UCHAR)
+            return CUDPP_ERROR_ILLEGAL_CONFIGURATION;
+        if (numElements != 1048576)
             return CUDPP_ERROR_ILLEGAL_CONFIGURATION;
 
         cudppBwtDispatch(d_a, d_x, d_y, numElements, plan);
@@ -631,7 +692,13 @@ CUDPPResult cudppBurrowsWheelerTransform(CUDPPHandle planHandle,
 /**
  * @brief Performs the Move-to-Front Transform
  *
- * @todo
+ * Performs a parallel move-to-front transform on 1,048,576 elements.
+ * The MTF uses a scan-based algorithm to parallelize the computation.
+ * The MTF uses a scan-based algorithm described in our paper "Parallel
+ * Lossless Data Compression on the GPU". (See the \ref references bibliography).
+ *
+ * - Currently, the MTF can only be performed on 1,048,576 (uchar) elements.
+ * - The transformed string is written to \a d_x.
  *
  * @param[out] d_x Output data
  * @param[in] d_a Input data
@@ -645,7 +712,21 @@ CUDPPResult cudppMoveToFrontTransform(CUDPPHandle planHandle,
                                       void *d_a,
                                       void *d_x,
                                       size_t numElements)
-{   
+{
+    int deviceCount;
+    int dev = 0;
+    cudaDeviceProp devProps;
+    cudaGetDeviceCount(&deviceCount);
+    dev = deviceCount - 1;
+    cudaSetDevice(dev);
+    cudaGetDeviceProperties(&devProps, dev);
+
+    if((int)devProps.major < 2) {
+        // Only supported on devices with compute
+        // capability 2.0 or greater
+        return CUDPP_ERROR_ILLEGAL_CONFIGURATION;
+    }
+
     CUDPPMtfPlan * plan = 
         (CUDPPMtfPlan *) getPlanPtrFromHandle<CUDPPMtfPlan>(planHandle);
     
@@ -654,6 +735,8 @@ CUDPPResult cudppMoveToFrontTransform(CUDPPHandle planHandle,
         if (plan->m_config.algorithm != CUDPP_MTF)
             return CUDPP_ERROR_INVALID_PLAN;
         if (plan->m_config.datatype != CUDPP_UCHAR)
+            return CUDPP_ERROR_ILLEGAL_CONFIGURATION;
+        if (numElements != 1048576)
             return CUDPP_ERROR_ILLEGAL_CONFIGURATION;
 
         cudppMtfDispatch(d_a, d_x, numElements, plan);

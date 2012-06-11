@@ -104,6 +104,8 @@
  * - CUDPP_SEGMENTED_SCAN     67,107,840 elements
  * - CUDPP_COMPACT            67,107,840 elements
  * - CUDPP_COMPRESS           1,048,576 elements
+ * - CUDPP_MTF                1,048,576 elements
+ * - CUDPP_BWT                1,048,576 elements
  * - CUDPP_SORT               2,147,450,880 elements
  * - CUDPP_REDUCE             NO LIMIT
  * - CUDPP_RAND               33,554,432 elements
@@ -197,6 +199,7 @@
  * - Shubhabrata Sengupta, Mark Harris, Michael Garland, and John D. Owens. "Efficient Parallel Scan Algorithms for many-core GPUs". In Jakub Kurzak, David A. Bader, and Jack Dongarra, editors, <i>Scientific Computing with Multicore and Accelerators</i>, Chapman & Hall/CRC Computational Science, chapter 19, pages 413&ndash;442. Taylor & Francis, January 2011. http://www.idav.ucdavis.edu/publications/print_pub?pub_id=1041
  * - Dan A. Alcantara, Andrei Sharf, Fatemeh Abbasinejad, Shubhabrata Sengupta, Michael Mitzenmacher, John D. Owens, and Nina Amenta. Real-Time Parallel Hashing on the GPU. ACM Transactions on Graphics, 28(5):154:1–154:9, December 2009. http://www.idav.ucdavis.edu/publications/print_pub?pub_id=973
  * - Dan A. Alcantara, Vasily Volkov, Shubhabrata Sengupta, Michael Mitzenmacher, John D. Owens, and Nina Amenta. Building an Efficient Hash Table on the GPU. In Wen-mei W. Hwu, editor, GPU Computing Gems, volume 2, chapter 1. Morgan Kaufmann, August 2011. 
+ * - Ritesh A. Patel, Yao Zhang, Jason Mak, Andrew Davidson, John D. Owens. "Parallel Lossless Data Compression on the GPU". In <i>Proceedings of Innovative Parallel Computing (InPar '12)</i>, May 2012. http://idav.ucdavis.edu/publications/print_pub?pub_id=1087
  *
  * Many researchers are using CUDPP in their work, and there are many
  * publications that have used it \ref cudpp_refs "(references)". If

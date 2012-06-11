@@ -265,7 +265,7 @@ public:
 
 };
 
-/** @brief Plan class for BWt
+/** @brief Plan class for BWT
 *
 */
 class CUDPPBwtPlan : public CUDPPPlan
@@ -289,7 +289,7 @@ public:
 
 };
 
-/** @brief Plan class for BWt
+/** @brief Plan class for MTF
 *
 */
 class CUDPPMtfPlan : public CUDPPPlan

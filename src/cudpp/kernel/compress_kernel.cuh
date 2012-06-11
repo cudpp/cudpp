@@ -1267,6 +1267,9 @@ bwt_keys_construct_kernel(uchar4    *d_bwtIn,
 
 
 
+/** @brief First stage in MTF (Reduction)
+* @todo
+**/
 __global__ void
 mtf_reduction_kernel(uchar      *d_mtfIn,
                      uchar      *d_lists,
@@ -1405,6 +1408,10 @@ mtf_reduction_kernel(uchar      *d_mtfIn,
 #endif
 }
 
+
+/** @brief Second stage in MTF (Global reduction)
+* @todo
+**/
 __global__ void
 mtf_GLreduction_kernel(uchar     *d_lists,
                        ushort    *d_list_sizes,
@@ -1521,6 +1528,9 @@ mtf_GLreduction_kernel(uchar     *d_lists,
 #endif
 }
 
+/** @brief Third stage in MTF (Global downsweep)
+* @todo
+**/
 __global__ void
 mtf_GLdownsweep_kernel(uchar    *d_lists,
                        ushort   *d_list_sizes,
@@ -1630,6 +1640,9 @@ mtf_GLdownsweep_kernel(uchar    *d_lists,
 #endif
 }
 
+/** @brief Compute final MTF lists and final MTF output
+* @todo
+**/
 __global__ void
 mtf_localscan_lists_kernel(uchar    *d_mtfIn,
                            uchar    *d_mtfOut,
@@ -1928,7 +1941,9 @@ mtf_localscan_lists_kernel(uchar    *d_mtfIn,
 
 
 
-
+/** @brief Compute 256-entry histogram
+* @todo
+**/
 __global__ void
 huffman_build_histogram_kernel(uint     *d_input, // Read in as words, instead of bytes
                                uint     *d_histograms,
@@ -2015,6 +2030,9 @@ huffman_build_histogram_kernel(uint     *d_input, // Read in as words, instead o
 #endif
 }
 
+/** @brief Build Huffman tree/codes
+* @todo
+**/
 __global__ void
 huffman_build_tree_kernel(uchar     *d_input,
                           uchar     *d_huffCodesPacked,
@@ -2502,7 +2520,9 @@ end:
 #endif
 }
 
-
+/** @brief Perform parallel Huffman encoding
+* @todo
+**/
 __global__ void
 huffman_kernel_en(uchar4    *d_input,              // Input to encode
                   uchar     *d_codes,               // Packed Huffman Codes
@@ -2690,6 +2710,9 @@ huffman_kernel_en(uchar4    *d_input,              // Input to encode
 #endif
 }
 
+/** @brief Pack together encoded blocks
+* @todo
+**/
 __global__ void
 huffman_datapack_kernel(encoded     *d_encoded,
                         uint        *d_encodedData,

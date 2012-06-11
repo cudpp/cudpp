@@ -556,7 +556,14 @@ int mtfTest(int argc, const char **argv, const CUDPPConfiguration &config,
 
     // Run the MTF transform
     // run once to avoid timing startup overhead.
-    cudppMoveToFrontTransform(plan, d_idata, d_odata, (unsigned int)numElements);
+    result = cudppMoveToFrontTransform(plan, d_idata, d_odata, (unsigned int)numElements);
+
+    if (result != CUDPP_SUCCESS)
+    {
+        if (!quiet)
+            printf("Error calling cudppMoveToFrontTransform for MTF\n");
+        retval = numTests;
+    }
 
     // copy result from device to host
     unsigned char* o_data = new unsigned char[numElements];
@@ -679,7 +686,14 @@ int bwtTest(int argc, const char **argv, const CUDPPConfiguration &config,
 
     // Run the BWT
     // run once to avoid timing startup overhead.
-    cudppBurrowsWheelerTransform(plan, d_idata, d_odata, d_oindex, (unsigned int)numElements);
+    result = cudppBurrowsWheelerTransform(plan, d_idata, d_odata, d_oindex, (unsigned int)numElements);
+
+    if (result != CUDPP_SUCCESS)
+    {   
+        if(!quiet)
+            printf("Error destroying cudppBurrowsWheelerTransform for BWT\n");
+        retval = numTests;
+    }
 
     // copy result from device to host
     unsigned char* o_data = new unsigned char[numElements];
@@ -709,7 +723,7 @@ int bwtTest(int argc, const char **argv, const CUDPPConfiguration &config,
 
     if (result != CUDPP_SUCCESS)
     {   
-        printf("Error destroying CUDPPPlan for BWt\n");
+        printf("Error destroying CUDPPPlan for BWT\n");
         retval = numTests;
     }
 
@@ -813,17 +827,25 @@ int compressTest(int argc, const char **argv, const CUDPPConfiguration &config,
 
     // Run the compression
     // run once to avoid timing startup overhead.
-    cudppCompress(plan, (void*)d_uncompressed, (void*)d_bwtIndex, (void*)d_histSize,
+    result = cudppCompress(plan, (void*)d_uncompressed, (void*)d_bwtIndex, (void*)d_histSize,
         (void*)d_hist, (void*)d_encodeOffset, (void*)d_compressedSize, (void*)d_compressed, numElements);
+    
+    if (result != CUDPP_SUCCESS)
+    {
+        if (!quiet)
+            printf("Error calling cudppCompress for compression\n");
+        retval = numTests;
+    } else {
+        // Copy from device back to host
+        CUDA_SAFE_CALL(cudaMemcpy(&h_bwtIndex, d_bwtIndex, sizeof(int), cudaMemcpyDeviceToHost));
+        CUDA_SAFE_CALL(cudaMemcpy(h_hist, d_hist, 256*sizeof(unsigned int), cudaMemcpyDeviceToHost));
+        CUDA_SAFE_CALL(cudaMemcpy(h_encodeOffset, d_encodeOffset, 256*sizeof(unsigned int), cudaMemcpyDeviceToHost));
+        CUDA_SAFE_CALL(cudaMemcpy(&h_compressedSize, d_compressedSize, sizeof(unsigned int), cudaMemcpyDeviceToHost));
+        CUDA_SAFE_CALL(cudaMemcpy(h_compressed, d_compressed, h_compressedSize*sizeof(unsigned int), cudaMemcpyDeviceToHost));
 
-    // Copy from device back to host
-    CUDA_SAFE_CALL(cudaMemcpy(&h_bwtIndex, d_bwtIndex, sizeof(int), cudaMemcpyDeviceToHost));
-    CUDA_SAFE_CALL(cudaMemcpy(h_hist, d_hist, 256*sizeof(unsigned int), cudaMemcpyDeviceToHost));
-    CUDA_SAFE_CALL(cudaMemcpy(h_encodeOffset, d_encodeOffset, 256*sizeof(unsigned int), cudaMemcpyDeviceToHost));
-    CUDA_SAFE_CALL(cudaMemcpy(&h_compressedSize, d_compressedSize, sizeof(unsigned int), cudaMemcpyDeviceToHost));
-    CUDA_SAFE_CALL(cudaMemcpy(h_compressed, d_compressed, h_compressedSize*sizeof(unsigned int), cudaMemcpyDeviceToHost));
-
-    computeCompressGold( reference, h_bwtIndex, h_hist, h_encodeOffset, h_compressedSize, h_compressed, numElements);
+        // Decompress on the CPU
+        computeCompressGold( reference, h_bwtIndex, h_hist, h_encodeOffset, h_compressedSize, h_compressed, numElements);
+    }
 
     // check results
     bool error = false;

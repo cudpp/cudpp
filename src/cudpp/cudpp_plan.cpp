@@ -591,7 +591,7 @@ CUDPPTridiagonalPlan::CUDPPTridiagonalPlan(CUDPPManager *mgr, CUDPPConfiguration
 
 /** @brief CUDPP Compress Plan Constructor
   *
-  * @param[in]  mgr pointer to the CUDPPManager
+  * @param[in] mgr pointer to the CUDPPManager
   * @param[in] config The configuration struct specifying options
   */
 CUDPPCompressPlan::CUDPPCompressPlan(CUDPPManager *mgr, CUDPPConfiguration config, size_t numElements) 
@@ -608,7 +608,7 @@ CUDPPCompressPlan::~CUDPPCompressPlan()
 
 /** @brief CUDPP BWT Plan Constructor
   *
-  * @param[in]  mgr pointer to the CUDPPManager
+  * @param[in] mgr pointer to the CUDPPManager
   * @param[in] config The configuration struct specifying options
   */
 CUDPPBwtPlan::CUDPPBwtPlan(CUDPPManager *mgr, CUDPPConfiguration config, size_t numElements) 
@@ -617,7 +617,7 @@ CUDPPBwtPlan::CUDPPBwtPlan(CUDPPManager *mgr, CUDPPConfiguration config, size_t 
     allocBwtStorage(this);
 }
 
-/** @brief Compress plan destructor */
+/** @brief BWT plan destructor */
 CUDPPBwtPlan::~CUDPPBwtPlan()
 {
     freeBwtStorage(this);
@@ -625,7 +625,7 @@ CUDPPBwtPlan::~CUDPPBwtPlan()
 
 /** @brief CUDPP MTF Plan Constructor
   *
-  * @param[in]  mgr pointer to the CUDPPManager
+  * @param[in] mgr pointer to the CUDPPManager
   * @param[in] config The configuration struct specifying options
   */
 CUDPPMtfPlan::CUDPPMtfPlan(CUDPPManager *mgr, CUDPPConfiguration config, size_t numElements) 
@@ -634,7 +634,7 @@ CUDPPMtfPlan::CUDPPMtfPlan(CUDPPManager *mgr, CUDPPConfiguration config, size_t 
     allocMtfStorage(this);
 }
 
-/** @brief Compress plan destructor */
+/** @brief MTF plan destructor */
 CUDPPMtfPlan::~CUDPPMtfPlan()
 {
     freeMtfStorage(this);
