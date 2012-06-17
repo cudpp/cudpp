@@ -50,7 +50,7 @@ bool MultivalueHashTable::Build(const unsigned  n,
     CUDPPHandle sort_plan;
     CUDPPResult sort_result = cudppPlan(theCudpp, &sort_plan, sort_config, n,
                                         1, 0);
-    cudppSort(sort_plan, d_sorted_keys, (void*)d_sorted_vals, n);
+    cudppRadixSort(sort_plan, d_sorted_keys, (void*)d_sorted_vals, n);
 
     if (sort_result != CUDPP_SUCCESS)
     {

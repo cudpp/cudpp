@@ -67,7 +67,6 @@ set(CUFILES
 set(HFILES_PUBLIC
   ../../include/cudpp.h
   )
-
 source_group("CUDA Source Files" FILES ${CUFILES})
 source_group("CUDA Header Files" FILES ${CUHFILES})
 
@@ -85,7 +84,7 @@ cuda_add_library(cudpp ${LIB_TYPE}
   ${CUHFILES}
   ${HFILES_PUBLIC}
   ${CUFILES} 
-  OPTIONS ${GENCODE_SM10} ${GENCODE_SM13}${GENCODE_SM20} ${VERBOSE_PTXAS}
+  OPTIONS ${GENCODE_SM10} ${GENCODE_SM13} ${GENCODE_SM20} ${VERBOSE_PTXAS}
   )
   
 install(FILES ${HFILES_PUBLIC}
