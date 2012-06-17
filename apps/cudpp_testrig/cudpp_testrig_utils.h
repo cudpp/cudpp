@@ -214,7 +214,8 @@ void VectorSupport<float>::fillVector(float *a, size_t numElements, float range)
     srand(95123);
     for(size_t j = 0; j < numElements; j++)
     {
-        a[j] = pow(-1, (float)j) * (range * (rand() / (float)RAND_MAX));
+		a[j] = pow(-1, (float)j) * (range * (rand() / (float)RAND_MAX));
+		
     }
 }
 
@@ -320,7 +321,14 @@ int VectorSupport<T>::verifySort(T *keysSorted, unsigned int *valuesSorted,
     {
         for(unsigned int i=0; i<len; ++i)
         {
-            if( keysUnsorted[valuesSorted[i]] != keysSorted[i] )
+			if(valuesSorted[i] > len)
+			{
+				cout << "Incorrectly sorted value[" << i << "] ("
+				<<valuesSorted[i] << " is greater than length " << len <<")" <<endl;
+				retval = 1;
+				break;
+			}
+            else if( keysUnsorted[valuesSorted[i]] != keysSorted[i] )
             {
                 cout << "Incorrectly sorted value[" << i << "] ("
                      << valuesSorted[i] << ") " << keysUnsorted[valuesSorted[i]] 

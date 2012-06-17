@@ -14,6 +14,7 @@
 #include "cudpp_segscan.h"
 #include "cudpp_compact.h"
 #include "cudpp_spmvmult.h"
+#include "cudpp_mergesort.h"
 #include "cudpp_radixsort.h"
 #include "cudpp_reduce.h"
 #include "cuda_util.h"
@@ -109,6 +110,11 @@ CUDPPResult cudppPlan(const CUDPPHandle  cudppHandle,
             plan = new CUDPPRadixSortPlan(mgr, config, numElements);
             break;
         }
+    case CUDPP_SORT_MERGE:
+	{
+	    plan = new CUDPPMergeSortPlan(mgr, config, numElements);
+	    break;
+	}
     case CUDPP_SEGMENTED_SCAN:
         {
             plan = new CUDPPSegmentedScanPlan(mgr, config, numElements);
@@ -171,6 +177,11 @@ CUDPPResult cudppDestroyPlan(CUDPPHandle planHandle)
             delete static_cast<CUDPPCompactPlan*>(plan);
             break;
         }
+    case CUDPP_SORT_MERGE:
+	{
+	    delete static_cast<CUDPPMergeSortPlan*>(plan);
+		break;
+	}
     case CUDPP_SORT_RADIX:
         {
             delete static_cast<CUDPPRadixSortPlan*>(plan);
@@ -430,6 +441,26 @@ CUDPPReducePlan::CUDPPReducePlan(CUDPPManager *mgr,
 CUDPPReducePlan::~CUDPPReducePlan()
 {
     freeReduceStorage(this);
+}
+
+
+/** @brief Merge Sort Plan consturctor
+* @param[in]  mgr pointer to the CUDPPManager
+* @param[in]  config The configuration struct specifying options
+* @param[in]  numElements The maximum number of elements to be sorted
+*/
+CUDPPMergeSortPlan::CUDPPMergeSortPlan(CUDPPManager *mgr,
+                                       CUDPPConfiguration config,
+				       size_t numElements)
+: CUDPPPlan(mgr, config, numElements, 1, 0), m_tempKeys(0), m_tempValues(0)
+{
+
+}
+
+/** @brief Merge sort plan destructor */
+CUDPPMergeSortPlan::~CUDPPMergeSortPlan()
+{
+    freeMergeSortStorage(this);
 }
 
 /** @brief Radix Sort Plan constructor

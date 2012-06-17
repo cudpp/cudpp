@@ -46,6 +46,7 @@
 #include "cudpp_segscan.h"
 #include "cudpp_compact.h"
 #include "cudpp_spmvmult.h"
+#include "cudpp_mergesort.h"
 #include "cudpp_radixsort.h"
 #include "cudpp_rand.h"
 #include "cudpp_reduce.h"
@@ -339,6 +340,7 @@ CUDPPResult cudppReduce(const CUDPPHandle planHandle,
  * Takes as input an array of keys in GPU memory
  * (d_keys) and an optional array of corresponding values,
  * and outputs sorted arrays of keys and (optionally) values in place. 
+ * Radix sort or Merge sort is selected through the configuration (.algorithm)
  * Key-value and key-only sort is selected through the configuration of 
  * the plan, using the options CUDPP_OPTION_KEYS_ONLY and 
  * CUDPP_OPTION_KEY_VALUE_PAIRS.
@@ -358,11 +360,14 @@ CUDPPResult cudppReduce(const CUDPPHandle planHandle,
  * @see cudppPlan, CUDPPConfiguration, CUDPPAlgorithm
  */
 CUDPP_DLL
-CUDPPResult cudppSort(const CUDPPHandle planHandle,
+CUDPPResult cudppRadixSort(const CUDPPHandle planHandle,
                       void              *d_keys,
                       void              *d_values,                      
                       size_t            numElements)
 {
+    
+	
+	
     CUDPPRadixSortPlan *plan = 
         (CUDPPRadixSortPlan*)getPlanPtrFromHandle<CUDPPRadixSortPlan>(planHandle);
 
@@ -371,12 +376,35 @@ CUDPPResult cudppSort(const CUDPPHandle planHandle,
         if (plan->m_config.algorithm != CUDPP_SORT_RADIX)
             return CUDPP_ERROR_INVALID_PLAN;
         
-        cudppRadixSortDispatch(d_keys, d_values, numElements, plan);
+	if(plan->m_config.algorithm == CUDPP_SORT_RADIX)
+            cudppRadixSortDispatch(d_keys, d_values, numElements, plan);
+	
         return CUDPP_SUCCESS;
     }
     else
         return CUDPP_ERROR_INVALID_HANDLE;
 }
+
+CUDPP_DLL
+CUDPPResult cudppMergeSort(const CUDPPHandle planHandle,
+                      void              *d_keys,
+                      void              *d_values,                      
+                      size_t            numElements)
+{    		
+    CUDPPMergeSortPlan *plan = 
+        (CUDPPMergeSortPlan*)getPlanPtrFromHandle<CUDPPMergeSortPlan>(planHandle);
+
+    if (plan != NULL)
+    {
+        if (plan->m_config.algorithm != CUDPP_SORT_MERGE)
+            return CUDPP_ERROR_INVALID_PLAN;   	
+		cudppMergeSortDispatch(d_keys, d_values, numElements, plan);
+	    return CUDPP_SUCCESS;
+    }
+    else
+        return CUDPP_ERROR_INVALID_HANDLE;
+}
+
 
 /** @brief Perform matrix-vector multiply y = A*x for arbitrary sparse matrix A and vector x
   *

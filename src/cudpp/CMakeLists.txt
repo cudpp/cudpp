@@ -25,6 +25,7 @@ set (HFILES
   cudpp_util.h
   cudpp_globals.h
   cudpp_compact.h
+  cudpp_mergesort.h
   cudpp_radixsort.h
   cudpp_rand.h
   cudpp_reduce.h
@@ -39,7 +40,9 @@ set (CUHFILES
   cta/rand_cta.cuh
   cta/scan_cta.cuh
   cta/segmented_scan_cta.cuh
+  cta/mergesort_cta.cuh
   kernel/compact_kernel.cuh
+  kernel/mergesort_kernel.cuh
   kernel/radixsort_kernel.cuh
   kernel/rand_kernel.cuh
   kernel/reduce_kernel.cuh
@@ -55,6 +58,7 @@ set(CUFILES
   app/scan_app.cu
   app/segmented_scan_app.cu
   app/spmvmult_app.cu
+  app/mergesort_app.cu
   app/radixsort_app.cu
   app/rand_app.cu 
   app/tridiagonal_app.cu
@@ -81,7 +85,7 @@ cuda_add_library(cudpp ${LIB_TYPE}
   ${CUHFILES}
   ${HFILES_PUBLIC}
   ${CUFILES} 
-  OPTIONS ${GENCODE_SM10} ${GENCODE_SM13} ${GENCODE_SM20} ${VERBOSE_PTXAS}
+  OPTIONS ${GENCODE_SM10} ${GENCODE_SM13}${GENCODE_SM20} ${VERBOSE_PTXAS}
   )
   
 install(FILES ${HFILES_PUBLIC}

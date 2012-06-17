@@ -45,6 +45,7 @@ int testScan(int argc, const char ** argv, const CUDPPConfiguration *config,
              bool multiRow, cudaDeviceProp props);
 int testCompact(int argc, const char ** argv, const CUDPPConfiguration *config);
 int testRadixSort(int argc, const char ** argv, const CUDPPConfiguration *config);
+int testMergeSort(int argc, const char ** argv, const CUDPPConfiguration *config);
 int testReduce(int argc, const char ** argv, const CUDPPConfiguration *config);
 int testSparseMatrixVectorMultiply(int argc, const char ** argv);
 int testRandMD5(int argc, const char ** argv);
@@ -86,6 +87,9 @@ int testAllDatatypes(int argc,
                 case CUDPP_COMPACT:
                     retval += testCompact(argc, argv, &config);
                     break;
+				case CUDPP_SORT_MERGE:
+					if(config.datatype == CUDPP_UINT)
+                        retval += testMergeSort(argc, argv, &config);
                 case CUDPP_SORT_RADIX:
                     retval += testRadixSort(argc, argv, &config);
                 default:
@@ -117,6 +121,12 @@ int testAllOptionsAndDatatypes(int argc,
         retval += testAllDatatypes(argc, argv, config, supportsDouble, multiRow);              
         return retval;
     }
+	if(config.algorithm == CUDPP_SORT_MERGE)
+	{
+		config.options = CUDPP_OPTION_KEY_VALUE_PAIRS | CUDPP_OPTION_FORWARD;		
+		retval += testAllDatatypes(argc, argv, config, supportsDouble, multiRow);
+		return retval;
+	}
     
     config.op = CUDPP_ADD;
     
@@ -290,7 +300,7 @@ int main(int argc, const char** argv)
         if (runSegScan)   retval += testScan(argc, argv, NULL, false, devProps);
         if (runCompact)   retval += testCompact(argc, argv, NULL);
         if (runReduce)    retval += testReduce(argc, argv, NULL);
-        if (runSort)      retval += testRadixSort(argc, argv, NULL);
+		if (runSort)      {/*retval += testRadixSort(argc, argv, NULL);*/ retval += testMergeSort(argc, argv, NULL);}
         if (runMultiScan) retval += testScan(argc, argv, NULL, true, devProps);
         if (runTridiagonal) retval += testTridiagonal(argc, argv, NULL);
     }
@@ -320,8 +330,11 @@ int main(int argc, const char** argv)
         }
         
         if (runSort) {
-            config.algorithm = CUDPP_SORT_RADIX;
-            retval += testAllOptionsAndDatatypes(argc, argv, config, supportsDouble);
+			printf("testing sort\n");
+            //config.algorithm = CUDPP_SORT_RADIX;
+            //retval += testAllOptionsAndDatatypes(argc, argv, config, supportsDouble);
+			config.algorithm = CUDPP_SORT_MERGE;
+			retval += testAllOptionsAndDatatypes(argc, argv, config, supportsDouble);
         }
         
         if (runMultiScan) {

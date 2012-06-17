@@ -114,6 +114,16 @@ public:
     void         *m_blockSums;          //!< @internal Intermediate block sums array
 };  
 
+class CUDPPMergeSortPlan : public CUDPPPlan
+{
+public:
+    CUDPPMergeSortPlan(CUDPPManager *mgr, CUDPPConfiguration config, size_t numElements);
+    virtual ~CUDPPMergeSortPlan();
+
+    mutable void *m_tempKeys;
+    mutable void *m_tempValues;
+};
+
 class CUDPPRadixSortPlan : public CUDPPPlan
 {
 public:
