@@ -86,9 +86,9 @@ stringMergeMulti(T      *A_keys,
     localAPartSize = partitionSizeA[myId];
     localBPartSize = partitionSizeB[myId];
 
-    int myStartIdxC;			
-    myStartIdxC = myStartIdxA + myStartIdxB - ((myStartId+subPartitions)/(subPartitions))*entirePartitionSize;	
-    localCPartSize = localAPartSize + localBPartSize;	
+    int myStartIdxC;                    
+    myStartIdxC = myStartIdxA + myStartIdxB - ((myStartId+subPartitions)/(subPartitions))*entirePartitionSize;  
+    localCPartSize = localAPartSize + localBPartSize;   
 
     if(myId%subPartitions != subPartitions-1 && myStartIdxB + localBPartSize < (myId/subPartitions)*entirePartitionSize+2*entirePartitionSize)
         finalMaxB = A_keys[myStartIdxB+localBPartSize+1];
@@ -98,7 +98,7 @@ stringMergeMulti(T      *A_keys,
     //Now we have the beginning and end points of our subpartitions, merge the two together
     T cmpValue;
     int mid, index;
-    int bIndex = 0; int aIndex = 0;	
+    int bIndex = 0; int aIndex = 0;     
 
     __shared__ T      BValues[2*BWT_INTERSECT_B_BLOCK_SIZE_multi+3];
     T * BKeys =      &BValues[BWT_INTERSECT_B_BLOCK_SIZE_multi];
@@ -108,8 +108,8 @@ stringMergeMulti(T      *A_keys,
     bool breakout = false;
     int tid = threadIdx.x;
 
-    T localMaxB, localMaxA;			
-    T localMinB = 0;	
+    T localMaxB, localMaxA;                     
+    T localMinB = 0;    
 
     T myKey[depth];
     T myValue[depth];
@@ -117,13 +117,13 @@ stringMergeMulti(T      *A_keys,
 #pragma unroll
     for(int i =0; i <depth; i++)
     {
-        myKey[i] =   (depth*tid + i < localAPartSize ? A_keys  [myStartIdxA + depth*tid + i]   : UINT_MAX-3);		
-        myValue[i] = (depth*tid + i < localAPartSize ? A_values[myStartIdxA + depth*tid + i]   : UINT_MAX-3);		
+        myKey[i] =   (depth*tid + i < localAPartSize ? A_keys  [myStartIdxA + depth*tid + i]   : UINT_MAX-3);           
+        myValue[i] = (depth*tid + i < localAPartSize ? A_values[myStartIdxA + depth*tid + i]   : UINT_MAX-3);           
     }
 
     if(bIndex + BWT_INTERSECT_B_BLOCK_SIZE_multi < localBPartSize) 
     {
-        int bi = tid;					
+        int bi = tid;                                   
 #pragma unroll
         for(int i = 0;i < BWT_INTERSECT_B_BLOCK_SIZE_multi/BWT_CTASIZE_multi; i++, bi+=BWT_CTASIZE_multi) 
         {
@@ -145,7 +145,7 @@ stringMergeMulti(T      *A_keys,
     {
         BMax[1] =  myKey[depth-1];
         BMax[0] =  (BWT_INTERSECT_B_BLOCK_SIZE_multi < localBPartSize ? A_keys  [myStartIdxB + BWT_INTERSECT_B_BLOCK_SIZE_multi-1] : UINT_MAX-1);
-    }	
+    }   
 
     __syncthreads();
 
@@ -171,16 +171,16 @@ stringMergeMulti(T      *A_keys,
             if(BWT_INTERSECT_B_BLOCK_SIZE_multi >= 256)
                 binSearch_frag_mult<T, depth> (BKeys, BValues, 64, mid, cmpValue, myKey[0], myValue[0], cumulativeAddress, A_values, stringValues, myStartIdxB+bIndex+index, numElements);
 
-            binSearch_frag_mult<T, depth> (BKeys, BValues, 32, mid, cmpValue, myKey[0], myValue[0], cumulativeAddress, A_values, stringValues, myStartIdxB+bIndex+index, numElements);						
-            binSearch_frag_mult<T, depth> (BKeys, BValues, 16, mid, cmpValue, myKey[0], myValue[0], cumulativeAddress, A_values, stringValues, myStartIdxB+bIndex+index, numElements);			
-            binSearch_frag_mult<T, depth> (BKeys, BValues,  8, mid, cmpValue, myKey[0], myValue[0], cumulativeAddress, A_values, stringValues, myStartIdxB+bIndex+index, numElements);						
-            binSearch_frag_mult<T, depth> (BKeys, BValues,  4, mid, cmpValue, myKey[0], myValue[0], cumulativeAddress, A_values, stringValues, myStartIdxB+bIndex+index, numElements);			
-            binSearch_frag_mult<T, depth> (BKeys, BValues,  2, mid, cmpValue, myKey[0], myValue[0], cumulativeAddress, A_values, stringValues, myStartIdxB+bIndex+index, numElements);			
+            binSearch_frag_mult<T, depth> (BKeys, BValues, 32, mid, cmpValue, myKey[0], myValue[0], cumulativeAddress, A_values, stringValues, myStartIdxB+bIndex+index, numElements);                                          
+            binSearch_frag_mult<T, depth> (BKeys, BValues, 16, mid, cmpValue, myKey[0], myValue[0], cumulativeAddress, A_values, stringValues, myStartIdxB+bIndex+index, numElements);                  
+            binSearch_frag_mult<T, depth> (BKeys, BValues,  8, mid, cmpValue, myKey[0], myValue[0], cumulativeAddress, A_values, stringValues, myStartIdxB+bIndex+index, numElements);                                          
+            binSearch_frag_mult<T, depth> (BKeys, BValues,  4, mid, cmpValue, myKey[0], myValue[0], cumulativeAddress, A_values, stringValues, myStartIdxB+bIndex+index, numElements);                  
+            binSearch_frag_mult<T, depth> (BKeys, BValues,  2, mid, cmpValue, myKey[0], myValue[0], cumulativeAddress, A_values, stringValues, myStartIdxB+bIndex+index, numElements);                  
             binSearch_frag_mult<T, depth> (BKeys, BValues,  1, mid, cmpValue, myKey[0], myValue[0], cumulativeAddress, A_values, stringValues, myStartIdxB+bIndex+index, numElements);
 
-            index = mid;			
+            index = mid;                        
             cmpValue = BKeys[index];
-            if(cmpValue < myKey[0] && index < (localBPartSize-bIndex) && index < BWT_INTERSECT_B_BLOCK_SIZE_multi)				
+            if(cmpValue < myKey[0] && index < (localBPartSize-bIndex) && index < BWT_INTERSECT_B_BLOCK_SIZE_multi)                              
                 cmpValue = BKeys[++index];
 
             if(cmpValue == myKey[0] && index < BWT_INTERSECT_B_BLOCK_SIZE_multi && index < (localBPartSize-bIndex))
@@ -196,10 +196,10 @@ stringMergeMulti(T      *A_keys,
                     cmpKey = (BValues[index]+4*count > numElements-1) ? stringValues[BValues[index] + 4*count - numElements] : stringValues[BValues[index] + 4*count];
 
                     if(cmpKey < tmpKey)
-                    {	cmpValue = BKeys[++index];	break; }	
+                    {   cmpValue = BKeys[++index];      break; }        
 
-                    count++;				
-                }				
+                    count++;                            
+                }                               
             }
 
 
@@ -220,9 +220,9 @@ stringMergeMulti(T      *A_keys,
                         stringValues[A_values[myStartIdxB+bIndex+index] + 4*count - numElements] : stringValues[A_values[myStartIdxB+bIndex+index] + 4*count];
 
                     if(cmpKey < tmpKey)
-                    {index++;	break; }		
-                    count++;		
-                }							
+                    {index++;   break; }                
+                    count++;            
+                }                                                       
             }
 
             int globalCAddress = (myStartIdxC + index + bIndex + aIndex + tid*depth);
@@ -230,7 +230,7 @@ stringMergeMulti(T      *A_keys,
             if(((myKey[0] < localMaxB && myKey[0] > localMinB) || (bIndex+index) >= (localBPartSize) || 
                 (index > 0 && index <BWT_INTERSECT_B_BLOCK_SIZE_multi)) && globalCAddress < (myStartIdxC+localCPartSize) && myKey[0] < finalMaxB)
             {
-                A_keys_out  [globalCAddress] = myKey[0];											
+                A_keys_out  [globalCAddress] = myKey[0];                                                                                        
                 A_values_out[globalCAddress] = myValue[0];
             }
             else if((myKey[0] == localMaxB && myKey[0] <= finalMaxB && index > 0 && index <=1024) && globalCAddress < (myStartIdxC+localCPartSize))
@@ -251,8 +251,8 @@ stringMergeMulti(T      *A_keys,
                 }
                 if(tmpKey < cmpKey)
                 {
-                    A_keys_out  [myStartIdxC + bIndex + aIndex+depth*tid+index] = myKey[0];	
-                    A_values_out[myStartIdxC + bIndex + aIndex+depth*tid+index] = myValue[0];	
+                    A_keys_out  [myStartIdxC + bIndex + aIndex+depth*tid+index] = myKey[0];     
+                    A_values_out[myStartIdxC + bIndex + aIndex+depth*tid+index] = myValue[0];   
                 }
             }
             else if(myKey[0] == localMinB && globalCAddress < (myStartIdxC+localCPartSize))
@@ -271,11 +271,11 @@ stringMergeMulti(T      *A_keys,
 
                     tmpKey = (tmpAdd+4*count > numElements-1) ? stringValues[tmpAdd + 4*count - numElements] : stringValues[tmpAdd + 4*count];
                     cmpKey = (cmpAdd+4*count > numElements-1) ? stringValues[cmpAdd + 4*count - numElements] : stringValues[cmpAdd + 4*count];
-                }	
+                }       
                 if(tmpKey > cmpKey)
                 {
-                    A_keys_out  [myStartIdxC + bIndex + aIndex+depth*tid+index] = myKey[0];	
-                    A_values_out[myStartIdxC + bIndex + aIndex+depth*tid+index] = myValue[0];	
+                    A_keys_out  [myStartIdxC + bIndex + aIndex+depth*tid+index] = myKey[0];     
+                    A_values_out[myStartIdxC + bIndex + aIndex+depth*tid+index] = myValue[0];   
                 }
             }
 
@@ -290,7 +290,7 @@ stringMergeMulti(T      *A_keys,
         bool reset = false;
         __syncthreads();
         if(localMaxA == localMaxB)
-        {	
+        {       
             //Break the tie
             if(tid == (blockDim.x-1))
             {
@@ -312,16 +312,16 @@ stringMergeMulti(T      *A_keys,
                 if(tmpKey > cmpKey)
                     BMax[1]++;
                 else
-                    BMax[0]++;				
+                    BMax[0]++;                          
 
             }
             __syncthreads();
             localMaxB = BMax[0];
             localMaxA = BMax[1];
-            reset = true;		
+            reset = true;               
         }
 
-        __syncthreads();		
+        __syncthreads();                
         __threadfence();
         if((localMaxA < localMaxB || (bIndex+BWT_INTERSECT_B_BLOCK_SIZE_multi-1) >= localBPartSize) && (aIndex+BWT_INTERSECT_A_BLOCK_SIZE_multi)< localAPartSize)
         {
@@ -329,7 +329,7 @@ stringMergeMulti(T      *A_keys,
             aIndex += BWT_INTERSECT_A_BLOCK_SIZE_multi;
 
             if(aIndex + BWT_INTERSECT_A_BLOCK_SIZE_multi < localAPartSize) 
-            {		
+            {           
 #pragma unroll
                 for(int i = 0;i < depth; i++) 
                 { myKey[i] = A_keys[myStartIdxA + aIndex + depth*tid + i]; myValue[i] = A_values[myStartIdxA + aIndex + depth*tid + i]; }
@@ -343,20 +343,20 @@ stringMergeMulti(T      *A_keys,
                 myValue[i] = (aIndex+depth*tid + i < localAPartSize ? A_values[myStartIdxA + aIndex+ depth*tid + i]   : UINT_MAX-3);}
             }
 
-            if(tid == BWT_CTASIZE_multi-1)		
+            if(tid == BWT_CTASIZE_multi-1)              
             {
-                BMax[1] = myKey[depth-1];		
+                BMax[1] = myKey[depth-1];               
                 if(reset)
-                    BMax[0]--;			
+                    BMax[0]--;                  
             }
             reset = false;
-        }			
+        }                       
         else if(localMaxB < localMaxA && (bIndex+BWT_INTERSECT_B_BLOCK_SIZE_multi-1) < localBPartSize)
-        {				
-            bIndex += BWT_INTERSECT_B_BLOCK_SIZE_multi-1;	
+        {                               
+            bIndex += BWT_INTERSECT_B_BLOCK_SIZE_multi-1;       
             if(bIndex + BWT_INTERSECT_B_BLOCK_SIZE_multi < localBPartSize) 
             {
-                int bi = tid;					
+                int bi = tid;                                   
 #pragma unroll
                 for(int i = 0;i < BWT_INTERSECT_B_BLOCK_SIZE_multi/BWT_CTASIZE_multi; i++, bi+=BWT_CTASIZE_multi) 
                 {
@@ -385,7 +385,7 @@ stringMergeMulti(T      *A_keys,
             localMinB = BKeys[0];
         }
         else
-            breakout = true;	
+            breakout = true;    
         __syncthreads();
         __threadfence();
 
@@ -434,7 +434,7 @@ findMultiPartitions(T       *A,
             int count = 1; testIdx = myStartA;
             if(testSample == mySample)
             {
-                while(testSample == mySample && (testIdx+count) < (myPartitionId)*partitionSize+partitionSize) 	
+                while(testSample == mySample && (testIdx+count) < (myPartitionId)*partitionSize+partitionSize)  
                     testSample = A[testIdx + (count++)];
                 myStartA = (testIdx + count-1);
             }
@@ -446,11 +446,11 @@ findMultiPartitions(T       *A,
 
             if(testSample == mySample)
             {
-                while(testSample == mySample && (testIdx+count) < (myPartitionId)*partitionSize+partitionSize) 	
+                while(testSample == mySample && (testIdx+count) < (myPartitionId)*partitionSize+partitionSize)  
                     testSample = A[testIdx + (count++)];
                 myStartA = (testIdx + count-1);
-            }			
-        }	    		
+            }                   
+        }                       
     }
 
 
@@ -460,29 +460,29 @@ findMultiPartitions(T       *A,
 
     if(mySubPartitionId!= splitsPP-1 )
     {
-        mySample = A[myEndA];	
+        mySample = A[myEndA];   
         //need to ensure that we don't start inbetween duplicates
 
         if(threadIdx.x%2 == 0)
         {
-            testSample = A[myEndA-1];			
+            testSample = A[myEndA-1];                   
             int count = 1; testIdx = myEndA;
 
             if(testSample == mySample)
             {
-                while(testSample == mySample && (testIdx+count) < (myPartitionId)*partitionSize+partitionSize) 	
+                while(testSample == mySample && (testIdx+count) < (myPartitionId)*partitionSize+partitionSize)  
                     testSample = A[testIdx + (count++)];
                 myEndA = (testIdx + count-1);
             }
         }
         else
         {
-            testSample = A[myEndA-1];			
+            testSample = A[myEndA-1];                   
             int count = 1; testIdx = myEndA;
 
             if(testSample == mySample)
             {
-                while(testSample == mySample && (testIdx+count) < (myPartitionId)*partitionSize+partitionSize) 	
+                while(testSample == mySample && (testIdx+count) < (myPartitionId)*partitionSize+partitionSize)  
                     testSample = A[testIdx + (count++)];
                 myEndA = (testIdx + count-1);
             }
@@ -493,7 +493,7 @@ findMultiPartitions(T       *A,
     }
     else
     {
-        myEndA = (myPartitionId)*partitionSize + partitionSize;			
+        myEndA = (myPartitionId)*partitionSize + partitionSize;                 
         myEndSample = A[myEndA-1];
 
     }
@@ -508,35 +508,35 @@ findMultiPartitions(T       *A,
     testSample = A[mid];
 
     while(testSample != myStartSample)
-    {	
-        if(testSample < myStartSample)		
-            first = mid;					
-        else		
+    {   
+        if(testSample < myStartSample)          
+            first = mid;                                        
+        else            
             last = mid;
 
-        mid = (first+last)/2;		
+        mid = (first+last)/2;           
         testSample = A[mid];
         if(mid == last || mid == first )
-            break;	
+            break;      
     }
 
-    while (testSample >= myStartSample && mid > myStartRange)	
+    while (testSample >= myStartSample && mid > myStartRange)   
         testSample = A[--mid];
 
-    myStartA = mid;	
+    myStartA = mid;     
     first = myStartA;
     last = myEndRange;
-    mid = (first + last)/2;	
+    mid = (first + last)/2;     
     testSample = A[mid];
 
     while(testSample != myEndSample)
     {
-        if(testSample <= myEndSample)		
-            first = mid;					
-        else		
+        if(testSample <= myEndSample)           
+            first = mid;                                        
+        else            
             last = mid;
 
-        mid = (first+last)/2;					
+        mid = (first+last)/2;                                   
         testSample = A[mid];
         if(mid == last || mid == first )
             break;
@@ -672,7 +672,7 @@ simpleStringMerge(T         *A_keys,
 
         index = 0;
 
-        int cumulativeAddress = myStartIdxA+aIndex+threadIdx.x*depth;			
+        int cumulativeAddress = myStartIdxA+aIndex+threadIdx.x*depth;                   
         if((myKey[0] <= localMaxB && myKey[depth-1] >= localMinB) ||  (bIndex+BWT_INTERSECT_B_BLOCK_SIZE_simple-1) >= (sizePerPartition) && cumulativeAddress < sizePerPartition) // ==ADDED==
         {
             index = -1;

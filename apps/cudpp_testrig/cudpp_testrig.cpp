@@ -252,6 +252,7 @@ int main(int argc, const char** argv)
 
     int computeVersion = devProps.major * 10 + devProps.minor;
     bool supportsDouble = (computeVersion >= 13);
+    bool supports48KBInShared = (computeVersion >= 20);
 
     int retval = 0;
 
@@ -268,9 +269,11 @@ int main(int argc, const char** argv)
         printf("reduce: Run reduce test(s)\n\n");
         printf("rand: Run random number generator test(s)\n\n");
         printf("tridiagonal: Run tridiagonal solver test(s)\n\n");
-        printf("mtf: Run move-to-front transform test(s)\n\n");	
-        printf("bwt: Run Burrows-Wheeler transform test(s)\n\n");
-        printf("compress: Run compression test(s)\n\n");
+        printf("mtf: Run move-to-front transform test(s) "
+               "(compute 2.0+ only)\n\n"); 
+        printf("bwt: Run Burrows-Wheeler transform test(s) "
+               "(compute 2.0+ only)\n\n");
+        printf("compress: Run compression test(s) (compute 2.0+ only)\n\n");
         printf("--- Global Options ---\n");
         printf("iterations=<N>: Number of times to run each test\n");
         printf("n=<N>: Number of values to use in a single test\n");
@@ -309,8 +312,26 @@ int main(int argc, const char** argv)
     bool runSpmv = checkCommandLineFlag(argc, argv, "spmv");
     bool runTridiagonal = runAll ||  checkCommandLineFlag(argc, argv, "tridiagonal");
     bool runMtf = runAll || checkCommandLineFlag(argc, argv, "mtf");
+    if (!supports48KBInShared && runMtf)
+    {
+        fprintf(stderr, "MTF is only supported on devices with "
+                "compute capability 2.0+\n");
+        runMtf = false;
+    }
     bool runBwt = runAll || checkCommandLineFlag(argc, argv, "bwt");
+    if (!supports48KBInShared && runBwt)
+    {
+        fprintf(stderr, "BWT is only supported on devices with "
+                "compute capability 2.0+\n");
+        runBwt = false;
+    }
     bool runCompress = runAll || checkCommandLineFlag(argc, argv, "compress");
+    if (!supports48KBInShared && runCompress)
+    {
+        fprintf(stderr, "Compress is only supported on devices with "
+                "compute capability 2.0+\n");
+        runCompress = false;
+    }
     
     bool hasopts = hasOptions(argc, argv);
 

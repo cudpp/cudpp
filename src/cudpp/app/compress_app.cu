@@ -217,7 +217,7 @@ void burrowsWheelerTransform(unsigned char              *d_uncompressed,
     dim3 grid_construct(nBlocks, 1, 1);
     dim3 threads_construct(nThreads, 1, 1);
     int numThreads = 64;
-	int secondBlocks;
+        int secondBlocks;
     size_t count;
     size_t mult;
     size_t numBlocks;
