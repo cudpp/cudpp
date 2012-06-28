@@ -14,27 +14,27 @@
 #include "cta/compress_cta.cuh"
 
 /**
-* @file
-* compress_kernel.cu
-* 
-* @brief CUDPP kernel-level compress routines
-*/
+ * @file
+ * compress_kernel.cu
+ * 
+ * @brief CUDPP kernel-level compress routines
+ */
 
 /** \addtogroup cudpp_kernel
-* @{
-*/
+ * @{
+ */
 
 /** @name Compress Functions
-* @{
-*/
+ * @{
+ */
 
 typedef unsigned int uint;
 typedef unsigned char uchar;
 typedef unsigned short ushort;
 
 /** @brief Compute final BWT
-* @todo
-**/
+ * @todo
+ **/
 __global__ void
 bwt_compute_final_kernel(uchar *d_bwtIn,
                          uint *d_values,
@@ -57,8 +57,8 @@ bwt_compute_final_kernel(uchar *d_bwtIn,
 }
 
 /** @brief Multi merge
-* @todo
-**/
+ * @todo
+ **/
 template<class T, int depth>
 __global__ void
 stringMergeMulti(T      *A_keys,
@@ -281,8 +281,8 @@ stringMergeMulti(T      *A_keys,
 
             if(myKey[1] <= localMaxB)
                 linearStringMerge<T, depth>(BKeys, BValues, A_values, myKey[1], myValue[1], index, cmpValue, A_keys_out, A_values_out, stringValues, 
-                myStartIdxC, myStartIdxA, myStartIdxB, localAPartSize, localBPartSize, localCPartSize, localMaxB, finalMaxB, localMinB, tid, aIndex, bIndex, 
-                1, subPartitions, numElements);
+                                            myStartIdxC, myStartIdxA, myStartIdxB, localAPartSize, localBPartSize, localCPartSize, localMaxB, finalMaxB, localMinB, tid, aIndex, bIndex, 
+                                            1, subPartitions, numElements);
         }
 
         if(threadIdx.x == blockDim.x - 1) { *lastAIndex = index; }
@@ -340,7 +340,7 @@ stringMergeMulti(T      *A_keys,
 #pragma unroll
                 for(int i = 0;i < depth; i++) 
                 { myKey[i] =   (aIndex+depth*tid + i < localAPartSize ? A_keys[myStartIdxA + aIndex+ depth*tid + i]   : UINT_MAX-3); 
-                myValue[i] = (aIndex+depth*tid + i < localAPartSize ? A_values[myStartIdxA + aIndex+ depth*tid + i]   : UINT_MAX-3);}
+                    myValue[i] = (aIndex+depth*tid + i < localAPartSize ? A_values[myStartIdxA + aIndex+ depth*tid + i]   : UINT_MAX-3);}
             }
 
             if(tid == BWT_CTASIZE_multi-1)              
@@ -396,8 +396,8 @@ stringMergeMulti(T      *A_keys,
 }
 
 /** @brief Multi merge -- find partitions
-* @todo
-**/
+ * @todo
+ **/
 template<class T>
 __global__ void
 findMultiPartitions(T       *A,
@@ -555,8 +555,8 @@ findMultiPartitions(T       *A,
 }
 
 /** @brief Simple merge
-* @todo
-**/
+ * @todo
+ **/
 template<class T, int depth>
 __global__ void
 simpleStringMerge(T         *A_keys,
@@ -653,7 +653,7 @@ simpleStringMerge(T         *A_keys,
         BMax[1] = myKey[depth-1];
     if(tid == 0)
         BMax[0] =  (bIndex + BWT_INTERSECT_B_BLOCK_SIZE_simple - 1 < sizePerPartition ?
-        A_keys[myStartIdxB + bIndex + BWT_INTERSECT_B_BLOCK_SIZE_simple - 1] : UINT_MAX);
+                    A_keys[myStartIdxB + bIndex + BWT_INTERSECT_B_BLOCK_SIZE_simple - 1] : UINT_MAX);
 
     __syncthreads();
 
@@ -814,7 +814,7 @@ simpleStringMerge(T         *A_keys,
 
             //After binary search, linear merge
             lin_merge_simple<T, depth>(cmpValue, myKey[1], myValue[1], index, BKeys, BValues, stringValues, A_values, A_keys_out, A_values_out,
-                myStartIdxA, myStartIdxB, myStartIdxC, localMinB, localMaxB, aIndex+tid*depth, bIndex, totalSize, sizePerPartition, 1, stringValues2, numElements);
+                                       myStartIdxA, myStartIdxB, myStartIdxC, localMinB, localMaxB, aIndex+tid*depth, bIndex, totalSize, sizePerPartition, 1, stringValues2, numElements);
 
         }
 
@@ -953,8 +953,8 @@ simpleStringMerge(T         *A_keys,
 }
 
 /** @brief Block sort
-* @todo
-**/
+ * @todo
+ **/
 template<class T, int depth>
 __global__ void blockWiseStringSort(T*      A_keys,
                                     T*      A_address,
@@ -1190,8 +1190,8 @@ __global__ void blockWiseStringSort(T*      A_keys,
 }
 
 /** @brief Massage input to set up for merge sort
-* @todo
-**/
+ * @todo
+ **/
 __global__ void
 bwt_keys_construct_kernel(uchar4    *d_bwtIn,
                           uint      *d_bwtInRef,
@@ -1268,8 +1268,8 @@ bwt_keys_construct_kernel(uchar4    *d_bwtIn,
 
 
 /** @brief First stage in MTF (Reduction)
-* @todo
-**/
+ * @todo
+ **/
 __global__ void
 mtf_reduction_kernel(uchar      *d_mtfIn,
                      uchar      *d_lists,
@@ -1410,8 +1410,8 @@ mtf_reduction_kernel(uchar      *d_mtfIn,
 
 
 /** @brief Second stage in MTF (Global reduction)
-* @todo
-**/
+ * @todo
+ **/
 __global__ void
 mtf_GLreduction_kernel(uchar     *d_lists,
                        ushort    *d_list_sizes,
@@ -1529,8 +1529,8 @@ mtf_GLreduction_kernel(uchar     *d_lists,
 }
 
 /** @brief Third stage in MTF (Global downsweep)
-* @todo
-**/
+ * @todo
+ **/
 __global__ void
 mtf_GLdownsweep_kernel(uchar    *d_lists,
                        ushort   *d_list_sizes,
@@ -1562,9 +1562,9 @@ mtf_GLdownsweep_kernel(uchar    *d_lists,
     while(l_offset>=lastLevel)
     {
         if( (((listID-lastLevel+1)%l_offset == 0) && ((listID-lastLevel+1)%(l_offset*2) != 0) &&
-            (listID >= lastLevel+l_offset) && (listID < (nLists-1)) && (idx<tThreads)) ||
+             (listID >= lastLevel+l_offset) && (listID < (nLists-1)) && (idx<tThreads)) ||
             ( (l_offset==lastLevel) &&  (listID >= lastLevel+l_offset) && (listID < (nLists-1)) &&
-            (idx<tThreads) )
+              (idx<tThreads) )
             )
         {
             int C[8];
@@ -1641,8 +1641,8 @@ mtf_GLdownsweep_kernel(uchar    *d_lists,
 }
 
 /** @brief Compute final MTF lists and final MTF output
-* @todo
-**/
+ * @todo
+ **/
 __global__ void
 mtf_localscan_lists_kernel(uchar    *d_mtfIn,
                            uchar    *d_mtfOut,
@@ -1942,8 +1942,8 @@ mtf_localscan_lists_kernel(uchar    *d_mtfIn,
 
 
 /** @brief Compute 256-entry histogram
-* @todo
-**/
+ * @todo
+ **/
 __global__ void
 huffman_build_histogram_kernel(uint     *d_input, // Read in as words, instead of bytes
                                uint     *d_histograms,
@@ -2031,8 +2031,8 @@ huffman_build_histogram_kernel(uint     *d_input, // Read in as words, instead o
 }
 
 /** @brief Build Huffman tree/codes
-* @todo
-**/
+ * @todo
+ **/
 __global__ void
 huffman_build_tree_kernel(uchar     *d_input,
                           uchar     *d_huffCodesPacked,
@@ -2190,7 +2190,7 @@ huffman_build_tree_kernel(uchar     *d_input,
 
             if( ((!h_huffmanArray[mins[idx].x].ignore) && (!h_huffmanArray[mins[idx].y].ignore)) &&
                 ((h_huffmanArray[mins[idx].y].count < h_huffmanArray[mins[idx].x].count) ||
-                (h_huffmanArray[mins[idx].x].count == h_huffmanArray[mins[idx].y].count && h_huffmanArray[mins[idx].y].level < h_huffmanArray[mins[idx].x].level) ) )
+                 (h_huffmanArray[mins[idx].x].count == h_huffmanArray[mins[idx].y].count && h_huffmanArray[mins[idx].y].level < h_huffmanArray[mins[idx].x].level) ) )
             {
                 // swap
                 ushort tmp = mins[idx].x;
@@ -2238,7 +2238,7 @@ huffman_build_tree_kernel(uchar     *d_input,
                         // 1st 'y' not ignored, implies 1st 'x' not ignored
                         if( (h_huffmanArray[mins[scaledID+offset/2].x].count < h_huffmanArray[mins[scaledID].y].count) ||
                             (h_huffmanArray[mins[scaledID+offset/2].x].count == h_huffmanArray[mins[scaledID].y].count &&
-                            h_huffmanArray[mins[scaledID+offset/2].x].level < h_huffmanArray[mins[scaledID].y].level) )
+                             h_huffmanArray[mins[scaledID+offset/2].x].level < h_huffmanArray[mins[scaledID].y].level) )
                         {
                             // Replace 1st 'y' with 2nd 'x'
                             mins[scaledID].y = mins[scaledID+offset/2].x;
@@ -2248,7 +2248,7 @@ huffman_build_tree_kernel(uchar     *d_input,
                                 // 2nd 'y' not ignored
                                 if( (h_huffmanArray[mins[scaledID+offset/2].y].count < h_huffmanArray[mins[scaledID].x].count) ||
                                     (h_huffmanArray[mins[scaledID+offset/2].y].count == h_huffmanArray[mins[scaledID].x].count &&
-                                    h_huffmanArray[mins[scaledID+offset/2].y].level < h_huffmanArray[mins[scaledID].x].level) )
+                                     h_huffmanArray[mins[scaledID+offset/2].y].level < h_huffmanArray[mins[scaledID].x].level) )
                                 {
                                     // Replace both 1st with 2nd
                                     mins[scaledID].x = mins[scaledID].y;
@@ -2277,7 +2277,7 @@ huffman_build_tree_kernel(uchar     *d_input,
                                 // 1st 'x' not ignored
                                 if( (h_huffmanArray[mins[scaledID+offset/2].y].count < h_huffmanArray[mins[scaledID].x].count) ||
                                     (h_huffmanArray[mins[scaledID+offset/2].y].count == h_huffmanArray[mins[scaledID].x].count &&
-                                    h_huffmanArray[mins[scaledID+offset/2].y].level < h_huffmanArray[mins[scaledID].x].level) )
+                                     h_huffmanArray[mins[scaledID+offset/2].y].level < h_huffmanArray[mins[scaledID].x].level) )
                                 {
                                     // Replace both 1st with 2nd
                                     mins[scaledID].x = mins[scaledID].y;
@@ -2306,7 +2306,7 @@ huffman_build_tree_kernel(uchar     *d_input,
                         if(!h_huffmanArray[mins[scaledID].x].ignore)
                         { // 1st 'x' not ignored
                             if((h_huffmanArray[mins[scaledID].y].count < h_huffmanArray[mins[scaledID].x].count) ||
-                                (h_huffmanArray[mins[scaledID].y].count == h_huffmanArray[mins[scaledID].x].count &&
+                               (h_huffmanArray[mins[scaledID].y].count == h_huffmanArray[mins[scaledID].x].count &&
                                 h_huffmanArray[mins[scaledID].y].level < h_huffmanArray[mins[scaledID].x].level))
                             {
                                 // swap
@@ -2325,7 +2325,7 @@ huffman_build_tree_kernel(uchar     *d_input,
                 }
             }
 
-skip:
+          skip:
 
             __threadfence();
             __syncthreads();
@@ -2394,7 +2394,7 @@ skip:
             h_huffmanArray[min2].parent =  h_huffmanArray[min1].iter;
             h_huffmanArray[min1].parent = -1;
         }
-end:
+      end:
         __threadfence();
         __syncthreads();
 
@@ -2521,8 +2521,8 @@ end:
 }
 
 /** @brief Perform parallel Huffman encoding
-* @todo
-**/
+ * @todo
+ **/
 __global__ void
 huffman_kernel_en(uchar4    *d_input,              // Input to encode
                   uchar     *d_codes,               // Packed Huffman Codes
@@ -2711,8 +2711,8 @@ huffman_kernel_en(uchar4    *d_input,              // Input to encode
 }
 
 /** @brief Pack together encoded blocks
-* @todo
-**/
+ * @todo
+ **/
 __global__ void
 huffman_datapack_kernel(encoded     *d_encoded,
                         uint        *d_encodedData,
@@ -2722,7 +2722,7 @@ huffman_datapack_kernel(encoded     *d_encoded,
 {
 #if (__CUDA_ARCH__ >= 200)
     // Global, local IDs
-   uint lid = threadIdx.x;
+    uint lid = threadIdx.x;
 
     __shared__ uint prevWords;
     encoded* my_encodedData = (encoded*)&d_encoded[blockIdx.x];
@@ -2749,3 +2749,6 @@ huffman_datapack_kernel(encoded     *d_encoded,
     }
 #endif
 }
+
+/** @} */ // end compress functions
+/** @} */ // end cudpp_kernel

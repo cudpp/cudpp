@@ -445,7 +445,7 @@ CUDPPCompactPlan::~CUDPPCompactPlan()
 * 
 * @param[in]  mgr pointer to the CUDPPManager
 * @param[in]  config The configuration struct specifying options
-* @param[in]  numElements The maximum number of elements to be compacted
+* @param[in]  numElements The maximum number of elements to be reduced
 */
 CUDPPReducePlan::CUDPPReducePlan(CUDPPManager *mgr,
                                  CUDPPConfiguration config, 
@@ -593,6 +593,7 @@ CUDPPTridiagonalPlan::CUDPPTridiagonalPlan(CUDPPManager *mgr, CUDPPConfiguration
   *
   * @param[in] mgr pointer to the CUDPPManager
   * @param[in] config The configuration struct specifying options
+  * @param[in] numElements The maximum number of elements to be compressed
   */
 CUDPPCompressPlan::CUDPPCompressPlan(CUDPPManager *mgr, CUDPPConfiguration config, size_t numElements) 
  : CUDPPPlan(mgr, config, numElements, 1, 0)
@@ -610,6 +611,7 @@ CUDPPCompressPlan::~CUDPPCompressPlan()
   *
   * @param[in] mgr pointer to the CUDPPManager
   * @param[in] config The configuration struct specifying options
+  * @param[in] numElements The maximum number of elements to be transformed
   */
 CUDPPBwtPlan::CUDPPBwtPlan(CUDPPManager *mgr, CUDPPConfiguration config, size_t numElements) 
  : CUDPPPlan(mgr, config, numElements, 1, 0)
@@ -627,6 +629,7 @@ CUDPPBwtPlan::~CUDPPBwtPlan()
   *
   * @param[in] mgr pointer to the CUDPPManager
   * @param[in] config The configuration struct specifying options
+  * @param[in] numElements The maximum number of elements to be moved to front
   */
 CUDPPMtfPlan::CUDPPMtfPlan(CUDPPManager *mgr, CUDPPConfiguration config, size_t numElements) 
  : CUDPPPlan(mgr, config, numElements, 1, 0)
