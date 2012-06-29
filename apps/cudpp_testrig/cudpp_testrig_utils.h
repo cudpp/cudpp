@@ -30,12 +30,15 @@
 using namespace std;
 using namespace cudpp_app;
 
+/* Make sure this tracks CUDPPDatatype in cudpp.h! */
 inline const char * datatypeToString(CUDPPDatatype t)
 {
     static const char * d2s[] =
     {
         "char",
         "uchar",
+        "short",
+        "ushort",
         "int",
         "uint",
         "float",
@@ -55,8 +58,8 @@ class VectorSupport
 public:
     static void fillVectorKeys(T *a, size_t numElements, unsigned int keybits);
     static void fillVector(T *a, size_t numElements, float range);
-    static int verifySort(T *keysSorted, unsigned int *valuesSorted, T *keysUnsorted, 
-                          size_t len, bool reverse);
+    static int verifySort(T *keysSorted, unsigned int *valuesSorted, 
+                          T *keysUnsorted, size_t len, bool reverse);
 };
 
 template <typename T>
