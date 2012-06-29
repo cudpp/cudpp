@@ -72,10 +72,10 @@ const int SEGSCAN_ELTS_PER_THREAD = 8;           /**< Number of elements per seg
 #define HUFF_COMPOSITE_NODE      -1      /* node represents multiple characters */
 #define HUFF_EOF_CHAR    (HUFF_NUM_CHARS - 1) /* index used for EOF */
 
-#define CUDA_CHAR_BIT 8
+#define CUDPP_CHAR_BIT 8
 #define BITS_TO_CHARS(bits)   ((((bits) - 1) / 8) + 1)
 #define MS_BIT                (1 << (8 - 1))
-#define BIT_CHAR(bit)         ((bit) / CUDA_CHAR_BIT)
+#define BIT_CHAR(bit)         ((bit) / CUDPP_CHAR_BIT)
 #define BIT_IN_CHAR(bit)      (1 << (8 - 1 - ((bit)  % 8)))
 
 struct encoded {

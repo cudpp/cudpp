@@ -471,7 +471,7 @@ __device__ void BitArrayShiftLeft(huffman_code *ba, unsigned int shifts)
 		}
 	}
 
-    // now we have at most CUDA_CHAR_BIT - 1 bit shifts across the whole array
+    // now we have at most CUDPP_CHAR_BIT - 1 bit shifts across the whole array
     for (i = 0; i < (int)shifts; i++)
 	{
 	    for (j = 0; j < (int)BIT_CHAR(ba->numBits - 1); j++)
@@ -493,8 +493,8 @@ __device__ void BitArrayShiftRight(huffman_code *ba, unsigned int shifts)
 {
     int i, j;
     unsigned char mask;
-    int chars = shifts / CUDA_CHAR_BIT;  // number of whole byte shifts
-    shifts = shifts % CUDA_CHAR_BIT;     // number of bit shifts remaining
+    int chars = shifts / CUDPP_CHAR_BIT;  // number of whole byte shifts
+    shifts = shifts % CUDPP_CHAR_BIT;     // number of bit shifts remaining
 
     if (shifts >= ba->numBits)
 	{
@@ -518,7 +518,7 @@ __device__ void BitArrayShiftRight(huffman_code *ba, unsigned int shifts)
 		}
 	}
 
-    // now we have at most CUDA_CHAR_BIT - 1 bit shifts across the whole array
+    // now we have at most CUDPP_CHAR_BIT - 1 bit shifts across the whole array
     for (i = 0; i < (int)shifts; i++)
 	{
 	    for (j = BIT_CHAR(ba->numBits - 1); j > 0; j--)
@@ -539,10 +539,10 @@ __device__ void BitArrayShiftRight(huffman_code *ba, unsigned int shifts)
      * zero any spare bits that are beyond the end of the bit array so
      * increment and decrement are consistent.
      ***********************************************************************/
-    i = ba->numBits % CUDA_CHAR_BIT;
+    i = ba->numBits % CUDPP_CHAR_BIT;
     if (i != 0)
 	{
-	    mask = UCHAR_MAX << (CUDA_CHAR_BIT - i);
+	    mask = UCHAR_MAX << (CUDPP_CHAR_BIT - i);
 	    ba->code[BIT_CHAR(ba->numBits - 1)] &= mask;
 	}
 }
