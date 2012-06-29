@@ -49,6 +49,9 @@ int testReduce(int argc, const char ** argv, const CUDPPConfiguration *config);
 int testSparseMatrixVectorMultiply(int argc, const char ** argv);
 int testRandMD5(int argc, const char ** argv);
 int testTridiagonal(int argc, const char** argv, const CUDPPConfiguration *config);
+int testMtf(int argc, const char** argv, const CUDPPConfiguration *config);
+int testBwt(int argc, const char** argv, const CUDPPConfiguration *config);
+int testCompress(int argc, const char** argv, const CUDPPConfiguration *config);
 
 int testAllDatatypes(int argc, 
                      const char** argv, 
@@ -68,6 +71,27 @@ int testAllDatatypes(int argc,
             config.datatype = CUDPP_DOUBLE;
             retval += testTridiagonal(argc, argv, &config);      
         }
+        return retval;
+    }
+
+    if (config.algorithm == CUDPP_MTF)
+    {
+        config.datatype = CUDPP_UCHAR;
+        retval += testMtf(argc, argv, &config);
+        return retval;
+    }
+
+    if (config.algorithm == CUDPP_BWT)
+    {
+        config.datatype = CUDPP_UCHAR;
+        retval += testBwt(argc, argv, &config);
+        return retval;
+    }
+
+    if (config.algorithm == CUDPP_COMPRESS)
+    {
+        config.datatype = CUDPP_UCHAR;
+        retval += testCompress(argc, argv, &config);
         return retval;
     }
 
@@ -228,6 +252,7 @@ int main(int argc, const char** argv)
 
     int computeVersion = devProps.major * 10 + devProps.minor;
     bool supportsDouble = (computeVersion >= 13);
+    bool supports48KBInShared = (computeVersion >= 20);
 
     int retval = 0;
 
@@ -243,7 +268,12 @@ int main(int argc, const char** argv)
         printf("compact: Run compact test(s)\n\n");
         printf("reduce: Run reduce test(s)\n\n");
         printf("rand: Run random number generator test(s)\n\n");
-        printf("tridiagonal: Run tridiagonal solver test(s)\n\n");	
+        printf("tridiagonal: Run tridiagonal solver test(s)\n\n");
+        printf("mtf: Run move-to-front transform test(s) "
+               "(compute 2.0+ only)\n\n"); 
+        printf("bwt: Run Burrows-Wheeler transform test(s) "
+               "(compute 2.0+ only)\n\n");
+        printf("compress: Run compression test(s) (compute 2.0+ only)\n\n");
         printf("--- Global Options ---\n");
         printf("iterations=<N>: Number of times to run each test\n");
         printf("n=<N>: Number of values to use in a single test\n");
@@ -281,6 +311,27 @@ int main(int argc, const char** argv)
     bool runRand = runAll || checkCommandLineFlag(argc, argv, "rand");
     bool runSpmv = checkCommandLineFlag(argc, argv, "spmv");
     bool runTridiagonal = runAll ||  checkCommandLineFlag(argc, argv, "tridiagonal");
+    bool runMtf = runAll || checkCommandLineFlag(argc, argv, "mtf");
+    if (!supports48KBInShared && runMtf)
+    {
+        fprintf(stderr, "MTF is only supported on devices with "
+                "compute capability 2.0+\n");
+        runMtf = false;
+    }
+    bool runBwt = runAll || checkCommandLineFlag(argc, argv, "bwt");
+    if (!supports48KBInShared && runBwt)
+    {
+        fprintf(stderr, "BWT is only supported on devices with "
+                "compute capability 2.0+\n");
+        runBwt = false;
+    }
+    bool runCompress = runAll || checkCommandLineFlag(argc, argv, "compress");
+    if (!supports48KBInShared && runCompress)
+    {
+        fprintf(stderr, "Compress is only supported on devices with "
+                "compute capability 2.0+\n");
+        runCompress = false;
+    }
     
     bool hasopts = hasOptions(argc, argv);
 
@@ -293,6 +344,9 @@ int main(int argc, const char** argv)
         if (runSort)      retval += testRadixSort(argc, argv, NULL);
         if (runMultiScan) retval += testScan(argc, argv, NULL, true, devProps);
         if (runTridiagonal) retval += testTridiagonal(argc, argv, NULL);
+        if (runMtf)       retval += testMtf(argc, argv, NULL);
+        if (runBwt)       retval += testBwt(argc, argv, NULL);
+        if (runCompress)  retval += testCompress(argc, argv, NULL);
     }
     else
     {
@@ -332,7 +386,22 @@ int main(int argc, const char** argv)
         if (runTridiagonal) {
             config.algorithm = CUDPP_TRIDIAGONAL;
             retval += testAllDatatypes(argc, argv, config, supportsDouble, false);
-        }    
+        }
+
+        if (runMtf) {
+            config.algorithm = CUDPP_MTF;
+            retval += testAllDatatypes(argc, argv, config, supportsDouble, false);
+        } 
+
+        if (runBwt) {
+            config.algorithm = CUDPP_BWT;
+            retval += testAllDatatypes(argc, argv, config, supportsDouble, false);
+        } 
+
+        if (runCompress) {
+            config.algorithm = CUDPP_COMPRESS;
+            retval += testAllDatatypes(argc, argv, config, supportsDouble, false);
+        }
 
     }
 

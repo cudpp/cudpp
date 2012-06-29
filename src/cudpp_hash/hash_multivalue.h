@@ -95,16 +95,16 @@ public:
 
     //! Initializes the multi-value hash table's memory.
     /*! See \ref HashTable::Initialize() for an explanation of the parameters.
-     * 
-     * @param[in] max_input_size  Largest expected number of items in the input.
-     * @param[in] space_usage     Size of the hash table relative to the input.
-     *                            Bigger tables are faster to build and 
-     *                            retrieve from.
-     * @param[in] num_functions   Number of hash functions to use. May be 2-5.
-     *                            More hash functions make it easier to build
-     *                            the table, but increase retrieval times.
-     * @returns Whether the hash table was initialized successfully (true) or
-     *                            not (false).
+     *  @param[in] max_input_size Largest expected number of items in the input.
+     *  @param[in] space_usage Size of the hash table relative to the
+     *                         input. Bigger tables are faster to build
+     *                         and retrieve from.
+     *  @param[in] num_functions Number of hash functions to use. May be
+     *                           2-5. More hash functions make it easier
+     *                           to build the table, but increase
+     *                           retrieval times.
+     *  @returns Whether the hash table was initialized successfully (true) 
+     *           or not (false).
      * @see HashTable::Initialize()
      */
     virtual bool Initialize(const unsigned max_input_size,

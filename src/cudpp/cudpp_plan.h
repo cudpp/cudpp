@@ -221,4 +221,86 @@ public:
     CUDPPTridiagonalPlan(CUDPPManager *mgr, CUDPPConfiguration config);
 };
 
+/** @brief Plan class for compressor
+*
+*/
+struct encoded;
+class CUDPPCompressPlan : public CUDPPPlan
+{
+public:
+    CUDPPCompressPlan(CUDPPManager *mgr, CUDPPConfiguration config, size_t numElements);
+    virtual ~CUDPPCompressPlan();
+
+    // BWT
+    unsigned int *m_d_keys;
+    unsigned int *m_d_values;
+    unsigned char *m_d_bwtOut;
+
+    unsigned int *m_d_bwtInRef;
+    unsigned int *m_d_bwtInRef2;
+    unsigned int *m_d_keys_dev;
+    unsigned int *m_d_values_dev;
+    int *m_d_partitionBeginA;
+    int *m_d_partitionSizeA;
+    int *m_d_partitionBeginB;
+    int *m_d_partitionSizeB;
+
+    // MTF
+    unsigned char *m_d_mtfIn;
+    unsigned char *m_d_mtfOut;
+    unsigned char *m_d_lists;
+    unsigned short *m_d_list_sizes;
+
+    // Huffman
+    unsigned char *m_d_huffCodesPacked;   // tightly pack together all huffman codes
+    unsigned int *m_d_huffCodeLocations;  // keep track of where each huffman code starts
+    unsigned char *m_d_huffCodeLengths;   // lengths of each huffman codes (in bits)
+    unsigned int *m_d_histograms;         // histogram used to build huffman tree
+    //unsigned int *m_d_encodedData;        // encoded data only
+    //unsigned int *m_d_totalEncodedSize;   // total words we need to read
+    unsigned int *m_d_nCodesPacked;       // Size of all Huffman codes packed together (in bytes)
+    //unsigned int *m_d_histogram;          // Final histogram
+    //unsigned int *m_d_encodeOffset;
+    encoded *m_d_encoded;
+
+};
+
+/** @brief Plan class for BWT
+*
+*/
+class CUDPPBwtPlan : public CUDPPPlan
+{
+public:
+    CUDPPBwtPlan(CUDPPManager *mgr, CUDPPConfiguration config, size_t numElements);
+    virtual ~CUDPPBwtPlan();
+
+    // BWT
+    unsigned int *m_d_keys;
+    unsigned int *m_d_values;
+
+    unsigned int *m_d_bwtInRef;
+    unsigned int *m_d_bwtInRef2;
+    unsigned int *m_d_keys_dev;
+    unsigned int *m_d_values_dev;
+    int *m_d_partitionBeginA;
+    int *m_d_partitionSizeA;
+    int *m_d_partitionBeginB;
+    int *m_d_partitionSizeB;
+
+};
+
+/** @brief Plan class for MTF
+*
+*/
+class CUDPPMtfPlan : public CUDPPPlan
+{
+public:
+    CUDPPMtfPlan(CUDPPManager *mgr, CUDPPConfiguration config, size_t numElements);
+    virtual ~CUDPPMtfPlan();
+
+    // MTF
+    unsigned char *m_d_lists;
+    unsigned short *m_d_list_sizes;
+};
+
 #endif // __CUDPP_PLAN_H__

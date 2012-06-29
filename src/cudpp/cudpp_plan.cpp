@@ -16,6 +16,7 @@
 #include "cudpp_spmvmult.h"
 #include "cudpp_radixsort.h"
 #include "cudpp_reduce.h"
+#include "cudpp_compress.h"
 #include "cuda_util.h"
 #include <cuda_runtime_api.h>
 
@@ -129,6 +130,21 @@ CUDPPResult cudppPlan(const CUDPPHandle  cudppHandle,
             plan = new CUDPPReducePlan(mgr, config, numElements);
             break;
         }
+    case CUDPP_COMPRESS:
+        {
+            plan = new CUDPPCompressPlan(mgr, config, numElements);
+            break;
+        }
+    case CUDPP_BWT:
+        {
+            plan = new CUDPPBwtPlan(mgr, config, numElements);
+            break;
+        }
+    case CUDPP_MTF:
+        {
+            plan = new CUDPPMtfPlan(mgr, config, numElements);
+            break;
+        }
     default:
         return CUDPP_ERROR_ILLEGAL_CONFIGURATION; 
         break;
@@ -194,6 +210,21 @@ CUDPPResult cudppDestroyPlan(CUDPPHandle planHandle)
     case CUDPP_REDUCE:
         {
             delete static_cast<CUDPPReducePlan*>(plan);
+            break;
+        }
+    case CUDPP_COMPRESS:
+        {
+            delete static_cast<CUDPPCompressPlan*>(plan);
+            break;
+        }
+    case CUDPP_BWT:
+        {
+            delete static_cast<CUDPPBwtPlan*>(plan);
+            break;
+        }
+    case CUDPP_MTF:
+        {
+            delete static_cast<CUDPPMtfPlan*>(plan);
             break;
         }
     default:
@@ -414,7 +445,7 @@ CUDPPCompactPlan::~CUDPPCompactPlan()
 * 
 * @param[in]  mgr pointer to the CUDPPManager
 * @param[in]  config The configuration struct specifying options
-* @param[in]  numElements The maximum number of elements to be compacted
+* @param[in]  numElements The maximum number of elements to be reduced
 */
 CUDPPReducePlan::CUDPPReducePlan(CUDPPManager *mgr,
                                  CUDPPConfiguration config, 
@@ -557,3 +588,58 @@ CUDPPTridiagonalPlan::CUDPPTridiagonalPlan(CUDPPManager *mgr, CUDPPConfiguration
 {
     
 }
+
+/** @brief CUDPP Compress Plan Constructor
+  *
+  * @param[in] mgr pointer to the CUDPPManager
+  * @param[in] config The configuration struct specifying options
+  * @param[in] numElements The maximum number of elements to be compressed
+  */
+CUDPPCompressPlan::CUDPPCompressPlan(CUDPPManager *mgr, CUDPPConfiguration config, size_t numElements) 
+ : CUDPPPlan(mgr, config, numElements, 1, 0)
+{
+    allocCompressStorage(this);
+}
+
+/** @brief Compress plan destructor */
+CUDPPCompressPlan::~CUDPPCompressPlan()
+{
+    freeCompressStorage(this);
+}
+
+/** @brief CUDPP BWT Plan Constructor
+  *
+  * @param[in] mgr pointer to the CUDPPManager
+  * @param[in] config The configuration struct specifying options
+  * @param[in] numElements The maximum number of elements to be transformed
+  */
+CUDPPBwtPlan::CUDPPBwtPlan(CUDPPManager *mgr, CUDPPConfiguration config, size_t numElements) 
+ : CUDPPPlan(mgr, config, numElements, 1, 0)
+{
+    allocBwtStorage(this);
+}
+
+/** @brief BWT plan destructor */
+CUDPPBwtPlan::~CUDPPBwtPlan()
+{
+    freeBwtStorage(this);
+}
+
+/** @brief CUDPP MTF Plan Constructor
+  *
+  * @param[in] mgr pointer to the CUDPPManager
+  * @param[in] config The configuration struct specifying options
+  * @param[in] numElements The maximum number of elements to be moved to front
+  */
+CUDPPMtfPlan::CUDPPMtfPlan(CUDPPManager *mgr, CUDPPConfiguration config, size_t numElements) 
+ : CUDPPPlan(mgr, config, numElements, 1, 0)
+{
+    allocMtfStorage(this);
+}
+
+/** @brief MTF plan destructor */
+CUDPPMtfPlan::~CUDPPMtfPlan()
+{
+    freeMtfStorage(this);
+}
+

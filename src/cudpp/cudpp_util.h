@@ -175,6 +175,26 @@ struct typeToVector
 };
 
 template<>
+struct typeToVector<char, 4>
+{
+    typedef char4 Result;
+};
+template<>
+struct typeToVector<unsigned char, 4>
+{
+    typedef uchar4 Result;
+};
+template<>
+struct typeToVector<short, 4>
+{
+    typedef short4 Result;
+};
+template<>
+struct typeToVector<unsigned short, 4>
+{
+    typedef ushort4 Result;
+};
+template<>
 struct typeToVector<int, 4>
 {
     typedef int4 Result;
@@ -205,6 +225,26 @@ struct typeToVector<unsigned long long, 4>
     typedef ulonglong4 Result;
 };
 template<>
+struct typeToVector<char, 3>
+{
+    typedef char3 Result;
+};
+template<>
+struct typeToVector<unsigned char, 3>
+{
+    typedef uchar3 Result;
+};
+template<>
+struct typeToVector<short, 3>
+{
+    typedef short3 Result;
+};
+template<>
+struct typeToVector<unsigned short, 3>
+{
+    typedef ushort3 Result;
+};
+template<>
 struct typeToVector<int, 3>
 {
     typedef int3 Result;
@@ -228,6 +268,26 @@ template<>
 struct typeToVector<unsigned long long, 3>
 {
     typedef ulonglong3 Result;
+};
+template<>
+struct typeToVector<char, 2>
+{
+    typedef char2 Result;
+};
+template<>
+struct typeToVector<unsigned char, 2>
+{
+    typedef uchar2 Result;
+};
+template<>
+struct typeToVector<short, 2>
+{
+    typedef short2 Result;
+};
+template<>
+struct typeToVector<unsigned short, 2>
+{
+    typedef ushort2 Result;
 };
 template<>
 struct typeToVector<int, 2>
@@ -276,9 +336,17 @@ class OperatorMax
 {
 public:
     __device__ T operator() (const T a, const T b) const { return max(a, b); }
-    __device__ T identity() const { return (T)0; }
+    __device__ T identity() const; // no implementation - only specializations allowed
 };
 
+template <>
+__device__ inline char OperatorMax<char>::identity() const { return CHAR_MIN; }
+template <>
+__device__ inline unsigned char OperatorMax<unsigned char>::identity() const { return 0; }
+template <>
+__device__ inline short OperatorMax<short>::identity() const { return SHRT_MIN; }
+template <>
+__device__ inline unsigned short OperatorMax<unsigned short>::identity() const { return 0; }
 template <>
 __device__ inline int OperatorMax<int>::identity() const { return INT_MIN; }
 template <>
@@ -297,9 +365,17 @@ class OperatorMin
 {
 public:
     __device__ T operator() (const T a, const T b) const { return min(a, b); }
-    __device__ T identity() const { return (T)0; }
+    __device__ T identity() const; // no implementation - only specializations allowed
 };
 
+template <>
+__device__ inline char OperatorMin<char>::identity() const { return CHAR_MAX; }
+template <>
+__device__ inline unsigned char OperatorMin<unsigned char>::identity() const { return UCHAR_MAX; }
+template <>
+__device__ inline short OperatorMin<short>::identity() const { return SHRT_MAX; }
+template <>
+__device__ inline unsigned short OperatorMin<unsigned short>::identity() const { return USHRT_MAX; }
 template <>
 __device__ inline int OperatorMin<int>::identity() const { return INT_MAX; }
 template <>

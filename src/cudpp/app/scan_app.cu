@@ -227,6 +227,22 @@ void allocScanStorage(CUDPPScanPlan *plan)
 
     switch(plan->m_config.datatype)
     {
+    case CUDPP_CHAR:
+        plan->m_blockSums = (void**) malloc(level * sizeof(char*));
+        elementSize = sizeof(char);
+        break;
+    case CUDPP_UCHAR:
+        plan->m_blockSums = (void**) malloc(level * sizeof(unsigned char*));
+        elementSize = sizeof(unsigned char);
+        break;
+    case CUDPP_SHORT:
+        plan->m_blockSums = (void**) malloc(level * sizeof(short*));
+        elementSize = sizeof(short);
+        break;
+    case CUDPP_USHORT:
+        plan->m_blockSums = (void**) malloc(level * sizeof(unsigned short*));
+        elementSize = sizeof(unsigned short);
+        break;
     case CUDPP_INT:
         plan->m_blockSums = (void**) malloc(level * sizeof(int*));
         elementSize = sizeof(int);
@@ -374,6 +390,30 @@ void cudppScanDispatchType(void                *d_out,
 {    
     switch(plan->m_config.datatype)
     {
+    case CUDPP_CHAR:
+        cudppScanDispatchOperator<char, 
+                                  isBackward, 
+                                  isExclusive>(d_out, d_in, numElements, 
+                                               numRows, plan);
+        break;
+    case CUDPP_UCHAR:
+        cudppScanDispatchOperator<unsigned char, 
+                                  isBackward, 
+                                  isExclusive>(d_out, d_in, numElements, 
+                                               numRows, plan);
+        break;
+    case CUDPP_SHORT:
+        cudppScanDispatchOperator<short, 
+                                  isBackward, 
+                                  isExclusive>(d_out, d_in, numElements, 
+                                               numRows, plan);
+        break;
+    case CUDPP_USHORT:
+        cudppScanDispatchOperator<unsigned short, 
+                                  isBackward, 
+                                  isExclusive>(d_out, d_in, numElements, 
+                                               numRows, plan);
+        break;
     case CUDPP_INT:
         cudppScanDispatchOperator<int, 
                                   isBackward, 

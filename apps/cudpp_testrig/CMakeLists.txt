@@ -16,6 +16,7 @@ set(CCFILES
   test_scan.cpp
   test_spmvmult.cpp
   test_tridiagonal.cpp
+  test_compress.cpp
   )
 
 set(HFILES

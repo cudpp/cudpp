@@ -44,6 +44,12 @@ void setOptions(int argc, const char **argv, testrigOptions &testOptions)
         testOptions.algorithm = "rand";
     else if (checkCommandLineFlag(argc, argv, "tridiagonal"))
         testOptions.algorithm = "tridiagonal";
+    else if (checkCommandLineFlag(argc, argv, "mtf"))
+        testOptions.algorithm = "mtf";
+    else if (checkCommandLineFlag(argc, argv, "bwt"))
+        testOptions.algorithm = "bwt";
+    else if (checkCommandLineFlag(argc, argv, "compress"))
+        testOptions.algorithm = "compress";
             
     testOptions.op = "sum";
     commandLineArg(testOptions.op, argc, argv, "op");

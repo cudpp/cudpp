@@ -25,6 +25,7 @@ set (HFILES
   cudpp_util.h
   cudpp_globals.h
   cudpp_compact.h
+  cudpp_compress.h
   cudpp_radixsort.h
   cudpp_rand.h
   cudpp_reduce.h
@@ -35,11 +36,13 @@ set (HFILES
   )
 
 set (CUHFILES
+  cta/compress_cta.cuh
   cta/radixsort_cta.cuh
   cta/rand_cta.cuh
   cta/scan_cta.cuh
   cta/segmented_scan_cta.cuh
   kernel/compact_kernel.cuh
+  kernel/compress_kernel.cuh
   kernel/radixsort_kernel.cuh
   kernel/rand_kernel.cuh
   kernel/reduce_kernel.cuh
@@ -52,6 +55,7 @@ set (CUHFILES
 set(CUFILES
   app/reduce_app.cu
   app/compact_app.cu
+  app/compress_app.cu
   app/scan_app.cu
   app/segmented_scan_app.cu
   app/spmvmult_app.cu
@@ -81,6 +85,7 @@ cuda_add_library(cudpp ${LIB_TYPE}
   ${CUHFILES}
   ${HFILES_PUBLIC}
   ${CUFILES} 
+  #OPTIONS ${GENCODE_SM20} ${VERBOSE_PTXAS}
   OPTIONS ${GENCODE_SM10} ${GENCODE_SM13} ${GENCODE_SM20} ${VERBOSE_PTXAS}
   )
   
