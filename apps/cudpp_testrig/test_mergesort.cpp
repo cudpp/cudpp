@@ -49,12 +49,9 @@ int mergeSortTest(CUDPPHandle theCudpp, CUDPPConfiguration config, size_t *tests
         h_values[i] = i;            
                                                                                                                                        
 	
-    // Fill up with some random data   
-    if (config.datatype != CUDPP_FLOAT && config.datatype != CUDPP_DOUBLE)
-        VectorSupport<T>::fillVectorKeys(h_keys, numElements, 32);         
-    else
-        VectorSupport<T>::fillVector(h_keys, numElements, std::numeric_limits<float>::max() );         
-
+  
+    VectorSupport<T>::fillVectorKeys(h_keys, numElements, 31);         
+  
 	
     CUDA_SAFE_CALL(cudaMalloc((void **)&d_keys, numElements*sizeof(T)));
     CUDA_SAFE_CALL(cudaMalloc((void **)&d_values, numElements*sizeof(unsigned int)));

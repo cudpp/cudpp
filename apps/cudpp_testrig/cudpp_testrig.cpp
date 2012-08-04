@@ -88,8 +88,13 @@ int testAllDatatypes(int argc,
                     retval += testCompact(argc, argv, &config);
                     break;
 				case CUDPP_SORT_MERGE:
-					if(config.datatype == CUDPP_UINT)
+					if(!(config.datatype == CUDPP_UINT || config.datatype == CUDPP_INT))
+					{
+						printf("Only uints and ints currently supported for merge sort.. skipping\n");						
+					}
+					else
                         retval += testMergeSort(argc, argv, &config);
+					break;
                 case CUDPP_SORT_RADIX:
                     retval += testRadixSort(argc, argv, &config);
                 default:
@@ -249,7 +254,8 @@ int main(int argc, const char** argv)
         printf("scan: Run scan test(s)\n");
         printf("segscan; Run segmented scan test(s)\n");
         printf("multiscan: Run multi-row scan test(s)\n");
-        printf("sort: Run sort test(s)\n");
+        printf("mergesort: Run merge sort test(s)\n");
+		printf("radixsort: Run radix sort test(s)\n");
         printf("compact: Run compact test(s)\n\n");
         printf("reduce: Run reduce test(s)\n\n");
         printf("rand: Run random number generator test(s)\n\n");
@@ -287,7 +293,8 @@ int main(int argc, const char** argv)
     bool runMultiScan = runAll || checkCommandLineFlag(argc, argv, "multiscan");
     bool runCompact = runAll || checkCommandLineFlag(argc, argv, "compact");
     bool runReduce = runAll || checkCommandLineFlag(argc, argv, "reduce");
-    bool runSort = runAll || checkCommandLineFlag(argc, argv, "sort");
+    bool runRadixSort = runAll || checkCommandLineFlag(argc, argv, "radixsort");
+	bool runMergeSort = runAll || checkCommandLineFlag(argc, argv, "mergesort");
     bool runRand = runAll || checkCommandLineFlag(argc, argv, "rand");
     bool runSpmv = checkCommandLineFlag(argc, argv, "spmv");
     bool runTridiagonal = runAll ||  checkCommandLineFlag(argc, argv, "tridiagonal");
@@ -300,7 +307,8 @@ int main(int argc, const char** argv)
         if (runSegScan)   retval += testScan(argc, argv, NULL, false, devProps);
         if (runCompact)   retval += testCompact(argc, argv, NULL);
         if (runReduce)    retval += testReduce(argc, argv, NULL);
-		if (runSort)      {/*retval += testRadixSort(argc, argv, NULL);*/ retval += testMergeSort(argc, argv, NULL);}
+		if (runMergeSort) retval += testMergeSort(argc, argv, NULL);
+		if (runRadixSort) retval += testRadixSort(argc, argv, NULL); 
         if (runMultiScan) retval += testScan(argc, argv, NULL, true, devProps);
         if (runTridiagonal) retval += testTridiagonal(argc, argv, NULL);
     }
@@ -329,10 +337,12 @@ int main(int argc, const char** argv)
             retval += testAllOptionsAndDatatypes(argc, argv, config, supportsDouble);
         }
         
-        if (runSort) {
-			printf("testing sort\n");
-            //config.algorithm = CUDPP_SORT_RADIX;
-            //retval += testAllOptionsAndDatatypes(argc, argv, config, supportsDouble);
+		if(runRadixSort) {
+			config.algorithm = CUDPP_SORT_RADIX;
+            retval += testAllOptionsAndDatatypes(argc, argv, config, supportsDouble);
+		}
+        if (runMergeSort) {					
+            printf("running merge sort\n");
 			config.algorithm = CUDPP_SORT_MERGE;
 			retval += testAllOptionsAndDatatypes(argc, argv, config, supportsDouble);
         }

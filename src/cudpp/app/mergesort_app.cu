@@ -58,10 +58,9 @@ void runMergeSort(T *pkeys,
 	T* temp_keys;
 	unsigned int* temp_vals;
 
-	CUDA_SAFE_CALL( cudaMalloc((void **) &temp_keys, sizeof(T)*plan->m_numElements));
-	CUDA_SAFE_CALL( cudaMalloc((void **) &temp_vals, sizeof(unsigned int)*plan->m_numElements));
+	CUDA_SAFE_CALL( cudaMalloc((void **) &temp_keys, sizeof(T)*numElements));
+	CUDA_SAFE_CALL( cudaMalloc((void **) &temp_vals, sizeof(unsigned int)*numElements));
 
-	
 	int *partitionSizeA, *partitionBeginA;
 	unsigned int swapPoint = 32;
 	int blockLimit = swapPoint*subPartitions;	
@@ -83,15 +82,15 @@ void runMergeSort(T *pkeys,
 		{ 				
 			simpleMerge_lower<T, 2, INV_VAL, MIN_VAL>
 				<<<numBlocks, CTASIZE_simple, sizeof(T)*(INTERSECT_B_BLOCK_SIZE_simple+4)>>>
-				(pkeys, pvals, temp_keys, temp_vals, partitionSize*mult, (int)plan->m_numElements);				
+				(pkeys, pvals, temp_keys, temp_vals, partitionSize*mult, (int)numElements);				
 			simpleMerge_higher<T, 2, INV_VAL, MIN_VAL>
 				<<<numBlocks, CTASIZE_simple, sizeof(T)*(INTERSECT_B_BLOCK_SIZE_simple+4)>>>
-				(pkeys, pvals, temp_keys, temp_vals, partitionSize*mult, (int)plan->m_numElements);		
+				(pkeys, pvals, temp_keys, temp_vals, partitionSize*mult, (int)numElements);		
 			if(numPartitions%2 == 1)
 			{			
 				
 				int offset = (partitionSize*mult*(numPartitions-1));
-				int numElementsToCopy = plan->m_numElements-offset;												
+				int numElementsToCopy = numElements-offset;												
 				simpleCopy<T>
 					<<<(numElementsToCopy+numThreads-1)/numThreads, numThreads>>>(pkeys, pvals, temp_keys, temp_vals, offset, numElementsToCopy);
 			}
@@ -100,14 +99,14 @@ void runMergeSort(T *pkeys,
 		{			
 			simpleMerge_lower<T, 2, INV_VAL, MIN_VAL>
 				<<<numBlocks, CTASIZE_simple, sizeof(T)*(INTERSECT_B_BLOCK_SIZE_simple+4)>>>
-				(temp_keys, temp_vals, pkeys, pvals, partitionSize*mult, plan->m_numElements);				
+				(temp_keys, temp_vals, pkeys, pvals, partitionSize*mult, numElements);				
 			simpleMerge_higher<T, 2, INV_VAL, MIN_VAL>
 				<<<numBlocks, CTASIZE_simple, sizeof(T)*(INTERSECT_B_BLOCK_SIZE_simple+4)>>>
-				(temp_keys, temp_vals, pkeys, pvals, partitionSize*mult, plan->m_numElements);	
+				(temp_keys, temp_vals, pkeys, pvals, partitionSize*mult, numElements);	
 			if(numPartitions%2 == 1)
 			{			
 				int offset = (partitionSize*mult*(numPartitions-1));
-				int numElementsToCopy = plan->m_numElements-offset;						
+				int numElementsToCopy = numElements-offset;						
 				simpleCopy<T>
 					<<<(numElementsToCopy+numThreads-1)/numThreads, numThreads>>>(temp_keys, temp_vals, pkeys, pvals, offset, numElementsToCopy);
 			}
@@ -128,20 +127,20 @@ void runMergeSort(T *pkeys,
 		if(count%2 == 1)
 		{								
 			findMultiPartitions<T, INV_VAL><<<secondBlocks, numThreads>>>(temp_keys, subPartitions, numBlocks*2, 
-															partitionSize*mult, partitionBeginA, partitionSizeA, plan->m_numElements);						
+															partitionSize*mult, partitionBeginA, partitionSizeA, numElements);						
 			mergeMulti_lower<T, 4, INV_VAL, MIN_VAL>
 				<<<numBlocks*subPartitions, CTASIZE_multi, (INTERSECT_B_BLOCK_SIZE_multi+3)*sizeof(T)>>>
-				(pkeys, pvals,temp_keys, temp_vals, subPartitions, numBlocks, partitionBeginA, partitionSizeA, mult*partitionSize, plan->m_numElements);
+				(pkeys, pvals,temp_keys, temp_vals, subPartitions, numBlocks, partitionBeginA, partitionSizeA, mult*partitionSize, numElements);
 			
 			
 			mergeMulti_higher<T, 4, INV_VAL, MIN_VAL>
 				<<<numBlocks*subPartitions, CTASIZE_multi, (INTERSECT_B_BLOCK_SIZE_multi+3)*sizeof(T)>>>
-				(pkeys, pvals, temp_keys, temp_vals, subPartitions, numBlocks, partitionBeginA, partitionSizeA, mult*partitionSize, plan->m_numElements);
+				(pkeys, pvals, temp_keys, temp_vals, subPartitions, numBlocks, partitionBeginA, partitionSizeA, mult*partitionSize, numElements);
 			
 			if(numPartitions%2 == 1)
 			{			
 				int offset = (partitionSize*mult*(numPartitions-1));
-				int numElementsToCopy = plan->m_numElements-offset;				
+				int numElementsToCopy = numElements-offset;				
 				simpleCopy<T>
 					<<<(numElementsToCopy+numThreads-1)/numThreads, numThreads>>>(temp_keys, temp_vals, pkeys, pvals, offset, numElementsToCopy);
 			}
@@ -150,21 +149,21 @@ void runMergeSort(T *pkeys,
 		else
 		{
 				
-			findMultiPartitions <T, INV_VAL> <<<secondBlocks, numThreads>>>(pkeys, subPartitions, numBlocks*2, partitionSize*mult, partitionBeginA, partitionSizeA, plan->m_numElements);
+			findMultiPartitions <T, INV_VAL> <<<secondBlocks, numThreads>>>(pkeys, subPartitions, numBlocks*2, partitionSize*mult, partitionBeginA, partitionSizeA, numElements);
 				
 			
 			mergeMulti_lower<T, 4, INV_VAL, MIN_VAL>
 				<<<numBlocks*subPartitions, CTASIZE_multi, (INTERSECT_B_BLOCK_SIZE_multi+3)*sizeof(T)>>>
-				(temp_keys, temp_vals, pkeys, pvals, subPartitions, numBlocks, partitionBeginA, partitionSizeA, mult*partitionSize, plan->m_numElements);
+				(temp_keys, temp_vals, pkeys, pvals, subPartitions, numBlocks, partitionBeginA, partitionSizeA, mult*partitionSize, numElements);
 			
 			mergeMulti_higher<T, 4, INV_VAL, MIN_VAL>
 				<<<numBlocks*subPartitions, CTASIZE_multi, (INTERSECT_B_BLOCK_SIZE_multi+3)*sizeof(T)>>>
-				(temp_keys, temp_vals, pkeys, pvals, subPartitions, numBlocks, partitionBeginA, partitionSizeA, mult*partitionSize, plan->m_numElements);
+				(temp_keys, temp_vals, pkeys, pvals, subPartitions, numBlocks, partitionBeginA, partitionSizeA, mult*partitionSize, numElements);
 			
 			if(numPartitions%2 == 1)
 			{			
 				int offset = (partitionSize*mult*(numPartitions-1));
-				int numElementsToCopy = plan->m_numElements-offset;				
+				int numElementsToCopy = numElements-offset;				
 				simpleCopy<T>
 					<<<(numElementsToCopy+numThreads-1)/numThreads, numThreads>>>(pkeys, pvals, temp_keys, temp_vals, offset, numElementsToCopy);
 			}
