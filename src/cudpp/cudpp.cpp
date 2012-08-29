@@ -51,6 +51,7 @@
 #include "cudpp_reduce.h"
 #include "cudpp_tridiagonal.h"
 #include "cudpp_compress.h"
+#include "cudpp_listrank.h"
 
 /**
  * @brief Performs a scan operation of numElements on its input in
@@ -639,7 +640,7 @@ CUDPPResult cudppCompress(CUDPPHandle planHandle,
  * - The BWT index (used during the reverse-BWT) is recorded as an int 
  * in \a d_y.
  *
- *
+ * @param[in] planHandle Handle to plan for BWT
  * @param[out] d_y BWT Index
  * @param[out] d_x Output data
  * @param[in] d_a Input data
@@ -700,6 +701,7 @@ CUDPPResult cudppBurrowsWheelerTransform(CUDPPHandle planHandle,
  * - Currently, the MTF can only be performed on 1,048,576 (uchar) elements.
  * - The transformed string is written to \a d_x.
  *
+ * @param[in] planHandle Handle to plan for MTF
  * @param[out] d_x Output data
  * @param[in] d_a Input data
  * @param[in] numElements Number of elements
@@ -740,6 +742,63 @@ CUDPPResult cudppMoveToFrontTransform(CUDPPHandle planHandle,
             return CUDPP_ERROR_ILLEGAL_CONFIGURATION;
 
         cudppMtfDispatch(d_a, d_x, numElements, plan);
+        return CUDPP_SUCCESS;
+    }
+    else
+        return CUDPP_ERROR_INVALID_HANDLE;
+}
+
+/**
+ * @brief Performs list ranking of values
+ *
+ * @todo
+ *
+ * @param[in] planHandle Handle to plan for list ranking
+ * @param[out] d_x Output ranked values
+ * @param[in] d_a Input unranked values
+ * @param[in] d_b Input next indices
+ * @param[in] head Input head node index
+ * @param[in] numElements number of nodes
+ * @returns CUDPPResult indicating success or error condition
+ *
+ * @see cudppPlan, CUDPPConfiguration, CUDPPAlgorithm
+ */
+CUDPP_DLL
+CUDPPResult cudppListRank(CUDPPHandle planHandle,
+                          void *d_x,  
+                          void *d_a,
+                          void *d_b,
+                          size_t head,
+                          size_t numElements)
+{
+    /*
+    int deviceCount;
+    int dev = 0;
+    cudaDeviceProp devProps;
+    cudaGetDeviceCount(&deviceCount);
+    dev = deviceCount - 1;
+    cudaSetDevice(dev);
+    cudaGetDeviceProperties(&devProps, dev);
+
+    if((int)devProps.major < 2) {
+        // Only supported on devices with compute
+        // capability 2.0 or greater
+        return CUDPP_ERROR_ILLEGAL_CONFIGURATION;
+    }
+    */
+
+    CUDPPListRankPlan * plan = 
+        (CUDPPListRankPlan *) getPlanPtrFromHandle<CUDPPListRankPlan>(planHandle);
+    
+    if(plan != NULL)
+    {
+        // TODO - template for other value types
+        if (plan->m_config.algorithm != CUDPP_LISTRANK)
+            return CUDPP_ERROR_INVALID_PLAN;
+        if (plan->m_config.datatype != CUDPP_INT)
+            return CUDPP_ERROR_ILLEGAL_CONFIGURATION;
+
+        cudppListRankDispatch(d_x, d_a, d_b, head, numElements, plan);
         return CUDPP_SUCCESS;
     }
     else

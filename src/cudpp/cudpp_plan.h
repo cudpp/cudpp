@@ -303,4 +303,18 @@ public:
     unsigned short *m_d_list_sizes;
 };
 
+/** @brief Plan class for ListRank
+*
+*/
+class CUDPPListRankPlan : public CUDPPPlan
+{
+public:
+    CUDPPListRankPlan(CUDPPManager *mgr, CUDPPConfiguration config, size_t numElements);
+    virtual ~CUDPPListRankPlan();
+
+    //TODO - intermediate buffers
+    //unsigned char *m_d_lists;
+    //unsigned short *m_d_list_sizes;
+};
+
 #endif // __CUDPP_PLAN_H__

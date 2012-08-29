@@ -26,6 +26,7 @@ set (HFILES
   cudpp_globals.h
   cudpp_compact.h
   cudpp_compress.h
+  cudpp_listrank.h
   cudpp_radixsort.h
   cudpp_rand.h
   cudpp_reduce.h
@@ -43,6 +44,7 @@ set (CUHFILES
   cta/segmented_scan_cta.cuh
   kernel/compact_kernel.cuh
   kernel/compress_kernel.cuh
+  kernel/listrank_kernel.cuh
   kernel/radixsort_kernel.cuh
   kernel/rand_kernel.cuh
   kernel/reduce_kernel.cuh
@@ -56,6 +58,7 @@ set(CUFILES
   app/reduce_app.cu
   app/compact_app.cu
   app/compress_app.cu
+  app/listrank_app.cu
   app/scan_app.cu
   app/segmented_scan_app.cu
   app/spmvmult_app.cu
