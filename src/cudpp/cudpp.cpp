@@ -792,7 +792,6 @@ CUDPPResult cudppListRank(CUDPPHandle planHandle,
     
     if(plan != NULL)
     {
-        // TODO - template for other value types
         if (plan->m_config.algorithm != CUDPP_LISTRANK)
             return CUDPP_ERROR_INVALID_PLAN;
         if (plan->m_config.datatype != CUDPP_INT)

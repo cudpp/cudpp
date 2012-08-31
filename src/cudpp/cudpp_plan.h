@@ -312,9 +312,10 @@ public:
     CUDPPListRankPlan(CUDPPManager *mgr, CUDPPConfiguration config, size_t numElements);
     virtual ~CUDPPListRankPlan();
 
-    //TODO - intermediate buffers
-    //unsigned char *m_d_lists;
-    //unsigned short *m_d_list_sizes;
+    // Intermediate buffers used during list ranking
+    int *m_d_tmp1;
+    int *m_d_tmp2;
+    int *m_d_tmp3;
 };
 
 #endif // __CUDPP_PLAN_H__
