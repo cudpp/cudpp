@@ -13,10 +13,12 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 //! Compute reference data set for list ranking
-//! Each element is the sum of the elements before it in the array.
-//! @param reference  reference data, computed but preallocated
-//! @param idata      const input data as provided to device
-//! @param len        number of elements in reference / idata
+//! Each element is a node in the linked-list.
+//! @param reference        reference data, computed but preallocated
+//! @param ivalues          const input values as provided to device
+//! @param inextindices     const input next indices as provided to device
+//! @param head             input head node index
+//! @param count            number of elements in reference / linked-list
 ////////////////////////////////////////////////////////////////////////////////
 
 void listRankGold( int* reference, const int* ivalues, 
