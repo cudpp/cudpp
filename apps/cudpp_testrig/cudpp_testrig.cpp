@@ -248,6 +248,9 @@ int main(int argc, const char** argv)
         printf("%s; global mem: %dB; compute v%d.%d; clock: %d kHz\n",
                devProps.name, (int)devProps.totalGlobalMem, (int)devProps.major, 
                (int)devProps.minor, (int)devProps.clockRate);
+        size_t available, total;
+        cudaMemGetInfo(&available, &total);
+        printf("Memory avail/total (B): %d/%d\n", (int) available, (int) total);
     }
 
     int computeVersion = devProps.major * 10 + devProps.minor;
