@@ -36,8 +36,8 @@ typedef unsigned short ushort;
  * @todo
  **/
 __global__ void
-bwt_compute_final_kernel(uchar *d_bwtIn,
-                         uint *d_values,
+bwt_compute_final_kernel(const uchar *d_bwtIn,
+                         const uint *d_values,
                          int *d_bwtIndex,
                          uchar *d_bwtOut,
                          uint numElements,
@@ -1271,11 +1271,11 @@ bwt_keys_construct_kernel(uchar4    *d_bwtIn,
  * @todo
  **/
 __global__ void
-mtf_reduction_kernel(uchar      *d_mtfIn,
-                     uchar      *d_lists,
-                     ushort     *d_list_sizes,
-                     uint       nLists,
-                     uint       offset)
+mtf_reduction_kernel(const uchar * d_mtfIn,
+                     uchar       * d_lists,
+                     ushort      * d_list_sizes,
+                     uint          nLists,
+                     uint          offset)
 {
 #if (__CUDA_ARCH__ >= 200)
     __shared__ uchar shared[(MTF_PER_THREAD+256)*(MTF_THREADS_BLOCK/2)*sizeof(uchar) + MTF_THREADS_BLOCK*sizeof(ushort)];
@@ -1413,11 +1413,11 @@ mtf_reduction_kernel(uchar      *d_mtfIn,
  * @todo
  **/
 __global__ void
-mtf_GLreduction_kernel(uchar     *d_lists,
-                       ushort    *d_list_sizes,
-                       uint      offset,
-                       uint      tThreads,
-                       uint      nLists)
+mtf_GLreduction_kernel(uchar  * d_lists,
+                       ushort * d_list_sizes,
+                       uint     offset,
+                       uint     tThreads,
+                       uint     nLists)
 {
 #if (__CUDA_ARCH__ >= 200)
     __shared__ uchar sdata[256*MTF_THREADS_BLOCK];
@@ -1644,12 +1644,12 @@ mtf_GLdownsweep_kernel(uchar    *d_lists,
  * @todo
  **/
 __global__ void
-mtf_localscan_lists_kernel(uchar    *d_mtfIn,
-                           uchar    *d_mtfOut,
-                           uchar    *d_lists,
-                           ushort   *d_list_sizes,
-                           uint     nLists,
-                           uint     offset)
+mtf_localscan_lists_kernel(const uchar * d_mtfIn,
+                           uchar       * d_mtfOut,
+                           uchar       * d_lists,
+                           ushort      * d_list_sizes,
+                           uint          nLists,
+                           uint          offset)
 {
 #if (__CUDA_ARCH__ >= 200)
     uint idx = threadIdx.x + (blockIdx.x * blockDim.x);
@@ -2034,7 +2034,7 @@ huffman_build_histogram_kernel(uint     *d_input, // Read in as words, instead o
  * @todo
  **/
 __global__ void
-huffman_build_tree_kernel(uchar     *d_input,
+huffman_build_tree_kernel(const uchar *d_input,
                           uchar     *d_huffCodesPacked,
                           uint      *d_huffCodeLocations,
                           uchar     *d_huffCodeLengths,

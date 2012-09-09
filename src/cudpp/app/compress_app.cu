@@ -108,7 +108,7 @@ void huffmanEncoding(unsigned int               *d_hist,
  *
  */
 template <class T>
-void moveToFrontTransform(unsigned char             *d_mtfIn,
+void moveToFrontTransform(const unsigned char       *d_mtfIn,
                           unsigned char             *d_mtfOut,
                           size_t                    numElements,
                           const T                   *plan)
@@ -204,11 +204,11 @@ void moveToFrontTransform(unsigned char             *d_mtfIn,
  *
  */
 template <class T>
-void burrowsWheelerTransform(unsigned char              *d_uncompressed,
-                             int                        *d_bwtIndex,
-                             unsigned char              *d_bwtOut,
-                             size_t                     numElements,
-                             const T    *plan)
+void burrowsWheelerTransform(const unsigned char * d_uncompressed,
+                             int *                 d_bwtIndex,
+                             unsigned char *       d_bwtOut,
+                             size_t                numElements,
+                             const T *             plan)
 {
     size_t tThreads = (numElements%4 == 0) ? numElements/4 : numElements/4 + 1;
     size_t nThreads = BWT_CTA_BLOCK;
@@ -329,7 +329,7 @@ void burrowsWheelerTransform(unsigned char              *d_uncompressed,
  * @todo
  *
  */
-void burrowsWheelerTransformWrapper(unsigned char *d_in,
+void burrowsWheelerTransformWrapper(const unsigned char *d_in,
                                     int *d_bwtIndex,
                                     size_t numElements,
                                     const CUDPPCompressPlan *plan)
@@ -342,7 +342,7 @@ void burrowsWheelerTransformWrapper(unsigned char *d_in,
  * @todo
  *
  */
-void burrowsWheelerTransformWrapper(unsigned char *d_in,
+void burrowsWheelerTransformWrapper(const unsigned char *d_in,
                                     int *d_bwtIndex,
                                     unsigned char *d_bwtOut,
                                     size_t numElements,
@@ -367,7 +367,7 @@ void moveToFrontTransformWrapper(size_t numElements,
  * @todo
  *
  */
-void moveToFrontTransformWrapper(unsigned char *d_in,
+void moveToFrontTransformWrapper(const unsigned char *d_in,
                                  unsigned char *d_mtfOut,
                                  size_t numElements,
                                  const CUDPPMtfPlan *plan)
@@ -576,9 +576,9 @@ void freeMtfStorage(CUDPPMtfPlan *plan)
  * @param[in]  plan     Pointer to CUDPPCompressPlan object containing
  *                      compress options and intermediate storage
  */
-void cudppCompressDispatch(void *d_uncompressed,
+void cudppCompressDispatch(const void *d_uncompressed,
                            void *d_bwtIndex,
-                           void *d_histSize, // ignore
+                           const void *d_histSize, // ignore
                            void *d_hist,
                            void *d_encodeOffset,
                            void *d_compressedSize,
@@ -610,7 +610,7 @@ void cudppCompressDispatch(void *d_uncompressed,
  * @param[in]  plan        Pointer to CUDPPBwtPlan object containing
  *                         compress options and intermediate storage
  */
-void cudppBwtDispatch(void *d_bwtIn,
+void cudppBwtDispatch(const void *d_bwtIn,
                       void *d_bwtOut,
                       void *d_bwtIndex,
                       size_t numElements,
@@ -633,7 +633,7 @@ void cudppBwtDispatch(void *d_bwtIn,
  * @param[in]  plan        Pointer to CUDPPMtfPlan object containing
  *                         compress options and intermediate storage
  */
-void cudppMtfDispatch(void *d_mtfIn,
+void cudppMtfDispatch(const void *d_mtfIn,
                       void *d_mtfOut,
                       size_t numElements,
                       const CUDPPMtfPlan *plan)
