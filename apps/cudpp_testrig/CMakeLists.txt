@@ -17,6 +17,7 @@ set(CCFILES
   test_spmvmult.cpp
   test_tridiagonal.cpp
   test_compress.cpp
+  test_listrank.cpp
   )
 
 set(HFILES
@@ -26,6 +27,7 @@ set(HFILES
   scan_gold.h
   tridiagonal_gold.h
   sparse.h
+  listrank_gold.h
   )
 
 include_directories(../common/include)
