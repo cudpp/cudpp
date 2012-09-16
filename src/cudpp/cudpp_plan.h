@@ -313,9 +313,9 @@ public:
     virtual ~CUDPPListRankPlan();
 
     // Intermediate buffers used during list ranking
-    int *m_d_tmp1;
-    int *m_d_tmp2;
-    int *m_d_tmp3;
+    int *m_d_tmp1; //!< @internal temporary next indices array
+    int *m_d_tmp2; //!< @internal temporary start indices array
+    int *m_d_tmp3; //!< @internal temporary next indices array
 };
 
 #endif // __CUDPP_PLAN_H__

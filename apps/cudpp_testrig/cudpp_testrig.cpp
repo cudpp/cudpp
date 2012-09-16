@@ -96,14 +96,6 @@ int testAllDatatypes(int argc,
         return retval;
     }
 
-    // TODO - support more data types
-    if (config.algorithm == CUDPP_LISTRANK)
-    {
-        config.datatype = CUDPP_INT;
-        retval += testListRank(argc, argv, &config);
-        return retval;
-    }
-
     for (CUDPPDatatype dt = CUDPP_INT; dt != CUDPP_DATATYPE_INVALID; dt = CUDPPDatatype((int)dt+1))
     {
         config.datatype = dt;
@@ -121,6 +113,8 @@ int testAllDatatypes(int argc,
                     break;
                 case CUDPP_SORT_RADIX:
                     retval += testRadixSort(argc, argv, &config);
+                case CUDPP_LISTRANK:
+                    retval += testListRank(argc, argv, &config);
                 default:
                     break;  
             }

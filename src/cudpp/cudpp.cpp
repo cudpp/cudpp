@@ -749,9 +749,26 @@ CUDPPResult cudppMoveToFrontTransform(CUDPPHandle planHandle,
 }
 
 /**
- * @brief Performs list ranking of values
+ * @brief Performs list ranking of linked list node values
  *
- * @todo
+ * Performs parallel list ranking on values of a linked-list
+ * using a pointer-jumping algorithm.
+ *
+ * Takes as input an array of values in GPU memory
+ * (\a d_a) and an equal-sized int array in GPU memory
+ * (\a d_b) that represents the next indices of the linked
+ * list. The index of the head node (\a head) is given as an
+ * unsigned int. The output (\a d_x) is an equal-sized array,
+ * in GPU memory, that has the values ranked in-order.
+ *
+ * Example:
+ * \code
+ * d_a     = [  f a c d b e  ]
+ * d_b     = [ -1 4 3 5 2 0  ]
+ * head    = 4
+ * d_x     = [ a b c d e f ]
+ * \endcode
+ *
  *
  * @param[in] planHandle Handle to plan for list ranking
  * @param[out] d_x Output ranked values
@@ -771,22 +788,6 @@ CUDPPResult cudppListRank(CUDPPHandle planHandle,
                           size_t head,
                           size_t numElements)
 {
-    /*
-    int deviceCount;
-    int dev = 0;
-    cudaDeviceProp devProps;
-    cudaGetDeviceCount(&deviceCount);
-    dev = deviceCount - 1;
-    cudaSetDevice(dev);
-    cudaGetDeviceProperties(&devProps, dev);
-
-    if((int)devProps.major < 2) {
-        // Only supported on devices with compute
-        // capability 2.0 or greater
-        return CUDPP_ERROR_ILLEGAL_CONFIGURATION;
-    }
-    */
-
     CUDPPListRankPlan * plan = 
         (CUDPPListRankPlan *) getPlanPtrFromHandle<CUDPPListRankPlan>(planHandle);
     
@@ -794,11 +795,8 @@ CUDPPResult cudppListRank(CUDPPHandle planHandle,
     {
         if (plan->m_config.algorithm != CUDPP_LISTRANK)
             return CUDPP_ERROR_INVALID_PLAN;
-        if (plan->m_config.datatype != CUDPP_INT)
-            return CUDPP_ERROR_ILLEGAL_CONFIGURATION;
 
-        cudppListRankDispatch(d_x, d_a, d_b, head, numElements, plan);
-        return CUDPP_SUCCESS;
+        return cudppListRankDispatch(d_x, d_a, d_b, head, numElements, plan);
     }
     else
         return CUDPP_ERROR_INVALID_HANDLE;

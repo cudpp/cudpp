@@ -34,13 +34,23 @@
  * @{
  */
 
-/** @brief Perform Huffman encoding
+/** @brief Launch list ranking
  * 
- * @todo
+ * Given two inputs arrays, \a d_unranked_values and \a d_next_indices,
+ * listRank() outputs a ranked version of the unranked values by traversing
+ * the next indices. The head index is \a head. Called by ::cudppListRankDispatch().
  *
+ * @param[out] d_ranked_values Ranked values array
+ * @param[in]  d_unranked_values Unranked values array
+ * @param[in]  d_next_indices Next indices array
+ * @param[in]  head Head pointer index
+ * @param[in]  numElements Number of nodes values to rank
+ * @param[in]  plan     Pointer to CUDPPListRankPlan object containing
+ *                      list ranking options and intermediate storage
  */
-void listRank(int                       *d_ranked_values,
-              int                       *d_unranked_values,
+template <typename T>
+void listRank(T                         *d_ranked_values,
+              T                         *d_unranked_values,
               int                       *d_next_indices,
               size_t                    head,
               size_t                    numElements,
@@ -71,7 +81,7 @@ void listRank(int                       *d_ranked_values,
         if(cnt%2 == 1)
         {
             // ping
-            list_rank_kernel_soa_1<<< grid_construct, threads_construct >>>
+            list_rank_kernel_soa_1<T><<< grid_construct, threads_construct >>>
                 (d_ranked_values, d_unranked_values, d_tmp,
                 plan->m_d_tmp1, plan->m_d_tmp2, step, head, numElements);
             d_tmp = plan->m_d_tmp3;
@@ -79,7 +89,7 @@ void listRank(int                       *d_ranked_values,
         else
         {
             // pong
-            list_rank_kernel_soa_1<<< grid_construct, threads_construct >>>
+            list_rank_kernel_soa_1<T><<< grid_construct, threads_construct >>>
                 (d_ranked_values, d_unranked_values, plan->m_d_tmp1,
                 d_tmp, plan->m_d_tmp2, step, head, numElements);
         }
@@ -93,13 +103,13 @@ void listRank(int                       *d_ranked_values,
     {
         if(cnt%2 == 0)
         {
-            list_rank_kernel_soa_2<<< grid_construct2, threads_construct2 >>>
+            list_rank_kernel_soa_2<T><<< grid_construct2, threads_construct2 >>>
                 (d_ranked_values, d_unranked_values, plan->m_d_tmp1, plan->m_d_tmp2, head, numElements);
             CUDA_SAFE_CALL(cudaThreadSynchronize());
         }
         else
         {
-            list_rank_kernel_soa_2<<< grid_construct2, threads_construct2 >>>
+            list_rank_kernel_soa_2<T><<< grid_construct2, threads_construct2 >>>
                 (d_ranked_values, d_unranked_values, d_tmp, plan->m_d_tmp2, head, numElements);
             CUDA_SAFE_CALL(cudaThreadSynchronize());
         }
@@ -113,7 +123,8 @@ extern "C"
 
 /** @brief Allocate intermediate arrays used by ListRank.
  *
- * @todo
+ * CUDPPListRank needs temporary device arrays to store next indices
+ * so that it does not overwrite the original array.
  *
  * @param [in,out] plan Pointer to CUDPPListRankPlan object containing
  *                      options and number of elements, which is used
@@ -131,7 +142,7 @@ void allocListRankStorage(CUDPPListRankPlan *plan)
 
 /** @brief Deallocate intermediate block arrays in a CUDPPListRankPlan object.
  *
- * @todo 
+ * Deallocates the output indices array allocated by allocListRankStorage().
  *
  * @param[in,out] plan Pointer to CUDPPListRankPlan object initialized by allocListRankStorage().
  */
@@ -146,7 +157,9 @@ void freeListRankStorage(CUDPPListRankPlan *plan)
 /** @brief Dispatch function to perform parallel list ranking on a
  * linked-list with the specified configuration.
  *
- * @todo
+ * A wrapper on top of listRank which calls listRank() for the data type
+ * specified in \a config. This is the app-level interface to list ranking
+ * used by cudppListRank().
  * 
  * @param[out] d_ranked_values Ranked values array
  * @param[in]  d_unranked_values Unranked values array
@@ -156,7 +169,7 @@ void freeListRankStorage(CUDPPListRankPlan *plan)
  * @param[in]  plan     Pointer to CUDPPListRankPlan object containing
  *                      list ranking options and intermediate storage
  */
-void cudppListRankDispatch(void *d_ranked_values,
+CUDPPResult cudppListRankDispatch(void *d_ranked_values,
                            void *d_unranked_values,
                            void *d_next_indices,
                            size_t head,
@@ -164,9 +177,53 @@ void cudppListRankDispatch(void *d_ranked_values,
                            const CUDPPListRankPlan *plan)
 {
     // Call to list ranker
-    // TODO - template to allow other value types
-    listRank((int*) d_ranked_values, (int*) d_unranked_values,
-             (int*) d_next_indices, head, numElements, plan);
+    CUDPPResult status = CUDPP_SUCCESS;
+    switch (plan->m_config.datatype)
+    {
+    case CUDPP_CHAR:
+        listRank<char>((char*) d_ranked_values, (char*) d_unranked_values,
+                       (int*) d_next_indices, head, numElements, plan);
+        break;
+    case CUDPP_UCHAR:
+        listRank<unsigned char>((unsigned char*) d_ranked_values, (unsigned char*) d_unranked_values,
+                 (int*) d_next_indices, head, numElements, plan);
+        break;
+    case CUDPP_SHORT:
+        listRank<short>((short*) d_ranked_values, (short*) d_unranked_values,
+                        (int*) d_next_indices, head, numElements, plan);
+        break;
+    case CUDPP_USHORT:
+        listRank<unsigned short>((unsigned short*) d_ranked_values, (unsigned short*) d_unranked_values,
+                               (int*) d_next_indices, head, numElements, plan);
+    case CUDPP_INT:
+        listRank<int>((int*) d_ranked_values, (int*) d_unranked_values,
+                      (int*) d_next_indices, head, numElements, plan);
+        break;
+    case CUDPP_UINT:
+        listRank<unsigned int>((unsigned int*) d_ranked_values, (unsigned int*) d_unranked_values,
+                               (int*) d_next_indices, head, numElements, plan);
+        break;
+    case CUDPP_FLOAT:
+        listRank<float>((float*) d_ranked_values, (float*) d_unranked_values,
+                        (int*) d_next_indices, head, numElements, plan);
+        break;
+    case CUDPP_LONGLONG:
+        listRank<long long>((long long*) d_ranked_values, (long long*) d_unranked_values,
+                            (int*) d_next_indices, head, numElements, plan);
+        break;
+    case CUDPP_ULONGLONG:
+        listRank<unsigned long long>((unsigned long long*) d_ranked_values, (unsigned long long*) d_unranked_values,
+                                     (int*) d_next_indices, head, numElements, plan);
+        break;
+    case CUDPP_DOUBLE:
+        listRank<double>((double*) d_ranked_values, (double*) d_unranked_values,
+                         (int*) d_next_indices, head, numElements, plan);
+        break;
+    default:
+        status = CUDPP_ERROR_ILLEGAL_CONFIGURATION;
+        break;
+    }
+    return status;
 }
 
 

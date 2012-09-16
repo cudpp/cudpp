@@ -20,8 +20,8 @@
 //! @param head             input head node index
 //! @param count            number of elements in reference / linked-list
 ////////////////////////////////////////////////////////////////////////////////
-
-void listRankGold( int* reference, const int* ivalues, 
+template <typename T>
+void listRankGold( T* reference, const T* ivalues, 
                   const int* inextindices, const unsigned int head,
                   const unsigned int count) 
 {

@@ -28,7 +28,7 @@ extern "C"
 void freeListRankStorage(CUDPPListRankPlan* plan);
 
 extern "C"
-void cudppListRankDispatch(void *d_ranked_values,
+CUDPPResult cudppListRankDispatch(void *d_ranked_values,
                            void *d_unranked_values,
                            void *d_next_indices,
                            size_t head,

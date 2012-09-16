@@ -45,7 +45,7 @@ using namespace cudpp_app;
  * @return Number of tests that failed regression (0 for all pass)
  * @see setOptions, cudppListRank
  */
-
+template <typename T>
 int listRankTest(int argc, const char **argv, const CUDPPConfiguration &config,
                  const testrigOptions &testOptions)
 {
@@ -90,20 +90,21 @@ int listRankTest(int argc, const char **argv, const CUDPPConfiguration &config,
         return retval;
     }
 
-    unsigned int memSize = sizeof(int) * numElements;
+    unsigned int memSize = sizeof(T) * numElements;
 
     // allocate host memory to store the input data
     unsigned int head   = 0;
-    int* h_values       = (int*) malloc( memSize);
+    T* h_values    = (T*) malloc( memSize);
+    int* h_tmpvalues    = (int*) malloc( sizeof(int) * numElements);
     int* h_next_indices = (int*) malloc( sizeof(int) * numElements);
 
     // allocate and compute reference solution
-    int* reference = (int*) malloc( memSize);
+    T* reference = (T*) malloc( memSize);
 
     // allocate device memory input and output arrays
-    int* d_ivalues      = NULL;
+    T* d_ivalues        = NULL;
     int* d_inextindices = NULL;
-    int* d_ovalues      = NULL;
+    T* d_ovalues        = NULL;
 
     CUDA_SAFE_CALL( cudaMalloc( (void**) &d_ivalues, memSize));
     CUDA_SAFE_CALL( cudaMalloc( (void**) &d_inextindices, sizeof(int) * numElements));
@@ -122,25 +123,25 @@ int listRankTest(int argc, const char **argv, const CUDPPConfiguration &config,
         // create a random linked-list of test[k] nodes
         int* tracked_prev_indices = (int*) malloc(sizeof(int)*test[k]);
         for(int i=0; i<(int)test[k]; i++){
-            h_values[i] = i;
+            h_tmpvalues[i] = i;
             h_next_indices[i] = 0;
         }
         // shuffle
         for(int i=0;i<(int)test[k];i++){
             int other = i + (rand()%(test[k]-i));
             // this only swaps the value
-            int tmp_value       = h_values[i];
-            int other_value     = h_values[other];
+            int tmp_value       = h_tmpvalues[i];
+            int other_value     = h_tmpvalues[other];
 
-            h_values[i]         = other_value;
-            h_values[other]     = tmp_value;
+            h_tmpvalues[i]         = other_value;
+            h_tmpvalues[other]     = tmp_value;
 
             tracked_prev_indices[(other_value+1)%test[k]] = i;
         }
         // now we find indices
         for(int i=0; i<(int)test[k]; i++)
         {
-            int value = h_values[i];
+            int value = h_tmpvalues[i];
             int my_previous = tracked_prev_indices[value];
 
             if(value==0)
@@ -150,23 +151,26 @@ int listRankTest(int argc, const char **argv, const CUDPPConfiguration &config,
         }
         // find head
         for(unsigned int i=0; i<test[k]; i++){
-            int value = h_values[i];
+            int value = h_tmpvalues[i];
             if(value==0){
                 head = i;
             }
         }
+        for (unsigned int i=0; i<test[k]; i++){
+            h_values[i] = (T)h_tmpvalues[i];
+        }
         free( tracked_prev_indices);
 
-        memset(reference, 0, sizeof(int) * test[k]);
-        listRankGold( reference, h_values, h_next_indices, head, test[k]);
+        memset(reference, 0, sizeof(T) * test[k]);
+        listRankGold<T>( reference, h_values, h_next_indices, head, test[k]);
         
-        CUDA_SAFE_CALL( cudaMemcpy(d_ivalues, h_values, sizeof(int) * test[k],
+        CUDA_SAFE_CALL( cudaMemcpy(d_ivalues, h_values, sizeof(T) * test[k],
                                    cudaMemcpyHostToDevice) );
 
         CUDA_SAFE_CALL( cudaMemcpy(d_inextindices, h_next_indices, sizeof(int) * test[k],
                                    cudaMemcpyHostToDevice) );
 
-        CUDA_SAFE_CALL( cudaMemset(d_ovalues, 0, sizeof(int) * test[k]));
+        CUDA_SAFE_CALL( cudaMemset(d_ovalues, 0, sizeof(T) * test[k]));
 
         // run once to avoid timing startup overhead.
         cudppListRank(plan, d_ovalues, d_ivalues, d_inextindices, head, test[k]);
@@ -181,14 +185,14 @@ int listRankTest(int argc, const char **argv, const CUDPPConfiguration &config,
         timer.stop();
 
         // allocate host memory to store the output data
-        int* o_data = (int*) malloc( sizeof(int) * test[k]);
+        T* o_data = (T*) malloc( sizeof(T) * test[k]);
 
         // copy result from device to host
         CUDA_SAFE_CALL(cudaMemcpy(o_data, d_ovalues,
-                                  sizeof(int) * test[k],
+                                  sizeof(T) * test[k],
                                   cudaMemcpyDeviceToHost));
             
-        bool result = compareArrays<int>( reference, o_data, test[k]);
+        bool result = compareArrays<T>( reference, o_data, test[k]);
 
         free(o_data);
 
@@ -222,6 +226,7 @@ int listRankTest(int argc, const char **argv, const CUDPPConfiguration &config,
 
     // cleanup memory
     free( h_values);
+    free( h_tmpvalues);
     free( h_next_indices);
     free( reference);
     cudaFree( d_ivalues);
@@ -249,7 +254,34 @@ int testListRank(int argc, const char **argv,
         config.datatype = CUDPP_INT;
     }
 
-    return listRankTest(argc, argv, config, testOptions);
+    switch(config.datatype)
+    {
+    case CUDPP_CHAR:
+        return listRankTest<char>(argc, argv, config, testOptions);
+        break;
+    case CUDPP_UCHAR:
+        return listRankTest<unsigned char>(argc, argv, config, testOptions);
+        break;    
+    case CUDPP_INT:
+        return listRankTest<int>(argc, argv, config, testOptions);
+        break;
+    case CUDPP_UINT:
+        return listRankTest<unsigned int>(argc, argv, config, testOptions);
+        break;
+    case CUDPP_FLOAT:
+        return listRankTest<float>(argc, argv, config, testOptions);
+        break;
+    case CUDPP_LONGLONG:
+        return listRankTest<long long>(argc, argv, config, testOptions);
+        break;
+    case CUDPP_ULONGLONG:
+        return listRankTest<unsigned long long>(argc, argv, config, testOptions);
+        break;
+    default:
+        return 0;
+        break;
+    }
+    return 0;
 }
 
 // Leave this at the end of the file

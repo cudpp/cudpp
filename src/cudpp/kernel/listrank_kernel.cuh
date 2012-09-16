@@ -35,15 +35,33 @@ typedef unsigned int uint;
 typedef unsigned char uchar;
 typedef unsigned short ushort;
 
-__global__ void
-list_rank_kernel_soa_1(int*             d_ranked_values,
-                       const int*       d_unranked_values,
-                       const int*       d_ping,
-                       int*             d_pong,
-                       int*             d_start_indices,
-                       int              step,
-                       int              head,
-                       int              numElts)
+/**
+ * @brief Use pointer jumping to rank values. After ranking
+ * the values, calculate the next set of indices. The number
+ * of values ranked doubles at each kernel call. Called by
+ * listRank().
+ *
+ * @param[out] d_ranked_values Ranked values array
+ * @param[in]  d_unranked_values Unranked values array
+ * @param[in]  d_ping Next indices array for the current kernel call
+ * @param[in]  d_pong Next indices array for the next kernel call
+ * @param[in]  d_start_indices Holds the starting node indices
+ *             for "ranking" threads. The number of "ranking" threads
+ *             doubles at each stage.
+ * @param[in]  step The number of "ranking" threads.
+ * @param[in]  head Head node index of the linked-list.
+ * @param[in]  numElts Number of nodes to rank
+ *
+ */
+template <typename T>
+__global__ void list_rank_kernel_soa_1(T*               d_ranked_values,
+                                       const T*         d_unranked_values,
+                                       const int*       d_ping,
+                                       int*             d_pong,
+                                       int*             d_start_indices,
+                                       int              step,
+                                       int              head,
+                                       int              numElts)
 {
     // Global, Local IDs
     uint idx = threadIdx.x + (blockIdx.x * blockDim.x);
@@ -73,13 +91,28 @@ list_rank_kernel_soa_1(int*             d_ranked_values,
     }
 }
 
-__global__ void
-list_rank_kernel_soa_2(int*             d_ranked_values,
-                       const int*       d_unranked_values,
-                       const int*       d_pong,
-                       const int*       d_start_indices,
-                       int              head,
-                       int              numElts)
+/**
+ * @brief After pointer jumping is finished and all threads are
+ * able to rank values, ranking continues serially. Each thread
+ * ranks values until all values are ranked. Called by listRank().
+ *
+ * @param[out] d_ranked_values Ranked values array
+ * @param[in]  d_unranked_values Unranked values array
+ * @param[in]  d_pong Next indices array for the current kernel call
+ * @param[in]  d_start_indices Holds the starting node indices
+ *             for "ranking" threads. The number of "ranking" threads
+ *             doubles at each stage.
+ * @param[in]  head Head node index of the linked-list.
+ * @param[in]  numElts Number of nodes to rank
+ *
+ */
+template <typename T>
+__global__ void list_rank_kernel_soa_2(T*               d_ranked_values,
+                                       const T*         d_unranked_values,
+                                       const int*       d_pong,
+                                       const int*       d_start_indices,
+                                       int              head,
+                                       int              numElts)
 {
     // Global, Local IDs
     uint idx = threadIdx.x + (blockIdx.x * blockDim.x);
