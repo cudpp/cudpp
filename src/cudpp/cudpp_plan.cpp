@@ -17,6 +17,7 @@
 #include "cudpp_radixsort.h"
 #include "cudpp_reduce.h"
 #include "cudpp_compress.h"
+#include "cudpp_listrank.h"
 #include "cuda_util.h"
 #include <cuda_runtime_api.h>
 
@@ -145,6 +146,11 @@ CUDPPResult cudppPlan(const CUDPPHandle  cudppHandle,
             plan = new CUDPPMtfPlan(mgr, config, numElements);
             break;
         }
+    case CUDPP_LISTRANK:
+        {
+            plan = new CUDPPListRankPlan(mgr, config, numElements);
+            break;
+        }
     default:
         return CUDPP_ERROR_ILLEGAL_CONFIGURATION; 
         break;
@@ -225,6 +231,11 @@ CUDPPResult cudppDestroyPlan(CUDPPHandle planHandle)
     case CUDPP_MTF:
         {
             delete static_cast<CUDPPMtfPlan*>(plan);
+            break;
+        }
+    case CUDPP_LISTRANK:
+        {
+            delete static_cast<CUDPPListRankPlan*>(plan);
             break;
         }
     default:
@@ -643,3 +654,20 @@ CUDPPMtfPlan::~CUDPPMtfPlan()
     freeMtfStorage(this);
 }
 
+/** @brief CUDPP ListRank Plan Constructor
+  *
+  * @param[in] mgr pointer to the CUDPPManager
+  * @param[in] config The configuration struct specifying options
+  * @param[in] numElements The maximum number of elements to be ranked
+  */
+CUDPPListRankPlan::CUDPPListRankPlan(CUDPPManager *mgr, CUDPPConfiguration config, size_t numElements) 
+ : CUDPPPlan(mgr, config, numElements, 1, 0)
+{
+    allocListRankStorage(this);
+}
+
+/** @brief ListRank plan destructor */
+CUDPPListRankPlan::~CUDPPListRankPlan()
+{
+    freeListRankStorage(this);
+}

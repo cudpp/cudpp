@@ -52,6 +52,7 @@ int testTridiagonal(int argc, const char** argv, const CUDPPConfiguration *confi
 int testMtf(int argc, const char** argv, const CUDPPConfiguration *config);
 int testBwt(int argc, const char** argv, const CUDPPConfiguration *config);
 int testCompress(int argc, const char** argv, const CUDPPConfiguration *config);
+int testListRank(int argc, const char** argv, const CUDPPConfiguration *config);
 
 int testAllDatatypes(int argc, 
                      const char** argv, 
@@ -112,6 +113,8 @@ int testAllDatatypes(int argc,
                     break;
                 case CUDPP_SORT_RADIX:
                     retval += testRadixSort(argc, argv, &config);
+                case CUDPP_LISTRANK:
+                    retval += testListRank(argc, argv, &config);
                 default:
                     break;  
             }
@@ -277,6 +280,7 @@ int main(int argc, const char** argv)
         printf("bwt: Run Burrows-Wheeler transform test(s) "
                "(compute 2.0+ only)\n\n");
         printf("compress: Run compression test(s) (compute 2.0+ only)\n\n");
+        printf("listrank: Run list ranking test(s)\n\n");
         printf("--- Global Options ---\n");
         printf("iterations=<N>: Number of times to run each test\n");
         printf("n=<N>: Number of values to use in a single test\n");
@@ -315,6 +319,7 @@ int main(int argc, const char** argv)
     bool runSpmv = checkCommandLineFlag(argc, argv, "spmv");
     bool runTridiagonal = runAll ||  checkCommandLineFlag(argc, argv, "tridiagonal");
     bool runMtf = runAll || checkCommandLineFlag(argc, argv, "mtf");
+    bool runListRank = runAll || checkCommandLineFlag(argc, argv, "listrank");
     if (!supports48KBInShared && runMtf)
     {
         fprintf(stderr, "MTF is only supported on devices with "
@@ -350,6 +355,7 @@ int main(int argc, const char** argv)
         if (runMtf)       retval += testMtf(argc, argv, NULL);
         if (runBwt)       retval += testBwt(argc, argv, NULL);
         if (runCompress)  retval += testCompress(argc, argv, NULL);
+        if (runListRank)  retval += testListRank(argc, argv, NULL);
     }
     else
     {
@@ -403,6 +409,11 @@ int main(int argc, const char** argv)
 
         if (runCompress) {
             config.algorithm = CUDPP_COMPRESS;
+            retval += testAllDatatypes(argc, argv, config, supportsDouble, false);
+        }
+
+        if (runListRank) {
+            config.algorithm = CUDPP_LISTRANK;
             retval += testAllDatatypes(argc, argv, config, supportsDouble, false);
         }
 

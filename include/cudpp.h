@@ -104,6 +104,7 @@
  * - CUDPP_SEGMENTED_SCAN     67,107,840 elements
  * - CUDPP_COMPACT            67,107,840 elements
  * - CUDPP_COMPRESS           1,048,576 elements
+ * - CUDPP_LISTRANK           NO LIMIT
  * - CUDPP_MTF                1,048,576 elements
  * - CUDPP_BWT                1,048,576 elements
  * - CUDPP_SORT               2,147,450,880 elements
@@ -485,6 +486,7 @@ enum CUDPPAlgorithm
     CUDPP_RAND_MD5,          //!< Pseudorandom number generator using MD5 hash algorithm
     CUDPP_TRIDIAGONAL,       //!< Tridiagonal solver algorithm
     CUDPP_COMPRESS,          //!< Lossless data compression
+    CUDPP_LISTRANK,          //!< List ranking
     CUDPP_BWT,               //!< Burrows-Wheeler transform
     CUDPP_MTF,               //!< Move-to-Front transform
     CUDPP_ALGORITHM_INVALID, //!< Placeholder at end of enum
@@ -652,6 +654,15 @@ CUDPPResult cudppMoveToFrontTransform(CUDPPHandle planHandle,
                                       void *d_a,
                                       void *d_x,
                                       size_t numElements);
+
+// List ranking
+CUDPP_DLL
+CUDPPResult cudppListRank(CUDPPHandle planHandle, 
+                          void *d_x,  
+                          void *d_a,
+                          void *d_b,
+                          size_t head,
+                          size_t numElements);
 
 #ifdef __cplusplus
 }

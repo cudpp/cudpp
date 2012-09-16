@@ -856,6 +856,7 @@ int compressTest(int argc, const char **argv, const CUDPPConfiguration &config,
                            (void*)d_histSize, (void*)d_hist, 
                            (void*)d_encodeOffset, (void*)d_compressedSize, 
                            (void*)d_compressed, numElements);
+    CUDA_SAFE_CALL(cudaThreadSynchronize());
     
     if (result != CUDPP_SUCCESS)
     {

@@ -303,4 +303,19 @@ public:
     unsigned short *m_d_list_sizes;
 };
 
+/** @brief Plan class for ListRank
+*
+*/
+class CUDPPListRankPlan : public CUDPPPlan
+{
+public:
+    CUDPPListRankPlan(CUDPPManager *mgr, CUDPPConfiguration config, size_t numElements);
+    virtual ~CUDPPListRankPlan();
+
+    // Intermediate buffers used during list ranking
+    int *m_d_tmp1; //!< @internal temporary next indices array
+    int *m_d_tmp2; //!< @internal temporary start indices array
+    int *m_d_tmp3; //!< @internal temporary next indices array
+};
+
 #endif // __CUDPP_PLAN_H__

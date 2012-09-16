@@ -51,6 +51,7 @@
 #include "cudpp_reduce.h"
 #include "cudpp_tridiagonal.h"
 #include "cudpp_compress.h"
+#include "cudpp_listrank.h"
 
 /**
  * @brief Performs a scan operation of numElements on its input in
@@ -639,7 +640,7 @@ CUDPPResult cudppCompress(CUDPPHandle planHandle,
  * - The BWT index (used during the reverse-BWT) is recorded as an int 
  * in \a d_y.
  *
- *
+ * @param[in] planHandle Handle to plan for BWT
  * @param[out] d_y BWT Index
  * @param[out] d_x Output data
  * @param[in] d_a Input data
@@ -700,6 +701,7 @@ CUDPPResult cudppBurrowsWheelerTransform(CUDPPHandle planHandle,
  * - Currently, the MTF can only be performed on 1,048,576 (uchar) elements.
  * - The transformed string is written to \a d_x.
  *
+ * @param[in] planHandle Handle to plan for MTF
  * @param[out] d_x Output data
  * @param[in] d_a Input data
  * @param[in] numElements Number of elements
@@ -741,6 +743,60 @@ CUDPPResult cudppMoveToFrontTransform(CUDPPHandle planHandle,
 
         cudppMtfDispatch(d_a, d_x, numElements, plan);
         return CUDPP_SUCCESS;
+    }
+    else
+        return CUDPP_ERROR_INVALID_HANDLE;
+}
+
+/**
+ * @brief Performs list ranking of linked list node values
+ *
+ * Performs parallel list ranking on values of a linked-list
+ * using a pointer-jumping algorithm.
+ *
+ * Takes as input an array of values in GPU memory
+ * (\a d_a) and an equal-sized int array in GPU memory
+ * (\a d_b) that represents the next indices of the linked
+ * list. The index of the head node (\a head) is given as an
+ * unsigned int. The output (\a d_x) is an equal-sized array,
+ * in GPU memory, that has the values ranked in-order.
+ *
+ * Example:
+ * \code
+ * d_a     = [  f a c d b e  ]
+ * d_b     = [ -1 4 3 5 2 0  ]
+ * head    = 1
+ * d_x     = [ a b c d e f ]
+ * \endcode
+ *
+ *
+ * @param[in] planHandle Handle to plan for list ranking
+ * @param[out] d_x Output ranked values
+ * @param[in] d_a Input unranked values
+ * @param[in] d_b Input next indices
+ * @param[in] head Input head node index
+ * @param[in] numElements number of nodes
+ * @returns CUDPPResult indicating success or error condition
+ *
+ * @see cudppPlan, CUDPPConfiguration, CUDPPAlgorithm
+ */
+CUDPP_DLL
+CUDPPResult cudppListRank(CUDPPHandle planHandle,
+                          void *d_x,  
+                          void *d_a,
+                          void *d_b,
+                          size_t head,
+                          size_t numElements)
+{
+    CUDPPListRankPlan * plan = 
+        (CUDPPListRankPlan *) getPlanPtrFromHandle<CUDPPListRankPlan>(planHandle);
+    
+    if(plan != NULL)
+    {
+        if (plan->m_config.algorithm != CUDPP_LISTRANK)
+            return CUDPP_ERROR_INVALID_PLAN;
+
+        return cudppListRankDispatch(d_x, d_a, d_b, head, numElements, plan);
     }
     else
         return CUDPP_ERROR_INVALID_HANDLE;
