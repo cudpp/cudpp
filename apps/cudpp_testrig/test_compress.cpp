@@ -810,7 +810,7 @@ int compressTest(int argc, const char **argv, const CUDPPConfiguration &config,
     int h_bwtIndex;
     unsigned int* h_hist = new unsigned int[256];
     unsigned int* h_encodeOffset = new unsigned int[256];
-    size_t        h_compressedSize;
+    size_t        h_compressedSize = 0;
     unsigned int* h_compressed = new unsigned int[numElements/4];
     unsigned char* reference = new unsigned char[numElements];
 
@@ -849,6 +849,13 @@ int compressTest(int argc, const char **argv, const CUDPPConfiguration &config,
         fflush(stdout);
     }
 
+    // clear buffers
+    CUDA_SAFE_CALL(cudaMemset( (void*)d_encodeOffset, 0,
+                               256*sizeof(unsigned int) ));
+    CUDA_SAFE_CALL(cudaMemset( (void*)d_compressedSize, 0,
+                               sizeof(unsigned int) ));
+    CUDA_SAFE_CALL(cudaMemset( (void*)d_compressed,  0,
+                               (1536+1)*256*sizeof(unsigned int) ));
 
     // Run the compression
     // run once to avoid timing startup overhead.
@@ -918,11 +925,11 @@ int compressTest(int argc, const char **argv, const CUDPPConfiguration &config,
     delete [] h_encodeOffset;
     delete [] h_compressed;
     delete [] i_data;
-    cudaFree(d_hist);
-    cudaFree(d_encodeOffset);
-    cudaFree(d_compressedSize);
-    cudaFree(d_bwtIndex);
-    cudaFree(d_compressed);
+    CUDA_SAFE_CALL(cudaFree(d_hist));
+    CUDA_SAFE_CALL(cudaFree(d_encodeOffset));
+    CUDA_SAFE_CALL(cudaFree(d_compressedSize));
+    CUDA_SAFE_CALL(cudaFree(d_bwtIndex));
+    CUDA_SAFE_CALL(cudaFree(d_compressed));
     return retval;
 }
 
