@@ -53,7 +53,7 @@ void huffmanEncoding(unsigned int               *d_hist,
     //d_compressed            = plan->m_d_encodedData;
 
     // Set work dimensions
-    size_t nCodesPacked;
+    size_t nCodesPacked = 0;
     size_t histBlocks = (numElements%(HUFF_WORK_PER_THREAD_HIST*HUFF_THREADS_PER_BLOCK_HIST)==0) ?
         numElements/(HUFF_WORK_PER_THREAD_HIST*HUFF_THREADS_PER_BLOCK_HIST) : numElements%(HUFF_WORK_PER_THREAD_HIST*HUFF_THREADS_PER_BLOCK_HIST)+1;
     size_t tThreads = ((numElements%HUFF_WORK_PER_THREAD) == 0) ? numElements/HUFF_WORK_PER_THREAD : numElements/HUFF_WORK_PER_THREAD+1;
@@ -89,7 +89,7 @@ void huffmanEncoding(unsigned int               *d_hist,
     CUDA_SAFE_CALL(cudaMemcpy((void*)&nCodesPacked,  plan->m_d_nCodesPacked, sizeof(size_t), cudaMemcpyDeviceToHost));
     huffman_kernel_en<<< grid_huff, threads_huff, nCodesPacked*sizeof(unsigned char)>>>
         ((uchar4*)d_input, plan->m_d_huffCodesPacked, plan->m_d_huffCodeLocations, plan->m_d_huffCodeLengths,
-         plan->m_d_encoded, plan->m_d_nCodesPacked, tThreads);
+         plan->m_d_encoded, nCodesPacked, tThreads);
     CUDA_SAFE_CALL(cudaThreadSynchronize());
 
     //--------------------------------------------------
