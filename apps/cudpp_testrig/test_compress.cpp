@@ -51,7 +51,7 @@ unsigned char *block;
 
 #define Wrap(value, limit) (((value) < (limit)) ? (value) : ((value) - (limit)))
 
-int FindMinimumCount(my_huffman_node_t* ht, int elements)
+int FindMinimumCountTest(my_huffman_node_t* ht, int elements)
 {
     int i;                          // array index
     int currentIndex = NONE;        // index with lowest count seen so far
@@ -266,13 +266,13 @@ void huffman_build_tree_cpu(my_huffman_node_t* tree, unsigned int nNodes,
     for (;;)
     {
         // find node with lowest count
-        min1 = FindMinimumCount(&tree[0], nNodes);
+        min1 = FindMinimumCountTest(&tree[0], nNodes);
         if (min1 == NONE) break; // No more nodes to combine
 
         tree[min1].ignore = 1;    // remove from consideration
 
         // find node with second lowest count
-        min2 = FindMinimumCount(&tree[0], nNodes);
+        min2 = FindMinimumCountTest(&tree[0], nNodes);
         if (min2 == NONE) break; // No more nodes to combine
 
         // Move min1 to the next available slots
