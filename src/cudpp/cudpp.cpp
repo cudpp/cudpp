@@ -765,7 +765,7 @@ CUDPPResult cudppMoveToFrontTransform(CUDPPHandle planHandle,
  * \code
  * d_a     = [  f a c d b e  ]
  * d_b     = [ -1 4 3 5 2 0  ]
- * head    = 4
+ * head    = 1
  * d_x     = [ a b c d e f ]
  * \endcode
  *
