@@ -547,5 +547,28 @@ __device__ void BitArrayShiftRight(huffman_code *ba, unsigned int shifts)
 	}
 }
 
+__device__ int FindMinimumCount(my_huffman_node_t* ht, int elements)
+{
+    int currentIndex = HUFF_NONE;   // index with lowest count seen so far
+    int currentCount = INT_MAX;     // lowest count seen so far
+    int currentLevel = INT_MAX;     // level of lowest count seen so far
+
+    // sequentially search array
+    for (int i = 0; i < elements; i++)
+    {
+        // check for lowest count (or equally as low, but not as deep)
+        if( (!ht[i].ignore) &&
+            (ht[i].count < currentCount ||
+            (ht[i].count == currentCount && ht[i].level < currentLevel)) )
+        {
+            currentIndex = i;
+            currentCount = ht[i].count;
+            currentLevel = ht[i].level;
+        }
+    }
+
+    return currentIndex;
+}
+
 /** @} */ // end compress functions
 /** @} */ // end cudpp_cta

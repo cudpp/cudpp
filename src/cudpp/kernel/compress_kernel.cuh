@@ -1959,15 +1959,15 @@ huffman_build_histogram_kernel(uint     *d_input, // Read in as words, instead o
     uint lid = threadIdx.x;
 
     // Clear thread histograms
-    for(uint i=0; i<256; i++)
+    for(uint i=lid; i<HUFF_THREADS_PER_BLOCK_HIST*256; i += blockDim.x)
     {
-        threadHist[lid*256+i] = 0;
+        threadHist[i] = 0;
     }
 
     // Clear block histogram
-    for(uint i=0; i<(256/HUFF_THREADS_PER_BLOCK_HIST); i++)
+    for(uint i=lid; i<256; i += blockDim.x)
     {
-        blockHist[lid*(256/HUFF_THREADS_PER_BLOCK_HIST)+i] = 0;
+        blockHist[i] = 0;
     }
     __syncthreads();
 
@@ -2070,9 +2070,9 @@ huffman_build_tree_kernel(const uchar *d_input,
         *d_totalEncodedSize = 0;
     }
 
-    for(uint i = 0; i < workPerThread; i++)
+    for(uint i = lid; i < (HUFF_NUM_CHARS*(HUFF_NUM_CHARS+1)/2)/8+1; i += blockDim.x)
     {
-        s_codesPacked[idx*32+i] = 0;
+        s_codesPacked[i] = 0;
     }
 
     __syncthreads();
@@ -2172,195 +2172,27 @@ huffman_build_tree_kernel(const uchar *d_input,
     __threadfence();
     __syncthreads();
 
-    // Find minimums using reduction
-
-    uint workingThreads = (nNodes%2==0) ? nNodes/2 : nNodes/2+1;
-
-    for(uint x=0;;x++)
+    if(idx == 0)
     {
-        __syncthreads();
-
-        uint offset = 1;
-
-        // Initial stage - created initial pairs
-        if(idx < workingThreads)
+        // keep looking until no more nodes can be found
+        for (;;)
         {
-            mins[idx].x = idx*2;
-            mins[idx].y = idx*2+1;
+            // find node with lowest count
+            min1 = FindMinimumCount(&h_huffmanArray[0], nNodes);
+            if (min1 == HUFF_NONE) break; // No more nodes to combine
 
-            if( ((!h_huffmanArray[mins[idx].x].ignore) && (!h_huffmanArray[mins[idx].y].ignore)) &&
-                ((h_huffmanArray[mins[idx].y].count < h_huffmanArray[mins[idx].x].count) ||
-                 (h_huffmanArray[mins[idx].x].count == h_huffmanArray[mins[idx].y].count && h_huffmanArray[mins[idx].y].level < h_huffmanArray[mins[idx].x].level) ) )
-            {
-                // swap
-                ushort tmp = mins[idx].x;
-                mins[idx].x = mins[idx].y;
-                mins[idx].y = tmp;
-            }
-            else if(h_huffmanArray[mins[idx].x].ignore && !h_huffmanArray[mins[idx].y].ignore)
-            {
-                // swap
-                ushort tmp = mins[idx].x;
-                mins[idx].x = mins[idx].y;
-                mins[idx].y = tmp;
-            }
+            h_huffmanArray[min1].ignore = 1; // remove from consideration
 
-            if(workingThreads > blockDim.x && idx == 0)
-            {
-                mins[128].x = 256;
-                mins[128].y = 257;
-            }
-        }
+            // find node with second lowest count
+            min2 = FindMinimumCount(&h_huffmanArray[0], nNodes);
+            if (min2 == HUFF_NONE) break; // No more nodes to combine
 
-        __threadfence();
-        __syncthreads();
+            // Move min1 to the next available slot
 
-        uint scaledID = idx;
-
-        while(offset*2 < nNodes)
-        {
-            uchar check = 0;
-
-            offset *= 2;
-            scaledID *= 2;
-
-            if(scaledID < workingThreads && scaledID%offset==0)
-            {
-                if(scaledID == workingThreads-1)
-                    goto skip;
-
-                if(!h_huffmanArray[mins[scaledID+offset/2].x].ignore)
-                {
-                    // 2nd 'x' not ignored
-
-                    if(!h_huffmanArray[mins[scaledID].y].ignore)
-                    {
-                        // 1st 'y' not ignored, implies 1st 'x' not ignored
-                        if( (h_huffmanArray[mins[scaledID+offset/2].x].count < h_huffmanArray[mins[scaledID].y].count) ||
-                            (h_huffmanArray[mins[scaledID+offset/2].x].count == h_huffmanArray[mins[scaledID].y].count &&
-                             h_huffmanArray[mins[scaledID+offset/2].x].level < h_huffmanArray[mins[scaledID].y].level) )
-                        {
-                            // Replace 1st 'y' with 2nd 'x'
-                            mins[scaledID].y = mins[scaledID+offset/2].x;
-
-                            if(!h_huffmanArray[mins[scaledID+offset/2].y].ignore)
-                            {
-                                // 2nd 'y' not ignored
-                                if( (h_huffmanArray[mins[scaledID+offset/2].y].count < h_huffmanArray[mins[scaledID].x].count) ||
-                                    (h_huffmanArray[mins[scaledID+offset/2].y].count == h_huffmanArray[mins[scaledID].x].count &&
-                                     h_huffmanArray[mins[scaledID+offset/2].y].level < h_huffmanArray[mins[scaledID].x].level) )
-                                {
-                                    // Replace both 1st with 2nd
-                                    mins[scaledID].x = mins[scaledID].y;
-                                    mins[scaledID].y = mins[scaledID+offset/2].y;
-                                } else {
-                                    // 1st 'x' < 2nd 'y'
-                                    check = 1;
-                                }
-                            } else {
-                                // 2nd  'y' ignored
-                                check = 1;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        // 1st 'y' ignored
-                        // replace 1st 'y' with 2nd 'x'
-                        mins[scaledID].y = mins[scaledID+offset/2].x;
-
-                        if(!h_huffmanArray[mins[scaledID+offset/2].y].ignore)
-                        { 
-                            // 2nd 'y' not ignored
-                            if(!h_huffmanArray[mins[scaledID].x].ignore)
-                            { 
-                                // 1st 'x' not ignored
-                                if( (h_huffmanArray[mins[scaledID+offset/2].y].count < h_huffmanArray[mins[scaledID].x].count) ||
-                                    (h_huffmanArray[mins[scaledID+offset/2].y].count == h_huffmanArray[mins[scaledID].x].count &&
-                                     h_huffmanArray[mins[scaledID+offset/2].y].level < h_huffmanArray[mins[scaledID].x].level) )
-                                {
-                                    // Replace both 1st with 2nd
-                                    mins[scaledID].x = mins[scaledID].y;
-                                    mins[scaledID].y = mins[scaledID+offset/2].y;
-                                } else {
-                                    // 1st 'x' < 2nd 'y'
-                                    check = 1;
-                                }
-                            }
-                            else
-                            {
-                                // 1st 'x' ignored
-                                // Replace both 1st with 2nd
-                                mins[scaledID].x = mins[scaledID].y;
-                                mins[scaledID].y = mins[scaledID+offset/2].y;
-                            }
-                        } else {
-                            // 2nd 'y' ignored
-                            check = 1;
-                        }
-                    }
-
-                    // one last check for re-ordering
-                    if(check)
-                    {
-                        if(!h_huffmanArray[mins[scaledID].x].ignore)
-                        { // 1st 'x' not ignored
-                            if((h_huffmanArray[mins[scaledID].y].count < h_huffmanArray[mins[scaledID].x].count) ||
-                               (h_huffmanArray[mins[scaledID].y].count == h_huffmanArray[mins[scaledID].x].count &&
-                                h_huffmanArray[mins[scaledID].y].level < h_huffmanArray[mins[scaledID].x].level))
-                            {
-                                // swap
-                                ushort tmp = mins[scaledID].x;
-                                mins[scaledID].x = mins[scaledID].y;
-                                mins[scaledID].y = tmp;
-                            }
-                        } else { // 1st 'x' ignored
-                            // swap
-                            ushort tmp = mins[scaledID].x;
-                            mins[scaledID].x = mins[scaledID].y;
-                            mins[scaledID].y = tmp;
-                        }
-                    }
-
-                }
-            }
-
-          skip:
-
-            __threadfence();
-            __syncthreads();
-
-        }
-
-        if(idx == 0)
-        {
-            min1 = HUFF_NONE;
-            min2 = HUFF_NONE;
-
-            if(!h_huffmanArray[mins[0].x].ignore)
-                min1 = (int)h_huffmanArray[mins[0].x].iter;
-
-            if(!h_huffmanArray[mins[0].y].ignore)
-                min2 = (int)h_huffmanArray[mins[0].y].iter;
-
-            if (min1 == HUFF_NONE) {
-                // No more nodes to combine
-                complete = 1;
-                head_node = min1;
-                goto end;
-            }
-
-            if (min2 == HUFF_NONE) {
-                // No more nodes to combine
-                complete = 1;
-                head_node = min1;
-                goto end;
-            }
-
-            h_huffmanArray[min2].ignore = 1;
             h_huffmanArray[min1].ignore = 0;
+            uchar min1_replacement = 0;
 
-            for(int i = (int)nNodes+addedNodes; i<(HUFF_NUM_CHARS*2-1); i++)
+            for(int i = (int)nNodes; i<(HUFF_NUM_CHARS*2-1); i++)
             {
                 if(h_huffmanArray[i].count==0)
                 {
@@ -2370,16 +2202,22 @@ huffman_build_tree_kernel(const uchar *d_input,
                     h_huffmanArray[i].ignore = 1;
                     h_huffmanArray[i].parent = h_huffmanArray[min1].iter;
 
-                    if(h_huffmanArray[i].left >= 0)
+                    if(h_huffmanArray[i].left >= 0) {
                         h_huffmanArray[h_huffmanArray[i].left].parent = i;
-                    if(h_huffmanArray[i].right >= 0)
+                    }
+                    if(h_huffmanArray[i].right >= 0) {
                         h_huffmanArray[h_huffmanArray[i].right].parent = i;
-
+                    }
                     h_huffmanArray[min1].left = i;
-
-                    addedNodes++;
+                    min1_replacement = 1;
                     break;
                 }
+            }
+
+            if(min1_replacement == 0)
+            {
+                printf("ERROR: Tree size too small\n");
+                break;
             }
 
             h_huffmanArray[min2].ignore = 1;
@@ -2393,13 +2231,14 @@ huffman_build_tree_kernel(const uchar *d_input,
             h_huffmanArray[min1].right = h_huffmanArray[min2].iter;
             h_huffmanArray[min2].parent =  h_huffmanArray[min1].iter;
             h_huffmanArray[min1].parent = -1;
-        }
-      end:
-        __threadfence();
-        __syncthreads();
 
-        if(complete) break;
+        }
+
+        // 'head_node' tells us which node in the h_huffmanArray
+        // represents the head node of the Huffman tree (Starting point)
+        head_node = min1;
     }
+    __threadfence();
     __syncthreads();
 
 
@@ -2529,7 +2368,7 @@ huffman_kernel_en(uchar4    *d_input,              // Input to encode
                   uint      *d_code_locations,       // Location of each huffman code
                   uchar     *d_huffCodeLengths,
                   encoded   *d_encoded,
-                  uint      *d_nCodesPacked,
+                  uint      nCodesPacked,
                   uint      nThreads)
 {
 #if (__CUDA_ARCH__ >= 200)
@@ -2548,7 +2387,6 @@ huffman_kernel_en(uchar4    *d_input,              // Input to encode
     __shared__ uint total_bits_block;
 
     encoded* my_encoded = (encoded*)&d_encoded[blockIdx.x];
-    uint nCodesPacked = *d_nCodesPacked;
 
     //-----------------------------------------------
     //    Copy data from global to shared memory

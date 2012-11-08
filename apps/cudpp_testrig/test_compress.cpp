@@ -51,7 +51,7 @@ unsigned char *block;
 
 #define Wrap(value, limit) (((value) < (limit)) ? (value) : ((value) - (limit)))
 
-int FindMinimumCount(my_huffman_node_t* ht, int elements)
+int FindMinimumCountTest(my_huffman_node_t* ht, int elements)
 {
     int i;                          // array index
     int currentIndex = NONE;        // index with lowest count seen so far
@@ -266,13 +266,13 @@ void huffman_build_tree_cpu(my_huffman_node_t* tree, unsigned int nNodes,
     for (;;)
     {
         // find node with lowest count
-        min1 = FindMinimumCount(&tree[0], nNodes);
+        min1 = FindMinimumCountTest(&tree[0], nNodes);
         if (min1 == NONE) break; // No more nodes to combine
 
         tree[min1].ignore = 1;    // remove from consideration
 
         // find node with second lowest count
-        min2 = FindMinimumCount(&tree[0], nNodes);
+        min2 = FindMinimumCountTest(&tree[0], nNodes);
         if (min2 == NONE) break; // No more nodes to combine
 
         // Move min1 to the next available slots
@@ -810,7 +810,7 @@ int compressTest(int argc, const char **argv, const CUDPPConfiguration &config,
     int h_bwtIndex;
     unsigned int* h_hist = new unsigned int[256];
     unsigned int* h_encodeOffset = new unsigned int[256];
-    size_t        h_compressedSize;
+    size_t        h_compressedSize = 0;
     unsigned int* h_compressed = new unsigned int[numElements/4];
     unsigned char* reference = new unsigned char[numElements];
 
@@ -849,6 +849,13 @@ int compressTest(int argc, const char **argv, const CUDPPConfiguration &config,
         fflush(stdout);
     }
 
+    // clear buffers
+    CUDA_SAFE_CALL(cudaMemset( (void*)d_encodeOffset, 0,
+                               256*sizeof(unsigned int) ));
+    CUDA_SAFE_CALL(cudaMemset( (void*)d_compressedSize, 0,
+                               sizeof(unsigned int) ));
+    CUDA_SAFE_CALL(cudaMemset( (void*)d_compressed,  0,
+                               (1536+1)*256*sizeof(unsigned int) ));
 
     // Run the compression
     // run once to avoid timing startup overhead.
@@ -856,7 +863,6 @@ int compressTest(int argc, const char **argv, const CUDPPConfiguration &config,
                            (void*)d_histSize, (void*)d_hist, 
                            (void*)d_encodeOffset, (void*)d_compressedSize, 
                            (void*)d_compressed, numElements);
-    CUDA_SAFE_CALL(cudaThreadSynchronize());
     
     if (result != CUDPP_SUCCESS)
     {
@@ -919,11 +925,11 @@ int compressTest(int argc, const char **argv, const CUDPPConfiguration &config,
     delete [] h_encodeOffset;
     delete [] h_compressed;
     delete [] i_data;
-    cudaFree(d_hist);
-    cudaFree(d_encodeOffset);
-    cudaFree(d_compressedSize);
-    cudaFree(d_bwtIndex);
-    cudaFree(d_compressed);
+    CUDA_SAFE_CALL(cudaFree(d_hist));
+    CUDA_SAFE_CALL(cudaFree(d_encodeOffset));
+    CUDA_SAFE_CALL(cudaFree(d_compressedSize));
+    CUDA_SAFE_CALL(cudaFree(d_bwtIndex));
+    CUDA_SAFE_CALL(cudaFree(d_compressed));
     return retval;
 }
 
