@@ -113,9 +113,17 @@ void moveToFrontTransform(unsigned char             *d_mtfIn,
                           size_t                    numElements,
                           const T                   *plan)
 {
+    unsigned int npad = numElements-1;
+    npad |= npad >> 1;
+    npad |= npad >> 2;
+    npad |= npad >> 4;
+    npad |= npad >> 8;
+    npad |= npad >> 16;
+    npad++;
+
     unsigned int nThreads = MTF_THREADS_BLOCK; 
-    unsigned int nLists = numElements/MTF_PER_THREAD;
-    unsigned int tThreads = numElements/MTF_PER_THREAD;
+    unsigned int nLists = npad/MTF_PER_THREAD;
+    unsigned int tThreads = npad/MTF_PER_THREAD;
     unsigned int offset = 2;
 
     bool fullBlocks = (tThreads%nThreads == 0);
@@ -131,7 +139,7 @@ void moveToFrontTransform(unsigned char             *d_mtfIn,
 
     // Kernel call
     mtf_reduction_kernel<<< grid, threads>>>
-        (d_mtfIn, plan->m_d_lists, plan->m_d_list_sizes, nLists, offset);
+        (d_mtfIn, plan->m_d_lists, plan->m_d_list_sizes, nLists, offset, numElements);
     CUDA_SAFE_CALL(cudaThreadSynchronize());
 
     if(nBlocks > 1) 
@@ -184,7 +192,7 @@ void moveToFrontTransform(unsigned char             *d_mtfIn,
     //------------------------
     //      Local Scan
     //------------------------
-    tThreads = numElements/MTF_PER_THREAD;
+    tThreads = npad/MTF_PER_THREAD;
     offset = 2;
     fullBlocks = (tThreads%nThreads == 0);
     nBlocks = (fullBlocks) ? (tThreads/nThreads) : (tThreads/nThreads + 1);
@@ -193,7 +201,7 @@ void moveToFrontTransform(unsigned char             *d_mtfIn,
     dim3 threads_loc(nThreads, 1, 1);
 
     mtf_localscan_lists_kernel<<< grid_loc, threads_loc>>>
-        (d_mtfIn, d_mtfOut, plan->m_d_lists, plan->m_d_list_sizes, nLists, offset);
+        (d_mtfIn, d_mtfOut, plan->m_d_lists, plan->m_d_list_sizes, nLists, offset, numElements);
     CUDA_SAFE_CALL(cudaThreadSynchronize());
 
 }
@@ -418,11 +426,21 @@ void allocBwtStorage(CUDPPBwtPlan *plan)
  */
 void allocMtfStorage(CUDPPMtfPlan *plan)
 {
-    size_t numElts = plan->m_numElements;
-    
+    // Number of padding
+    size_t tmp = plan->m_numElements-1;
+    tmp |= tmp >> 1;
+    tmp |= tmp >> 2;
+    tmp |= tmp >> 4;
+    tmp |= tmp >> 8;
+    tmp |= tmp >> 16;
+    tmp++;
+    plan->npad = tmp;
+
     // MTF
-    CUDA_SAFE_CALL(cudaMalloc( (void**) &(plan->m_d_lists), (numElts/MTF_PER_THREAD)*256*sizeof(unsigned char)));
-    CUDA_SAFE_CALL(cudaMalloc( (void**) &(plan->m_d_list_sizes), (numElts/MTF_PER_THREAD)*sizeof(unsigned short)));
+    CUDA_SAFE_CALL(cudaMalloc( (void**) &(plan->m_d_lists), (tmp/MTF_PER_THREAD)*256*sizeof(unsigned char)));
+    CUDA_SAFE_CALL(cudaMalloc( (void**) &(plan->m_d_list_sizes), (tmp/MTF_PER_THREAD)*sizeof(unsigned short)));
+    CUDA_SAFE_CALL(cudaMemset(plan->m_d_lists, 0, (tmp/MTF_PER_THREAD)*256*sizeof(unsigned char)));
+    CUDA_SAFE_CALL(cudaMemset(plan->m_d_list_sizes, 0, (tmp/MTF_PER_THREAD)*sizeof(unsigned short)));
 }
     
 /** @brief Allocate intermediate arrays used by compression.
@@ -438,6 +456,7 @@ void allocMtfStorage(CUDPPMtfPlan *plan)
 void allocCompressStorage(CUDPPCompressPlan *plan)
 {
     size_t numElts = plan->m_numElements;
+    plan->npad = numElts;
     
     // BWT
     CUDA_SAFE_CALL(cudaMalloc((void**) &(plan->m_d_keys), numElts*sizeof(unsigned int) ));

@@ -1275,7 +1275,8 @@ mtf_reduction_kernel(const uchar * d_mtfIn,
                      uchar       * d_lists,
                      ushort      * d_list_sizes,
                      uint          nLists,
-                     uint          offset)
+                     uint          offset,
+                     uint          numElements)
 {
 #if (__CUDA_ARCH__ >= 200)
     __shared__ uchar shared[(MTF_PER_THREAD+256)*(MTF_THREADS_BLOCK/2)*sizeof(uchar) + MTF_THREADS_BLOCK*sizeof(ushort)];
@@ -1320,7 +1321,7 @@ mtf_reduction_kernel(const uchar * d_mtfIn,
         {
             // Each working thread traverses through PER_THREAD elements,
             // and generate nLists (numElements/PER_THREAD) lists
-            mtfVal = d_mtfIn[i];
+            mtfVal = (i<numElements) ? d_mtfIn[i] : 0;
             C_ID = mtfVal/32;
             C_bit = mtfVal%32;
 
@@ -1649,7 +1650,8 @@ mtf_localscan_lists_kernel(const uchar * d_mtfIn,
                            uchar       * d_lists,
                            ushort      * d_list_sizes,
                            uint          nLists,
-                           uint          offset)
+                           uint          offset,
+                           uint          numElements)
 {
 #if (__CUDA_ARCH__ >= 200)
     uint idx = threadIdx.x + (blockIdx.x * blockDim.x);
@@ -1847,7 +1849,8 @@ mtf_localscan_lists_kernel(const uchar * d_mtfIn,
     for(int i = 0; i < MTF_PER_THREAD; i++)
     {
         // Coalesced reads
-        s_mtfIn[lid+MTF_THREADS_BLOCK*i] = d_mtfIn[blockIdx.x*MTF_PER_THREAD*MTF_THREADS_BLOCK + lid+MTF_THREADS_BLOCK*i];
+        int index = blockIdx.x*MTF_PER_THREAD*MTF_THREADS_BLOCK + lid+MTF_THREADS_BLOCK*i;
+        s_mtfIn[lid+MTF_THREADS_BLOCK*i] = (index<numElements) ? d_mtfIn[index] : 0;
     }
     __syncthreads();
 
@@ -1929,7 +1932,9 @@ mtf_localscan_lists_kernel(const uchar * d_mtfIn,
     for(int i = 0; i < MTF_PER_THREAD; i++)
     {
         // Coalesced writes
-        d_mtfOut[blockIdx.x*MTF_PER_THREAD*MTF_THREADS_BLOCK + lid+MTF_THREADS_BLOCK*i] = s_mtfIn[lid+MTF_THREADS_BLOCK*i];
+        int index = blockIdx.x*MTF_PER_THREAD*MTF_THREADS_BLOCK + lid+MTF_THREADS_BLOCK*i;
+        if(index<numElements)
+            d_mtfOut[index] = s_mtfIn[lid+MTF_THREADS_BLOCK*i];
     }
 #endif
 }
