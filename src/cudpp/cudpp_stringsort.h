@@ -15,10 +15,10 @@
 #include "cudpp_plan.h"
 
 extern "C"
-void allocMergeStringStorage(CUDPPMergeSortPlan* plan);
+void allocStringSortStorage(CUDPPStringSortPlan* plan);
 
 extern "C"
-void freeMergeStringStorage(CUDPPMergeSortPlan* plan);
+void freeStringSortStorage(CUDPPStringSortPlan* plan);
 
 extern "C"
 void cudppStringSortDispatch(void       *keys,

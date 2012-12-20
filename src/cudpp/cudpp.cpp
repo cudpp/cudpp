@@ -47,6 +47,7 @@
 #include "cudpp_compact.h"
 #include "cudpp_spmvmult.h"
 #include "cudpp_mergesort.h"
+#include "cudpp_stringsort.h"
 #include "cudpp_radixsort.h"
 #include "cudpp_rand.h"
 #include "cudpp_reduce.h"
@@ -463,7 +464,7 @@ CUDPPResult cudppStringSort(const CUDPPHandle planHandle,
     {
         if (plan->m_config.algorithm != CUDPP_SORT_STRING)
             return CUDPP_ERROR_INVALID_PLAN;   	
-		cudppStringSortDispatch(d_keys, d_values, numElements, stringArrayLength, plan);
+		cudppStringSortDispatch(d_keys, d_values, stringVals, numElements, stringArrayLength, plan);
 	    return CUDPP_SUCCESS;
     }
     else

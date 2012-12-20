@@ -44,7 +44,7 @@ set (CUHFILES
   cta/segmented_scan_cta.cuh
   cta/stringsort_cta.cuh
   kernel/compact_kernel.cuh
-  kenel/mergesort_kernel.cuh
+  kernel/mergesort_kernel.cuh
   kernel/radixsort_kernel.cuh
   kernel/rand_kernel.cuh
   kernel/reduce_kernel.cuh
