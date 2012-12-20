@@ -250,6 +250,7 @@ public:
     unsigned char *m_d_mtfOut;
     unsigned char *m_d_lists;
     unsigned short *m_d_list_sizes;
+    unsigned int npad;
 
     // Huffman
     unsigned char *m_d_huffCodesPacked;   // tightly pack together all huffman codes
@@ -299,8 +300,9 @@ public:
     virtual ~CUDPPMtfPlan();
 
     // MTF
-    unsigned char *m_d_lists;
-    unsigned short *m_d_list_sizes;
+    unsigned char   *m_d_lists;
+    unsigned short  *m_d_list_sizes;
+    unsigned int    npad;
 };
 
 /** @brief Plan class for ListRank

@@ -24,7 +24,9 @@
 #include "cudpp_testrig_options.h"
 #include "cudpp_testrig_utils.h"
 #include "cuda_util.h"
+#include "stopwatch.h"
 #include "commandline.h"
+#include "comparearrays.h"
 
 #define NONE    -1
 #define NUM_CHARS           257     /* 256 bytes + EOF */
@@ -502,32 +504,43 @@ int mtfTest(int argc, const char **argv, const CUDPPConfiguration &config,
             const testrigOptions &testOptions)
 {
     int retval = 0;
-    int numElements = 1048576; // test size
 
-    bool quiet = checkCommandLineFlag(argc, argv, "quiet");
-    int numTests = 1;
-    bool oneTest = true;
+    cudpp_app::StopWatch timer;
 
-    // Initialize CUDPP
-    CUDPPHandle plan;
+    bool quiet = checkCommandLineFlag(argc, (const char**)argv, "quiet");   
+
+    unsigned int test[] = {39, 128, 256, 512, 1000, 1024, 1025, 32768, 45537, 65536, 131072,
+        262144, 500001, 524288, 1048577, 1048576, 1048581};
+    int numTests = sizeof(test) / sizeof(test[0]);
+    int numElements = test[numTests-1]; // maximum test size
+
+    bool oneTest = false;
+    if (commandLineArg(numElements, argc, (const char**) argv, "n"))
+    {
+        oneTest = true;
+        numTests = 1;
+        test[0] = numElements;
+    }
+
     CUDPPResult result = CUDPP_SUCCESS;
     CUDPPHandle theCudpp;
     result = cudppCreate(&theCudpp);
     if (result != CUDPP_SUCCESS)
     {
-        fprintf(stderr, "Error initializing CUDPP Library\n");
-        retval = 1;
+        if (!quiet)
+            fprintf(stderr, "Error initializing CUDPP Library.\n");
+        retval = (oneTest) ? 1 : numTests;
         return retval;
     }
 
+    CUDPPHandle plan;
     result = cudppPlan(theCudpp, &plan, config, numElements, 1, 0);
 
-    if(result != CUDPP_SUCCESS)
+    if (result != CUDPP_SUCCESS)
     {
-        printf("Error in plan creation\n");
-        retval = numTests;
-        cudppDestroyPlan(plan);
-        cudppDestroy(theCudpp);
+        if (!quiet)
+            fprintf(stderr, "Error creating plan for MTF\n");
+        retval = (oneTest) ? 1 : numTests;
         return retval;
     }
 
@@ -535,12 +548,6 @@ int mtfTest(int argc, const char **argv, const CUDPPConfiguration &config,
     
     // allocate host memory to store the input data
     unsigned char* i_data = new unsigned char[numElements];
-
-    // initialize the input data on the host
-    float range = (float)(sizeof(unsigned char)*8);
-        
-    VectorSupport<unsigned char>::fillVector(i_data, numElements, range);
-    
     unsigned char* reference = new unsigned char[numElements];
 
     // allocate device memory input and output arrays
@@ -550,73 +557,76 @@ int mtfTest(int argc, const char **argv, const CUDPPConfiguration &config,
     CUDA_SAFE_CALL( cudaMalloc( (void **) &d_idata, memSize));
     CUDA_SAFE_CALL( cudaMalloc( (void **) &d_odata, memSize));
 
-    CUDA_SAFE_CALL( cudaMemcpy(d_idata, i_data, memSize, 
-                               cudaMemcpyHostToDevice) );
-    CUDA_SAFE_CALL( cudaMemset(d_odata, 0, memSize) );
-
-    char dt[10];
-    strcpy(dt, "uchar");
-
-    if (!quiet)
+    for (int k = 0; k < numTests; ++k)
     {
-        printf("Running a mtf of %d %s elements\n", 
-               numElements, dt);
-        fflush(stdout);
+        if (!quiet)
+        {
+            printf("Running a MTF test of %u %s nodes\n",
+                test[k],
+                datatypeToString(config.datatype));
+            fflush(stdout);
+        }
+
+        // initialize the input data on the host
+        float range = (float)(sizeof(unsigned char)*8);
+        VectorSupport<unsigned char>::fillVector(i_data, test[k], range);
+
+        memset(reference, 0, sizeof(unsigned char) * test[k]);
+        computeMtfGold( reference, i_data, test[k]);
+
+        CUDA_SAFE_CALL( cudaMemcpy(d_idata, i_data, sizeof(unsigned char) * test[k], cudaMemcpyHostToDevice) );
+        CUDA_SAFE_CALL( cudaMemset(d_odata, 0, sizeof(unsigned char) * test[k]) );
+
+        // run once to avoid timing startup overhead.
+        cudppMoveToFrontTransform(plan, d_idata, d_odata, test[k]);
+
+        timer.reset();
+        timer.start();
+        for (int i = 0; i < testOptions.numIterations; i++)
+        {
+            cudppMoveToFrontTransform(plan, d_idata, d_odata, test[k]);
+        }
+        cudaThreadSynchronize();
+        timer.stop();
+
+        // allocate host memory to store the output data
+        unsigned char* o_data = (unsigned char*) malloc( sizeof(unsigned char) * test[k]);
+        CUDA_SAFE_CALL(cudaMemcpy( o_data, d_odata, sizeof(unsigned char) * test[k],
+            cudaMemcpyDeviceToHost));
+
+        bool result = compareArrays<unsigned char>( reference, o_data, test[k]);
+
+        free(o_data);
+
+        retval += result ? 0 : 1;
+        if (!quiet)
+        {
+            printf("test %s\n", result ? "PASSED" : "FAILED");
+        }
+        if (!quiet)
+        {
+            printf("Average execution time: %f ms\n",
+                timer.getTime() / testOptions.numIterations);
+        }
+        else
+            printf("\t%10d\t%0.4f\n", test[k], timer.getTime() / testOptions.numIterations);
     }
 
-    computeMtfGold( reference, i_data, numElements);
-
-    // Run the MTF transform
-    // run once to avoid timing startup overhead.
-    result = cudppMoveToFrontTransform(plan, d_idata, d_odata, 
-                                       (unsigned int)numElements);
-
+    result = cudppDestroyPlan(plan);
     if (result != CUDPP_SUCCESS)
     {
         if (!quiet)
-            printf("Error calling cudppMoveToFrontTransform for MTF "
-		   "(error: %d)\n", (int) result);
-        retval = numTests;
-    }
-
-    // copy result from device to host
-    unsigned char* o_data = new unsigned char[numElements];
-    CUDA_SAFE_CALL(cudaMemcpy( o_data, d_odata, memSize, 
-                               cudaMemcpyDeviceToHost));
-
-
-    // check results
-    bool error = false;
-    for(int i=0; i<numElements; i++)
-    {
-        if(o_data[i] != reference[i])
-        {
-            error = true;
-            retval = 1;
-            break;
-        }
-    }
-
-    printf("test %s\n", (error) ? "FAILED" : "PASSED");
-
-    result = cudppDestroyPlan(plan);
-
-    if (result != CUDPP_SUCCESS)
-    {   
-        printf("Error destroying CUDPPPlan for MTF\n");
-        retval = numTests;
+            printf("Error destroying CUDPPPlan for MTF\n");
     }
 
     result = cudppDestroy(theCudpp);
-
     if (result != CUDPP_SUCCESS)
-    {   
-        printf("Error shutting down CUDPP Library.\n");
-        retval = numTests;
+    {
+        if (!quiet)
+            printf("Error shutting down CUDPP Library.\n");
     }
 
     delete [] reference;
-    delete [] o_data;
     delete [] i_data;
     cudaFree(d_odata);
     cudaFree(d_idata);
