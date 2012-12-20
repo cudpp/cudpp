@@ -113,7 +113,7 @@ void moveToFrontTransform(unsigned char             *d_mtfIn,
                           size_t                    numElements,
                           const T                   *plan)
 {
-    unsigned int npad = numElements;
+    unsigned int npad = numElements-1;
     npad |= npad >> 1;
     npad |= npad >> 2;
     npad |= npad >> 4;
