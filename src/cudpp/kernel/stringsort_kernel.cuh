@@ -236,17 +236,8 @@ void blockWiseStringSort(T *A_keys, T* A_address, T* stringVals, int blockSize, 
 		lin_search_block<T, depth>(cmpValue,  Aval[3], in, addressPad, stringVals, j, 3, last, startAddress, 0, totalSize-bid*blockSize, stringSize);		
 		lin_search_block<T, depth>(cmpValue,  Aval[4], in, addressPad, stringVals, j, 4, last, startAddress, 0, totalSize-bid*blockSize, stringSize);		
 		lin_search_block<T, depth>(cmpValue,  Aval[5], in, addressPad, stringVals, j, 5, last, startAddress, 0, totalSize-bid*blockSize, stringSize);		
-		if(mult == 64)
-		print_in_range(DEBUG_VALUE, DEBUG_VALUE, scratchPad[tid*depth+5], 0, UINT_MAX, blockIdx.x*blockSize + j + startAddress+5, 0, UINT_MAX-2, addressPad[j+startAddress+5], stringVals, stringSize);
-
 		lin_search_block<T, depth>(cmpValue,  Aval[6], in, addressPad, stringVals, j, 6, last, startAddress, 0, totalSize-bid*blockSize, stringSize);		
-		if(mult == 64)
-		print_in_range(DEBUG_VALUE, DEBUG_VALUE, scratchPad[tid*depth+6], 0, UINT_MAX, blockIdx.x*blockSize + j + startAddress+6, 0, UINT_MAX-2, addressPad[j+startAddress+6], stringVals, stringSize);
-
 		lin_search_block<T, depth>(cmpValue,  Aval[7], in, addressPad, stringVals, j, 7, last, startAddress, 0, totalSize-bid*blockSize, stringSize);
-		if(mult == 64)
-		print_in_range(DEBUG_VALUE, DEBUG_VALUE, scratchPad[tid*depth+7], 0, UINT_MAX, blockIdx.x*blockSize + j + startAddress+7, 0, UINT_MAX-2, addressPad[j+startAddress+7], stringVals, stringSize);
-		
 		
 		__threadfence();
         __syncthreads();
@@ -692,8 +683,8 @@ void simpleStringMerge(T *A_keys, T *A_keys_out, T *A_values, T* A_values_out, T
  **/
 template<class T>
 __global__
-void findMultiPartitions(T *A_keys, T* A_address, T* stringValues, int splitsPP, int numPartitions, int partitionSize,  int* partitionBeginA, int* partitionSizesA, 
-						 int* partitionBeginB, int* partitionSizesB, int size, int stringSize)
+void findMultiPartitions(T *A_keys, T* A_address, T* stringValues, int splitsPP, int numPartitions, int partitionSize,  unsigned int* partitionBeginA, unsigned int* partitionSizesA, 
+						 unsigned int* partitionBeginB, unsigned int* partitionSizesB, size_t size, size_t stringSize)
 {
 	int myId = threadIdx.x + blockIdx.x*blockDim.x;
 	int myIdLoc = myId%splitsPP + (myId/splitsPP)*splitsPP*2;
@@ -708,7 +699,7 @@ void findMultiPartitions(T *A_keys, T* A_address, T* stringValues, int splitsPP,
 	int mySubPartitionId = myId%splitsPP;
 
  
-	printf("tid %d\n", threadIdx.x);
+	//printf("tid %d\n", threadIdx.x);
 	
 	
 	myStartA = (myPartitionId)*partitionSize + (mySubPartitionId)*subPartitionSize; // we are at the beginning of a partition
@@ -758,7 +749,7 @@ void findMultiPartitions(T *A_keys, T* A_address, T* stringValues, int splitsPP,
 				last = mid;
 			else
 			{
-				if(tie_break_mult(myStartA-1, mid, size, size, A_address[myStartA-1], A_address[mid], stringValues, stringSize) == 1)
+				if(tie_break_simp(myStartA-1, mid, size, size, A_address[myStartA-1], A_address[mid], stringValues, stringSize) == 1)
 					last = mid;
 				else
 					first = mid;
@@ -775,7 +766,7 @@ void findMultiPartitions(T *A_keys, T* A_address, T* stringValues, int splitsPP,
 			prevSample = A_keys[--mid];
 		while(prevSample == myStartSample && mid > 0)
 		{
-			if(tie_break_mult(myStartA, mid, size, size, A_address[myStartA], A_address[mid], stringValues, stringSize) == 1)
+			if(tie_break_simp(myStartA, mid, size, size, A_address[myStartA], A_address[mid], stringValues, stringSize) == 1)
 				prevSample = A_keys[--mid];
 			else
 				break;
@@ -786,7 +777,7 @@ void findMultiPartitions(T *A_keys, T* A_address, T* stringValues, int splitsPP,
 			testSample = A_keys[++mid];
 		while(testSample == myPrevSample && mid < myEndRange)
 		{
-			if(tie_break_mult(myStartA-1, mid, size, size, A_address[myStartA-1], A_address[mid], stringValues, stringSize) == 0)
+			if(tie_break_simp(myStartA-1, mid, size, size, A_address[myStartA-1], A_address[mid], stringValues, stringSize) == 0)
 				testSample = A_keys[++mid];
 			else
 				break;
@@ -831,7 +822,7 @@ void findMultiPartitions(T *A_keys, T* A_address, T* stringValues, int splitsPP,
 				last = mid;
 			else 
 			{
-				if(tie_break_mult(myEndA-1, mid, size, size, A_address[myEndA-1], A_address[mid], stringValues, stringSize) == 1)
+				if(tie_break_simp(myEndA-1, mid, size, size, A_address[myEndA-1], A_address[mid], stringValues, stringSize) == 1)
 					last = mid;
 				else
 					first = mid;
@@ -848,7 +839,7 @@ void findMultiPartitions(T *A_keys, T* A_address, T* stringValues, int splitsPP,
 			prevSample = A_keys[--mid];
 		while(prevSample == myEndSample && mid > 0)
 		{
-			if(tie_break_mult(myEndA, mid, size, size, A_address[myEndA], A_address[mid], stringValues, stringSize) == 1)
+			if(tie_break_simp(myEndA, mid, size, size, A_address[myEndA], A_address[mid], stringValues, stringSize) == 1)
 				prevSample = A_keys[--mid];
 			else
 				break;
@@ -859,7 +850,7 @@ void findMultiPartitions(T *A_keys, T* A_address, T* stringValues, int splitsPP,
 			testSample = A_keys[++mid];
 		while(testSample == myPrevSample && mid < myEndRange)
 		{
-			if(tie_break_mult(myEndA-1, mid, size, size, A_address[myEndA-1], A_address[mid], stringValues, stringSize) == 0)
+			if(tie_break_simp(myEndA-1, mid, size, size, A_address[myEndA-1], A_address[mid], stringValues, stringSize) == 0)
 				testSample = A_keys[++mid];
 			else
 				break;
@@ -917,7 +908,8 @@ void findMultiPartitions(T *A_keys, T* A_address, T* stringValues, int splitsPP,
 template<class T, int depth>
 __global__
 void stringMergeMulti(T *A_keys, T*A_keys_out, T* A_values, T *A_values_out, T* stringValues, int subPartitions, int numBlocks, 
-					  int *partitionBeginA, int *partitionSizeA, int *partitionBeginB, int* partitionSizeB, int entirePartitionSize, int step, int size, int stringSize)
+					  unsigned int *partitionBeginA, unsigned int *partitionSizeA, unsigned int *partitionBeginB, unsigned int* partitionSizeB, 
+					  int entirePartitionSize, int step, size_t size, size_t stringSize)
 {
 	int myId = blockIdx.x;
 	
@@ -1072,7 +1064,7 @@ void stringMergeMulti(T *A_keys, T*A_keys_out, T* A_values, T *A_values_out, T* 
 				cmpLoc = myStartIdxB + bIndex + index;
 				int cmpAdd = BValues[index];
 			
-				if(cmpLoc != myLoc && cmpAdd > 0 && tie_break(myLoc, cmpLoc, size, size, myValue[0], cmpAdd, stringValues, stringSize) == 0)
+				if(cmpLoc != myLoc && cmpAdd > 0 && tie_break_simp(myLoc, cmpLoc, size, size, myValue[0], cmpAdd, stringValues, stringSize) == 0)
 				{
 					cmpValue = BKeys[++index];		
 				}
@@ -1094,7 +1086,7 @@ void stringMergeMulti(T *A_keys, T*A_keys_out, T* A_values, T *A_values_out, T* 
 				
 				int cmpAdd = BValues[index];	
 			
-				if(cmpAdd > 0 && tie_break(myLoc, cmpLoc, size, size, myValue[0], cmpAdd, stringValues, stringSize) == 0)
+				if(cmpAdd > 0 && tie_break_simp(myLoc, cmpLoc, size, size, myValue[0], cmpAdd, stringValues, stringSize) == 0)
 				{
 					index++;						
 					cmpValue = bIndex+index < localBPartSize ? A_keys[myStartIdxB+bIndex+index] : UINT_MAX;
@@ -1124,7 +1116,7 @@ void stringMergeMulti(T *A_keys, T*A_keys_out, T* A_values, T *A_values_out, T* 
 				
 				unsigned int cmpAdd = A_values[cmpLoc];								
 				
-				if(tie_break_mult(myLoc, cmpLoc, size, size, myValue[0], cmpAdd, stringValues, stringSize) == 1)
+				if(tie_break_simp(myLoc, cmpLoc, size, size, myValue[0], cmpAdd, stringValues, stringSize) == 1)
 				{					
 					A_keys_out  [myStartIdxC + bIndex + aIndex+depth*tid+index] = myKey[0];	
 					A_values_out[myStartIdxC + bIndex + aIndex+depth*tid+index] = myValue[0];	

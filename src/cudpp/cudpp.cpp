@@ -384,7 +384,31 @@ CUDPPResult cudppRadixSort(const CUDPPHandle planHandle,
     else
         return CUDPP_ERROR_INVALID_HANDLE;
 }
-
+/**
+ * @brief Sorts key-value pairs or keys only
+ * 
+ * Takes as input an array of keys in GPU memory
+ * (d_keys) and an optional array of corresponding values,
+ * and outputs sorted arrays of keys and (optionally) values in place. 
+ * Radix sort or Merge sort is selected through the configuration (.algorithm)
+ * Key-value and key-only sort is selected through the configuration of 
+ * the plan, using the options CUDPP_OPTION_KEYS_ONLY and 
+ * CUDPP_OPTION_KEY_VALUE_PAIRS.
+ *
+ * Supported key types are CUDPP_FLOAT and CUDPP_UINT.  Values can be
+ * any 32-bit type (internally, values are treated only as a payload
+ * and cast to unsigned int).
+ *
+ * @todo Determine if we need to provide an "out of place" sort interface.
+ * 
+ * @param[in] planHandle handle to CUDPPSortPlan
+ * @param[out] d_keys keys by which key-value pairs will be sorted
+ * @param[in] d_values values to be sorted
+ * @param[in] numElements number of elements in d_keys and d_values
+ * @returns CUDPPResult indicating success or error condition 
+ *
+ * @see cudppPlan, CUDPPConfiguration, CUDPPAlgorithm
+ */
 CUDPP_DLL
 CUDPPResult cudppMergeSort(const CUDPPHandle planHandle,
                       void              *d_keys,
@@ -399,6 +423,47 @@ CUDPPResult cudppMergeSort(const CUDPPHandle planHandle,
         if (plan->m_config.algorithm != CUDPP_SORT_MERGE)
             return CUDPP_ERROR_INVALID_PLAN;   	
 		cudppMergeSortDispatch(d_keys, d_values, numElements, plan);
+	    return CUDPP_SUCCESS;
+    }
+    else
+        return CUDPP_ERROR_INVALID_HANDLE;
+}
+/**
+ * @brief Sorts strings. Keys are the first four characters of the string, 
+ * and values are the addresses where the strings reside in memory (stringVals)
+ * 
+ * Takes as input an array of strings (broken up as first four chars (key), 
+ * addresses (values), and the strings themselves (stringVals))
+ *
+ * 
+ * @todo Determine if we need to provide an "out of place" sort interface.
+ * 
+ * @param[in] planHandle handle to CUDPPSortPlan
+ * @param[in/out] d_keys keys (first four chars of string to be sorted)
+ * @param[in/out] d_values addresses where the strings reside
+ * @param[in] stringVals Original string input, series of characters each terminated by a null
+ * @param[in] numElements number of elements in d_keys and d_values
+ * @param[in] stringArrayLength Length in uint of the size of all strings
+ * @returns CUDPPResult indicating success or error condition 
+ *
+ * @see cudppPlan, CUDPPConfiguration, CUDPPAlgorithm
+ */
+CUDPP_DLL
+CUDPPResult cudppStringSort(const CUDPPHandle planHandle,
+                      void              *d_keys,
+                      void              *d_values,                      
+		              void              *stringVals,
+                      size_t            numElements,
+		              size_t            stringArrayLength)
+{    		
+    CUDPPStringSortPlan *plan = 
+        (CUDPPStringSortPlan*)getPlanPtrFromHandle<CUDPPStringSortPlan>(planHandle);
+
+    if (plan != NULL)
+    {
+        if (plan->m_config.algorithm != CUDPP_SORT_STRING)
+            return CUDPP_ERROR_INVALID_PLAN;   	
+		cudppStringSortDispatch(d_keys, d_values, numElements, stringArrayLength, plan);
 	    return CUDPP_SUCCESS;
     }
     else

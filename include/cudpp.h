@@ -476,6 +476,7 @@ enum CUDPPAlgorithm
     CUDPP_REDUCE,            //!< Parallel reduction
     CUDPP_SORT_RADIX,        //!< Radix sort
 	CUDPP_SORT_MERGE,
+	CUDPP_SORT_STRING,
     CUDPP_SPMVMULT,          //!< Sparse matrix-dense vector multiplication
     CUDPP_RAND_MD5,          //!< Pseudorandom number generator using MD5 hash algorithm
     CUDPP_TRIDIAGONAL,    //!< Tridiagonal solver algorithm
@@ -580,6 +581,14 @@ CUDPPResult cudppMergeSort(const CUDPPHandle planHandle,
                       void              *d_keys,                                          
                       void              *d_values,                                                                       
                       size_t            numElements);
+
+CUDPP_DLL
+CUDPPResult cudppStringSort(const CUDPPHandle planHandle,
+						   void              *d_keys,                                          
+						   void              *d_values, 
+						   void              *stringVals,		      
+						   size_t            numElements,
+						   size_t            stringArrayLength);
 
 // Sparse matrix allocation
 

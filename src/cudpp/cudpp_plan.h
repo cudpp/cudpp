@@ -124,6 +124,18 @@ public:
     mutable void *m_tempValues;
 };
 
+
+class CUDPPStringSortPlan : public CUDPPPlan
+{
+public:
+    CUDPPStringSortPlan(CUDPPManager *mgr, CUDPPConfiguration config, size_t numElements, size_t stringArrayLength);
+    virtual ~CUDPPStringSortPlan();
+
+    unsigned int m_stringArrayLength;
+    mutable void *m_tempKeys;
+    mutable void *m_tempValues;
+};
+
 class CUDPPRadixSortPlan : public CUDPPPlan
 {
 public:

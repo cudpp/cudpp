@@ -107,7 +107,7 @@ __device__ void bin_search_block(T &cmpValue, T tmpVal, T* in, T* addressPad, T*
 		unsigned int cmpAdd = addressPad[j];
 
 		
-		j = (tie_break<T>(depth*threadIdx.x, j, sizeRemain, sizeRemain, myAdd, cmpAdd, stringVals, stringSize) == 0 ? j + bump : j - bump);                
+		j = (tie_break_simp<T>(depth*threadIdx.x, j, sizeRemain, sizeRemain, myAdd, cmpAdd, stringVals, stringSize) == 0 ? j + bump : j - bump);                
 		
     }
     else
@@ -227,9 +227,6 @@ __device__ void compareSwapVal(T &A1, T &A2, const int index1, const int index2,
             tmp2 = stringVals[scratch[index2]+i];
 			i++;
         }
-		//if(i == 40)
-		//	printf("ERROR in compareSwapVal %d %d %d %d %c%c%c%c\n", tmp, tmp2, scratch[index1], scratch[index2], 
-		//	char(int(tmp>>24)&255), char(int(tmp>>16)&255), char(int(tmp>>8)&255), char(int(tmp)&255));
 
         if(tmp > tmp2)
         {
@@ -287,7 +284,7 @@ void  binSearch_frag_mult(T* keyArraySmem, T* valueArraySmem, int offset, int &m
 	{
 		int myLoc = myStartIdxA + aIndex + depth*threadIdx.x;
 		int cmpLoc = myStartIdxB + bIndex + mid;
-		mid = (tie_break_mult(myLoc, cmpLoc, size, size, myAddress, valueArraySmem[mid], globalStringArray, stringSize) == 0 ? mid + offset : mid - offset);
+		mid = (tie_break_simp(myLoc, cmpLoc, size, size, myAddress, valueArraySmem[mid], globalStringArray, stringSize) == 0 ? mid + offset : mid - offset);
 	}
 }
 
