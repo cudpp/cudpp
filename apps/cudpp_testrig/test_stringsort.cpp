@@ -28,22 +28,49 @@
 
 using namespace cudpp_app;
 
+//TODO: right now just checking the strings, need to check in case of ties (and values)
+int verifyStringSort(unsigned int* keysSorted, unsigned int *valuesSorted, unsigned int* keysUnsorted,
+					  unsigned int* stringVals, int numElements, int stringSize)
+{
+	int retval = 0;
+	
+	for(unsigned int i = 0; i< numElements-1; ++i)
+	{
+		bool unordered = (keysSorted[i])>(keysSorted[i+1]);
+        if (unordered)
+        {
+            cout << "Unordered key[" << i << "]:" << keysSorted[i] 
+                 << (" > ") << "key["
+                 << i+1 << "]:" << keysSorted[i+1] << endl;
+            retval = 1;
+            break;
+        } 
+	}	
+	return retval;
+}
+
 int stringSortTest(CUDPPHandle theCudpp, CUDPPConfiguration config, size_t *tests, 
                   unsigned int numTests, size_t numElements,
                   testrigOptions testOptions, bool quiet)
 {
     int retval = 0;
-    
+    srand(1);
     unsigned int *h_keys, *h_keysSorted, *d_keys;
-    unsigned int *h_values, *h_valuesSorted, *d_values;
+    unsigned int *h_values, *h_valuesSorted, *h_valSend, *d_values;
     unsigned int *string_length;
+	unsigned int *d_stringVals;
     unsigned int *stringVals;
+	config.algorithm = CUDPP_SORT_STRING;
+	config.datatype = CUDPP_UINT;
+	config.options = CUDPP_OPTION_FORWARD;
 
+	unsigned int maxStringLength = 4;
     h_keys       = (unsigned int*)malloc(numElements*sizeof(unsigned int));
     h_keysSorted = (unsigned int*)malloc(numElements*sizeof(unsigned int));
 
     
     h_values       = (unsigned int*)malloc(numElements*sizeof(unsigned int));
+	h_valSend = (unsigned int*)malloc(numElements*sizeof(unsigned int));
     h_valuesSorted = (unsigned int*)malloc(numElements*sizeof(unsigned int));
 
 
@@ -53,33 +80,52 @@ int stringSortTest(CUDPPHandle theCudpp, CUDPPConfiguration config, size_t *test
     //We add its starting address to the end to make it unique 
     //For the sake of simplicity in this test we make all strings 
     //multiples of 4 characters
+	//printf("making strings\n");
     for(unsigned int i=0; i < numElements; ++i)                     
-    {
-        h_address[i] = 2 + rand(maxStringLength);            
-	stringSize += h_address[i];
+    {				
+        h_values[i] = 2 + rand()%maxStringLength;    
+		h_valSend[i] = i == 0 ? 0 : h_values[i-1];
+	    stringSize += h_values[i];		
     }
-    stringVals = (unsigned int*) malloc(sizeof(unsigned int));
+    stringVals = (unsigned int*) malloc(sizeof(unsigned int)*stringSize);
     unsigned int index = 0;
+	printf("%d elements and %d strings\n", numElements, stringSize);
+	unsigned int temp = 0;
+	char c1, c2, c3, c4;
     for(unsigned int i = 0; i < numElements; ++i)
     {
-	    for(unsigned int j = 0; j < h_address[i]-1; j++);
+	    for(unsigned int j = 0; j < h_values[i]-1; j++)
 	    {
-		    unsigned int val = rand(UINT_MAX);
-		    stringValues[index++] = val;
-		    if(j == 0)
-			    h_keys[i] = val;
+		    c1 = (rand()%255)+1;
+			c2 = (rand()%255)+1;
+			c3 = (rand()%255)+1;
+			c4 = (rand()%255)+1;
+			unsigned int val = (c1 << 24) + (c2 << 16) + (c3 << 8) + c4;
+		    stringVals[index++] = val;
+		    if(j == 0)			
+				h_keys[i] = val;				
+			
 
 	    }
-	    if( i > 0 )
-		    h_values[i] += h_values[i-1];
-	    stringValues[index++] = i << 8; // Make sure there is a character with a 0
+		
+
+		c1 = rand()%255+1;
+		c2 = rand()%255+1;
+		c3 = rand()%255+1;		
+		unsigned int val = (c1 << 24) + (c2 << 16) + (c3 << 8);
+		
+	    if( i > 0 )					
+		    h_valSend[i] += h_valSend[i-1];					
+		
+
+	    stringVals[index++] = val; // Make sure there is a character with a 0
 	    //so the algorithm knows the string has terminated
     }
     
 
-                                                                                                                                       
+    //printf("made strings %d long %d stringSize\n", index, stringSize);
 	
-  
+	
     CUDA_SAFE_CALL(cudaMalloc((void **)&d_keys, numElements*sizeof(unsigned int)));
     CUDA_SAFE_CALL(cudaMalloc((void **)&d_values, numElements*sizeof(unsigned int)));
     CUDA_SAFE_CALL(cudaMalloc((void **)&d_stringVals, stringSize*sizeof(unsigned int)));
@@ -124,15 +170,15 @@ int stringSortTest(CUDPPHandle theCudpp, CUDPPConfiguration config, size_t *test
         {		
 			
 			
-            CUDA_SAFE_CALL(cudaMemcpy(d_keys, h_keys, tests[k] * sizeof(T), cudaMemcpyHostToDevice));
+            CUDA_SAFE_CALL(cudaMemcpy(d_keys, h_keys, tests[k] * sizeof(unsigned int), cudaMemcpyHostToDevice));
           			
-            CUDA_SAFE_CALL( cudaMemcpy(d_values, h_values, tests[k] * sizeof(unsigned int), cudaMemcpyHostToDevice) );
+            CUDA_SAFE_CALL( cudaMemcpy(d_values, h_valSend, tests[k] * sizeof(unsigned int), cudaMemcpyHostToDevice) );
 
             
             CUDA_SAFE_CALL( cudaEventRecord(start_event, 0) );
 
 			
-            cudppStringSort(plan, d_keys, d_values, stringVals, tests[k], stringSize);
+            cudppStringSort(plan, d_keys, d_values, d_stringVals, tests[k], stringSize);
 
             CUDA_SAFE_CALL( cudaEventRecord(stop_event, 0) );
             CUDA_SAFE_CALL( cudaEventSynchronize(stop_event) );
@@ -142,19 +188,19 @@ int stringSortTest(CUDPPHandle theCudpp, CUDPPConfiguration config, size_t *test
             totalTime += time;
         }
         
-        CUDA_CHECK_ERROR("testmergeSort - cudppMergeSort");
+        CUDA_CHECK_ERROR("teststringSort - cudppStringSort");
 		
         // copy results
-        CUDA_SAFE_CALL(cudaMemcpy(h_keysSorted, d_keys, tests[k] * sizeof(T), cudaMemcpyDeviceToHost));
+        CUDA_SAFE_CALL(cudaMemcpy(h_keysSorted, d_keys, tests[k] * sizeof(unsigned int), cudaMemcpyDeviceToHost));
        
         CUDA_SAFE_CALL( cudaMemcpy((void*)h_valuesSorted, 
                                    (void*)d_values, 
                                    tests[k] * sizeof(unsigned int), 
                                    cudaMemcpyDeviceToHost) );
        
-        retval += VectorSupport<T>::verifySort(h_keysSorted, h_valuesSorted, h_keys, tests[k], 
-                                               (config.options & CUDPP_OPTION_BACKWARD) != 0);
-
+		retval += verifyStringSort(h_keysSorted, h_valuesSorted, h_keys,
+					  stringVals, numElements, stringSize);
+        
 	//Verify that the keys make sense
 	//TODO: Verify that all strings are in correct order using addresses
 
@@ -168,8 +214,7 @@ int stringSortTest(CUDPPHandle theCudpp, CUDPPConfiguration config, size_t *test
             printf("\t%10ld\t%0.4f\n", tests[k], totalTime / testOptions.numIterations);
         }
     }	
-    printf("\n");
-	//printf("%f %f\n", FLT_MAX, -FLT_MAX);
+    printf("\n");	
 
 	
     CUDA_CHECK_ERROR("after mergesort");
@@ -187,24 +232,23 @@ int stringSortTest(CUDPPHandle theCudpp, CUDPPConfiguration config, size_t *test
     cudaEventDestroy(stop_event);
 
     cudaFree(d_keys);
-    cudaFree(d_vals);
+    cudaFree(d_values);
     cudaFree(d_stringVals);
 	
     free(h_keys);
     free(h_keysSorted);
-    free(h_vals);
-    free(h_valsSorted);
+    free(h_values);
+    free(h_valuesSorted);
     free(stringVals);
     
 
     return retval;
 }
 
+
 /**
- * testMergeSort tests cudpp's merge sort
- * Possible command line arguments:
- * - --keysonly, tests only a set of keys
- * - --keyval, tests a set of keys with associated values
+ * testStringSort tests cudpp's merge sort
+ * Possible command line arguments: 
  * - --n=#, number of elements in sort
  * @param argc Number of arguments on the command line, passed
  * directly from main
@@ -214,10 +258,11 @@ int stringSortTest(CUDPPHandle theCudpp, CUDPPConfiguration config, size_t *test
  * @return Number of tests that failed regression (0 for all pass)
  * @see cudppSort
 */
-int testMergeSort(int argc, const char **argv, const CUDPPConfiguration *configPtr)
+int testStringSort(int argc, const char **argv, const CUDPPConfiguration *configPtr)
 {
 
-    int cmdVal;
+	printf("begin test\n");
+	int cmdVal;
     int retval = 0;
     
     bool quiet = checkCommandLineFlag(argc, argv, "quiet");        
@@ -225,89 +270,39 @@ int testMergeSort(int argc, const char **argv, const CUDPPConfiguration *configP
     setOptions(argc, argv, testOptions);        
     
     CUDPPConfiguration config;
-    config.algorithm = CUDPP_SORT_MERGE;
+    config.algorithm = CUDPP_SORT_STRING;
     config.datatype = CUDPP_UINT;
-    config.options = CUDPP_OPTION_KEY_VALUE_PAIRS;
+
              
     size_t test[] = {39, 128, 256, 512, 513, 1000, 1024, 1025, 32768, 
                      45537, 65536, 131072, 262144, 500001, 524288, 
-                     1048577, 1048576, 1048581, 2097152, 4194304, 
-                     8388608};
+                     1048577, 1048576, 1048581, 2097152, 4194304};
     
     int numTests = sizeof(test)/sizeof(test[0]);
     
     size_t numElements = test[numTests - 1];
-
-    if(configPtr != NULL)
-    {
-        config = *configPtr;
-    }
-    else
-    {
-        config.datatype = getDatatypeFromArgv(argc, argv);
-
-        bool keysOnly = checkCommandLineFlag(argc, argv, "keysonly");     
-        bool backward = checkCommandLineFlag(argc, argv, "backward");
-        
-        config.options = CUDPP_OPTION_KEY_VALUE_PAIRS;
-        
-	}
-
-    if( commandLineArg( cmdVal, argc, (const char**)argv, "n" ) )
+	
+	if( commandLineArg( cmdVal, argc, (const char**)argv, "n" ) )
     { 
         numElements = cmdVal;
         numTests = 1;                           
     }
-    
-    CUDPPResult result = CUDPP_SUCCESS;  
+
+	printf("create the cudpp\n");
+	CUDPPResult result = CUDPP_SUCCESS;  
     CUDPPHandle theCudpp;
     result = cudppCreate(&theCudpp);
+	printf("created the cudpp\n");
     if(result != CUDPP_SUCCESS)
     {
         printf("Error initializing CUDPP Library.\n");
         retval = numTests;
         return retval;
     }
-        
-    switch(config.datatype)
-    {        
-    //case CUDPP_CHAR:
-      //  retval = mergeSortTest<char>(theCudpp, config, test, numTests, numElements, testOptions, quiet);    
-        //break;
-    //case CUDPP_UCHAR:
-      //  retval = mergeSortTest<unsigned char>(theCudpp, config, test, numTests, numElements, testOptions, quiet);    
-        //break;
-    case CUDPP_INT:
-        retval = mergeSortTest<int>(theCudpp, config, test, numTests, numElements, testOptions, quiet);
-        break;
-    case CUDPP_UINT:
-        retval = mergeSortTest<unsigned int>(theCudpp, config, test, numTests, numElements, testOptions, quiet);
-        break;
-    case CUDPP_FLOAT:   
-        retval = mergeSortTest<float>(theCudpp, config, test, numTests, numElements, testOptions, quiet);
-        break;
-    case CUDPP_DOUBLE:   
-        retval = mergeSortTest<double>(theCudpp, config, test, numTests, numElements, testOptions, quiet);
-        break;
-    //case CUDPP_LONGLONG:   
-     //   retval = mergeSortTest<long long>(theCudpp, config, test, numTests, numElements, testOptions, quiet);
-     //   break;
-   // case CUDPP_ULONGLONG:   
-     //   retval = mergeSortTest<unsigned long long>(theCudpp, config, test, numTests, numElements, testOptions, quiet);
-     //   break;
-    default:
-        break;
-    }
 
-    result = cudppDestroy(theCudpp);
-
-    if (result != CUDPP_SUCCESS)
-    {   
-        printf("Error shutting down CUDPP Library.\n");
-        retval = numTests;
-    }
-                          
+	retval = stringSortTest(theCudpp, config, test, numTests, numElements, testOptions, quiet);
     return retval;
+
 }
 
 // Leave this at the end of the file

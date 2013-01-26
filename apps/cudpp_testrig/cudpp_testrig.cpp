@@ -46,6 +46,7 @@ int testScan(int argc, const char ** argv, const CUDPPConfiguration *config,
 int testCompact(int argc, const char ** argv, const CUDPPConfiguration *config);
 int testRadixSort(int argc, const char ** argv, const CUDPPConfiguration *config);
 int testMergeSort(int argc, const char ** argv, const CUDPPConfiguration *config);
+int testStringSort(int argc, const char ** argv, const CUDPPConfiguration *config);
 int testReduce(int argc, const char ** argv, const CUDPPConfiguration *config);
 int testSparseMatrixVectorMultiply(int argc, const char ** argv);
 int testRandMD5(int argc, const char ** argv);
@@ -88,10 +89,8 @@ int testAllDatatypes(int argc,
                     retval += testCompact(argc, argv, &config);
                     break;
 				case CUDPP_SORT_MERGE:
-					if(!(config.datatype == CUDPP_UINT || config.datatype == CUDPP_INT))
-					{
-						printf("Only uints and ints currently supported for merge sort.. skipping\n");						
-					}
+					if(!(config.datatype == CUDPP_UINT || config.datatype == CUDPP_INT))					
+						printf("Only uints and ints currently supported for merge sort ... skipping\n");											
 					else
                         retval += testMergeSort(argc, argv, &config);
 					break;
@@ -126,6 +125,11 @@ int testAllOptionsAndDatatypes(int argc,
         retval += testAllDatatypes(argc, argv, config, supportsDouble, multiRow);              
         return retval;
     }
+	if(config.algorithm == CUDPP_SORT_STRING)
+	{
+		retval += testAllDatatypes(argc, argv, config, supportsDouble, multiRow);
+		return retval;
+	}
 	if(config.algorithm == CUDPP_SORT_MERGE)
 	{
 		config.options = CUDPP_OPTION_KEY_VALUE_PAIRS | CUDPP_OPTION_FORWARD;		
@@ -211,7 +215,9 @@ int testAllOptionsAndDatatypes(int argc,
  *   - Use --backward and/or --op=max to change default
  * - --multiscan calls the multiscan regression routine
  * - --compact calls the compact regression routine
- * - --sort calls the sort regression routine
+ * - --radixsort calls the radix sort regression routine
+ * - --mergesort calls the merge sort regression routine
+ * - --stringsort calls the string sort regression routine
  * - --spmvmult calls the sparse matrix-vector routine
  * - --reduce calls the reduce regression routine
  * - --n=# sets the size of the dataset
@@ -256,6 +262,7 @@ int main(int argc, const char** argv)
         printf("multiscan: Run multi-row scan test(s)\n");
         printf("mergesort: Run merge sort test(s)\n");
 		printf("radixsort: Run radix sort test(s)\n");
+		printf("stringsort: Run string sort test(s)\n");
         printf("compact: Run compact test(s)\n\n");
         printf("reduce: Run reduce test(s)\n\n");
         printf("rand: Run random number generator test(s)\n\n");
@@ -295,6 +302,7 @@ int main(int argc, const char** argv)
     bool runReduce = runAll || checkCommandLineFlag(argc, argv, "reduce");
     bool runRadixSort = runAll || checkCommandLineFlag(argc, argv, "radixsort");
 	bool runMergeSort = runAll || checkCommandLineFlag(argc, argv, "mergesort");
+	bool runStringSort = runAll || checkCommandLineFlag(argc, argv, "stringsort");
     bool runRand = runAll || checkCommandLineFlag(argc, argv, "rand");
     bool runSpmv = checkCommandLineFlag(argc, argv, "spmv");
     bool runTridiagonal = runAll ||  checkCommandLineFlag(argc, argv, "tridiagonal");
@@ -309,6 +317,7 @@ int main(int argc, const char** argv)
         if (runReduce)    retval += testReduce(argc, argv, NULL);
 		if (runMergeSort) retval += testMergeSort(argc, argv, NULL);
 		if (runRadixSort) retval += testRadixSort(argc, argv, NULL); 
+		if (runStringSort)retval += testStringSort(argc, argv, NULL);
         if (runMultiScan) retval += testScan(argc, argv, NULL, true, devProps);
         if (runTridiagonal) retval += testTridiagonal(argc, argv, NULL);
     }
@@ -341,8 +350,11 @@ int main(int argc, const char** argv)
 			config.algorithm = CUDPP_SORT_RADIX;
             retval += testAllOptionsAndDatatypes(argc, argv, config, supportsDouble);
 		}
-        if (runMergeSort) {					
-            printf("running merge sort\n");
+		if(runStringSort) {
+			config.algorithm = CUDPP_SORT_STRING;
+            retval += testStringSort(argc, argv, &config);
+		}
+        if (runMergeSort) {					            
 			config.algorithm = CUDPP_SORT_MERGE;
 			retval += testAllOptionsAndDatatypes(argc, argv, config, supportsDouble);
         }

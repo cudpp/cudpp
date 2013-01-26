@@ -34,9 +34,9 @@
 #define BLOCKSORT_SIZE 1024
 #define CTA_BLOCK 128
 #define DEPTH_simple 2
-#define DEPTH_multi 4
+#define DEPTH_multi 2
 #define CTASIZE_simple 256
-#define CTASIZE_multi 128
+#define CTASIZE_multi 256
 
 #define INTERSECT_A_BLOCK_SIZE_simple DEPTH_simple*CTASIZE_simple
 #define INTERSECT_B_BLOCK_SIZE_simple 2*DEPTH_simple*CTASIZE_simple
@@ -54,26 +54,28 @@ typedef unsigned int uint;
  * @param[in] stringSize Size of our input string
  **/
 
-template <class T>
-__device__ int tie_break_simp(unsigned int myLoc, unsigned int cmpLoc, unsigned int myBound, unsigned int cmpBound, unsigned int myAdd, unsigned int cmpAdd, T* stringLoc, unsigned int stringSize)
+
+__device__ int tie_break_simp(unsigned int myLoc, unsigned int cmpLoc, unsigned int myBound, unsigned int cmpBound, unsigned int myAdd, unsigned int cmpAdd, unsigned int* stringLoc, unsigned int stringSize)
 {
 	
-	if(myLoc > myBound && cmpLoc > cmpBound)
+	if(myLoc >= myBound && cmpLoc >= cmpBound)
 		return cmpLoc > myLoc;
-	else if(myLoc > myBound)
+	else if(myLoc >= myBound)
 		return 0;
-	else if(cmpLoc > cmpBound)
+	else if(cmpLoc >= cmpBound)
+		return 1;
+		
+	//Our tie is in bounds therefore we can break the tie using traditional means
+	if(myAdd >= stringSize)
+		return 0;
+	else if(cmpAdd >= stringSize)
 		return 1;
 	
-
-	//Our tie is in bounds therefore we can break the tie using traditional means
+	unsigned int a = stringLoc[myAdd];
+	unsigned int b = stringLoc[cmpAdd];
 	
-	
-	T a = stringLoc[myAdd];
-	T b = stringLoc[cmpAdd];
-	while(a == b && ((a&255) != 0) && ((b&255) != 0) && myAdd < stringSize && cmpAdd < stringSize )
-	{
-		
+	while(a == b && ((a&255) != 0) && ((b&255) != 0) && myAdd < (stringSize-1) && cmpAdd < (stringSize-1) )
+	{		
 
 	    a = stringLoc[++myAdd];
 	    b = stringLoc[++cmpAdd];
@@ -92,7 +94,7 @@ __device__ int tie_break_simp(unsigned int myLoc, unsigned int cmpLoc, unsigned 
  * @param[in] stringSize, Size of our global string array (for tie breaks)
  **/
 template<class T, int depth>
-__device__ void bin_search_block(T &cmpValue, T tmpVal, T* in, T* addressPad, T* stringVals, int & j, int bump, int sizeRemain, unsigned int stringSize)
+__device__ void bin_search_block_string(T &cmpValue, T tmpVal, T* in, T* addressPad, T* stringVals, int & j, int bump, int sizeRemain, unsigned int stringSize)
 {
 
 
@@ -107,7 +109,7 @@ __device__ void bin_search_block(T &cmpValue, T tmpVal, T* in, T* addressPad, T*
 		unsigned int cmpAdd = addressPad[j];
 
 		
-		j = (tie_break_simp<T>(depth*threadIdx.x, j, sizeRemain, sizeRemain, myAdd, cmpAdd, stringVals, stringSize) == 0 ? j + bump : j - bump);                
+		j = (tie_break_simp(depth*threadIdx.x, j, sizeRemain, sizeRemain, myAdd, cmpAdd, stringVals, stringSize) == 0 ? j + bump : j - bump);                
 		
     }
     else
@@ -128,10 +130,9 @@ __device__ void bin_search_block(T &cmpValue, T tmpVal, T* in, T* addressPad, T*
  * @param[in] stringSize, Size of our global string array
  **/
 template<class T, int depth>
-__device__ void lin_search_block(T &cmpValue, T &tmpVal, T* in, T* addressPad, T* stringVals, int &j, int offset, int last, int startAddress, int addPart, int sizeRemain, int stringSize)
+__device__ void lin_search_block_string(T &cmpValue, T &tmpVal, T* in, T* addressPad, T* stringVals, int &j, int offset, int last, int startAddress, int addPart, int sizeRemain, int stringSize)
 {			
 	
-	int tid = threadIdx.x;
 	
 	while (cmpValue < tmpVal && j < last)		
 		cmpValue = in[++j];			
@@ -166,28 +167,23 @@ __device__ void lin_search_block(T &cmpValue, T &tmpVal, T* in, T* addressPad, T
         else  if (cmpTmp > myTmp || j == last)
            break;		
 		
-		//printf("Index %d resolved tie break to (%d) unless corner case\n", depth*threadIdx.x+offset, j+startAddress+offset);
+		
     }
 
+	
 
 	__syncthreads();
 	//Corner case to handle being at the edge of our shared memory search
     j = ((j==last && cmpValue < tmpVal) ? j+1 : j);	
 	if (j == last && cmpValue == tmpVal)
 	{
-		T tmp = stringVals[addressPad[depth*threadIdx.x+offset]+1];
-        T tmp2 = stringVals[addressPad[j]+1];
-	    int i = 2;
-        while(tmp == tmp2)
-        {
-            tmp = stringVals[addressPad[depth*threadIdx.x+offset]+i];
-            tmp2 = stringVals[addressPad[j]+i];
-			i++;
-        }            
-		//if(i == 40)
-		//	printf("ERROR in linsearch %d %d\n", tmp, tmp2);
-	    if(tmp2 < tmp)
-           j++;        
+		int myLoc = depth*threadIdx.x + offset;
+		int cmpLoc = j;
+		int myAdd = addressPad[depth*threadIdx.x+offset];
+		int cmpAdd = addressPad[j];
+
+		j = tie_break_simp(myLoc, cmpLoc, BLOCKSORT_SIZE, BLOCKSORT_SIZE, myAdd, cmpAdd, stringVals, stringSize) == 0 ? j+1 : j;	 
+        
 	}
     tmpVal = j+startAddress+offset;
 	
@@ -309,7 +305,8 @@ void lin_merge_simple(T& cmpValue, T myKey, T myAddress, int& index, T* BKeys, T
 {
 
 	int tid = threadIdx.x;
-
+	//if(blockIdx.x == 1 && tid == 0)
+	//	printf("%u %u\n", myKey, cmpValue);
 	 
 	//Here we keep climbing until we either reach the end of our partitions
 	//Or we pass a value greater than ours
@@ -354,21 +351,20 @@ void lin_merge_simple(T& cmpValue, T myKey, T myAddress, int& index, T* BKeys, T
 	int globalCAddress = myStartIdxC + bCont + index + aCont + i;
 
 
+	
+
 	bool isInWindow = (index > 0 && index < (INTERSECT_B_BLOCK_SIZE_simple));
 
 	isInWindow = (isInWindow || (index == 0 && myKey > localMinB));
 	isInWindow = (isInWindow || (index >= (INTERSECT_B_BLOCK_SIZE_simple-1) && myKey < localMaxB));
 	isInWindow = (isInWindow || (bCont+index >= mySizeB));
 
+	
+
 	if(!isInWindow && index == 0 && myKey <= localMinB)
 	{
-		//Here we must check if our string is greater than our tie @ index 0 (or our shared memory partition)
-		int myLoc = myStartIdxA + depth*tid + i;
-		int cmpLoc = myStartIdxB + bCont;
-
-		int cmpAdd = BValues[0];
 		
-		if(!placed || tie_break_simp(myLoc, cmpLoc, totalSize, totalSize, myAddress, cmpAdd, stringValues, stringSize) == 0)
+		if(!placed)
 			isInWindow = true;
 	}
 	else if(!isInWindow && index >= (INTERSECT_B_BLOCK_SIZE_simple-1) && myKey == localMaxB && cmpValue <= myKey)
@@ -380,17 +376,17 @@ void lin_merge_simple(T& cmpValue, T myKey, T myAddress, int& index, T* BKeys, T
 		int cmpAdd = (bCont+index < mySizeB ? A_values[cmpLoc] : -1);
 		
 		
-		if(cmpAdd < 0 || tie_break_simp(myLoc, cmpLoc, totalSize, totalSize, myAddress, cmpAdd, stringValues, stringSize) == 1)
+		if(cmpAdd < 0 || tie_break_simp(myLoc, cmpLoc, totalSize, totalSize, myAddress, cmpAdd, stringValues, stringSize) == 0)
 			isInWindow = true;
 	}	
 	 
+	if(globalCAddress >= totalSize)
+		return;
 	//Save Value if it is valid (correct window)
 	//If we are on the edge of a window, and we are tied with the localMax or localMin value
 	//we must go to global memory to find out if we are valid
 	if(!placed && isInWindow)
-    {
-		
-
+    {		
 		A_keys_out[globalCAddress] = myKey;	
         A_values_out[globalCAddress] = myAddress;			
 		placed = true;
@@ -447,7 +443,11 @@ void linearStringMerge(T* BKeys, T* BValues, T myKey, T myAddress, bool &placed,
 
 
 
-
+	if(myKey == 1058433075)
+	{
+		//printf("myKey2 aIndex %d %d %d key %u %u %d %d %d %d %d\n", myStartIdxA+aIndex+depth*tid, blockIdx.x, tid, myKey, 
+		//	globalCAddress, myStartIdxC, myStartIdxA, myStartIdxB, i, blockIdx.x);
+	}
 	
 	bool isInWindow = (index > 0 && index < (INTERSECT_B_BLOCK_SIZE_multi));
 

@@ -86,7 +86,7 @@ CUDPPResult cudppPlan(const CUDPPHandle  cudppHandle,
 
     CUDPPPlan *plan;
     CUDPPManager *mgr = CUDPPManager::getManagerFromHandle(cudppHandle);
-
+	
     result = validateOptions(config, numElements, numRows, rowPitch);
     if (result != CUDPP_SUCCESS)
     {
@@ -117,7 +117,7 @@ CUDPPResult cudppPlan(const CUDPPHandle  cudppHandle,
 	    break;
 	}
     case CUDPP_SORT_STRING:
-	{
+	{		
 	    plan = new CUDPPStringSortPlan(mgr, config, numElements, rowPitch);
 	    break;
 	}	
@@ -488,6 +488,7 @@ CUDPPStringSortPlan::CUDPPStringSortPlan(CUDPPManager *mgr,
 										 size_t stringArrayLength)
 : CUDPPPlan(mgr, config, numElements, stringArrayLength, 0), m_tempKeys(0), m_tempValues(0)
 {
+
 
 }
 

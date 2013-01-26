@@ -16,6 +16,7 @@ set(CCFILES
   test_reduce.cpp
   test_scan.cpp
   test_spmvmult.cpp
+  test_stringsort.cpp
   test_tridiagonal.cpp
   )
 
