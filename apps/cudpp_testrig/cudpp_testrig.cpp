@@ -113,8 +113,10 @@ int testAllDatatypes(int argc,
                     break;
                 case CUDPP_SORT_RADIX:
                     retval += testRadixSort(argc, argv, &config);
+                    break;
                 case CUDPP_LISTRANK:
                     retval += testListRank(argc, argv, &config);
+                    break;
                 default:
                     break;  
             }
