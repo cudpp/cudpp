@@ -114,7 +114,7 @@ int radixSortTest(CUDPPHandle theCudpp, CUDPPConfiguration config, size_t *tests
 
             CUDA_SAFE_CALL( cudaEventRecord(start_event, 0) );
 
-            cudppSort(plan, d_keys, (void*)d_values, tests[k]);
+            cudppRadixSort(plan, d_keys, (void*)d_values, tests[k]);
 
             CUDA_SAFE_CALL( cudaEventRecord(stop_event, 0) );
             CUDA_SAFE_CALL( cudaEventSynchronize(stop_event) );

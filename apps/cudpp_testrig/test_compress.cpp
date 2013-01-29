@@ -478,7 +478,7 @@ void computeCompressGold(unsigned char* reference,
                                cudaMemcpyHostToDevice) );
 
     // sort
-    cudppSort(plan, (void*)d_keys, (void*)d_values, numElements);
+    cudppRadixSort(plan, (void*)d_keys, (void*)d_values, numElements);
 
     // Decode final BWT
     cudaMemcpy( h_values, d_values, numElements*sizeof(unsigned int), 

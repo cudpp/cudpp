@@ -10,11 +10,13 @@ set(CCFILES
   rand_gold.cpp
   spmvmult_gold.cpp
   test_compact.cpp
+  test_mergesort.cpp
   test_radixsort.cpp
   test_rand.cpp
   test_reduce.cpp
   test_scan.cpp
   test_spmvmult.cpp
+  test_stringsort.cpp
   test_tridiagonal.cpp
   test_compress.cpp
   test_listrank.cpp

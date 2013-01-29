@@ -27,9 +27,11 @@ set (HFILES
   cudpp_compact.h
   cudpp_compress.h
   cudpp_listrank.h
+  cudpp_mergesort.h
   cudpp_radixsort.h
   cudpp_rand.h
   cudpp_reduce.h
+  cudpp_stringsort.h
   cudpp_scan.h
   cudpp_segscan.h
   cudpp_spmvmult.h
@@ -38,18 +40,22 @@ set (HFILES
 
 set (CUHFILES
   cta/compress_cta.cuh
-  cta/radixsort_cta.cuh
+  cta/mergesort_cta.cuh
+  cta/radixsort_cta.cuh  
   cta/rand_cta.cuh
   cta/scan_cta.cuh
   cta/segmented_scan_cta.cuh
+  cta/stringsort_cta.cuh  
   kernel/compact_kernel.cuh
   kernel/compress_kernel.cuh
   kernel/listrank_kernel.cuh
+  kernel/mergesort_kernel.cuh
   kernel/radixsort_kernel.cuh
   kernel/rand_kernel.cuh
   kernel/reduce_kernel.cuh
   kernel/segmented_scan_kernel.cuh
   kernel/spmvmult_kernel.cuh
+  kernel/stringsort_kernel.cuh
   kernel/vector_kernel.cuh
   kernel/tridiagonal_kernel.cuh
   )
@@ -59,9 +65,11 @@ set(CUFILES
   app/compact_app.cu
   app/compress_app.cu
   app/listrank_app.cu
+  app/mergesort_app.cu
   app/scan_app.cu
   app/segmented_scan_app.cu
   app/spmvmult_app.cu
+  app/stringsort_app.cu
   app/radixsort_app.cu
   app/rand_app.cu 
   app/tridiagonal_app.cu

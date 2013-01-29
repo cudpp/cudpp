@@ -114,6 +114,39 @@ public:
     void         *m_blockSums;          //!< @internal Intermediate block sums array
 };  
 
+/** @brief Plan class for mergesort algorithm
+*
+*/
+
+class CUDPPMergeSortPlan : public CUDPPPlan
+{
+public:
+    CUDPPMergeSortPlan(CUDPPManager *mgr, CUDPPConfiguration config, size_t numElements);
+    virtual ~CUDPPMergeSortPlan();
+
+    mutable void *m_tempKeys;
+    mutable void *m_tempValues;
+};
+
+/** @brief Plan class for stringsort algorithm
+*
+*/
+
+class CUDPPStringSortPlan : public CUDPPPlan
+{
+public:
+    CUDPPStringSortPlan(CUDPPManager *mgr, CUDPPConfiguration config, size_t numElements, size_t stringArrayLength);
+    virtual ~CUDPPStringSortPlan();
+
+    unsigned int m_stringArrayLength;
+    mutable void *m_tempKeys;
+    mutable void *m_tempValues;
+};
+
+/** @brief Plan class for radixsort algorithm
+*
+*/
+
 class CUDPPRadixSortPlan : public CUDPPPlan
 {
 public:

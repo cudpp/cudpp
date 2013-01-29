@@ -14,6 +14,8 @@
 #include "cudpp_segscan.h"
 #include "cudpp_compact.h"
 #include "cudpp_spmvmult.h"
+#include "cudpp_stringsort.h"
+#include "cudpp_mergesort.h"
 #include "cudpp_radixsort.h"
 #include "cudpp_reduce.h"
 #include "cudpp_compress.h"
@@ -111,6 +113,16 @@ CUDPPResult cudppPlan(const CUDPPHandle  cudppHandle,
             plan = new CUDPPRadixSortPlan(mgr, config, numElements);
             break;
         }
+    case CUDPP_SORT_MERGE:
+        {
+            plan = new CUDPPMergeSortPlan(mgr, config, numElements);
+            break;
+        }
+    case CUDPP_SORT_STRING:
+        {
+            plan = new CUDPPStringSortPlan(mgr, config, numElements, rowPitch);
+            break;
+        }	
     case CUDPP_SEGMENTED_SCAN:
         {
             plan = new CUDPPSegmentedScanPlan(mgr, config, numElements);
@@ -198,6 +210,16 @@ CUDPPResult cudppDestroyPlan(CUDPPHandle planHandle)
             delete static_cast<CUDPPRadixSortPlan*>(plan);
             break;
         }
+    case CUDPP_SORT_MERGE:
+        {
+            delete static_cast<CUDPPMergeSortPlan*>(plan);
+            break;
+        }
+    case CUDPP_SORT_STRING:
+        {
+            delete static_cast<CUDPPStringSortPlan*>(plan);
+            break;
+        }	
     case CUDPP_SEGMENTED_SCAN:
         {
             delete static_cast<CUDPPSegmentedScanPlan*>(plan);
@@ -474,6 +496,48 @@ CUDPPReducePlan::~CUDPPReducePlan()
     freeReduceStorage(this);
 }
 
+/** @brief Merge Sort Plan consturctor
+* @param[in]  mgr pointer to the CUDPPManager
+* @param[in]  config The configuration struct specifying options
+* @param[in]  numElements The maximum number of elements to be sorted
+*/
+CUDPPMergeSortPlan::CUDPPMergeSortPlan(CUDPPManager *mgr,
+                                       CUDPPConfiguration config,
+				       size_t numElements)
+: CUDPPPlan(mgr, config, numElements, 1, 0), m_tempKeys(0), m_tempValues(0)
+{
+	allocMergeSortStorage(this);
+
+}
+
+/** @brief Merge sort plan destructor */
+CUDPPMergeSortPlan::~CUDPPMergeSortPlan()
+{
+    freeMergeSortStorage(this);
+}
+
+
+
+/** @brief String Sort Plan consturctor
+* @param[in]  mgr pointer to the CUDPPManager
+* @param[in]  config The configuration struct specifying options
+* @param[in]  numElements The maximum number of elements to be sorted
+* @param[in]  stringArrayLength The length of our input string (in uint)
+*/
+CUDPPStringSortPlan::CUDPPStringSortPlan(CUDPPManager *mgr,
+										 CUDPPConfiguration config,
+										 size_t numElements, 
+										 size_t stringArrayLength)
+: CUDPPPlan(mgr, config, numElements, stringArrayLength, 0), m_tempKeys(0), m_tempValues(0)
+{
+	allocStringSortStorage(this);
+}
+
+/** @brief String sort plan destructor */
+CUDPPStringSortPlan::~CUDPPStringSortPlan()
+{
+    freeStringSortStorage(this);
+}
 /** @brief Radix Sort Plan constructor
 * 
 * @param[in]  mgr pointer to the CUDPPManager
