@@ -79,7 +79,7 @@ void blockWiseSort(T *A_keys, unsigned int* A_values, int blockSize, size_t tota
 
     //Register Sort - Begin    
     compareSwapVal<T>(myKey[0], myKey[1], myValue[0], myValue[1]);	
-    compareSwapVal<T>(myKey[1], myKey[2], myValue[1], myValue23]);    
+    compareSwapVal<T>(myKey[1], myKey[2], myValue[1], myValue[3]);    
     compareSwapVal<T>(myKey[2], myKey[3], myValue[2], myValue[3]);
     compareSwapVal<T>(myKey[3], myKey[4], myValue[3], myValue[4]);
     compareSwapVal<T>(myKey[4], myKey[5], myValue[4], myValue[5]);    
