@@ -10,6 +10,7 @@
 
 #include "cudpp_mergesort.h"
 #include <cudpp_globals.h>
+#include <cudpp_util.h>
 #include "sharedmem.h"
 #include "cta/mergesort_cta.cuh"
 
@@ -49,7 +50,7 @@ void simpleCopy(T* A_keys_dev, unsigned int* A_vals_dev, T* A_keys_out_dev, unsi
  * @param[in] blockSize Size of the chunks being sorted
  **/
 
-template<class T, int depth, T MAX_VAL>
+template<class T, int depth>
 __global__
 void blockWiseSort(T *A_keys, unsigned int* A_values, int blockSize, size_t totalSize)
 {
@@ -68,6 +69,7 @@ void blockWiseSort(T *A_keys, unsigned int* A_values, int blockSize, size_t tota
     int bid = blockIdx.x;
     int tid = threadIdx.x;
 
+	T MAX_VAL = getMax<T>();
     
     //Grab values in coalesced fashion 
     //out of order, but since no sorting has been done, doesn't matter
@@ -239,7 +241,7 @@ void blockWiseSort(T *A_keys, unsigned int* A_values, int blockSize, size_t tota
  * @param[in] sizePerPartition Size of each partition being merged
  * @param[in] size Size of total Array being sorted
  **/
-template<class T, int depth, T MAX_VAL, T MIN_VAL>
+template<class T, int depth>
 __global__
 void simpleMerge_lower(T *A_keys, unsigned int* A_values, T *A_keys_out, unsigned int *A_values_out, int sizePerPartition, int size)
 {
@@ -248,6 +250,8 @@ void simpleMerge_lower(T *A_keys, unsigned int* A_values, T *A_keys_out, unsigne
     int myStartIdxA = 2*myId*sizePerPartition;   int myStartIdxB = (2*myId+1)*sizePerPartition;  int myStartIdxC = myStartIdxA;	
     int partitionSizeB = sizePerPartition < (size - myStartIdxB) ? sizePerPartition : size - myStartIdxB;	
 
+	T MAX_VAL = getMax<T>();
+	T MIN_VAL = getMin<T>();
     __shared__ T BKeys[INTERSECT_B_BLOCK_SIZE_simple+2];	
     T* BMax = (T*) &BKeys[INTERSECT_B_BLOCK_SIZE_simple];			
     T localMaxB, localMaxA, localMinB;					
@@ -415,10 +419,14 @@ void simpleMerge_lower(T *A_keys, unsigned int* A_values, T *A_keys_out, unsigne
  * @param[in] sizePerPartition Size of each partition being merged
  * @param[in] size Size of total Array being sorted
  **/
-template<class T, int depth, T MAX_VAL, T MIN_VAL>
+template<class T, int depth>
 __global__
 void simpleMerge_higher(T *A_keys, unsigned int*A_values, T*A_keys_out, unsigned int *A_values_out, int sizePerPartition, int size)
 {
+
+	T MAX_VAL = getMax<T>();
+	T MIN_VAL = getMin<T>();
+
     int myId = blockIdx.x;
     int myStartIdxB = 2*myId*sizePerPartition; 
     int myStartIdxA = (2*myId+1)*sizePerPartition; 
@@ -581,10 +589,11 @@ void simpleMerge_higher(T *A_keys, unsigned int*A_values, T*A_keys_out, unsigned
  * @param[out] partitionSizeA Size of each partition/subpartition in A
  * @param[in] sizeA Size of the entire array
  **/
-template<class T, T MY_INVALID>
+template<class T>
 __global__
 void findMultiPartitions(T *A, int splitsPP, int numPartitions, int partitionSize,  int* partitionBeginA, int* partitionSizesA, int sizeA)
 {
+	T MY_INVALID = getMax<T>();
     int myId = threadIdx.x + blockIdx.x*blockDim.x;
     if (myId >= (numPartitions*splitsPP)/2)
         return;
@@ -746,11 +755,15 @@ void findMultiPartitions(T *A, int splitsPP, int numPartitions, int partitionSiz
  * @param[in] partitionBeginA Partition starting points decided by function findMultiPartitions
  * @param[in] partitionSizeA Partition sizes decided by function findMultiPartitions
  **/
-template<class T, int depth, T MAX_VAL,  T MIN_VAL>
+template<class T, int depth>
 __global__
 void mergeMulti_lower(T *A_keys_out, unsigned int* A_vals_out, T *A_keys, unsigned int *A_vals, int subPartitions, int numBlocks, int *partitionBeginA, int *partitionSizeA, 
                       int entirePartitionSize, int sizeA)
 {
+
+	T MAX_VAL = getMax<T>();
+	T MIN_VAL = getMin<T>();
+
     int myId = blockIdx.x; int tid = threadIdx.x;
     int myStartId = (myId%subPartitions) + 2*(myId/subPartitions)*subPartitions; 
     int myStartIdxA = partitionBeginA[myStartId];
@@ -963,11 +976,15 @@ void mergeMulti_lower(T *A_keys_out, unsigned int* A_vals_out, T *A_keys, unsign
  * @param[in] partitionSizeA Partition sizes decided by function findMultiPartitions
  **/
 
-template<class T, int depth, T MAX_VAL, T MIN_VAL>
+template<class T, int depth>
 __global__
 void mergeMulti_higher(T *A_keys_out, unsigned int* A_vals_out, T *A_keys, unsigned int*A_vals, int subPartitions, int numBlocks, int *partitionBeginA, int *partitionSizeA, 
                        int entirePartitionSize, int sizeA)
 {
+
+	T MAX_VAL = getMax<T>();
+	T MIN_VAL = getMin<T>();
+
     int myId = blockIdx.x;
     int myStartId = (myId%subPartitions) + 2*(myId/subPartitions)*subPartitions;
     int myStartIdxB = partitionBeginA[myStartId];

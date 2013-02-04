@@ -42,12 +42,13 @@
 * @param[in] numElements Number of elements in the sort.
 * @param[in] plan Configuration information for mergesort.
 **/
-template<typename T, T INV_VAL, T MIN_VAL>
+template<typename T>
 void runMergeSort(T *pkeys, 
              unsigned int *pvals,
              size_t numElements, 
              const CUDPPMergeSortPlan *plan)
 {
+
 
 	int numPartitions = (numElements+BLOCKSORT_SIZE-1)/BLOCKSORT_SIZE;
 	int numBlocks = numPartitions/2;
@@ -70,7 +71,7 @@ void runMergeSort(T *pkeys,
 
 	int numThreads = 128;	
 #define DEPTH 8
-	blockWiseSort<T, DEPTH, INV_VAL>
+	blockWiseSort<T, DEPTH>
 	<<<numPartitions, BLOCKSORT_SIZE/DEPTH, (BLOCKSORT_SIZE)*sizeof(T) + (BLOCKSORT_SIZE)*sizeof(unsigned int)>>>(pkeys, pvals, BLOCKSORT_SIZE, numElements);
 
 	int mult = 1; int count = 0;
@@ -80,10 +81,10 @@ void runMergeSort(T *pkeys,
 	{				
 		if(count%2 == 0)
 		{ 				
-			simpleMerge_lower<T, 2, INV_VAL, MIN_VAL>
+			simpleMerge_lower<T, 2>
 				<<<numBlocks, CTASIZE_simple, sizeof(T)*(INTERSECT_B_BLOCK_SIZE_simple+4)>>>
 				(pkeys, pvals, temp_keys, temp_vals, partitionSize*mult, (int)numElements);				
-			simpleMerge_higher<T, 2, INV_VAL, MIN_VAL>
+			simpleMerge_higher<T, 2>
 				<<<numBlocks, CTASIZE_simple, sizeof(T)*(INTERSECT_B_BLOCK_SIZE_simple+4)>>>
 				(pkeys, pvals, temp_keys, temp_vals, partitionSize*mult, (int)numElements);		
 			if(numPartitions%2 == 1)
@@ -97,10 +98,10 @@ void runMergeSort(T *pkeys,
 		}
 		else
 		{			
-			simpleMerge_lower<T, 2, INV_VAL, MIN_VAL>
+			simpleMerge_lower<T, 2>
 				<<<numBlocks, CTASIZE_simple, sizeof(T)*(INTERSECT_B_BLOCK_SIZE_simple+4)>>>
 				(temp_keys, temp_vals, pkeys, pvals, partitionSize*mult, numElements);				
-			simpleMerge_higher<T, 2, INV_VAL, MIN_VAL>
+			simpleMerge_higher<T, 2>
 				<<<numBlocks, CTASIZE_simple, sizeof(T)*(INTERSECT_B_BLOCK_SIZE_simple+4)>>>
 				(temp_keys, temp_vals, pkeys, pvals, partitionSize*mult, numElements);	
 			if(numPartitions%2 == 1)
@@ -126,14 +127,14 @@ void runMergeSort(T *pkeys,
 		int secondBlocks = (numBlocks*subPartitions+numThreads-1)/numThreads;			
 		if(count%2 == 1)
 		{								
-			findMultiPartitions<T, INV_VAL><<<secondBlocks, numThreads>>>(temp_keys, subPartitions, numBlocks*2, 
+			findMultiPartitions<T><<<secondBlocks, numThreads>>>(temp_keys, subPartitions, numBlocks*2, 
 															partitionSize*mult, partitionBeginA, partitionSizeA, numElements);						
-			mergeMulti_lower<T, 4, INV_VAL, MIN_VAL>
+			mergeMulti_lower<T, 4>
 				<<<numBlocks*subPartitions, CTASIZE_multi, (INTERSECT_B_BLOCK_SIZE_multi+3)*sizeof(T)>>>
 				(pkeys, pvals,temp_keys, temp_vals, subPartitions, numBlocks, partitionBeginA, partitionSizeA, mult*partitionSize, numElements);
 			
 			
-			mergeMulti_higher<T, 4, INV_VAL, MIN_VAL>
+			mergeMulti_higher<T, 4>
 				<<<numBlocks*subPartitions, CTASIZE_multi, (INTERSECT_B_BLOCK_SIZE_multi+3)*sizeof(T)>>>
 				(pkeys, pvals, temp_keys, temp_vals, subPartitions, numBlocks, partitionBeginA, partitionSizeA, mult*partitionSize, numElements);
 			
@@ -149,14 +150,14 @@ void runMergeSort(T *pkeys,
 		else
 		{
 				
-			findMultiPartitions <T, INV_VAL> <<<secondBlocks, numThreads>>>(pkeys, subPartitions, numBlocks*2, partitionSize*mult, partitionBeginA, partitionSizeA, numElements);
+			findMultiPartitions <T> <<<secondBlocks, numThreads>>>(pkeys, subPartitions, numBlocks*2, partitionSize*mult, partitionBeginA, partitionSizeA, numElements);
 				
 			
-			mergeMulti_lower<T, 4, INV_VAL, MIN_VAL>
+			mergeMulti_lower<T, 4>
 				<<<numBlocks*subPartitions, CTASIZE_multi, (INTERSECT_B_BLOCK_SIZE_multi+3)*sizeof(T)>>>
 				(temp_keys, temp_vals, pkeys, pvals, subPartitions, numBlocks, partitionBeginA, partitionSizeA, mult*partitionSize, numElements);
 			
-			mergeMulti_higher<T, 4, INV_VAL, MIN_VAL>
+			mergeMulti_higher<T, 4>
 				<<<numBlocks*subPartitions, CTASIZE_multi, (INTERSECT_B_BLOCK_SIZE_multi+3)*sizeof(T)>>>
 				(temp_keys, temp_vals, pkeys, pvals, subPartitions, numBlocks, partitionBeginA, partitionSizeA, mult*partitionSize, numElements);
 			
@@ -179,21 +180,7 @@ void runMergeSort(T *pkeys,
 		numBlocks = numPartitions/2;
 	}	
 	
-	/*int * tempPartSize, *tempPartStart;
-	tempPartSize = (int*)malloc(sizeof(int)*numPartitions*subPartitions);
-	tempPartStart = (int*)malloc(sizeof(int)*numPartitions*subPartitions);
-	cudaMemcpy(tempPartSize, partitionSizeA, numPartitions*subPartitions*sizeof(int), cudaMemcpyDeviceToHost);
-	cudaMemcpy(tempPartStart, partitionBeginA, numPartitions*subPartitions*sizeof(int), cudaMemcpyDeviceToHost);
-
-	for(int i =0;i<numPartitions*subPartitions; i++)
-		printf("%d ", tempPartSize[i]);
-	printf("\n");
-	for(int i =0;i<numPartitions*subPartitions; i++)
-		printf("%d ", tempPartStart[i]);
-	printf("\n");
-	for(int i =0;i<numPartitions*subPartitions; i++)
-		printf("%d ", tempPartStart[i]+tempPartSize[i]);
-	printf("\n");*/
+	
 	if(count%2==1)
 	{
 		cudaMemcpy(pkeys, temp_keys, numElements*sizeof(T), cudaMemcpyDeviceToDevice);
@@ -257,13 +244,13 @@ void cudppMergeSortDispatch(void  *keys,
   //      runSort<unsigned char>((unsigned char*)keys, (unsigned int*)values, numElements, plan);
     //    break;
     case CUDPP_INT:
-        runMergeSort<int, INT_MAX, INT_MIN>((int*)keys, (unsigned int*)values, numElements, plan);
+        runMergeSort<int>((int*)keys, (unsigned int*)values, numElements, plan);
         break;
     case CUDPP_UINT:		
-        runMergeSort<unsigned int, UINT_MAX, 0>((unsigned int*)keys, (unsigned int*)values, numElements, plan);
+        runMergeSort<unsigned int>((unsigned int*)keys, (unsigned int*)values, numElements, plan);
         break;
     case CUDPP_FLOAT:
-        runMergeSort<float, FLT_MAX, -FLT_MAX>((float*)keys, (unsigned int*)values, numElements, plan);
+        runMergeSort<float>((float*)keys, (unsigned int*)values, numElements, plan);
         break;
     //case CUDPP_DOUBLE:
      //   runMergeSort<double, DBL_MAX>((double*)keys, (unsigned int*)values, numElements, plan);
