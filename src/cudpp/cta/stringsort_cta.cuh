@@ -304,9 +304,7 @@ void lin_merge_simple(T& cmpValue, T myKey, T myAddress, int& index, T* BKeys, T
 					  int mySizeB, unsigned int stringSize, int i, int stepNum, bool &placed)
 {
 
-	int tid = threadIdx.x;
-	//if(blockIdx.x == 1 && tid == 0)
-	//	printf("%u %u\n", myKey, cmpValue);
+	int tid = threadIdx.x;	
 	 
 	//Here we keep climbing until we either reach the end of our partitions
 	//Or we pass a value greater than ours
@@ -371,12 +369,12 @@ void lin_merge_simple(T& cmpValue, T myKey, T myAddress, int& index, T* BKeys, T
 	{
 		
 		//Here we must check if our string is greater than our tie @ index INTERSECT_B_BLOCK_SIZE_simple (or our shared memory partition)
-		int myLoc = myStartIdxA + depth*tid + i;
-		int cmpLoc = myStartIdxB + bCont + index;
-		int cmpAdd = (bCont+index < mySizeB ? A_values[cmpLoc] : -1);
+		unsigned int myLoc = myStartIdxA + depth*tid + i;
+		unsigned int cmpLoc = myStartIdxB + bCont + index;
+		unsigned int cmpAdd = (bCont+index < mySizeB ? A_values[cmpLoc] : UINT_MAX);
 		
 		
-		if(cmpAdd < 0 || tie_break_simp(myLoc, cmpLoc, totalSize, totalSize, myAddress, cmpAdd, stringValues, stringSize) == 0)
+		if(cmpAdd > totalSize || tie_break_simp(myLoc, cmpLoc, totalSize, totalSize, myAddress, cmpAdd, stringValues, stringSize) == 0)
 			isInWindow = true;
 	}	
 	 
@@ -443,11 +441,7 @@ void linearStringMerge(T* BKeys, T* BValues, T myKey, T myAddress, bool &placed,
 
 
 
-	/*if(myKey > 2746083000 && myKey < 3000000000)
-	{
-		printf("myKey2 aIndex %d %d %d key %u %u %d %d %d %d %d\n", myStartIdxA+aIndex+depth*tid, blockIdx.x, tid, myKey, 
-			globalCAddress, myStartIdxC, myStartIdxA, myStartIdxB, i, blockIdx.x);
-	}*/
+	
 	
 	bool isInWindow = (index > 0 && index < (INTERSECT_B_BLOCK_SIZE_multi));
 
@@ -460,12 +454,12 @@ void linearStringMerge(T* BKeys, T* BValues, T myKey, T myAddress, bool &placed,
 	if((myKey == localMaxB) && index >= (INTERSECT_B_BLOCK_SIZE_multi-1) && globalCAddress <= (myStartIdxC+localCPartSize))
 	{
 		//Here we must check if our string is greater than our tie @ index INTERSECT_B_BLOCK_SIZE_simple (or our shared memory partition)
-		int myLoc = myStartIdxA + depth*tid + i;
-		int cmpLoc = myStartIdxB + bIndex + index;
-		int cmpAdd = (bIndex+index < localBPartSize ? A_values[cmpLoc] : -1);
+		unsigned int myLoc = myStartIdxA + depth*tid + i;
+		unsigned int cmpLoc = myStartIdxB + bIndex + index;
+		unsigned int cmpAdd = (bIndex+index < localBPartSize ? A_values[cmpLoc] : UINT_MAX);
 		
 		
-		if(cmpAdd < 0 || tie_break_simp(myLoc, cmpLoc, totalSize, totalSize, myAddress, cmpAdd, stringValues, stringSize) == 1)
+		if(cmpAdd > totalSize || tie_break_simp(myLoc, cmpLoc, totalSize, totalSize, myAddress, cmpAdd, stringValues, stringSize) == 1)
 			isInWindow = true;
 	
 	}

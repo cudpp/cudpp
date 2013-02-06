@@ -380,7 +380,7 @@ void simpleStringMerge(T *A_keys, T *A_keys_out, T *A_values, T* A_values_out, T
 	bool breakout = false;
 	int tid = threadIdx.x;	
 
-	T localMaxB, localMinB, localMaxA;					
+	T localMaxB, localMinB;					
 	
 
 	T myKey[depth]; T myValue[depth]; bool placed[depth];	
@@ -443,8 +443,7 @@ void simpleStringMerge(T *A_keys, T *A_keys_out, T *A_values, T* A_values_out, T
 		__syncthreads();				
 
 		localMinB = BKeys[0];
-	    localMaxB = BKeys[1023];
-		localMaxA = BMax[1];			
+	    localMaxB = BKeys[1023];	
 
 		__syncthreads();				
 
@@ -674,7 +673,7 @@ void findMultiPartitions(T *A_keys, T* A_address, T* stringValues, int splitsPP,
 
 	int myStartA, myEndA;	
 	T testSample, myStartSample, myEndSample;
-	int testIdx; int subPartitionSize;
+	int subPartitionSize;
 
 	
 	int myPartitionId = myId/splitsPP;
@@ -710,9 +709,6 @@ void findMultiPartitions(T *A_keys, T* A_address, T* stringValues, int splitsPP,
 	int first = myStartRange;
 	int last = myEndRange;
 	uint BMin = A_keys[myStartRange];
-	uint BMax = myEndRange < size ? A_keys[myEndRange] : UINT_MAX;
-	uint AMin = A_keys[myStartA];
-	uint AMax = myEndA < size ? A_keys[myEndA] : UINT_MAX;
 	int mid = (first + last)/2;
 
 	T myPrevSample;
@@ -792,7 +788,6 @@ void findMultiPartitions(T *A_keys, T* A_address, T* stringValues, int splitsPP,
 	
 	unsigned int myStartB = mid;
 	unsigned int myEndB;
-	T myNextSample;
 	
 
 	first = myStartRange; 
@@ -861,9 +856,7 @@ void findMultiPartitions(T *A_keys, T* A_address, T* stringValues, int splitsPP,
 			if(tie_break_simp(myEndA-1, mid, size, size, A_address[myEndA-1], A_address[mid], stringValues, stringSize) == 0)
 			    mid++;
 			
-		}
-
-		//printf("final endSample tid %d mid %d %u %u\n", threadIdx.x, mid, prevSample, myPrevSample);
+		}		
 	}	
 	myEndB = mid;
 
@@ -904,7 +897,6 @@ void stringMergeMulti(T *A_keys, T*A_keys_out, T* A_values, T *A_values_out, T* 
 {
 	int myId = blockIdx.x;
 	int myMergeId = (myId/(2*subPartitions))*2;
-	int myStartId = (myId%subPartitions) + myMergeId; 
 	int partStart = myMergeId*entirePartitionSize;
 
 	int myStartIdxA, myStartIdxB, localAPartSize, localBPartSize, localCPartSize;
