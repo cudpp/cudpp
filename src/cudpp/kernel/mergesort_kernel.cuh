@@ -81,7 +81,7 @@ void blockWiseSort(T *A_keys, unsigned int* A_values, int blockSize, size_t tota
 
     //Register Sort - Begin    
     compareSwapVal<T>(myKey[0], myKey[1], myValue[0], myValue[1]);	
-    compareSwapVal<T>(myKey[1], myKey[2], myValue[1], myValue[3]);    
+    compareSwapVal<T>(myKey[1], myKey[2], myValue[1], myValue[2]);    
     compareSwapVal<T>(myKey[2], myKey[3], myValue[2], myValue[3]);
     compareSwapVal<T>(myKey[3], myKey[4], myValue[3], myValue[4]);
     compareSwapVal<T>(myKey[4], myKey[5], myValue[4], myValue[5]);    
@@ -252,6 +252,7 @@ void simpleMerge_lower(T *A_keys, unsigned int* A_values, T *A_keys_out, unsigne
 
 	T MAX_VAL = getMax<T>();
 	T MIN_VAL = getMin<T>();
+	unsigned int UMAX_VAL = getMax<unsigned int>();
     __shared__ T BKeys[INTERSECT_B_BLOCK_SIZE_simple+2];	
     T* BMax = (T*) &BKeys[INTERSECT_B_BLOCK_SIZE_simple];			
     T localMaxB, localMaxA, localMinB;					
@@ -280,7 +281,7 @@ void simpleMerge_lower(T *A_keys, unsigned int* A_values, T *A_keys_out, unsigne
         for(int i = 0;i < depth; i++) 
         { 
             myKey[i] =   (aIndex+depth*tid + i < sizePerPartition ? A_keys  [myStartIdxA + aIndex+ depth*tid + i]   : MAX_VAL); 
-            myValue[i] = (aIndex+depth*tid + i < sizePerPartition ? A_values[myStartIdxA + aIndex+ depth*tid + i]   : MAX_VAL);	
+            myValue[i] = (aIndex+depth*tid + i < sizePerPartition ? A_values[myStartIdxA + aIndex+ depth*tid + i]   : UMAX_VAL);	
         }
     }	
 
@@ -367,7 +368,7 @@ void simpleMerge_lower(T *A_keys, unsigned int* A_values, T *A_keys_out, unsigne
             else {
                 for(int i = 0;i < depth; i++) {		
                     myKey[i] = (aIndex+depth*tid + i < sizePerPartition ? A_keys[myStartIdxA + aIndex+ depth*tid + i]   : MAX_VAL);					
-                    myValue[i] = (aIndex+depth*tid + i < sizePerPartition ? A_values[myStartIdxA + aIndex+ depth*tid + i]   : MAX_VAL);
+                    myValue[i] = (aIndex+depth*tid + i < sizePerPartition ? A_values[myStartIdxA + aIndex+ depth*tid + i]   : UMAX_VAL);
                 }
             }			
             if(tid == CTASIZE_simple-1)		
@@ -426,6 +427,7 @@ void simpleMerge_higher(T *A_keys, unsigned int*A_values, T*A_keys_out, unsigned
 
 	T MAX_VAL = getMax<T>();
 	T MIN_VAL = getMin<T>();
+	unsigned int UMAX_VAL = getMax<unsigned int>();
 
     int myId = blockIdx.x;
     int myStartIdxB = 2*myId*sizePerPartition; 
@@ -451,7 +453,7 @@ void simpleMerge_higher(T *A_keys, unsigned int*A_values, T*A_keys_out, unsigned
     for(int i =0; i <depth; i++)
     {
         myKey[i] =   (aIndex+depth*tid + i < partitionSizeA ? A_keys  [myStartIdxA + aIndex+depth*tid+i] : MAX_VAL);
-        myValue[i] = (aIndex+depth*tid + i < partitionSizeA ? A_values[myStartIdxA + aIndex+depth*tid+i] : MAX_VAL);
+        myValue[i] = (aIndex+depth*tid + i < partitionSizeA ? A_values[myStartIdxA + aIndex+depth*tid+i] : UMAX_VAL);
     }
 
     if(bIndex + INTERSECT_B_BLOCK_SIZE_simple < sizePerPartition) {
@@ -527,7 +529,7 @@ void simpleMerge_higher(T *A_keys, unsigned int*A_values, T*A_keys_out, unsigned
             for(int i=0;i <depth;i++)
             {
                 myKey[i]   = (aIndex+depth*tid+i   < partitionSizeA ? A_keys[myStartIdxA + aIndex + depth * tid + i]   : MAX_VAL);
-                myValue[i] = (aIndex+depth*tid+i   < partitionSizeA ? A_values[myStartIdxA + aIndex + depth * tid + i]   : MAX_VAL);
+                myValue[i] = (aIndex+depth*tid+i   < partitionSizeA ? A_values[myStartIdxA + aIndex + depth * tid + i]   : UMAX_VAL);
             }
     
             if(tid == CTASIZE_simple-1)		
@@ -764,6 +766,8 @@ void mergeMulti_lower(T *A_keys_out, unsigned int* A_vals_out, T *A_keys, unsign
 	T MAX_VAL = getMax<T>();
 	T MIN_VAL = getMin<T>();
 
+	unsigned int UMAX_VAL = getMax<unsigned int>();
+
     int myId = blockIdx.x; int tid = threadIdx.x;
     int myStartId = (myId%subPartitions) + 2*(myId/subPartitions)*subPartitions; 
     int myStartIdxA = partitionBeginA[myStartId];
@@ -805,7 +809,7 @@ void mergeMulti_lower(T *A_keys_out, unsigned int* A_vals_out, T *A_keys, unsign
     for(int i =0; i <depth; i++)
     {
         myKey[i] = (localAIndex + i   < localAPartSize ? A_keys[myStartIdxA + aIndex+depth*tid+i]   : MAX_VAL);		
-        myVal[i] = (localAIndex + i   < localAPartSize ? A_vals[myStartIdxA + aIndex+depth*tid+i]   : MAX_VAL);
+        myVal[i] = (localAIndex + i   < localAPartSize ? A_vals[myStartIdxA + aIndex+depth*tid+i]   : UMAX_VAL);
     }
 
     if(bIndex + INTERSECT_B_BLOCK_SIZE_multi < localBPartSize) {
@@ -908,7 +912,7 @@ void mergeMulti_lower(T *A_keys_out, unsigned int* A_vals_out, T *A_keys, unsign
             for(int i=0;i <depth;i++)
             {
                 myKey[i] = (aIndex+depth*tid + i   < localAPartSize  ? A_keys[myStartIdxA + aIndex+depth*tid+i]   : MAX_VAL);
-                myVal[i] = (aIndex+depth*tid + i   < localAPartSize  ? A_vals[myStartIdxA + aIndex+depth*tid+i]   : MAX_VAL);
+                myVal[i] = (aIndex+depth*tid + i   < localAPartSize  ? A_vals[myStartIdxA + aIndex+depth*tid+i]   : UMAX_VAL);
             }
     
             if(tid == CTASIZE_multi-1)		
@@ -985,6 +989,8 @@ void mergeMulti_higher(T *A_keys_out, unsigned int* A_vals_out, T *A_keys, unsig
 	T MAX_VAL = getMax<T>();
 	T MIN_VAL = getMin<T>();
 
+	unsigned int UMAX_VAL = getMax<unsigned int>();
+
     int myId = blockIdx.x;
     int myStartId = (myId%subPartitions) + 2*(myId/subPartitions)*subPartitions;
     int myStartIdxB = partitionBeginA[myStartId];
@@ -1024,7 +1030,7 @@ void mergeMulti_higher(T *A_keys_out, unsigned int* A_vals_out, T *A_keys, unsig
     for(int i =0; i <depth; i++)
     {
         myKey[i] = (localAIndex+ i   < localAPartSize ? A_keys[myStartIdxA + localAIndex+i]   : MAX_VAL);
-        myVal[i] = (localAIndex + i   < localAPartSize ? A_vals[myStartIdxA + localAIndex+i]   : MAX_VAL);
+        myVal[i] = (localAIndex + i   < localAPartSize ? A_vals[myStartIdxA + localAIndex+i]   : UMAX_VAL);
     }
     
         
@@ -1137,7 +1143,7 @@ void mergeMulti_higher(T *A_keys_out, unsigned int* A_vals_out, T *A_keys, unsig
             for(int i=0;i <depth;i++)
             {
                 myKey[i] = (aIndex+depth*tid+i   < localAPartSize ? A_keys[myStartIdxA + aIndex+depth*tid+i]   : MAX_VAL);
-                myVal[i] = (aIndex+depth*tid+i   < localAPartSize ? A_vals[myStartIdxA + aIndex+depth*tid+i]   : MAX_VAL);
+                myVal[i] = (aIndex+depth*tid+i   < localAPartSize ? A_vals[myStartIdxA + aIndex+depth*tid+i]   : UMAX_VAL);
             }
     
             if(tid == CTASIZE_multi-1)		
