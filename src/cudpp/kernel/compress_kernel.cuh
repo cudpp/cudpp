@@ -2141,19 +2141,13 @@ huffman_build_tree_kernel(const uchar *d_input,
     //--------------------------------------------------------------------------
 
     __shared__ uint nNodes;
-    __shared__ ushort2 mins[129];
-    __shared__ uchar complete;
-    __shared__ uint addedNodes;
-
     __shared__ int min1, min2; // two nodes with the lowest count
     __shared__ int head_node; // root of tree
     __shared__ int current_node; // location on the tree
 
     if(idx == 0)
     {
-        complete = 0;
         nNodes = 0;
-        addedNodes = 0;
         min1 = HUFF_NONE;
         min2 = HUFF_NONE;
 
@@ -2167,12 +2161,7 @@ huffman_build_tree_kernel(const uchar *d_input,
                 nNodes++;
             }
         }
-        mins[128].x = 256;
-        mins[128].y = 257;
     }
-
-    mins[idx].x = idx*2;
-    mins[idx].y = idx*2+1;
 
     __threadfence();
     __syncthreads();
