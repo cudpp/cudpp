@@ -8,7 +8,7 @@
 // in the root directory of this source distribution.
 // ------------------------------------------------------------- 
 #include <cudpp_globals.h>
-#include "cudpp_mergesort.h"
+#include "cudpp_stringsort.h"
 #include <cudpp.h>
 #include <stdio.h>
 
@@ -34,27 +34,26 @@
 #define BLOCKSORT_SIZE 1024
 #define CTA_BLOCK 128
 #define DEPTH_simple 2
-#define DEPTH_multi 2
+#define DEPTH_multi 4
 #define CTASIZE_simple 256
-#define CTASIZE_multi 256
+#define CTASIZE_multi 128
 
 #define INTERSECT_A_BLOCK_SIZE_simple DEPTH_simple*CTASIZE_simple
 #define INTERSECT_B_BLOCK_SIZE_simple 2*DEPTH_simple*CTASIZE_simple
 
 #define INTERSECT_A_BLOCK_SIZE_multi DEPTH_multi*CTASIZE_multi
 #define INTERSECT_B_BLOCK_SIZE_multi 2*DEPTH_multi*CTASIZE_multi
-
 typedef unsigned int uint;
 
 /** @brief Breaks ties in keys (first four characters) returns true if cmpVal > myVal false otherwise
  * @param[in] myLoc, cmpLoc Location of the two inputs
  * @param[in] myBound, cmpBound Local memory bounds for the two addresses
- * @param[in] myAdd, cmpAdd Address into global memory of the two values add[myLoc], add[cmpLoc]
+ * @param[in] myAdd, Address into global memory of our current value
+ * @param[in] cmpAdd, Address into global memory of the value we are comparing against
  * @param[in] stringLoc Global memory array (input string)
  * @param[in] stringSize Size of our input string
+ * @return Returns 1 if cmpVal > myVal 0 otherwise
  **/
-
-
 __device__ int tie_break_simp(unsigned int myLoc, unsigned int cmpLoc, unsigned int myBound, unsigned int cmpBound, unsigned int myAdd, unsigned int cmpAdd, unsigned int* stringLoc, unsigned int stringSize)
 {
 	
@@ -86,12 +85,15 @@ __device__ int tie_break_simp(unsigned int myLoc, unsigned int cmpLoc, unsigned 
 	
 }
 /** @brief Binary search within a single block (blockSort)
- * @param[in/out] cmpValue Value being considered from other partition
+ * @param[in,out] cmpValue Value being considered from other partition
  * @param[in] tmpVal My Value
- * @param[in] in, addressPad, stringVals in = keys, addressPad = values, stringVals are used to break ties
- * @param[in/out] j, The index we are considering
- * @param[in] sizeRemain, Size of our block (if it's smaller than blockSize)
- * @param[in] stringSize, Size of our global string array (for tie breaks)
+ * @param[in] in, input keys
+ * @param[in] addressPad addresses of string locations in case of tie breaks
+ * @param[in] stringVals global string array used to break ties
+ * @param[in,out] j The index we are considering
+ * @param[in] bump The offset we update by
+ * @param[in] sizeRemain Size of our block (if it's smaller than blockSize)
+ * @param[in] stringSize Size of our global string array (for tie breaks)
  **/
 template<class T, int depth>
 __device__ void bin_search_block_string(T &cmpValue, T tmpVal, T* in, T* addressPad, T* stringVals, int & j, int bump, int sizeRemain, unsigned int stringSize)
@@ -119,19 +121,18 @@ __device__ void bin_search_block_string(T &cmpValue, T tmpVal, T* in, T* address
 }
 
 /** @brief Linear search within a single block (blockSort)
- * @param[in/out] cmpValue Value being considered from other partition
- * @param[in/out] tmpVal Temporary register which is used initially to compare our value, and then to store the final address
+ * @param[in,out] cmpValue Value being considered from other partition
+ * @param[in,out] tmpVal Temporary register which is used initially to compare our value, and then to store the final address
  *                        after our search
  * @param[in] in, addressPad, stringVals in = keys, addressPad = values, stringVals = global string array for tie breaks
- * @param[in] j, index in B partition we are considering
- * @param[in] offset, Since this is register packed, offset is the ith iteration of linear search
- * @param[in] last, The end of partition B we are allowed to look upto
- * @param[in] startAddress, The beginning of our partition
- * @param[in] stringSize, Size of our global string array
+ * @param[in] j index in B partition we are considering
+ * @param[in] offset Since this is register packed, offset is the ith iteration of linear search
+ * @param[in] last The end of partition B we are allowed to look upto
+ * @param[in] startAddress The beginning of our partition 
+ * @param[in] stringSize Size of our global string array
  **/
 template<class T, int depth>
-__device__ void lin_search_block_string(T &cmpValue, T &tmpVal, T* in, T* addressPad, T* stringVals, int &j, int offset, int last, int startAddress, int addPart, int sizeRemain, int stringSize)
-{			
+__device__ void lin_search_block_string(T &cmpValue, T &tmpVal, T* in, T* addressPad, T* stringVals, int &j, int offset, int last, int startAddress, int stringSize){			
 	
 	
 	while (cmpValue < tmpVal && j < last)		
@@ -190,9 +191,11 @@ __device__ void lin_search_block_string(T &cmpValue, T &tmpVal, T* in, T* addres
 }
 
 /** @brief For blockSort. Compares two values and decides to swap if A1 > A2
- * @param[in/out] A1, A2 Two values being compared
- * @param[in] index1, index Local addresses of values
- * @param[in/out] scratch, Scratch memory storing the addresses
+ * @param[in,out] A1 First value being compared
+ * @param[in,out] A2 Second value being compared
+ * @param[in] index1, Local address of A1
+ * @param[in] index2, Local address of A2 
+ * @param[in,out] scratch, Scratch memory storing the addresses
  * @param[in] stringVals, String Values for tie breaks
  * @param[in] size, size of our array
  *                        
@@ -290,10 +293,11 @@ void  binSearch_frag_mult(T* keyArraySmem, T* valueArraySmem, int offset, int &m
  * @param[in] myKey, myAddress Keys and address from our array
  * @param[in] index Current index we are considering in our B array
  * @param[in] BKeys, BValues Keys and Addresses for array B
- * @param[in, out] stringValues, A_Keys, A_values, A_keys_out, A_values_out Global arrays for our strings, keys, values
+ * @param[in, out] stringValues, A_keys, A_values, A_keys_out, A_values_out Global arrays for our strings, keys, values
  * @param[in] myStartIdxA, myStartIdxB, myStartIdxC Beginning indices for our partitions
  * @param[in] localMinB, localMaxB The minimum and maximum values in our B partition
- * @param[in] aCont, bCount, totalSize, mySizeA, mySizeB, stringSize Address bounds and calculation helpers
+ * @param[in] aCont, bCont, totalSize, mySizeA, mySizeB, stringSize Address bounds and calculation helpers
+ * @param[in] i, The index of the local element we are merging
  * @param[in] stepNum Debug helper
  * @param[in] placed Whether value has been placed yet or not
 **/
@@ -392,7 +396,6 @@ void lin_merge_simple(T& cmpValue, T myKey, T myAddress, int& index, T* BKeys, T
 		
 }
 
-//TODO: Make both linearMerge work for both multi and simple merge
 template<class T, int depth>
 __device__
 void linearStringMerge(T* BKeys, T* BValues, T myKey, T myAddress, bool &placed, int &index,  T &cmpValue, T* A_keys, T* A_values, T* A_keys_out, 

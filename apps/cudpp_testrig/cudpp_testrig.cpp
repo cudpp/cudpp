@@ -173,7 +173,7 @@ int testAllOptionsAndDatatypes(int argc,
 	    config.datatype = CUDPP_UINT;
         retval += testAllDatatypes(argc, argv, config, supportsDouble, multiRow);
 		return retval;
-    }
+    } 
     
     config.op = CUDPP_ADD;
     
@@ -403,10 +403,7 @@ int main(int argc, const char** argv)
             config.algorithm = CUDPP_SCAN;
             retval += testAllOptionsAndDatatypes(argc, argv, config, supportsDouble);        
         }
-        if (runMergeSort) {					            
-            config.algorithm = CUDPP_SORT_MERGE;
-            retval += testAllOptionsAndDatatypes(argc, argv, config, supportsDouble);
-        }
+       
         if (runSegScan) {
             config.algorithm = CUDPP_SEGMENTED_SCAN;
             retval += testAllOptionsAndDatatypes(argc, argv, config, supportsDouble);                        
@@ -426,6 +423,12 @@ int main(int argc, const char** argv)
             config.algorithm = CUDPP_SORT_RADIX;
             retval += testAllOptionsAndDatatypes(argc, argv, config, supportsDouble);
         }
+
+		if (runMergeSort) {					            
+            config.algorithm = CUDPP_SORT_MERGE;
+            retval += testAllOptionsAndDatatypes(argc, argv, config, supportsDouble);
+        }
+
         if(runStringSort) {
 			
             config.algorithm = CUDPP_SORT_STRING;

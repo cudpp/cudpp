@@ -45,7 +45,14 @@
 #define INTERSECT_B_BLOCK_SIZE_multi 2*DEPTH_multi*CTASIZE_multi
 typedef unsigned int uint;
 
-//does a portion of binary search
+/** @brief Binary search within a single block (blockSort)
+ * @param[in,out] cmpValue Value being considered from other partition
+ * @param[in] tmpVal My Value
+ * @param[in] in input keys
+ * @param[in,out] j The index we are considering
+ * @param[in] bump The offset we update by
+ * @param[in] addPart Tie break (left partition vs right partition) 
+ **/
 template<class T, int depth>
 __device__ void bin_search_block(T &cmpValue, T tmpVal, T* in, unsigned int & j, unsigned int bump, unsigned int addPart)
 {
@@ -56,10 +63,18 @@ __device__ void bin_search_block(T &cmpValue, T tmpVal, T* in, unsigned int & j,
     __syncthreads();
 
 }
-//linear search to find next index
-//addPart is needed to determine if you are the "right" block or "left" block
-
-//lin_search_block<T, depth>(cmpValue, myKey[1], myAddress[1], scratchPad, addressPad, j, 1, last, startAddress, addPart);				
+/** @brief Linear search within a single block (blockSort)
+ * @param[in,out] cmpValue Value being considered from other partition
+ * @param[in,out] cmpValue Value in our partition
+ * @param[in,out] tmpVal Temporary register which is used to store the final address after our search
+ * @param[in] in, addressPad, in = keys and addressPad = values
+ * @param[in] j index in B partition we are considering
+ * @param[in] offset Since this is register packed, offset is the ith iteration of linear search
+ * @param[in] last The end of partition B we are allowed to look upto
+ * @param[in] startAddress The beginning of our partition 
+ * @param[in] addPart Tie break (left partition vs right partition) 
+ **/
+			
 template<class T, int depth>
 __device__ void lin_search_block(T &cmpValue, T mVal, unsigned int &tmpVal, T* in, unsigned int* addressPad, unsigned int &j, 
 								 unsigned int offset, unsigned int last, unsigned int startAddress, unsigned int addPart)
@@ -76,7 +91,12 @@ __device__ void lin_search_block(T &cmpValue, T mVal, unsigned int &tmpVal, T* i
     tmpVal = j+startAddress+offset;
 }
 
-//Key-Value compare and swap
+/** @brief For blockSort. Compares two values and decides to swap if A1 > A2
+ * @param[in,out] A1 First value being compared
+ * @param[in,out] A2 Second value being compared
+ * @param[in] ref1, Local address of A1
+ * @param[in] ref2, Local address of A2                        
+ **/
 template<class T>
 __device__ void compareSwapVal(T &A1, T &A2, unsigned int& ref1, unsigned int& ref2)
 {
@@ -86,9 +106,9 @@ __device__ void compareSwapVal(T &A1, T &A2, unsigned int& ref1, unsigned int& r
         A1 = A2;
         A2 = tmp;
 
-        tmp = ref1;
+        unsigned int tmp2 = ref1;
         ref1 = ref2;
-        ref2 = tmp;
+        ref2 = tmp2;
     }   
 }
 
@@ -135,8 +155,26 @@ inline void binSearch_whole_higher(T* BKeys, int &index, T myKey)
 	binSearch_fragment_higher<T> (BKeys, 1,   index, myKey);							
 }
 
-#define DVAL1  1043863958
-#define DVAL2  1043863958
+
+/** @brief Performs a linear search in our shared memory (done after binary search).
+* It merges the partition on the left side with the associated partition on the right side
+* @param[in] searchArray Array of keys
+* @param[in] myKey Current key being considered
+* @param[in] myVal Associated value of key
+* @param[in,out] index Index in local B partition we are comparing with
+* @param[out] saveGlobalArray Array of Keys after merge is complete
+* @param[out] saveValueArray Array of values after merge is complete
+* @param[in] myStartIdxC Global starting index of both partitions being considered
+* @param[in] nextMaxB Minimum value in the partition NEXT to the one we are comparing against
+* @param[in] localAPartSize Size of the partition we are considering
+* @param[in] localBPartSize Size of the partition we are comparing against
+* @param[in] localMaxB Largest element in THIS partition we are comparing against
+* @param[in] localMinB Smallest element in THIS partition we are comparing against
+* @param[in] aIndex The first global index our block is considering (thread 0 key 0)
+* @param[in] bIndex The first global index our block is comparing against (value 0 in shared memory)
+* @param[in] offset Count of key this thread is considering (between 1 and depth)
+ 
+**/
 
 template<class T, int depth>
 __device__
@@ -161,6 +199,23 @@ inline void linearMerge_lower(T* searchArray, T myKey, unsigned int myVal, int &
 				
 }
 
+/** @brief Performs a linear search in our shared memory (done after binary search).
+* It merges the partition on the right side with the associated partition on the left side
+* @param[in] searchArray Array of keys
+* @param[in] myKey Current key being considered
+* @param[in] myVal Associated value of key
+* @param[in,out] index Index in local B partition we are comparing with
+* @param[out] saveGlobalArray Array of Keys after merge is complete
+* @param[out] saveValueArray Array of values after merge is complete
+* @param[in] myStartIdxC Global starting index of both partitions being considered
+* @param[in] localMinB Smallest element in THIS partition we are comparing against
+* @param[in] nextMaxB Minimum value in the partition NEXT to the one we are comparing against
+* @param[in] aIndex The first global index our block is considering (thread 0 key 0)
+* @param[in] bIndex The first global index our block is comparing against (value 0 in shared memory)
+* @param[in] offset Count of key this thread is considering (between 1 and depth)
+* @param[in] localAPartSize Size of the partition we are considering
+* @param[in] localBPartSize Size of the partition we are comparing against
+**/
 template<class T, int depth>
 __device__
 inline void linearMerge_higher(T* searchArray, T myKey, unsigned int myVal, int &index, T* saveGlobalArray, unsigned int* saveValueArray, int myStartIdxC, 

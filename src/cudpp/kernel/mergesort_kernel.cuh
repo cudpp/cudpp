@@ -33,6 +33,13 @@
 
 typedef unsigned int uint;
 
+/** @brief Copies unused portions of arrays in our ping-pong strategy
+ * @param[in] A_keys_dev, A_vals_dev The keys and values we will be copying
+ * @param[out] A_keys_out_dev, A_vals_out_dev The keys and values array we will copy to
+ * @param[in] offset, The offset we are starting to copy from 
+ * @param[in] numElementsToCopy, The number of elements we copy starting from the offset
+**/
+
 template <class T>
 __global__
 void simpleCopy(T* A_keys_dev, unsigned int* A_vals_dev, T* A_keys_out_dev, unsigned int* A_vals_out_dev, int offset, int numElementsToCopy)
@@ -422,7 +429,7 @@ void simpleMerge_lower(T *A_keys, unsigned int* A_values, T *A_keys_out, unsigne
  **/
 template<class T, int depth>
 __global__
-void simpleMerge_higher(T *A_keys, unsigned int*A_values, T*A_keys_out, unsigned int *A_values_out, int sizePerPartition, int size)
+void simpleMerge_higher(T *A_keys, unsigned int* A_values, T* A_keys_out, unsigned int *A_values_out, int sizePerPartition, int size)
 {
 
 	T MAX_VAL = getMax<T>();
@@ -740,11 +747,6 @@ void findMultiPartitions(T *A, int splitsPP, int numPartitions, int partitionSiz
 }
 
 
-
-
-/** @} */ // end mergesort functions
-/** @} */ // end cudpp_kernel
-
 /** @brief Blocks cooperatively Merge two partitions for the indices in the "lower" block (left block)
  *  
  * Utilizes a "ping-pong" strategy
@@ -756,6 +758,7 @@ void findMultiPartitions(T *A, int splitsPP, int numPartitions, int partitionSiz
  * @param[in] numBlocks 
  * @param[in] partitionBeginA Partition starting points decided by function findMultiPartitions
  * @param[in] partitionSizeA Partition sizes decided by function findMultiPartitions
+ * @param[in] sizeA The total size of our array
  **/
 template<class T, int depth>
 __global__
@@ -978,6 +981,7 @@ void mergeMulti_lower(T *A_keys_out, unsigned int* A_vals_out, T *A_keys, unsign
  * @param[in] numBlocks 
  * @param[in] partitionBeginA Partition starting points decided by function findMultiPartitions
  * @param[in] partitionSizeA Partition sizes decided by function findMultiPartitions
+ * @param[in] sizeA The total size of our array
  **/
 
 template<class T, int depth>
@@ -1202,3 +1206,7 @@ void mergeMulti_higher(T *A_keys_out, unsigned int* A_vals_out, T *A_keys, unsig
     while(!breakout);
 
 }
+
+/** @} */ // end MergeSort functions
+/** @} */ // end cudpp_kernel
+

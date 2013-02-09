@@ -13,6 +13,7 @@
 #include "sharedmem.h"
 #include "cta/stringsort_cta.cuh"
 
+
 /**
  * @file
  * stringsort_kernel.cu
@@ -29,30 +30,13 @@
  */
 
 
-/** @brief Copies unused portions of arrays in our ping-pong strategy
- * @param[in] A_keys_dev, A_vals_dev The keys and values we will be copying
- * @param[out] A_keys_out_dev, A_vals_out_dev The keys and values array we will copy to
- * @param[in] offset, The offset we are starting to copy from 
- * @oaran[in] numElementsToCopy, The number of elements we copy starting from the offset
-**/
-template <class T>
-__global__
-void simpleCopy(T* A_keys_dev, unsigned int* A_vals_dev, T* A_keys_out_dev, unsigned int* A_vals_out_dev, int offset, int numElementsToCopy)
-{
-    int myId = blockIdx.x*blockDim.x + threadIdx.x;
-    if(myId >= numElementsToCopy)
-        return;
-    A_keys_out_dev[offset+myId] = A_keys_dev[offset+myId];
-    A_vals_out_dev[offset+myId] = A_vals_dev[offset+myId];
-
-}
 
 /** @brief Does an initial blockSort based on the size of our partition (limited by shared memory size)
- * @param[in/out] A_keys, A_address This sort is in-place. A_keys and A_address store the key (first four characters) and addresses of our strings
+ * @param[in/out] A_keys, A_address, This sort is in-place. A_keys and A_address store the key (first four characters) and addresses of our strings
  * @param[in] stringVals Global array of strings for tie breaks
- * @param[in] blockSize, The size of each block
- * @param[in] totalSize, The totalSize of the array we are sorting
- * @param[in] stringSize, The size of our string array (stringVals)
+ * @param[in] blockSize size of each block
+ * @param[in] totalSize The total size of the array we are sorting
+ * @param[in] stringSize The size of our string array (stringVals)
  **/
 template<class T, int depth>
 __global__
@@ -234,13 +218,13 @@ void blockWiseStringSort(T *A_keys, T* A_address, T* stringVals, int blockSize, 
 		__syncthreads();	
 		__threadfence();
         Aval[0] = j+startAddress;			
-		lin_search_block_string<T, depth>(cmpValue,  Aval[1], in, addressPad, stringVals, j, 1, last, startAddress, 0, totalSize-bid*blockSize, stringSize);				
-		lin_search_block_string<T, depth>(cmpValue,  Aval[2], in, addressPad, stringVals, j, 2, last, startAddress, 0, totalSize-bid*blockSize, stringSize);		
-		lin_search_block_string<T, depth>(cmpValue,  Aval[3], in, addressPad, stringVals, j, 3, last, startAddress, 0, totalSize-bid*blockSize, stringSize);		
-		lin_search_block_string<T, depth>(cmpValue,  Aval[4], in, addressPad, stringVals, j, 4, last, startAddress, 0, totalSize-bid*blockSize, stringSize);		
-		lin_search_block_string<T, depth>(cmpValue,  Aval[5], in, addressPad, stringVals, j, 5, last, startAddress, 0, totalSize-bid*blockSize, stringSize);		
-		lin_search_block_string<T, depth>(cmpValue,  Aval[6], in, addressPad, stringVals, j, 6, last, startAddress, 0, totalSize-bid*blockSize, stringSize);		
-		lin_search_block_string<T, depth>(cmpValue,  Aval[7], in, addressPad, stringVals, j, 7, last, startAddress, 0, totalSize-bid*blockSize, stringSize);
+		lin_search_block_string<T, depth>(cmpValue,  Aval[1], in, addressPad, stringVals, j, 1, last, startAddress, stringSize);				
+		lin_search_block_string<T, depth>(cmpValue,  Aval[2], in, addressPad, stringVals, j, 2, last, startAddress, stringSize);		
+		lin_search_block_string<T, depth>(cmpValue,  Aval[3], in, addressPad, stringVals, j, 3, last, startAddress, stringSize);		
+		lin_search_block_string<T, depth>(cmpValue,  Aval[4], in, addressPad, stringVals, j, 4, last, startAddress, stringSize);		
+		lin_search_block_string<T, depth>(cmpValue,  Aval[5], in, addressPad, stringVals, j, 5, last, startAddress, stringSize);		
+		lin_search_block_string<T, depth>(cmpValue,  Aval[6], in, addressPad, stringVals, j, 6, last, startAddress, stringSize);		
+		lin_search_block_string<T, depth>(cmpValue,  Aval[7], in, addressPad, stringVals, j, 7, last, startAddress, stringSize);
 		
 		__threadfence();
         __syncthreads();
@@ -655,7 +639,7 @@ void simpleStringMerge(T *A_keys, T *A_keys_out, T *A_values, T* A_values_out, T
 
 /** @brief For our multiMerge kernels we need to divide our partitions into smaller partitions. This kernel breaks up a set of partitions into splitsPP*numPartitions subpartitions.
  * @param[in] A_keys, A_address First four characters (input), and addresses of our inputs
- * @param[in] stringValues, Global string array for tie breaks
+ * @param[in] stringValues Global string array for tie breaks
  * @param[in] splitsPP, numPartitions, partitionSize Partition information for this routine (splitsPP=splits Per Partition) 
  * @param[in] partitionBeginA, partitionSizesA Partition starting points and sizes for each new subpartition in our original set in A
  * @param[in] partitionBeginB, partitionSizesB Partition starting points and sizes for each new subpartition in our original set in B
@@ -876,13 +860,13 @@ void findMultiPartitions(T *A_keys, T* A_address, T* stringValues, int splitsPP,
 }
 
 /** @brief Main merge kernel where multiple CUDA blocks cooperate to merge a partition(s)
- * @param[in] A_keys, A_address First four characters (input), and addresses of our inputs
+ * @param[in] A_keys, A_values First four characters (input), and addresses of our inputs
  * @param[out] A_keys_out, A_values_out First four characters, and addresses for our outputs(ping-pong)
- * @param[in] stringValues, Global string array for tie breaks
+ * @param[in] stringValues string array for tie breaks
  * @param[out] subPartitions, numBlocks Number of splits per partitions and number of partitions respectively
  * @param[in] partitionBeginA, partitionSizeA Where partitions begin and how large they are for Segment A
  * @param[in] partitionBeginB, partitionSizeB Where partitions begin and how large they are for Segment B
- * @param[in] entierPartitionSize The maximum length of a partition
+ * @param[in] entirePartitionSize The maximum length of a partition
  * @param[in] step Number of merge cycles done
  * @param[in] size Number of total strings being sorted
  * @param[in] stringSize Length of string array
@@ -1213,4 +1197,5 @@ void stringMergeMulti(T *A_keys, T*A_keys_out, T* A_values, T *A_values_out, T* 
 }
 
 		
-
+/** @} */ // end StringSort functions
+/** @} */ // end cudpp_kernel

@@ -28,6 +28,7 @@
 #include "cudpp_util.h"
 #include "cudpp_stringsort.h"
 #include "kernel/stringsort_kernel.cuh"
+#include "kernel/mergesort_kernel.cuh" //for simpleCopy
 #include "limits.h"
 
 
@@ -42,6 +43,7 @@
 * @param[in,out] pvals Addresses of string locations for tie-breaks
 * @param[out] stringVals global string value array (four characters stuffed into a uint)
 * @param[in] numElements Number of elements in the sort.
+* @param[in] stringArrayLength The size of our string array in uints (4 chars per uint)
 * @param[in] plan Configuration information for mergesort.
 **/
 void runStringSort(unsigned int *pkeys, 
@@ -238,6 +240,7 @@ extern "C"
 	* @param[in,out] values Address of string values in array of null terminated strings
 	* @param[in] stringVals Global string array
 	* @param[in] numElements Number of elements in the sort.
+	* @param[in] stringArrayLength The size of our string array in uints (4 chars per uint)
 	* @param[in] plan Configuration information for mergeSort.
 	**/
 

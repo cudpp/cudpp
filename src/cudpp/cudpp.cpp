@@ -442,8 +442,8 @@ CUDPPResult cudppMergeSort(const CUDPPHandle planHandle,
  * @todo Determine if we need to provide an "out of place" sort interface.
  * 
  * @param[in] planHandle handle to CUDPPSortPlan
- * @param[in/out] d_keys keys (first four chars of string to be sorted)
- * @param[in/out] d_values addresses where the strings reside
+ * @param[in,out] d_keys keys (first four chars of string to be sorted)
+ * @param[in,out] d_values addresses where the strings reside
  * @param[in] stringVals Original string input, series of characters each terminated by a null
  * @param[in] numElements number of elements in d_keys and d_values
  * @param[in] stringArrayLength Length in uint of the size of all strings
