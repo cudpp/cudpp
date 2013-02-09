@@ -30,11 +30,11 @@ using namespace cudpp_app;
 
 //TODO: right now just checking the keys, need to check in case of ties (and values)
 int verifyStringSort(unsigned int* keysSorted, unsigned int *valuesSorted, unsigned int* keysUnsorted,
-					  unsigned int* stringVals, int numElements, int stringSize)
+					  unsigned int* stringVals, size_t numElements, int stringSize)
 {
 	int retval = 0;
 	
-	for(unsigned int i = 0; i< numElements-1; ++i)
+	for(unsigned int i = 0; i < numElements-1; ++i)
 	{
 		bool unordered = (keysSorted[i])>(keysSorted[i+1]);
         if (unordered)
@@ -89,7 +89,7 @@ int stringSortTest(CUDPPHandle theCudpp, CUDPPConfiguration config, size_t *test
     }
     stringVals = (unsigned int*) malloc(sizeof(unsigned int)*stringSize);
     unsigned int index = 0;
-	printf("%d elements and %d characters\n", numElements, 4*stringSize);
+	printf("%u elements and %d characters\n", numElements, 4*stringSize);
 	unsigned int temp = 0;
 	char c1, c2, c3, c4;
     for(unsigned int i = 0; i < numElements; ++i)
