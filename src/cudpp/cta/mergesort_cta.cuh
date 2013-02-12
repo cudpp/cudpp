@@ -65,7 +65,7 @@ __device__ void bin_search_block(T &cmpValue, T tmpVal, T* in, unsigned int & j,
 }
 /** @brief Linear search within a single block (blockSort)
  * @param[in,out] cmpValue Value being considered from other partition
- * @param[in,out] cmpValue Value in our partition
+ * @param[in] mVal Value in our partition
  * @param[in,out] tmpVal Temporary register which is used to store the final address after our search
  * @param[in] in, addressPad, in = keys and addressPad = values
  * @param[in] j index in B partition we are considering
@@ -94,8 +94,8 @@ __device__ void lin_search_block(T &cmpValue, T mVal, unsigned int &tmpVal, T* i
 /** @brief For blockSort. Compares two values and decides to swap if A1 > A2
  * @param[in,out] A1 First value being compared
  * @param[in,out] A2 Second value being compared
- * @param[in] ref1, Local address of A1
- * @param[in] ref2, Local address of A2                        
+ * @param[in,out] ref1 Local address of A1
+ * @param[in,out] ref2 Local address of A2                        
  **/
 template<class T>
 __device__ void compareSwapVal(T &A1, T &A2, unsigned int& ref1, unsigned int& ref2)

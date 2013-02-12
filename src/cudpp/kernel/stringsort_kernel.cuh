@@ -32,7 +32,7 @@
 
 
 /** @brief Does an initial blockSort based on the size of our partition (limited by shared memory size)
- * @param[in/out] A_keys, A_address, This sort is in-place. A_keys and A_address store the key (first four characters) and addresses of our strings
+ * @param[in,out] A_keys, A_address This sort is in-place. A_keys and A_address store the key (first four characters) and addresses of our strings
  * @param[in] stringVals Global array of strings for tie breaks
  * @param[in] blockSize size of each block
  * @param[in] totalSize The total size of the array we are sorting

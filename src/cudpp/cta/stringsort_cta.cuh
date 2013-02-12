@@ -48,8 +48,8 @@ typedef unsigned int uint;
 /** @brief Breaks ties in keys (first four characters) returns true if cmpVal > myVal false otherwise
  * @param[in] myLoc, cmpLoc Location of the two inputs
  * @param[in] myBound, cmpBound Local memory bounds for the two addresses
- * @param[in] myAdd, Address into global memory of our current value
- * @param[in] cmpAdd, Address into global memory of the value we are comparing against
+ * @param[in] myAdd Address into global memory of our current value
+ * @param[in] cmpAdd Address into global memory of the value we are comparing against
  * @param[in] stringLoc Global memory array (input string)
  * @param[in] stringSize Size of our input string
  * @return Returns 1 if cmpVal > myVal 0 otherwise
@@ -87,7 +87,7 @@ __device__ int tie_break_simp(unsigned int myLoc, unsigned int cmpLoc, unsigned 
 /** @brief Binary search within a single block (blockSort)
  * @param[in,out] cmpValue Value being considered from other partition
  * @param[in] tmpVal My Value
- * @param[in] in, input keys
+ * @param[in] in input keys
  * @param[in] addressPad addresses of string locations in case of tie breaks
  * @param[in] stringVals global string array used to break ties
  * @param[in,out] j The index we are considering
@@ -193,11 +193,11 @@ __device__ void lin_search_block_string(T &cmpValue, T &tmpVal, T* in, T* addres
 /** @brief For blockSort. Compares two values and decides to swap if A1 > A2
  * @param[in,out] A1 First value being compared
  * @param[in,out] A2 Second value being compared
- * @param[in] index1, Local address of A1
- * @param[in] index2, Local address of A2 
- * @param[in,out] scratch, Scratch memory storing the addresses
- * @param[in] stringVals, String Values for tie breaks
- * @param[in] size, size of our array
+ * @param[in] index1 Local address of A1
+ * @param[in] index2 Local address of A2 
+ * @param[in,out] scratch Scratch memory storing the addresses
+ * @param[in] stringVals String Values for tie breaks
+ * @param[in] size size of our array
  *                        
  **/
 template<class T>
@@ -297,7 +297,7 @@ void  binSearch_frag_mult(T* keyArraySmem, T* valueArraySmem, int offset, int &m
  * @param[in] myStartIdxA, myStartIdxB, myStartIdxC Beginning indices for our partitions
  * @param[in] localMinB, localMaxB The minimum and maximum values in our B partition
  * @param[in] aCont, bCont, totalSize, mySizeA, mySizeB, stringSize Address bounds and calculation helpers
- * @param[in] i, The index of the local element we are merging
+ * @param[in] i The index of the local element we are merging
  * @param[in] stepNum Debug helper
  * @param[in] placed Whether value has been placed yet or not
 **/

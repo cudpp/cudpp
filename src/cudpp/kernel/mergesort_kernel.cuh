@@ -36,8 +36,8 @@ typedef unsigned int uint;
 /** @brief Copies unused portions of arrays in our ping-pong strategy
  * @param[in] A_keys_dev, A_vals_dev The keys and values we will be copying
  * @param[out] A_keys_out_dev, A_vals_out_dev The keys and values array we will copy to
- * @param[in] offset, The offset we are starting to copy from 
- * @param[in] numElementsToCopy, The number of elements we copy starting from the offset
+ * @param[in] offset The offset we are starting to copy from 
+ * @param[in] numElementsToCopy The number of elements we copy starting from the offset
 **/
 
 template <class T>
@@ -53,8 +53,9 @@ void simpleCopy(T* A_keys_dev, unsigned int* A_vals_dev, T* A_keys_out_dev, unsi
 }
 /** @brief Sorts blocks of data of size blockSize
  * @param[in,out] A_keys keys to be sorted
- * @param[in,out] A_address associated values to keys
+ * @param[in,out] A_values associated values to keys
  * @param[in] blockSize Size of the chunks being sorted
+ * @param[in] totalSize Size of the enitre array
  **/
 
 template<class T, int depth>
@@ -64,7 +65,6 @@ void blockWiseSort(T *A_keys, unsigned int* A_values, int blockSize, size_t tota
     //load into registers
     T myKey[depth];
     unsigned int myValue[depth];
-
     unsigned int myAddress[depth];
 
     extern __shared__ char shared[];
@@ -595,7 +595,7 @@ void simpleMerge_higher(T *A_keys, unsigned int* A_values, T* A_keys_out, unsign
  * @param[in] numPartitions  number of partitions being considered
  * @param[in] partitionSize Size of each partition being considered
  * @param[out] partitionBeginA Where each partition/subpartition will begin in A
- * @param[out] partitionSizeA Size of each partition/subpartition in A
+ * @param[out] partitionSizesA Size of each partition/subpartition in A
  * @param[in] sizeA Size of the entire array
  **/
 template<class T>
@@ -758,6 +758,7 @@ void findMultiPartitions(T *A, int splitsPP, int numPartitions, int partitionSiz
  * @param[in] numBlocks 
  * @param[in] partitionBeginA Partition starting points decided by function findMultiPartitions
  * @param[in] partitionSizeA Partition sizes decided by function findMultiPartitions
+ * @param[in] entirePartitionSize The size of an entire partition (before it is split up)
  * @param[in] sizeA The total size of our array
  **/
 template<class T, int depth>
@@ -981,6 +982,7 @@ void mergeMulti_lower(T *A_keys_out, unsigned int* A_vals_out, T *A_keys, unsign
  * @param[in] numBlocks 
  * @param[in] partitionBeginA Partition starting points decided by function findMultiPartitions
  * @param[in] partitionSizeA Partition sizes decided by function findMultiPartitions
+ * @param[in] entirePartitionSize The size of an entire partition (before it is split up)
  * @param[in] sizeA The total size of our array
  **/
 
