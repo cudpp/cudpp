@@ -36,7 +36,25 @@
 
 /** @brief Perform Huffman encoding
  * 
- * @todo
+ *
+ * Performs Huffman encoding on the input data stream. The input data
+ * stream is the output data stream from the previous stage (MTF) in our
+ * compress stream.
+ *
+ * The input is given by the output of the Move-to-Front transform (MTF).
+ * There are a few things that need to be store along with the compressed
+ * data. We also store the word offset of the compressed data stream because
+ * our data is compressed into indepedent blocks (word granularity) so that
+ * they can be encoded and decoded in parallel. The number of independent blocks
+ * is HUFF_THREADS_PER_BLOCK*HUFF_WORK_PER_THREAD.
+ *
+ *
+ * @param[out] d_hist           Histogram array of the input data stream used for decoding.
+ * @param[out] d_encodeOffset   An array of the word offsets of the independent compressed data blocks.
+ * @param[out] d_compressedSize Pointer to the total size in words of all compressed data blocks combined.
+ * @param[out] d_compressed     A pointer to the compressed data blocks.
+ * @param[in]  numElements      Total number of input elements to compress.
+ * @param[in]  plan             Pointer to the plan object used for this compress.
  *
  */
 void huffmanEncoding(unsigned int               *d_hist,
@@ -97,14 +115,22 @@ void huffmanEncoding(unsigned int               *d_hist,
     //     much encoded data needs to be transferred
     //--------------------------------------------------
     huffman_datapack_kernel<<<grid_huff, threads_huff>>>
-        (plan->m_d_encoded, d_compressed, d_compressedSize, d_encodeOffset, nBlocks);
+        (plan->m_d_encoded, d_compressed, d_compressedSize, d_encodeOffset);
     CUDA_SAFE_CALL(cudaThreadSynchronize());
 }
 
 
-/** @brief Perform the MTF
+/** @brief Perform the Move-to-Front Transform (MTF)
  * 
- * @todo
+ * Performs a Move-to-Front (MTF) transform on the input data stream.
+ * The MTF transform is the second stage in our compress pipeline. The
+ * MTF manipulates the input data stream to improve the performance of
+ * entropy encoding.
+ *
+ * @param[in]  d_mtfIn      An array of the input data stream to perform the MTF transform on.
+ * @param[out] d_mtfOut     An array to store the output of the MTF transform.
+ * @param[in]  numElements  Total number of input elements of the MTF transform.
+ * @param[in]  plan         Pointer to the plan object used for this MTF transform.
  *
  */
 template <class T>
@@ -206,9 +232,22 @@ void moveToFrontTransform(unsigned char             *d_mtfIn,
 
 }
 
-/** @brief Perform the BWT
+/** @brief Perform the Burrows-Wheeler Transform (BWT)
  * 
- * @todo
+ * Performs the Burrows-Wheeler Transform (BWT) on a given
+ * character string. The BWT is an algorithm which is commonly used
+ * in compression applications, mainly bzip2. The BWT orders the
+ * characters in such a way that the output tends to have many long
+ * runs of repeated characters. This bodes well for later stages in
+ * compression pipelines which perform better with repeated characters.
+ *
+ *
+ * @param[in]  d_uncompressed       A char array of the input data stream to perform the BWT on.
+ * @param[out] d_bwtIndex           The index at which the original string in the BWT sorts to.
+ * @param[out] d_bwtOut             An array to store the output of the BWT.
+ * @param[in]  numElements          Total number of input elements of the BWT.
+ * @param[in]  plan                 Pointer to the plan object used for this BWT.
+ *
  *
  */
 template <class T>
@@ -294,7 +333,7 @@ void burrowsWheelerTransform(unsigned char              *d_uncompressed,
 
             stringMergeMulti<unsigned int, 2><<<numBlocks*subPartitions, BWT_CTASIZE_multi, (2*BWT_INTERSECT_B_BLOCK_SIZE_multi+5)*sizeof(unsigned int)>>>
                 (plan->m_d_keys_dev, plan->m_d_keys, plan->m_d_values_dev, plan->m_d_values, plan->m_d_bwtInRef2, subPartitions, numBlocks,
-                 plan->m_d_partitionBeginA, plan->m_d_partitionSizeA, plan->m_d_partitionBeginB, plan->m_d_partitionSizeB, BWT_BLOCKSORT_SIZE*mult, step, numElements);
+                 plan->m_d_partitionBeginA, plan->m_d_partitionSizeA, plan->m_d_partitionBeginB, plan->m_d_partitionSizeB, BWT_BLOCKSORT_SIZE*mult, numElements);
             CUDA_SAFE_CALL(cudaThreadSynchronize());
         }
         else
@@ -306,7 +345,7 @@ void burrowsWheelerTransform(unsigned char              *d_uncompressed,
 
             stringMergeMulti<unsigned int, 2><<<numBlocks*subPartitions, BWT_CTASIZE_multi, (2*BWT_INTERSECT_B_BLOCK_SIZE_multi+5)*sizeof(unsigned int)>>>
                 (plan->m_d_keys, plan->m_d_keys_dev, plan->m_d_values, plan->m_d_values_dev, plan->m_d_bwtInRef2, subPartitions, numBlocks,
-                 plan->m_d_partitionBeginA, plan->m_d_partitionSizeA, plan->m_d_partitionBeginB, plan->m_d_partitionSizeB, BWT_BLOCKSORT_SIZE*mult, step, numElements);
+                 plan->m_d_partitionBeginA, plan->m_d_partitionSizeA, plan->m_d_partitionBeginB, plan->m_d_partitionSizeB, BWT_BLOCKSORT_SIZE*mult, numElements);
             CUDA_SAFE_CALL(cudaThreadSynchronize());
         }
         numBlocks/=2;
@@ -332,9 +371,17 @@ void burrowsWheelerTransform(unsigned char              *d_uncompressed,
 
 }
 
-/** @brief Wrapper to call for calling BWT.
+/** @brief Wrapper for calling the Burrows-Wheeler Transform (BWT).
  *
- * @todo
+ * This is a wrapper function for calling the BWT. This wrapper is used
+ * internally via the compress application to call burrowsWheelerTransform().
+ *
+ *
+ * @param[in]  d_in         A char array of the input data stream to perform the BWT on.
+ * @param[out] d_bwtIndex   The index at which the original string in the BWT sorts to.
+ * @param[in]  numElements  Total number of input elements to the compress stream.
+ * @param[in]  plan         Pointer to the plan object used for this compress.
+ *
  *
  */
 void burrowsWheelerTransformWrapper(unsigned char *d_in,
@@ -345,9 +392,18 @@ void burrowsWheelerTransformWrapper(unsigned char *d_in,
     burrowsWheelerTransform<CUDPPCompressPlan>(d_in, d_bwtIndex, plan->m_d_bwtOut, numElements, plan);
 }
 
-/** @brief Wrapper to call for calling BWT.
+/** @brief Wrapper for calling the Burrows-Wheeler Transform (BWT).
  *
- * @todo
+ * This is a wrapper function for calling the BWT. This wrapper is used
+ * internally via the BWT primitive to call burrowsWheelerTransform().
+ *
+ *
+ * @param[in]  d_in         A char array of the input data stream to perform the BWT on.
+ * @param[out] d_bwtIndex   The index at which the original string in the BWT sorts to.
+ * @param[out] d_bwtOut     An array to store the output of the BWT.
+ * @param[in]  numElements  Total number of input elements to the BWT.
+ * @param[in]  plan         Pointer to the plan object used for this BWT.
+ *
  *
  */
 void burrowsWheelerTransformWrapper(unsigned char *d_in,
@@ -359,9 +415,15 @@ void burrowsWheelerTransformWrapper(unsigned char *d_in,
     burrowsWheelerTransform<CUDPPBwtPlan>(d_in, d_bwtIndex, d_bwtOut, numElements, plan);
 }
 
-/** @brief Wrapper to call for calling MTF.
+/** @brief Wrapper for calling the Move-to-Front (MTF) transform.
  *
- * @todo
+ * This is a wrapper function for calling the MTF. This wrapper is used
+ * internally via the compress application to call moveToFrontTransform().
+ *
+ *
+ * @param[in]  numElements  Total number of input elements to the MTF transform.
+ * @param[in]  plan         Pointer to the plan object used for this compress.
+ *
  *
  */
 void moveToFrontTransformWrapper(size_t numElements,
@@ -370,9 +432,18 @@ void moveToFrontTransformWrapper(size_t numElements,
     moveToFrontTransform<CUDPPCompressPlan>(plan->m_d_bwtOut, plan->m_d_mtfOut, numElements, plan);
 }
 
-/** @brief Wrapper to call for calling MTF.
+/** @brief Wrapper for calling the Move-to-Front (MTF) transform.
  *
- * @todo
+ * This is a wrapper function for calling the MTF. This wrapper is used
+ * internally via the MTF primitive to call moveToFrontTransform().
+ *
+ *
+ * @param[in]  d_in         An input char array to perform the MTF on.
+ * @param[in]  d_mtfOut     An output char array to store the MTF transformed
+                            stream.
+ * @param[in]  numElements  Total number of input elements to the MTF transform.
+ * @param[in]  plan         Pointer to the plan object used for this MTF.
+ *
  *
  */
 void moveToFrontTransformWrapper(unsigned char *d_in,
@@ -390,7 +461,6 @@ extern "C"
 
 /** @brief Allocate intermediate arrays used by BWT.
  *
- * @todo
  *
  * @param [in,out] plan Pointer to CUDPPBwtPlan object containing options and number 
  *                      of elements, which is used to compute storage requirements, and
@@ -417,7 +487,6 @@ void allocBwtStorage(CUDPPBwtPlan *plan)
     
 /** @brief Allocate intermediate arrays used by MTF.
  *
- * @todo
  *
  * @param [in,out] plan Pointer to CUDPPMtfPlan object containing
  *                      options and number of elements, which is used
@@ -445,7 +514,6 @@ void allocMtfStorage(CUDPPMtfPlan *plan)
     
 /** @brief Allocate intermediate arrays used by compression.
  *
- * @todo
  *
  * @param [in,out] plan Pointer to CUDPPCompressPlan object
  *                      containing options and number of elements,
@@ -502,7 +570,6 @@ void allocCompressStorage(CUDPPCompressPlan *plan)
     
 /** @brief Deallocate intermediate block arrays in a CUDPPCompressPlan object.
  *
- * @todo 
  *
  * @param[in,out] plan Pointer to CUDPPCompressPlan object initialized by allocCompressStorage().
  */
@@ -545,7 +612,6 @@ void freeCompressStorage(CUDPPCompressPlan *plan)
 
 /** @brief Deallocate intermediate block arrays in a CUDPPBwtPlan object.
  *
- * @todo 
  *
  * @param[in,out] plan Pointer to CUDPPBwtPlan object initialized by allocBwtStorage().
  */
@@ -567,8 +633,7 @@ void freeBwtStorage(CUDPPBwtPlan *plan)
 }
 
 /** @brief Deallocate intermediate block arrays in a CUDPPMtfPlan object.
- *
- * @todo 
+ * 
  *
  * @param[in,out] plan Pointer to CUDPPMtfPlan object initialized by allocMtfStorage().
  */
@@ -580,9 +645,8 @@ void freeMtfStorage(CUDPPMtfPlan *plan)
 }
 
 /** @brief Dispatch function to perform parallel compression on an
- * array with the specified configuration.
+ *         array with the specified configuration.
  *
- * @todo
  * 
  * @param[in]  d_uncompressed Uncompressed data
  * @param[out] d_bwtIndex BWT Index
@@ -620,7 +684,6 @@ void cudppCompressDispatch(void *d_uncompressed,
 
 /** @brief Dispatch function to perform the Burrows-Wheeler transform
  *
- * @todo
  * 
  * @param[in]  d_bwtIn     Input data
  * @param[out] d_bwtOut    Transformed data
@@ -644,7 +707,6 @@ void cudppBwtDispatch(void *d_bwtIn,
 
 /** @brief Dispatch function to perform the Move-to-Front transform
  *
- * @todo
  * 
  * @param[in]  d_mtfIn     Input data
  * @param[out] d_mtfOut    Transformed data

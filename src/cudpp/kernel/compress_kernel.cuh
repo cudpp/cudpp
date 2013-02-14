@@ -33,7 +33,24 @@ typedef unsigned char uchar;
 typedef unsigned short ushort;
 
 /** @brief Compute final BWT
- * @todo
+ *
+ * This is the final stage in the BWT. This stage computes the final
+ * values of the BWT output. It is given the indices of where each of
+ * the cyclical rotations of the initial input were sorted to. It uses
+ * these indices to figure out the last "column" of the sorted
+ * cyclical rotations which is the final BWT output.
+ *
+ *
+ * @param[in]  d_bwtIn      Input char array to perform the BWT on.
+ * @param[in]  d_values     Input array that gives the indices of where each
+                            of the cyclical rotations of the intial input
+                            were sorted to.
+ * @param[out] d_bwtIndex   Output pointer to store the BWT index. The index
+                            tells us where the original string sorted to.
+ * @param[out] d_bwtOut     Output char array of the BWT.
+ * @param[in]  numElements  The number of elements we are performing a BWT on.
+ * @param[in]  tThreads     The total threads we have dispatched on the device.
+ *
  **/
 __global__ void
 bwt_compute_final_kernel(const uchar *d_bwtIn,
@@ -57,7 +74,20 @@ bwt_compute_final_kernel(const uchar *d_bwtIn,
 }
 
 /** @brief Multi merge
- * @todo
+ * @param[in]  A_keys        keys to be sorted
+ * @param[out] A_keys_out    keys after being sorted
+ * @param[in]  A_values      associated values to keys
+ * @param[out]  A_values_out  associated values after sort
+ * @param[in]  stringValues  keys of each of the cyclical rotations
+ * @param[in]  subPartitions  Number of blocks working on a partition (number of sub-partitions)
+ * @param[in]  numBlocks 
+ * @param[out] partitionBeginA  Where each partition/subpartition will begin in A
+ * @param[in]  partitionSizeA Partition sizes decided by function findMultiPartitions
+ * @param[out] partitionBeginB  Where each partition/subpartition will begin in B
+ * @param[in]  partitionSizeB Partition sizes decided by function findMultiPartitions
+ * @param[in] entirePartitionSize The size of an entire partition (before it is split up)
+ * @param[in]     numElements   Size of the enitre array
+ *
  **/
 template<class T, int depth>
 __global__ void
@@ -73,7 +103,6 @@ stringMergeMulti(T      *A_keys,
                  int    *partitionBeginB,
                  int    *partitionSizeB,
                  int    entirePartitionSize,
-                 int    step,
                  size_t numElements)
 {
     int myId = blockIdx.x;
@@ -395,8 +424,19 @@ stringMergeMulti(T      *A_keys,
     while(!breakout);
 }
 
-/** @brief Multi merge -- find partitions
- * @todo
+/** @brief Merges the indices for the "upper" block (right block)
+ *  
+ * Utilizes a "ping-pong" strategy
+ * @param[in]  A                Global array of keys
+ * @param[in]  splitsPP         Global array of values to be merged
+ * @param[in]  numPartitions    number of partitions being considered
+ * @param[in]  partitionSize    Size of each partition being considered
+ * @param[out] partitionBeginA  Where each partition/subpartition will begin in A
+ * @param[out] partitionSizesA  Size of each partition/subpartition in A
+ * @param[out] partitionBeginB  Where each partition/subpartition will begin in B
+ * @param[out] partitionSizesB  Size of each partition/subpartition in B
+ * @param[in]  sizeA            Size of the entire array
+ *
  **/
 template<class T>
 __global__ void
@@ -555,7 +595,17 @@ findMultiPartitions(T       *A,
 }
 
 /** @brief Simple merge
- * @todo
+*
+ * @param[in]  A_keys           keys to be sorted
+ * @param[out] A_keys_out       keys after being sorted
+ * @param[in]  A_values         associated values to keys
+ * @param[out] A_values_out     associated values after sort
+ * @param[in]  stringValues     BWT string manipulated to words
+ * @param[in]  sizePerPartition Size of each partition being merged
+ * @param[in]  size             Size of total Array being sorted
+ * @param[in]  stringValues2    keys of each of the cyclical rotations
+ * @param[in]  numElements      Number of elements being sorted
+ *
  **/
 template<class T, int depth>
 __global__ void
@@ -952,8 +1002,13 @@ simpleStringMerge(T         *A_keys,
 
 }
 
-/** @brief Block sort
- * @todo
+/** @brief Sorts blocks of data of size blockSize
+ * @param[in,out] A_keys        keys to be sorted
+ * @param[in,out] A_address     associated values to keys
+ * @param[in]     stringVals    BWT string manipulated to words
+ * @param[in]     stringVals2   keys of each of the cyclical rotations
+ * @param[in]     blockSize     Size of the chunks being sorted
+ * @param[in]     numElements   Size of the enitre array
  **/
 template<class T, int depth>
 __global__ void blockWiseStringSort(T*      A_keys,
@@ -1190,7 +1245,13 @@ __global__ void blockWiseStringSort(T*      A_keys,
 }
 
 /** @brief Massage input to set up for merge sort
- * @todo
+ * @param[in]  d_bwtIn      A char array of the input data stream to perform the BWT on.
+ * @param[out] d_bwtInRef   BWT string manipulated to words.
+ * @param[out] d_keys       An array of associated keys to sort by the first four chars
+                            of the cyclical rotations.
+ * @param[out] d_values     Array of values associates with the keys to sort.
+ * @param[out] d_bwtInRef2  keys of each of the cyclical rotations.
+ * @param[in]  tThreads     Pointer to the plan object used for this BWT.
  **/
 __global__ void
 bwt_keys_construct_kernel(uchar4    *d_bwtIn,
@@ -1268,7 +1329,12 @@ bwt_keys_construct_kernel(uchar4    *d_bwtIn,
 
 
 /** @brief First stage in MTF (Reduction)
- * @todo
+ * @param[in]  d_mtfIn      A char array of the input data stream to perform the MTF on.
+ * @param[out] d_lists      A pointer to the start of MTF lists.
+ * @param[out] d_list_sizes An array storing the size of each MTF list.
+ * @param[in]  nLists       Total number of MTF lists.
+ * @param[in]  offset       The offset during the reduction stage. Initialized to two.
+ * @param[in]  numElements  Total number of input elements MTF transform.
  **/
 __global__ void
 mtf_reduction_kernel(const uchar * d_mtfIn,
@@ -1411,7 +1477,11 @@ mtf_reduction_kernel(const uchar * d_mtfIn,
 
 
 /** @brief Second stage in MTF (Global reduction)
- * @todo
+ * @param[in,out] d_lists      A pointer to the start of MTF lists.
+ * @param[in,out] d_list_sizes An array storing the size of each MTF list.
+ * @param[in]     offset       The offset during the reduction stage. Initialized to two.
+ * @param[in]     tThreads     Total number of threads dispatched.
+ * @param[in]     nLists       Total number of MTF lists.
  **/
 __global__ void
 mtf_GLreduction_kernel(uchar  * d_lists,
@@ -1530,7 +1600,12 @@ mtf_GLreduction_kernel(uchar  * d_lists,
 }
 
 /** @brief Third stage in MTF (Global downsweep)
- * @todo
+ * @param[in,out] d_lists      A pointer to the start of MTF lists.
+ * @param[in,out] d_list_sizes An array storing the size of each MTF list.
+ * @param[in]     offset       The offset during the reduction stage.
+ * @param[in]     lastLevel    The limit to which offset can be set to.
+ * @param[in]     nLists       Total number of MTF lists.
+ * @param[in]     tThreads     Total number of threads dispatched.
  **/
 __global__ void
 mtf_GLdownsweep_kernel(uchar    *d_lists,
@@ -1642,7 +1717,13 @@ mtf_GLdownsweep_kernel(uchar    *d_lists,
 }
 
 /** @brief Compute final MTF lists and final MTF output
- * @todo
+ * @param[in]     d_mtfIn      A char array of the input data stream to perform the MTF on.
+ * @param[in]     d_mtfOut     A char array of the output with the transformed MTF string.
+ * @param[in,out] d_lists      A pointer to the start of MTF lists.
+ * @param[in]     d_list_sizes An array storing the size of each MTF list.
+ * @param[in]     nLists       Total number of MTF lists.
+ * @param[in]     offset       The offset during the reduction stage.
+ * @param[in]     numElements  Total number of elements to perform the MTF on.
  **/
 __global__ void
 mtf_localscan_lists_kernel(const uchar * d_mtfIn,
@@ -1947,7 +2028,9 @@ mtf_localscan_lists_kernel(const uchar * d_mtfIn,
 
 
 /** @brief Compute 256-entry histogram
- * @todo
+ * @param[in]  d_input      An array of words we will use to build our histogram.
+ * @param[out] d_histograms A pointer where we store our global histograms.
+ * @param[in]  numElements  The total number of elements to build our histogram from.
  **/
 __global__ void
 huffman_build_histogram_kernel(uint     *d_input, // Read in as words, instead of bytes
@@ -2036,7 +2119,17 @@ huffman_build_histogram_kernel(uint     *d_input, // Read in as words, instead o
 }
 
 /** @brief Build Huffman tree/codes
- * @todo
+ * @param[in] d_input               An array of input elements to encode
+ * @param[out] d_huffCodesPacked    An array of huffman bit codes packed together
+ * @param[out] d_huffCodeLocations  An array which stores the starting bit locations of each
+                                    Huffman bit code
+ * @param[out] d_huffCodeLengths    An array which stores the lengths of each Huffman bit code
+ * @param[in] d_histograms          An input array of histograms to combine
+ * @param[out] d_histogram          Final histogram combined
+ * @param[out] d_nCodesPacked       Number of chars it took to store all Huffman bit codes
+ * @param[out] d_totalEncodedSize   Total number of words it takes to hold the compressed data
+ * @param[in] histBlocks            Total number of histograms we will combine into one
+ * @param[in] numElements           Number of elements to compress
  **/
 __global__ void
 huffman_build_tree_kernel(const uchar *d_input,
@@ -2354,7 +2447,14 @@ huffman_build_tree_kernel(const uchar *d_input,
 }
 
 /** @brief Perform parallel Huffman encoding
- * @todo
+ * @param[in] d_input           Input array to encode
+ * @param[in] d_codes           Array of packed Huffman bit codes
+ * @param[in] d_code_locations  Array of starting Huffman bit locations
+ * @param[in] d_huffCodeLengths An array storing the bit lengths of the Huffman codes
+ * @param[out] d_encoded        An array of encoded classes which stores the size and data of
+                                encoded data
+ * @param[in] nCodesPacked      Number of chars it took to store all Huffman bit codes
+ * @param[in] nThreads          Total number of dispatched threads
  **/
 __global__ void
 huffman_kernel_en(uchar4    *d_input,              // Input to encode
@@ -2542,15 +2642,17 @@ huffman_kernel_en(uchar4    *d_input,              // Input to encode
 #endif
 }
 
-/** @brief Pack together encoded blocks
- * @todo
+/** @brief Pack together encoded blocks.
+ * @param[in] d_encoded An array of encoded objects with stored size and data of the encoded data.
+ * @param[out] d_encodedData An in array to store all encoded data.
+ * @param[out] d_totalEncodedSize Total number words of the encoded data.
+ * @param[out] d_eOffsets Array holding the word offsets of each encoded data block.
  **/
 __global__ void
 huffman_datapack_kernel(encoded     *d_encoded,
                         uint        *d_encodedData,
                         uint        *d_totalEncodedSize,
-                        uint        *d_eOffsets,
-                        uint        nBlocks)
+                        uint        *d_eOffsets)
 {
 #if (__CUDA_ARCH__ >= 200)
     // Global, local IDs

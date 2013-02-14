@@ -168,6 +168,7 @@ void freeListRankStorage(CUDPPListRankPlan *plan)
  * @param[in]  numElements Number of nodes values to rank
  * @param[in]  plan     Pointer to CUDPPListRankPlan object containing
  *                      list ranking options and intermediate storage
+ * @returns CUDPPResult indicating success or error condition
  */
 CUDPPResult cudppListRankDispatch(void *d_ranked_values,
                            void *d_unranked_values,
