@@ -1,5 +1,13 @@
 CUDPP Change Log
 
+Release 2.1
+22 February 2013
+- Added cudppCompress lossless data compression algorithms which implement
+  the Move-to-Front transform, Burrows-Wheeler Transform, and
+  Huffman encoding
+- Added cudppMoveToFrontTransform and cudppBurrowsWheelerTransform
+- Added cudppListRank parallel list ranking
+
 Release 2.0
 DATE HERE
 - New thread-safe public interface -- requires creating a CUDPP instance 

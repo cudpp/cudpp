@@ -647,7 +647,7 @@ CUDPPResult cudppTridiagonal(CUDPPHandle planHandle,
  * Data Compression on the GPU". (See the \ref references bibliography).
  *
  * - Only unsigned char type is supported.
- * - Currently, the input stream (d_a) must be a buffer of 1,048,576 (uchar) elements.
+ * - Currently, the input stream (d_a) must be a buffer of 1,048,576 (uchar) elements (~1MB).
  * - The BWT Index (d_x) is an integer number (int). This is used during the reverse-BWT stage.
  * - The Histogram size pointer (d_y) can be ignored and can be passed a null pointer.
  * - The Histrogram (d_z) is a 256-entry (unsigned int) buffer. The histogram is used to
