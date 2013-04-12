@@ -50,28 +50,29 @@ using namespace cudpp_app;
  * @see CUDPPConfiguration, setOptions, cudppScan
  */
 template <typename T>
-int scanTest(int argc, const char **argv, const CUDPPConfiguration &config, 
+int scanTest(int argc, const char **argv, const CUDPPConfiguration &config,
              const testrigOptions &testOptions)
 {
     int retval = 0;
 
     cudpp_app::StopWatch timer;
 
-    int numElements = 8388608; // maximum test size
-
     bool quiet = checkCommandLineFlag(argc, (const char**) argv, "quiet");
 
     bool oneTest = false;
+    int numElements;
     if (commandLineArg(numElements, argc, (const char**) argv, "n"))
     {
         oneTest = true;
     }
 
     unsigned int test[] = {39, 128, 256, 512, 1000, 1024, 1025, 32768, 45537,
-			   65536, 131072, 262144, 500001, 524288, 1048577,
-			   1048576, 1048581, 2097152, 4194304, 8388608};
+                           65536, 131072, 262144, 500001, 524288, 1048577,
+                           1048576, 1048581, 2097152, 4194304, 8388608};
 
     int numTests = sizeof(test) / sizeof(test[0]);
+    numElements = test[numTests-1]; // maximum test size
+
     if (oneTest)
     {
         test[0] = numElements;
@@ -81,7 +82,7 @@ int scanTest(int argc, const char **argv, const CUDPPConfiguration &config,
     // Initialize CUDPP
     CUDPPResult result = CUDPP_SUCCESS;
     CUDPPHandle theCudpp;
-    result = cudppCreate(&theCudpp);    
+    result = cudppCreate(&theCudpp);
     if (result != CUDPP_SUCCESS)
     {
         fprintf(stderr, "Error initializing CUDPP Library\n");
@@ -90,7 +91,7 @@ int scanTest(int argc, const char **argv, const CUDPPConfiguration &config,
     }
 
     CUDPPHandle plan;
-    
+
     result = cudppPlan(theCudpp, &plan, config, numElements, 1, 0);
 
     if (result != CUDPP_SUCCESS)
@@ -99,17 +100,17 @@ int scanTest(int argc, const char **argv, const CUDPPConfiguration &config,
         retval = (oneTest) ? 1 : numTests;
         return retval;
     }
- 
+
     unsigned int memSize = sizeof(T) * numElements;
- 
+
     // allocate host memory to store the input data
     T* i_data = (T*) malloc( memSize);
- 
+
     // allocate host memory to store the output data
     T* o_data = (T*) malloc( memSize);
- 
+
     // host memory to store input flags
-  
+
     // initialize the input data on the host
     for(int i = 0; i < numElements; ++i)
     {
@@ -122,27 +123,27 @@ int scanTest(int argc, const char **argv, const CUDPPConfiguration &config,
     if (config.algorithm == CUDPP_SEGMENTED_SCAN)
     {
         i_flags = (unsigned int*)malloc(sizeof(unsigned int) * numElements);
-        CUDA_SAFE_CALL( cudaMalloc( (void**) &d_iflags, 
+        CUDA_SAFE_CALL( cudaMalloc( (void**) &d_iflags,
                                     sizeof(unsigned int) * numElements));
     }
 
     // allocate and compute reference solution
     T* reference = (T*) malloc( memSize);
- 
+
     // allocate device memory input and output arrays
     T* d_idata     = NULL;
     T* d_odata     = NULL;
 
     CUDA_SAFE_CALL( cudaMalloc( (void**) &d_idata, memSize));
     CUDA_SAFE_CALL( cudaMalloc( (void**) &d_odata, memSize));
-     
+
     // copy host memory to device input array
     CUDA_SAFE_CALL( cudaMemcpy(d_idata, i_data, memSize,
                                cudaMemcpyHostToDevice) );
     // initialize all the other device arrays to be safe
     CUDA_SAFE_CALL( cudaMemcpy(d_odata, o_data, memSize,
                                cudaMemcpyHostToDevice) );
- 
+
     for (int k = 0; k < numTests; ++k)
     {
         if (config.algorithm == CUDPP_SEGMENTED_SCAN)
@@ -150,27 +151,27 @@ int scanTest(int argc, const char **argv, const CUDPPConfiguration &config,
             int numFlags = 4;
             memset(i_flags, 0, sizeof(unsigned int) * test[k]);
             // Generate flags
-            for(int i = 0; i < numFlags; ++i) 
+            for(int i = 0; i < numFlags; ++i)
             {
                 unsigned int idx;
 
                 // The flag at the first position is implicitly set
                 // so try to generate non-zero positions
                 while((idx = (unsigned int)
-                       ((test[k] - 1) * (rand() / (double)RAND_MAX))) 
+                       ((test[k] - 1) * (rand() / (double)RAND_MAX)))
                       == 0)
                 {
                 }
 
                 i_flags[idx] = 1;
             }
-        
+
             // Copy flags to GPU
-            CUDA_SAFE_CALL( cudaMemcpy(d_iflags, i_flags, 
+            CUDA_SAFE_CALL( cudaMemcpy(d_iflags, i_flags,
                                        sizeof(unsigned int) * test[k],
                                        cudaMemcpyHostToDevice) );
         }
-        
+
         char op[10];
         switch (config.op)
         {
@@ -190,15 +191,15 @@ int scanTest(int argc, const char **argv, const CUDPPConfiguration &config,
             fprintf(stderr, "testScan called with invalid operator\n");
             break;
         }
-        
+
         if (!quiet)
         {
             printf("Running a%s%s %s%s-scan of %d %s elements\n",
                    (config.options & CUDPP_OPTION_BACKWARD) ? " backward" : "",
-                   (config.options & CUDPP_OPTION_INCLUSIVE) ? " inclusive" : 
-		   "",
-                   (config.algorithm == CUDPP_SEGMENTED_SCAN) ? "segmented " : 
-		   "",
+                   (config.options & CUDPP_OPTION_INCLUSIVE) ? " inclusive" :
+                   "",
+                   (config.algorithm == CUDPP_SEGMENTED_SCAN) ? "segmented " :
+                   "",
                    op,
                    test[k],
                    datatypeToString(config.datatype));
@@ -207,40 +208,40 @@ int scanTest(int argc, const char **argv, const CUDPPConfiguration &config,
 
         timer.reset();
         timer.start();
-         
-        if (config.algorithm == CUDPP_SEGMENTED_SCAN) 
+
+        if (config.algorithm == CUDPP_SEGMENTED_SCAN)
         {
             if (config.op == CUDPP_ADD)
-                computeSegmentedSumScanGold( reference, i_data, i_flags, 
-					     test[k], config);
+                computeSegmentedSumScanGold(reference, i_data, i_flags,
+                                            test[k], config);
             else if (config.op == CUDPP_MULTIPLY)
-                computeSegmentedMultiplyScanGold( reference, i_data, i_flags, 
-						  test[k], config);
+                computeSegmentedMultiplyScanGold(reference, i_data, i_flags,
+                                                 test[k], config);
             else if (config.op == CUDPP_MAX)
-                computeSegmentedMaxScanGold( reference, i_data, i_flags, 
-					     test[k], config);     
+                computeSegmentedMaxScanGold(reference, i_data, i_flags,
+                                            test[k], config);
             else if (config.op == CUDPP_MIN)
-                computeSegmentedMinScanGold( reference, i_data, i_flags, 
-					     test[k], config);                
+                computeSegmentedMinScanGold(reference, i_data, i_flags,
+                                            test[k], config);
         }
-        else 
+        else
         {
             if (config.op == CUDPP_ADD)
                 computeSumScanGold( reference, i_data, test[k], config);
             else if (config.op == CUDPP_MULTIPLY)
                 computeMultiplyScanGold( reference, i_data, test[k], config);
             else if (config.op == CUDPP_MAX)
-                computeMaxScanGold( reference, i_data, test[k], config);     
+                computeMaxScanGold( reference, i_data, test[k], config);
             else if (config.op == CUDPP_MIN)
                 computeMinScanGold( reference, i_data, test[k], config);
         }
 
         timer.stop();
-     
+
         if (!quiet)
             printf("CPU execution time = %f\n", timer.getTime());
         timer.reset();
-  
+
         // Run the scan
         // run once to avoid timing startup overhead.
         if (config.algorithm == CUDPP_SEGMENTED_SCAN)
@@ -257,12 +258,12 @@ int scanTest(int argc, const char **argv, const CUDPPConfiguration &config,
                 cudppScan(plan, d_odata, d_idata, test[k]);
         }
         cudaThreadSynchronize();
-        timer.stop();            
-        
+        timer.stop();
+
         // copy result from device to host
         CUDA_SAFE_CALL(cudaMemcpy( o_data, d_odata, sizeof(T) * test[k],
                                    cudaMemcpyDeviceToHost));
-          
+
         // check if the result is equivalent to the expected solution
         bool result = compareArrays( reference, o_data, test[k], 0.001f);
 
@@ -275,8 +276,8 @@ int scanTest(int argc, const char **argv, const CUDPPConfiguration &config,
         }
         else
         {
-            printf("\t%10d\t%0.4f\n", test[k], 
-		   timer.getTime() / testOptions.numIterations);
+            printf("\t%10d\t%0.4f\n", test[k],
+                   timer.getTime() / testOptions.numIterations);
         }
         if (testOptions.debug)
         {
@@ -300,7 +301,7 @@ int scanTest(int argc, const char **argv, const CUDPPConfiguration &config,
     {
         printf("Error shutting down CUDPP Library\n");
     }
- 
+
     // cleanup memory
     free(i_data);
     free(o_data);
@@ -323,18 +324,18 @@ int scanTest(int argc, const char **argv, const CUDPPConfiguration &config,
  * @see cudppMultiScan
  */
 template <class T>
-int multiscanTest(int argc, const char **argv, const CUDPPConfiguration &config, 
+int multiscanTest(int argc, const char **argv, const CUDPPConfiguration &config,
                   const testrigOptions &testOptions, cudaDeviceProp devProps)
 {
     int retval = 0;
 
     cudpp_app::StopWatch timer;
-    
+
     bool quiet = checkCommandLineFlag(argc, (const char**) argv, "quiet");
 
-    unsigned int test[] = {39, 128, 256, 512, 1000, 1024, 1025, 32768, 45537, 
-			   65536, 131072, 262144, 500001, 524288, 1048577, 
-			   1048576, 1048581, 2097152, 4194304, 8388608};
+    unsigned int test[] = {39, 128, 256, 512, 1000, 1024, 1025, 32768, 45537,
+                           65536, 131072, 262144, 500001, 524288, 1048577,
+                           1048576, 1048581, 2097152, 4194304, 8388608};
 
     int numTests = sizeof(test) / sizeof(test[0]);
 
@@ -350,8 +351,8 @@ int multiscanTest(int argc, const char **argv, const CUDPPConfiguration &config,
     if (commandLineArg(numRows, argc, (const char**) argv, "r"))
     {
         fixedNumRows = true;
-    } 
-      
+    }
+
     char op[10];
     switch (config.op)
     {
@@ -371,7 +372,7 @@ int multiscanTest(int argc, const char **argv, const CUDPPConfiguration &config,
         fprintf(stderr, "testScan called with invalid operator\n");
         break;
     }
-    
+
     CUDPPResult ret;
     CUDPPHandle theCudpp;
     ret = cudppCreate(&theCudpp);
@@ -384,44 +385,47 @@ int multiscanTest(int argc, const char **argv, const CUDPPConfiguration &config,
     }
 
     for (int k = 0; k < numTests; ++k)
-    {    
+    {
+        size_t freeMem, totalMem;
+        CUDA_SAFE_CALL(cudaMemGetInfo(&freeMem, &totalMem));
         unsigned int memNeeded = test[k] * numRows * sizeof(T) * 3;
-        while (memNeeded > (devProps.totalGlobalMem / 2)) 
+        while (memNeeded > freeMem)
         {
             numRows /= 2;
             memNeeded = test[k] * numRows * sizeof(T) * 3;
         }
 
         if (numRows < 1) {
-            printf("Error, not enough memory to run test\n");
+            fprintf(stderr,
+                    "multiscanTest: Error, not enough memory to run test\n");
             break;
         }
-           
+
         if (!quiet)
         {
             printf("Running a%s%s %s-multiscan of %d %s elements in %d rows\n",
                    (config.options & CUDPP_OPTION_BACKWARD) ? " backward" : "",
-                   (config.options & CUDPP_OPTION_INCLUSIVE) ? " inclusive" : 
-		   "",
+                   (config.options & CUDPP_OPTION_INCLUSIVE) ? " inclusive" :
+                   "",
                    op,
                    test[k],
                    datatypeToString(config.datatype),
                    numRows);
             fflush(stdout);
         }
-               
+
         size_t kPitch = test[k] * sizeof(T);
         size_t hmemSize = numRows * kPitch;
- 
+
         // allocate host memory to store the input data
-        T* i_data = (T*) malloc( hmemSize);
+        T* i_data = (T*) malloc(hmemSize);
         if (!i_data) {
             printf("Error, out of host memory\n");
             break;
         }
-  
+
         // allocate host memory to store the output data
-        T* o_data = (T*) malloc( hmemSize);
+        T* o_data = (T*) malloc(hmemSize);
         if (!o_data) {
             printf("Error, out of host memory\n");
             break;
@@ -441,44 +445,44 @@ int multiscanTest(int argc, const char **argv, const CUDPPConfiguration &config,
         }
 
         if (config.op == CUDPP_ADD)
-            computeMultiRowScanGold<T, OperatorAdd<T> >( reference, i_data, 
-							 test[k], numRows, 
-							 config);
+            computeMultiRowScanGold<T, OperatorAdd<T> >( reference, i_data,
+                                                         test[k], numRows,
+                                                         config);
         else if (config.op == CUDPP_MULTIPLY)
             computeMultiRowScanGold<T, OperatorMultiply<T> >( reference, i_data,
-							      test[k], numRows, 
-							      config);
+                                                              test[k], numRows,
+                                                              config);
         else if (config.op == CUDPP_MAX)
-            computeMultiRowScanGold<T, OperatorMax<T> >( reference, i_data, 
-							 test[k], numRows, 
-							 config);
+            computeMultiRowScanGold<T, OperatorMax<T> >( reference, i_data,
+                                                         test[k], numRows,
+                                                         config);
         else if (config.op == CUDPP_MIN)
-            computeMultiRowScanGold<T, OperatorMin<T> >( reference, i_data, 
-							 test[k], numRows, 
-							 config);
-        
+            computeMultiRowScanGold<T, OperatorMin<T> >( reference, i_data,
+                                                         test[k], numRows,
+                                                         config);
+
         // allocate device memory input and output arrays
         T* d_idata     = NULL;
         T* d_odata     = NULL;
         size_t d_ipitch = 0;
         size_t d_opitch = 0;
 
-        CUDA_SAFE_CALL( cudaMallocPitch( (void**) &d_idata, &d_ipitch,
-                                         kPitch, numRows));
-        CUDA_SAFE_CALL( cudaMallocPitch( (void**) &d_odata, &d_opitch,
-                                         kPitch, numRows));
+        CUDA_SAFE_CALL(cudaMallocPitch((void**) &d_idata, &d_ipitch,
+                                       kPitch, numRows));
+        CUDA_SAFE_CALL(cudaMallocPitch((void**) &d_odata, &d_opitch,
+                                       kPitch, numRows));
         // copy host memory to device input array
-        CUDA_SAFE_CALL( cudaMemcpy2D(d_idata, d_ipitch, i_data, kPitch, kPitch,
-                                     numRows, cudaMemcpyHostToDevice) );
+        CUDA_SAFE_CALL(cudaMemcpy2D(d_idata, d_ipitch, i_data, kPitch, kPitch,
+                                    numRows, cudaMemcpyHostToDevice));
         // initialize all the other device arrays to be safe
-        CUDA_SAFE_CALL( cudaMemcpy2D(d_odata, d_ipitch, o_data, kPitch, kPitch,
-                                     numRows, cudaMemcpyHostToDevice) );
+        CUDA_SAFE_CALL(cudaMemcpy2D(d_odata, d_ipitch, o_data, kPitch, kPitch,
+                                    numRows, cudaMemcpyHostToDevice));
 
         size_t rowPitch = d_ipitch / sizeof(T);
-       
+
         CUDPPHandle multiscanPlan = 0;
-        ret = cudppPlan(theCudpp, &multiscanPlan, config, test[k], numRows, 
-			rowPitch);
+        ret = cudppPlan(theCudpp, &multiscanPlan, config, test[k], numRows,
+                        rowPitch);
 
         if (ret != CUDPP_SUCCESS)
         {
@@ -501,10 +505,10 @@ int multiscanTest(int argc, const char **argv, const CUDPPConfiguration &config,
         // copy result from device to host
         CUDA_SAFE_CALL(cudaMemcpy2D( o_data, kPitch, d_odata, d_opitch,
                                      kPitch, numRows, cudaMemcpyDeviceToHost));
-     
+
         // check if the result is equivalent to the expected solution
-        bool result = compareArrays( reference, o_data, test[k]*numRows, 
-				     0.001f);
+        bool result = compareArrays( reference, o_data, test[k]*numRows,
+                                     0.001f);
         retval += (true == result) ? 0 : 1;
         if (!quiet)
         {
@@ -514,36 +518,36 @@ int multiscanTest(int argc, const char **argv, const CUDPPConfiguration &config,
         }
         else
         {
-            printf("\t%10d\t%0.4f\n", test[k], 
-		   timer.getTime() / testOptions.numIterations);
+            printf("\t%10d\t%0.4f\n", test[k],
+                   timer.getTime() / testOptions.numIterations);
         }
 
         ret = cudppDestroyPlan(multiscanPlan);
- 
+
         if (ret != CUDPP_SUCCESS)
         {
             printf("Error destroying CUDPPPlan for Multiscan\n");
         }
- 
+
         // cleanup memory
         free(i_data);
         free(o_data);
         free(reference);
         cudaFree(d_odata);
         cudaFree(d_idata);
-    } 
-     
+    }
+
     ret = cudppDestroy(theCudpp);
 
     if (ret != CUDPP_SUCCESS)
     {
         printf("Error shutting down CUDPP Library.\n");
     }
-   
+
     return retval;
 }
 
-int testScan(int argc, const char **argv, const CUDPPConfiguration *configPtr, 
+int testScan(int argc, const char **argv, const CUDPPConfiguration *configPtr,
              bool multiRow, cudaDeviceProp deviceProperties)
 {
     testrigOptions testOptions;
@@ -558,7 +562,7 @@ int testScan(int argc, const char **argv, const CUDPPConfiguration *configPtr,
         testOptions.algorithm = "multiscan";
         config.algorithm = CUDPP_SCAN;
     }
-        
+
     if (configPtr != NULL)
     {
         config = *configPtr;
@@ -571,7 +575,7 @@ int testScan(int argc, const char **argv, const CUDPPConfiguration *configPtr,
         //default sum scan
         config.op = CUDPP_ADD;
         config.datatype = getDatatypeFromArgv(argc, argv);
-            
+
         if (testOptions.op == "max")
         {
             config.op = CUDPP_MAX;
@@ -581,7 +585,7 @@ int testScan(int argc, const char **argv, const CUDPPConfiguration *configPtr,
             config.op = CUDPP_MIN;
         }
         else if (testOptions.op == "multiply")
-        { 
+        {
             config.op = CUDPP_MULTIPLY;
         }
 
@@ -589,7 +593,7 @@ int testScan(int argc, const char **argv, const CUDPPConfiguration *configPtr,
         {
             direction = CUDPP_OPTION_BACKWARD;
         }
-     
+
         if (checkCommandLineFlag(argc, argv, "exclusive"))
         {
             inclusivity = CUDPP_OPTION_EXCLUSIVE;
@@ -599,7 +603,7 @@ int testScan(int argc, const char **argv, const CUDPPConfiguration *configPtr,
         {
             inclusivity = CUDPP_OPTION_INCLUSIVE;
         }
-     
+
         config.options = direction | inclusivity;
     }
 
@@ -607,48 +611,48 @@ int testScan(int argc, const char **argv, const CUDPPConfiguration *configPtr,
     {
     case CUDPP_INT:
         if (testOptions.algorithm == "multiscan")
-            return multiscanTest<int>(argc, argv, config, testOptions, 
-				      deviceProperties);
+            return multiscanTest<int>(argc, argv, config, testOptions,
+                                      deviceProperties);
         else
             return scanTest<int>(argc, argv, config, testOptions);
-        
+
         break;
     case CUDPP_UINT:
         if (testOptions.algorithm == "multiscan")
             return multiscanTest<unsigned int>(argc, argv, config, testOptions,
-					       deviceProperties);
+                                               deviceProperties);
         else
             return scanTest<unsigned int>(argc, argv, config, testOptions);
         break;
     case CUDPP_FLOAT:
         if (testOptions.algorithm == "multiscan")
             return multiscanTest<float>(argc, argv, config, testOptions,
-					deviceProperties);
+                                        deviceProperties);
         else
             return scanTest<float>(argc, argv, config, testOptions);
         break;
     case CUDPP_DOUBLE:
         if (testOptions.algorithm == "multiscan")
             return multiscanTest<double>(argc, argv, config, testOptions,
-					 deviceProperties);
+                                         deviceProperties);
         else
             return scanTest<double>(argc, argv, config, testOptions);
         break;
     case CUDPP_LONGLONG:
         if (testOptions.algorithm == "multiscan")
             return multiscanTest<long long>(argc, argv, config, testOptions,
-					    deviceProperties);
+                                            deviceProperties);
         else
             return scanTest<long long>(argc, argv, config, testOptions);
         break;
     case CUDPP_ULONGLONG:
         if (testOptions.algorithm == "multiscan")
             return multiscanTest<unsigned long long>(argc, argv, config,
-						     testOptions,
-						     deviceProperties);
+                                                     testOptions,
+                                                     deviceProperties);
         else
             return scanTest<unsigned long long>(argc, argv, config,
-						testOptions);
+                                                testOptions);
         break;
     default:
         return 0;

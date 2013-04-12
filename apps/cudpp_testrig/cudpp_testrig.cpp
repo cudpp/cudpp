@@ -3,17 +3,17 @@
 // -------------------------------------------------------------
 // $Revision: 3716 $
 // $Date: 2007-10-12 13:55:18 +0100 (Fri, 12 Oct 2007) $
-// ------------------------------------------------------------- 
+// -------------------------------------------------------------
 // This source code is distributed under the terms of license.txt in
 // the root directory of this source distribution.
-// ------------------------------------------------------------- 
+// -------------------------------------------------------------
 
 /**
  * @file
  * cudpp_testrig.cu
- * 
+ *
  * @brief Main testing file for cudpp library.
- * 
+ *
  * Main testing file for cudpp library. Host code to link with cudpp
  * to exercise and test cudpp functionality. Contains regression
  * script to test cudpp calls. Simplest test to run regression is
@@ -41,7 +41,7 @@ using namespace cudpp_app;
 
 cudaDeviceProp devProps;
 
-int testScan(int argc, const char ** argv, const CUDPPConfiguration *config, 
+int testScan(int argc, const char ** argv, const CUDPPConfiguration *config,
              bool multiRow, cudaDeviceProp props);
 int testCompact(int argc, const char ** argv, const CUDPPConfiguration *config);
 int testRadixSort(int argc, const char ** argv, const CUDPPConfiguration *config);
@@ -56,9 +56,9 @@ int testBwt(int argc, const char** argv, const CUDPPConfiguration *config);
 int testCompress(int argc, const char** argv, const CUDPPConfiguration *config);
 int testListRank(int argc, const char** argv, const CUDPPConfiguration *config);
 
-int testAllDatatypes(int argc, 
-                     const char** argv, 
-                     CUDPPConfiguration & config, 
+int testAllDatatypes(int argc,
+                     const char** argv,
+                     CUDPPConfiguration & config,
                      bool supportsDouble,
                      bool multiRow)
 {
@@ -72,7 +72,7 @@ int testAllDatatypes(int argc,
         if (supportsDouble)
         {
             config.datatype = CUDPP_DOUBLE;
-            retval += testTridiagonal(argc, argv, &config);      
+            retval += testTridiagonal(argc, argv, &config);
         }
         return retval;
     }
@@ -99,7 +99,7 @@ int testAllDatatypes(int argc,
     }
 
     if(config.algorithm == CUDPP_SORT_STRING)
-    {		
+    {
         config.datatype = CUDPP_UINT;
         retval += testStringSort(argc, argv, &config);
         return retval;
@@ -110,29 +110,31 @@ int testAllDatatypes(int argc,
         config.datatype = dt;
         if (config.datatype != CUDPP_DOUBLE || supportsDouble) {
             switch (config.algorithm) {
-                case CUDPP_SCAN:
-                case CUDPP_SEGMENTED_SCAN:
-                    retval += testScan(argc, argv, &config, multiRow, devProps);
-                    break;
-                case CUDPP_REDUCE:
-                    retval += testReduce(argc, argv, &config);
-                    break;
-                case CUDPP_COMPACT:
-                    retval += testCompact(argc, argv, &config);
-                    break;
-                case CUDPP_SORT_RADIX:
-                    retval += testRadixSort(argc, argv, &config);
-                    break;
-                case CUDPP_LISTRANK:
-                    retval += testListRank(argc, argv, &config);
-                    break;
-                case CUDPP_SORT_MERGE:
-                    if(!(config.datatype == CUDPP_UINT || config.datatype == CUDPP_INT))					
-                        printf("Only uints and ints currently supported for merge sort ... skipping\n");											
-                    else
-                        retval += testMergeSort(argc, argv, &config);
-                    break; 
-        
+            case CUDPP_SCAN:
+            case CUDPP_SEGMENTED_SCAN:
+                retval += testScan(argc, argv, &config, multiRow, devProps);
+                break;
+            case CUDPP_REDUCE:
+                retval += testReduce(argc, argv, &config);
+                break;
+            case CUDPP_COMPACT:
+                retval += testCompact(argc, argv, &config);
+                break;
+            case CUDPP_SORT_RADIX:
+                retval += testRadixSort(argc, argv, &config);
+                break;
+            case CUDPP_LISTRANK:
+                retval += testListRank(argc, argv, &config);
+                break;
+            case CUDPP_SORT_MERGE:
+                if(!(config.datatype == CUDPP_UINT ||
+                     config.datatype == CUDPP_INT))
+                    printf("Only uints and ints currently supported for "
+                           "merge sort ... skipping\n");
+                else
+                    retval += testMergeSort(argc, argv, &config);
+                break;
+
             }
         }
     }
@@ -140,112 +142,112 @@ int testAllDatatypes(int argc,
     return retval;
 }
 
-int testAllOptionsAndDatatypes(int argc, 
-                               const char** argv, 
-                               CUDPPConfiguration & config, 
+int testAllOptionsAndDatatypes(int argc,
+                               const char** argv,
+                               CUDPPConfiguration & config,
                                bool supportsDouble,
                                bool multiRow = false)
 {
     int retval = 0;
-    
+
     if (config.algorithm == CUDPP_SORT_RADIX)
     {
         config.options = CUDPP_OPTION_KEY_VALUE_PAIRS | CUDPP_OPTION_FORWARD;
         retval += testAllDatatypes(argc, argv, config, supportsDouble, multiRow);
         config.options = CUDPP_OPTION_KEYS_ONLY | CUDPP_OPTION_FORWARD;
-        retval += testAllDatatypes(argc, argv, config, supportsDouble, multiRow);              
+        retval += testAllDatatypes(argc, argv, config, supportsDouble, multiRow);
         config.options = CUDPP_OPTION_KEY_VALUE_PAIRS | CUDPP_OPTION_BACKWARD;
         retval += testAllDatatypes(argc, argv, config, supportsDouble, multiRow);
         config.options = CUDPP_OPTION_KEYS_ONLY | CUDPP_OPTION_BACKWARD;
-        retval += testAllDatatypes(argc, argv, config, supportsDouble, multiRow);              
+        retval += testAllDatatypes(argc, argv, config, supportsDouble, multiRow);
         return retval;
     }
 
     if(config.algorithm == CUDPP_SORT_MERGE)
-    {	   		
-		config.options = CUDPP_OPTION_FORWARD | CUDPP_OPTION_EXCLUSIVE;
-        retval += testAllDatatypes(argc, argv, config, supportsDouble, multiRow);	
-		return retval;
+    {
+        config.options = CUDPP_OPTION_FORWARD | CUDPP_OPTION_EXCLUSIVE;
+        retval += testAllDatatypes(argc, argv, config, supportsDouble, multiRow);
+        return retval;
     }
 
     if(config.algorithm == CUDPP_SORT_STRING)
     {
-	    config.datatype = CUDPP_UINT;
+        config.datatype = CUDPP_UINT;
         retval += testAllDatatypes(argc, argv, config, supportsDouble, multiRow);
-		return retval;
-    } 
-    
+        return retval;
+    }
+
     config.op = CUDPP_ADD;
-    
+
     bool runReduce = (config.algorithm == CUDPP_REDUCE);
-    
+
     config.options = CUDPP_OPTION_FORWARD | CUDPP_OPTION_EXCLUSIVE;
-    retval += testAllDatatypes(argc, argv, config, supportsDouble, multiRow);        
-    
+    retval += testAllDatatypes(argc, argv, config, supportsDouble, multiRow);
+
     if (!runReduce)
     {
         config.options = CUDPP_OPTION_BACKWARD | CUDPP_OPTION_EXCLUSIVE;
-        retval += testAllDatatypes(argc, argv, config, supportsDouble, multiRow);        
+        retval += testAllDatatypes(argc, argv, config, supportsDouble, multiRow);
     }
 
     if (config.algorithm == CUDPP_COMPACT) // only one operator for compact
         return retval;
-        
+
     if (!runReduce)
     {
         config.options = CUDPP_OPTION_FORWARD | CUDPP_OPTION_INCLUSIVE;
-        retval += testAllDatatypes(argc, argv, config, supportsDouble, multiRow);        
+        retval += testAllDatatypes(argc, argv, config, supportsDouble, multiRow);
         config.options = CUDPP_OPTION_BACKWARD | CUDPP_OPTION_INCLUSIVE;
-        retval += testAllDatatypes(argc, argv, config, supportsDouble, multiRow);            
-    } 
+        retval += testAllDatatypes(argc, argv, config, supportsDouble, multiRow);
+    }
 
     config.op = CUDPP_MULTIPLY;
 
     config.options = CUDPP_OPTION_FORWARD | CUDPP_OPTION_EXCLUSIVE;
-    retval += testAllDatatypes(argc, argv, config, supportsDouble, multiRow);        
+    retval += testAllDatatypes(argc, argv, config, supportsDouble, multiRow);
     if (!runReduce)
-    {   
+    {
         config.options = CUDPP_OPTION_BACKWARD | CUDPP_OPTION_EXCLUSIVE;
-        retval += testAllDatatypes(argc, argv, config, supportsDouble, multiRow);        
+        retval += testAllDatatypes(argc, argv, config, supportsDouble, multiRow);
         config.options = CUDPP_OPTION_FORWARD | CUDPP_OPTION_INCLUSIVE;
-        retval += testAllDatatypes(argc, argv, config, supportsDouble, multiRow);        
+        retval += testAllDatatypes(argc, argv, config, supportsDouble, multiRow);
         config.options = CUDPP_OPTION_BACKWARD | CUDPP_OPTION_INCLUSIVE;
-        retval += testAllDatatypes(argc, argv, config, supportsDouble, multiRow);        
-    }                
+        retval += testAllDatatypes(argc, argv, config, supportsDouble, multiRow);
+    }
 
     config.op = CUDPP_MAX;
 
     config.options = CUDPP_OPTION_FORWARD | CUDPP_OPTION_EXCLUSIVE;
-    retval += testAllDatatypes(argc, argv, config, supportsDouble, multiRow);        
+    retval += testAllDatatypes(argc, argv, config, supportsDouble, multiRow);
     if (!runReduce)
     {
         config.options = CUDPP_OPTION_BACKWARD | CUDPP_OPTION_EXCLUSIVE;
-        retval += testAllDatatypes(argc, argv, config, supportsDouble, multiRow);        
+        retval += testAllDatatypes(argc, argv, config, supportsDouble, multiRow);
         config.options = CUDPP_OPTION_FORWARD | CUDPP_OPTION_INCLUSIVE;
-        retval += testAllDatatypes(argc, argv, config, supportsDouble, multiRow);        
+        retval += testAllDatatypes(argc, argv, config, supportsDouble, multiRow);
         config.options = CUDPP_OPTION_BACKWARD | CUDPP_OPTION_INCLUSIVE;
-        retval += testAllDatatypes(argc, argv, config, supportsDouble, multiRow);        
+        retval += testAllDatatypes(argc, argv, config, supportsDouble, multiRow);
     }
-    
+
     config.op = CUDPP_MIN;
 
     config.options = CUDPP_OPTION_FORWARD | CUDPP_OPTION_EXCLUSIVE;
-    retval += testAllDatatypes(argc, argv, config, supportsDouble, multiRow);        
+    retval += testAllDatatypes(argc, argv, config, supportsDouble, multiRow);
     if (!runReduce)
     {
         config.options = CUDPP_OPTION_BACKWARD | CUDPP_OPTION_EXCLUSIVE;
         retval += testAllDatatypes(argc, argv, config, supportsDouble, multiRow);
         config.options = CUDPP_OPTION_FORWARD | CUDPP_OPTION_INCLUSIVE;
-        retval += testAllDatatypes(argc, argv, config, supportsDouble, multiRow);        
+        retval += testAllDatatypes(argc, argv, config, supportsDouble, multiRow);
         config.options = CUDPP_OPTION_BACKWARD | CUDPP_OPTION_INCLUSIVE;
         retval += testAllDatatypes(argc, argv, config, supportsDouble, multiRow);
-    }    
-    
+    }
+
     return retval;
 }
 
 /**
- * main in cudpp_testrig is a dispatch routine to exercise cudpp functionality. 
+ * main in cudpp_testrig is a dispatch routine to exercise cudpp functionality.
  *
  * - --all calls every regression routine.
  *   - The scan regression calls forward and backward sum and max scans.
@@ -260,10 +262,10 @@ int testAllOptionsAndDatatypes(int argc,
  * - --reduce calls the reduce regression routine
  * - --n=# sets the size of the dataset
  * - --iterations=# sets the number of iterations to run
- */ 
+ */
 int main(int argc, const char** argv)
 {
-    bool quiet = checkCommandLineFlag(argc, argv, "quiet"); 
+    bool quiet = checkCommandLineFlag(argc, argv, "quiet");
 
     int deviceCount;
     cudaGetDeviceCount(&deviceCount);
@@ -281,7 +283,7 @@ int main(int argc, const char** argv)
     {
         printf("Using device %d:\n", dev);
         printf("%s; global mem: %dB; compute v%d.%d; clock: %d kHz\n",
-               devProps.name, (int)devProps.totalGlobalMem, (int)devProps.major, 
+               devProps.name, (int)devProps.totalGlobalMem, (int)devProps.major,
                (int)devProps.minor, (int)devProps.clockRate);
     }
 
@@ -307,7 +309,7 @@ int main(int argc, const char** argv)
         printf("rand: Run random number generator test(s)\n\n");
         printf("tridiagonal: Run tridiagonal solver test(s)\n\n");
         printf("mtf: Run move-to-front transform test(s) "
-               "(compute 2.0+ only)\n\n"); 
+               "(compute 2.0+ only)\n\n");
         printf("bwt: Run Burrows-Wheeler transform test(s) "
                "(compute 2.0+ only)\n\n");
         printf("compress: Run compression test(s) (compute 2.0+ only)\n\n");
@@ -338,7 +340,7 @@ int main(int argc, const char** argv)
         printf("--- Rand Options ---\n");
         printf("dir=<directory>: Directory containing all the random number regression tests\n");
     }
-    
+
     bool runAll = checkCommandLineFlag(argc, argv, "all");
     bool runScan = runAll || checkCommandLineFlag(argc, argv, "scan");
     bool runSegScan = runAll || checkCommandLineFlag(argc, argv, "segscan");
@@ -373,18 +375,18 @@ int main(int argc, const char** argv)
                 "compute capability 2.0+\n");
         runCompress = false;
     }
-    
+
     bool hasopts = hasOptions(argc, argv);
 
-    if (hasopts) 
+    if (hasopts)
     {
-		printf("has opts\n");
+        printf("has opts\n");
         if (runScan)      retval += testScan(argc, argv, NULL, false, devProps);
         if (runSegScan)   retval += testScan(argc, argv, NULL, false, devProps);
         if (runCompact)   retval += testCompact(argc, argv, NULL);
         if (runReduce)    retval += testReduce(argc, argv, NULL);
         if (runMergeSort) retval += testMergeSort(argc, argv, NULL);
-        if (runRadixSort) retval += testRadixSort(argc, argv, NULL); 
+        if (runRadixSort) retval += testRadixSort(argc, argv, NULL);
         if (runStringSort)retval += testStringSort(argc, argv, NULL);
         if (runMultiScan) retval += testScan(argc, argv, NULL, true, devProps);
         if (runTridiagonal) retval += testTridiagonal(argc, argv, NULL);
@@ -397,50 +399,47 @@ int main(int argc, const char** argv)
     {
         CUDPPConfiguration config;
         config.options = 0;
-        
-		
+
         if (runScan) {
             config.algorithm = CUDPP_SCAN;
-            retval += testAllOptionsAndDatatypes(argc, argv, config, supportsDouble);        
+            retval += testAllOptionsAndDatatypes(argc, argv, config, supportsDouble);
         }
-       
+
         if (runSegScan) {
             config.algorithm = CUDPP_SEGMENTED_SCAN;
-            retval += testAllOptionsAndDatatypes(argc, argv, config, supportsDouble);                        
+            retval += testAllOptionsAndDatatypes(argc, argv, config, supportsDouble);
         }
-        
+
         if (runCompact) {
             config.algorithm = CUDPP_COMPACT;
-            retval += testAllOptionsAndDatatypes(argc, argv, config, supportsDouble);        
+            retval += testAllOptionsAndDatatypes(argc, argv, config, supportsDouble);
         }
-        
+
         if (runReduce) {
             config.algorithm = CUDPP_REDUCE;
             retval += testAllOptionsAndDatatypes(argc, argv, config, supportsDouble);
         }
-        
+
         if (runRadixSort) {
             config.algorithm = CUDPP_SORT_RADIX;
             retval += testAllOptionsAndDatatypes(argc, argv, config, supportsDouble);
         }
 
-		if (runMergeSort) {					            
+        if (runMergeSort) {
             config.algorithm = CUDPP_SORT_MERGE;
             retval += testAllOptionsAndDatatypes(argc, argv, config, supportsDouble);
         }
 
         if(runStringSort) {
-			
             config.algorithm = CUDPP_SORT_STRING;
             retval += testAllOptionsAndDatatypes(argc, argv, config, supportsDouble);
         }
-        
-        
+
         if (runMultiScan) {
             config.algorithm = CUDPP_SCAN;
-            retval += testAllOptionsAndDatatypes(argc, argv, config, supportsDouble, true);        
+            retval += testAllOptionsAndDatatypes(argc, argv, config, supportsDouble, true);
         }
-        
+
         if (runTridiagonal) {
             config.algorithm = CUDPP_TRIDIAGONAL;
             retval += testAllDatatypes(argc, argv, config, supportsDouble, false);
@@ -449,12 +448,12 @@ int main(int argc, const char** argv)
         if (runMtf) {
             config.algorithm = CUDPP_MTF;
             retval += testAllDatatypes(argc, argv, config, supportsDouble, false);
-        } 
+        }
 
         if (runBwt) {
             config.algorithm = CUDPP_BWT;
             retval += testAllDatatypes(argc, argv, config, supportsDouble, false);
-        } 
+        }
 
         if (runCompress) {
             config.algorithm = CUDPP_COMPRESS;
@@ -465,13 +464,12 @@ int main(int argc, const char** argv)
             config.algorithm = CUDPP_LISTRANK;
             retval += testAllDatatypes(argc, argv, config, supportsDouble, false);
         }
-
     }
 
     if (runSpmv)
     {
         retval += testSparseMatrixVectorMultiply(argc, argv);
-    }    
+    }
 
     if (runRand)
     {
@@ -489,7 +487,7 @@ int main(int argc, const char** argv)
         if (!quiet)
             printf("All tests passed.\n");
     }
-    return 0;//retval;
+    return 0; //retval;
 }
 
 
