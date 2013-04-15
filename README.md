@@ -1,0 +1,3 @@
+CUDPP is the CUDA Data Parallel Primitives Library. CUDPP is a library of data-parallel algorithm primitives such as parallel prefix-sum (”scan”), parallel sort and parallel reduction. Primitives such as these are important building blocks for a wide variety of data-parallel algorithms, including sorting, stream compaction, and building data structures such as trees and summed-area tables. CUDPP runs on processors that support [CUDA](http://www.nvidia.com/cuda).
+
+For detailed information, see the [CUDPP Documentation](http://cudpp.github.io/cudpp/2.0/). A good place to start is the [simpleCUDPP Example](http://cudpp.github.io/cudpp/2.0/example_simple_c_u_d_p_p.html). 
