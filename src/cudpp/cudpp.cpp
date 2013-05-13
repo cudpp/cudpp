@@ -688,12 +688,10 @@ CUDPPResult cudppCompress(CUDPPHandle planHandle,
                           size_t numElements)
 {   
     // first check: is this device >= 2.0? if not, return error
-    int deviceCount;
-    int dev = 0;
+    int dev;
+    cudaGetDevice(&dev);
+
     cudaDeviceProp devProps;
-    cudaGetDeviceCount(&deviceCount);
-    dev = deviceCount - 1;
-    cudaSetDevice(dev);
     cudaGetDeviceProperties(&devProps, dev);
 
     if((int)devProps.major < 2) {
@@ -701,7 +699,7 @@ CUDPPResult cudppCompress(CUDPPHandle planHandle,
         // capability 2.0 or greater
         return CUDPP_ERROR_ILLEGAL_CONFIGURATION;
     }
-    
+
     CUDPPCompressPlan * plan = 
         (CUDPPCompressPlan *) getPlanPtrFromHandle<CUDPPCompressPlan>(planHandle);
     
@@ -750,12 +748,10 @@ CUDPPResult cudppBurrowsWheelerTransform(CUDPPHandle planHandle,
                                          size_t numElements)
 {
     // first check: is this device >= 2.0? if not, return error
-    int deviceCount;
-    int dev = 0;
+    int dev;
+    cudaGetDevice(&dev);
+
     cudaDeviceProp devProps;
-    cudaGetDeviceCount(&deviceCount);
-    dev = deviceCount - 1;
-    cudaSetDevice(dev);
     cudaGetDeviceProperties(&devProps, dev);
 
     if((int)devProps.major < 2) {
@@ -808,12 +804,11 @@ CUDPPResult cudppMoveToFrontTransform(CUDPPHandle planHandle,
                                       void *d_x,
                                       size_t numElements)
 {
-    int deviceCount;
-    int dev = 0;
+    // first check: is this device >= 2.0? if not, return error
+    int dev;
+    cudaGetDevice(&dev);
+
     cudaDeviceProp devProps;
-    cudaGetDeviceCount(&deviceCount);
-    dev = deviceCount - 1;
-    cudaSetDevice(dev);
     cudaGetDeviceProperties(&devProps, dev);
 
     if((int)devProps.major < 2) {
