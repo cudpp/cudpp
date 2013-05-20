@@ -52,8 +52,6 @@ void runStringSort(unsigned int *pkeys,
 				   size_t stringArrayLength,
 				   const CUDPPStringSortPlan *plan)
 {
-
-	//printf("start\n");
 	int numPartitions = (numElements+BLOCKSORT_SIZE-1)/BLOCKSORT_SIZE;
 	int numBlocks = numPartitions/2;
 	int partitionSize = BLOCKSORT_SIZE;
@@ -71,10 +69,10 @@ void runStringSort(unsigned int *pkeys,
 	unsigned int swapPoint = 32;
 	int blockLimit = swapPoint*subPartitions;	
 
-	cudaMalloc((void**)&partitionBeginA, blockLimit*sizeof(unsigned int)); 
-	cudaMalloc((void**)&partitionSizeA, blockLimit*sizeof(unsigned int));
-	cudaMalloc((void**)&partitionBeginB, blockLimit*sizeof(unsigned int)); 
-	cudaMalloc((void**)&partitionSizeB, blockLimit*sizeof(unsigned int));
+	CUDA_SAFE_CALL( cudaMalloc((void**)&partitionBeginA, blockLimit*sizeof(unsigned int))); 
+	CUDA_SAFE_CALL( cudaMalloc((void**)&partitionSizeA, blockLimit*sizeof(unsigned int)));
+	CUDA_SAFE_CALL( cudaMalloc((void**)&partitionBeginB, blockLimit*sizeof(unsigned int)));
+	CUDA_SAFE_CALL( cudaMalloc((void**)&partitionSizeB, blockLimit*sizeof(unsigned int)));
 
 	int numThreads = 128;	
 
@@ -199,8 +197,6 @@ void runStringSort(unsigned int *pkeys,
 
 	CUDA_SAFE_CALL(cudaFree(temp_keys));
 	CUDA_SAFE_CALL(cudaFree(temp_vals));	
-
-	//printf("end\n");
 }
 
 #ifdef __cplusplus

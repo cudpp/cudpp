@@ -32,6 +32,7 @@
 
 
 #define BLOCKSORT_SIZE 1024
+#define DEPTH 8
 
 /** @brief Performs merge sor utilzing three stages. 
 * (1) Blocksort, (2) simple merge and (3) multi merge
@@ -48,8 +49,6 @@ void runMergeSort(T *pkeys,
              size_t numElements, 
              const CUDPPMergeSortPlan *plan)
 {
-
-
 	int numPartitions = (numElements+BLOCKSORT_SIZE-1)/BLOCKSORT_SIZE;
 	int numBlocks = numPartitions/2;
 	int partitionSize = BLOCKSORT_SIZE;
@@ -66,11 +65,10 @@ void runMergeSort(T *pkeys,
 	unsigned int swapPoint = 32;
 	int blockLimit = swapPoint*subPartitions;	
 
-	cudaMalloc((void**)&partitionBeginA, blockLimit*sizeof(unsigned int)); 
-	cudaMalloc((void**)&partitionSizeA, blockLimit*sizeof(unsigned int));
+	CUDA_SAFE_CALL( cudaMalloc((void**)&partitionBeginA, blockLimit*sizeof(unsigned int))); 
+	CUDA_SAFE_CALL( cudaMalloc((void**)&partitionSizeA, blockLimit*sizeof(unsigned int)));
 
 	int numThreads = 128;	
-#define DEPTH 8
 	blockWiseSort<T, DEPTH>
 	<<<numPartitions, BLOCKSORT_SIZE/DEPTH, (BLOCKSORT_SIZE)*sizeof(T) + (BLOCKSORT_SIZE)*sizeof(unsigned int)>>>(pkeys, pvals, BLOCKSORT_SIZE, numElements);
 
@@ -183,13 +181,12 @@ void runMergeSort(T *pkeys,
 	
 	if(count%2==1)
 	{
-		cudaMemcpy(pkeys, temp_keys, numElements*sizeof(T), cudaMemcpyDeviceToDevice);
-		cudaMemcpy(pvals, temp_vals, numElements*sizeof(unsigned int), cudaMemcpyDeviceToDevice);
+		CUDA_SAFE_CALL( cudaMemcpy(pkeys, temp_keys, numElements*sizeof(T), cudaMemcpyDeviceToDevice));
+		CUDA_SAFE_CALL( cudaMemcpy(pvals, temp_vals, numElements*sizeof(unsigned int), cudaMemcpyDeviceToDevice));
 	}
 	
 	CUDA_SAFE_CALL(cudaFree(temp_keys));
 	CUDA_SAFE_CALL(cudaFree(temp_vals));	
-	
 }
 
 #ifdef __cplusplus
@@ -237,12 +234,6 @@ void cudppMergeSortDispatch(void  *keys,
 {
     switch(plan->m_config.datatype)
     {
-   // case CUDPP_CHAR:
-     //   runSort<char>((char*)keys, (unsigned int*)values, numElements, plan);
-     //   break;
-//    case CUDPP_UCHAR:
-  //      runSort<unsigned char>((unsigned char*)keys, (unsigned int*)values, numElements, plan);
-    //    break;
     case CUDPP_INT:
         runMergeSort<int>((int*)keys, (unsigned int*)values, numElements, plan);
         break;
@@ -252,15 +243,6 @@ void cudppMergeSortDispatch(void  *keys,
     case CUDPP_FLOAT:
         runMergeSort<float>((float*)keys, (unsigned int*)values, numElements, plan);
         break;
-    //case CUDPP_DOUBLE:
-     //   runMergeSort<double, DBL_MAX>((double*)keys, (unsigned int*)values, numElements, plan);
-     //   break;
-    //case CUDPP_LONGLONG:
-      //  runSort<long long, LLONG_MAX>((long long*)keys, (unsigned int*)values, numElements, plan);        
-        //break;
-    //case CUDPP_ULONGLONG:
-      //  runSort<unsigned long long, ULLONG_MAX>((unsigned long long*)keys, (unsigned int*)values, numElements, plan);
-        //break;
     }    
 }                            
 
