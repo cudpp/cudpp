@@ -28,6 +28,7 @@
 #include "cudpp_util.h"
 #include "cudpp_stringsort.h"
 #include "kernel/stringsort_kernel.cuh"
+#include "kernel/mergesort_kernel.cuh" //for simpleCopy
 #include "limits.h"
 
 
@@ -91,7 +92,7 @@ void runStringSort(unsigned int *pkeys,
 		numBlocks = (numPartitions&0xFFFE);	    
 		if(count%2 == 0)
 		{ 				
-			simpleStringMerge<unsigned int, DEPTH_multi>
+			simpleStringMerge<unsigned int, 2>
 				<<<numBlocks, CTASIZE_simple, sizeof(unsigned int)*(2*INTERSECT_B_BLOCK_SIZE_simple+4)>>>(pkeys, temp_keys, 				
 				pvals, temp_vals, stringVals, partitionSize*mult, numElements, count, stringArrayLength);		
 
@@ -106,7 +107,7 @@ void runStringSort(unsigned int *pkeys,
 		}
 		else
 		{			
-			simpleStringMerge<unsigned int, DEPTH_multi>
+			simpleStringMerge<unsigned int, 2>
 				<<<numBlocks, CTASIZE_simple, sizeof(unsigned int)*(2*INTERSECT_B_BLOCK_SIZE_simple+4)>>>(temp_keys, pkeys, 				
 				temp_vals, pvals, stringVals, partitionSize*mult, numElements, count, stringArrayLength);		
 			
@@ -143,7 +144,7 @@ void runStringSort(unsigned int *pkeys,
 
 			//int lastSubPart = getLastSubPart(numBlocks, subPartitions, partitionSize, mult, numElements);
 			CUDA_SAFE_CALL(cudaThreadSynchronize());
-			stringMergeMulti<unsigned int, 2>
+			stringMergeMulti<unsigned int, DEPTH_multi>
 				<<<numBlocks*subPartitions, CTASIZE_multi, (2*INTERSECT_B_BLOCK_SIZE_multi+4)*sizeof(unsigned int)>>>(temp_keys, pkeys, temp_vals, 
 				pvals, stringVals, subPartitions, numBlocks, partitionBeginA, partitionSizeA, partitionBeginB, partitionSizeB, mult*partitionSize, count, numElements, stringArrayLength);
 			CUDA_SAFE_CALL(cudaThreadSynchronize());
@@ -164,7 +165,7 @@ void runStringSort(unsigned int *pkeys,
 				partitionBeginB, partitionSizeB, numElements, stringArrayLength);											
 			CUDA_SAFE_CALL(cudaThreadSynchronize());
 			//int lastSubPart = getLastSubPart(numBlocks, subPartitions, partitionSize, mult, numElements);
-			stringMergeMulti<unsigned int, 2>
+			stringMergeMulti<unsigned int, DEPTH_multi>
 				<<<numBlocks*subPartitions, CTASIZE_multi, (2*INTERSECT_B_BLOCK_SIZE_multi+4)*sizeof(unsigned int)>>>(pkeys, temp_keys, pvals, 
 				temp_vals, stringVals, subPartitions, numBlocks, partitionBeginA, partitionSizeA, partitionBeginB, partitionSizeB, mult*partitionSize, count, numElements, stringArrayLength);
 
