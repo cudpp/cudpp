@@ -34,9 +34,9 @@
 #define BLOCKSORT_SIZE 1024
 #define CTA_BLOCK 128
 #define DEPTH_simple 2
-#define DEPTH_multi 4
+#define DEPTH_multi 2
 #define CTASIZE_simple 256
-#define CTASIZE_multi 128
+#define CTASIZE_multi 256
 
 #define INTERSECT_A_BLOCK_SIZE_simple DEPTH_simple*CTASIZE_simple
 #define INTERSECT_B_BLOCK_SIZE_simple 2*DEPTH_simple*CTASIZE_simple

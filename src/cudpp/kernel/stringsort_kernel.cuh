@@ -30,6 +30,23 @@
  */
 
 
+/** @brief Copies unused portions of arrays in our ping-pong strategy
+ * @param[in] A_keys_dev, A_vals_dev The keys and values we will be copying
+ * @param[out] A_keys_out_dev, A_vals_out_dev The keys and values array we will copy to
+ * @param[in] offset, The offset we are starting to copy from
+ * @param[in] numElementsToCopy, The number of elements we copy starting from the offset
+**/
+template <class T>
+__global__
+void simpleCopy(T* A_keys_dev, unsigned int* A_vals_dev, T* A_keys_out_dev, unsigned int* A_vals_out_dev, int offset, int numElementsToCopy)
+{
+    int myId = blockIdx.x*blockDim.x + threadIdx.x;
+    if(myId >= numElementsToCopy)
+        return;
+    A_keys_out_dev[offset+myId] = A_keys_dev[offset+myId];
+    A_vals_out_dev[offset+myId] = A_vals_dev[offset+myId];
+
+}
 
 /** @brief Does an initial blockSort based on the size of our partition (limited by shared memory size)
  * @param[in,out] A_keys, A_address This sort is in-place. A_keys and A_address store the key (first four characters) and addresses of our strings

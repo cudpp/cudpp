@@ -28,7 +28,6 @@
 #include "cudpp_util.h"
 #include "cudpp_stringsort.h"
 #include "kernel/stringsort_kernel.cuh"
-#include "kernel/mergesort_kernel.cuh" //for simpleCopy
 #include "limits.h"
 
 
