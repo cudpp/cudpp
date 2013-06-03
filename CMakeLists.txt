@@ -8,8 +8,13 @@ cmake_minimum_required(VERSION 2.8)
 
 find_package(CUDA REQUIRED)
 
-option(BUILD_SHARED_LIBS	
+option(CUDPP_BUILD_SHARED_LIBS	
   "On to build shared libraries, off for static libraries."
+  OFF
+  )
+
+option(CUDPP_BUILD_APPLICATIONS
+  "If on, builds the sample applications."
   OFF
   )
 
@@ -56,13 +61,13 @@ foreach (config ${configs})
 endforeach(config {configs})
 set(CMAKE_DEBUG_POSTFIX "${bits}d")
 
-if(BUILD_SHARED_LIBS)
+if(CUDPP_BUILD_SHARED_LIBS)
   # User wants to build Dynamic Libraries, so change the LIB_TYPE variable to CMake keyword 'SHARED'
   set(LIB_TYPE SHARED)
 else()
   set(LIB_TYPE STATIC)
   set(CUDPP_STATIC_LIB 1)
-endif(BUILD_SHARED_LIBS)
+endif(CUDPP_BUILD_SHARED_LIBS)
 
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/include/cudpp_config.h.in
@@ -92,17 +97,12 @@ file(COPY apps/data DESTINATION apps)
 add_subdirectory(src/cudpp)
 add_subdirectory(src/cudpp_hash)
 
-option(BUILD_APPLICATIONS
-  "If on, builds the sample applications."
-  OFF
-  )
-
-if (BUILD_APPLICATIONS)
+if (CUDPP_BUILD_APPLICATIONS)
   add_subdirectory(apps/cudpp_testrig)
   add_subdirectory(apps/cudpp_hash_testrig)
   add_subdirectory(apps/simpleCUDPP)
   #add_subdirectory(apps/satGL)
-endif (BUILD_APPLICATIONS)
+endif (CUDPP_BUILD_APPLICATIONS)
 
 # Make files that store configuration to help dependent CMake files use
 # these libraries.
