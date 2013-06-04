@@ -31,6 +31,7 @@
 #include "cudpp.h"
 #include "cudpp_testrig_utils.h"
 #include "cudpp_testrig_options.h"
+#include "cuda_util.h"
 
 #define CUDPP_APP_COMMON_IMPL
 #include "stopwatch.h"
@@ -275,9 +276,10 @@ int main(int argc, const char** argv)
     commandLineArg(dev, argc, argv, "device");
     if (dev < 0) dev = 0;
     if (dev > deviceCount-1) dev = deviceCount - 1;
-    cudaSetDevice(dev);
+    CUDA_SAFE_CALL( cudaSetDevice(dev) );
 
-    if (!quiet && cudaGetDeviceProperties(&devProps, dev) == 0)
+    CUDA_SAFE_CALL( cudaGetDeviceProperties(&devProps, dev) );
+    if (!quiet)
     {
         printf("Using device %d:\n", dev);
         printf("%s; global mem: %dB; compute v%d.%d; clock: %d kHz\n",
