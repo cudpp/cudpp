@@ -278,7 +278,7 @@
  *
  * CUDPP also calls functions in the 
  * <a href="http://thrust.googlecode.com">Thrust</a> template library, which
- * is included with CUDA 4.0 and licensed under the Apache 2.0 open source 
+ * is included with the CUDA Toolkit and licensed under the Apache 2.0 open source 
  * license.
  * 
  * CUDPP also includes a modified version of FindGLEW.cmake from
