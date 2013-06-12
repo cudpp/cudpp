@@ -9,7 +9,7 @@ Release 2.1
 - Added cudppListRank parallel list ranking
 
 Release 2.0
-DATE HERE
+9 August 2011
 - New thread-safe public interface -- requires creating a CUDPP instance 
   with cudppCreate, and passing it to all functions
 - Added cudppReduce parallel reductions
