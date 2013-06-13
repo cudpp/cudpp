@@ -21,14 +21,11 @@
  * @brief CUDPP kernel-level radix sorting routines
  */
 
+/* doxygen: this include is already wrapped in "StringSort Functions" */
+
 /** \addtogroup cudpp_kernel
  * @{
  */
-
-/** @name StringSort Functions
- * @{
- */
-
 
 /** @brief Copies unused portions of arrays in our ping-pong strategy
  * @param[in] A_keys_dev The keys we will be copying
@@ -1216,7 +1213,6 @@ void stringMergeMulti(T *A_keys, T*A_keys_out, T* A_values, T *A_values_out, T* 
 }
 
                 
-/** @} */ // end StringSort functions
 /** @} */ // end cudpp_kernel
 
 // Leave this at the end of the file
