@@ -14,19 +14,23 @@ variety of data-parallel algorithms, including sorting, stream
 compaction, and building data structures such as trees and 
 summed-area tables.
 
-## Overview Presentation ##	                {#overview}
+Overview Presentation	                {#overview}
+---------------------
 
 A brief set of slides that describe the features, design principles,
 applications and impact of CUDPP is available:
 [CUDPP Presentation](https://github.com/cudpp/cudpp/blob/master/doc/CUDPP_slides.pdf?raw=true).
 
-## Home Page ##                             {#homepage}
+Home Page                             {#homepage}
+---------
+
 Homepage for CUDPP: <http://cudpp.github.io/>
 
 Announcements and discussion of CUDPP are hosted on the
 [CUDPP Google Group](http://groups.google.com/group/cudpp?hl=en).
  
-## Getting Started with CUDPP ##            {#getting-started}
+Getting Started with CUDPP            {#getting-started}
+--------------------------
 
 You may want to start by browsing the [CUDPP Public Interface](@ref publicInterface). 
 For information on building CUDPP, see [Building CUDPP](@ref building-cudpp). 
