@@ -3,7 +3,7 @@ CUDPP documentation                         {#mainpage}
 
 [TOC]
 
-Introduction                                {#introduction}
+Introduction
 ============
 
 CUDPP is the CUDA Data Parallel Primitives Library. CUDPP is a
@@ -14,14 +14,14 @@ variety of data-parallel algorithms, including sorting, stream
 compaction, and building data structures such as trees and 
 summed-area tables.
 
-Overview Presentation	                {#overview}
+Overview Presentation
 ---------------------
 
 A brief set of slides that describe the features, design principles,
 applications and impact of CUDPP is available:
 [CUDPP Presentation](https://github.com/cudpp/cudpp/blob/master/doc/CUDPP_slides.pdf?raw=true).
 
-Home Page                             {#homepage}
+Home Page
 ---------
 
 Homepage for CUDPP: <http://cudpp.github.io/>
@@ -29,7 +29,7 @@ Homepage for CUDPP: <http://cudpp.github.io/>
 Announcements and discussion of CUDPP are hosted on the
 [CUDPP Google Group](http://groups.google.com/group/cudpp?hl=en).
  
-Getting Started with CUDPP            {#getting-started}
+Getting Started with CUDPP
 --------------------------
 
 You may want to start by browsing the [CUDPP Public Interface](@ref publicInterface). 
@@ -48,7 +48,7 @@ that use CUDPP:
 
 We have also provided a code walkthrough of the [simpleCUDPP](@ref example_simpleCUDPP) example.
 
-Getting Help and Reporting Problems         {#getting-help}
+Getting Help and Reporting Problems
 ===================================
 
 To get help using CUDPP, please use the [CUDPP Google Group](http://groups.google.com/group/cudpp?hl=en).
@@ -61,7 +61,7 @@ Release Notes                               {#release-notes}
 
 For specific release details see the [Change Log](@ref changelog).
 
-Known Issues                                {#known-issues}
+Known Issues
 ------------
 
 For a complete list of issues, see the 
@@ -75,7 +75,7 @@ For a complete list of issues, see the
   GPU architectures that you plan to run on, using the `CUDPP_GENCODE_*` 
   CMake options.
  
-Algorithm Input Size Limitations           {#size-limits}
+Algorithm Input Size Limitations
 --------------------------------
  
 The following maximum size limitations currently apply.  In some 
@@ -99,7 +99,7 @@ CUDPP_SPMVMULT       | 67,107,840 non-zero elements
 CUDPP_HASH           | See [Hash Space Limitations](@ref hash_space_limitations)
 CUDPP_TRIDIAGONAL    | 65535 systems, 1024 equations per system (Compute capability 2.x), 512 equations per system (Compute capability < 2.0)
 
-Operating System Support and Requirements    {#opSys}
+Operating System Support and Requirements
 ========================================= 
  
 This release (2.0) has been thoroughly tested on the following OSes.
@@ -118,7 +118,7 @@ CUDPP 2.0 requires at least CUDA 3.0, and has not been tested with any
 CUDA version < 3.2.  CUDA 4.0 or higher is preferred. If you require an earlier CUDA
 version, then you should use CUDPP release 1.1.1.
 
-CUDA                                         {#cuda}
+CUDA
 ====
 
 CUDPP is implemented in
@@ -127,7 +127,7 @@ Please see the NVIDIA [CUDA](http://developer.nvidia.com/cuda) homepage to downl
 CUDA as well as the CUDA Programming Guide and CUDA SDK, which includes many 
 CUDA code examples.  
 
-Design Goals                                 {#design-goals}
+Design Goals
 ============
 
 Design goals for CUDPP include:
@@ -164,7 +164,7 @@ of CUDPP is to link to the library and invoke functions in the CUDPP
 satGL, cudpp_testrig, and cudpp_hash_testrig application examples included in the
 CUDPP distribution.
 
-Use Cases                                   {#uses}
+Use Cases
 ---------
  
 We expect the normal use of CUDPP will be in one of two ways:
@@ -173,7 +173,7 @@ We expect the normal use of CUDPP will be in one of two ways:
 - Running the "test" applications, cudpp_testrig and cudpp_hash_testrig, that 
   exercise CUDPP functionality.
 
-References                                  {#references}
+References {#references}
 ==========
  
 The following publications describe work incorporated in CUDPP.
@@ -193,7 +193,7 @@ Many researchers are using CUDPP in their work, and there are many publications 
 have used it ([references](@ref cudpp_refs)). If your work uses CUDPP, please let us know 
 by sending us a reference (preferably in BibTeX format) to your work.
  
-Citing CUDPP                                {#citing}
+Citing CUDPP
 ============
 
 If you make use of CUDPP primitives in your work and want to cite CUDPP (thanks!), 
@@ -209,7 +209,7 @@ paper (Tzeng and Wei) describes the random number generation algorithm. The two
 Alcantara papers describe the hash algorithms. The two Zhang papers describe the 
 tridiagonal solvers.
 
-Credits                                     {#credits}
+Credits
 =======
 
 CUDPP Developers
@@ -246,7 +246,7 @@ CUDPP Developers from UC Davis thank their funding agencies:
 - Los Alamos National Laboratory
 - Generous hardware donations from NVIDIA
 
-CUDPP Copyright and Software License           {#license-overview}
+CUDPP Copyright and Software License
 ====================================
  
 CUDPP is copyright The Regents of the University of California, Davis campus 
