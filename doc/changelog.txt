@@ -7,6 +7,9 @@ Release 2.1
   Huffman encoding
 - Added cudppMoveToFrontTransform and cudppBurrowsWheelerTransform
 - Added cudppListRank parallel list ranking
+- cudppSort has been removed
+- Added cudppMergeSort parallel merge sort
+- Added cudppStringSort parallel string sort
 
 Release 2.0
 9 August 2011
