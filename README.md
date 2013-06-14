@@ -106,25 +106,22 @@ Operating System Support and Requirements
 This release (2.1) has been thoroughly tested on the following OSes.  For more information, visit our [test results page](https://github.com/cudpp/cudpp/wiki/RegressionStatus2.1).
 
 - Windows 7 (64-bit) (CUDA 5.0)
-- Ubuntu Linux (64-bit) (CUDA 5.0)
-- Mac OS X 10.8.3 (Snow Leopard/Lion, 64-bit) (CUDA 5.0)
+- Ubuntu Linux (64-bit) (CUDA 5.0, CUDA 5.5)
+- Mac OS X 10.8.3 (Snow Leopard/Lion, 64-bit) (CUDA 5.0, CUDA 5.5)
 
-We expect CUDPP to build and run correctly on other flavors of Linux and Windows, but only the above are actively tested at this time.  Version 2.1 does not currently support 32-bit machines.
+We expect CUDPP to build and run correctly on other flavors of Linux and Windows, but only the above are actively tested at this time.  Version 2.1 does not currently support 32-bit operating systems.
 
 Requirements 
 ------------
 
-CUDPP 2.1 requires at least CUDA 3.0, and has not been tested with any 
-CUDA version < 3.2.  CUDA 4.0 or higher is preferred. If you require an earlier CUDA
-version, then you should use CUDPP release 1.1.1.
+CUDPP 2.1 has not been tested with any CUDA version < 5.0.  
 
 CUDA
 ====
 
-CUDPP is implemented in
-[CUDA C/C++](http://developer.nvidia.com/cuda). It requires the CUDA Toolkit. 
-Please see the NVIDIA [CUDA](http://developer.nvidia.com/cuda) homepage to download 
-CUDA as well as the CUDA Programming Guide and CUDA SDK, which includes many 
+CUDPP is implemented in [CUDA C/C++](http://developer.nvidia.com/cuda). It requires the
+CUDA Toolkit. Please see the NVIDIA [CUDA](http://developer.nvidia.com/cuda) homepage to
+download CUDA as well as the CUDA Programming Guide and CUDA SDK, which includes many 
 CUDA code examples.  
 
 Design Goals

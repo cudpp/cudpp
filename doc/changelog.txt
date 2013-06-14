@@ -10,6 +10,9 @@ Release 2.1
 - cudppSort has been removed
 - Added cudppMergeSort parallel merge sort
 - Added cudppStringSort parallel string sort
+- Moved source code to Github: http://cudpp.github.io
+- Moved documentation pages from cudpp.h to README.md
+- Added CUDPP_GENCODE_* CMake options to make CUDA target architecture compilation more flexible
 
 Release 2.0
 9 August 2011
