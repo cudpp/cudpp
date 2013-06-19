@@ -185,6 +185,7 @@ The following publications describe work incorporated in CUDPP.
 - Dan A. Alcantara, Andrei Sharf, Fatemeh Abbasinejad, Shubhabrata Sengupta, Michael Mitzenmacher, John D. Owens, and Nina Amenta. Real-Time Parallel Hashing on the GPU. ACM Transactions on Graphics, 28(5):154:1–154:9, December 2009. http://www.idav.ucdavis.edu/publications/print_pub?pub_id=973
 - Dan A. Alcantara, Vasily Volkov, Shubhabrata Sengupta, Michael Mitzenmacher, John D. Owens, and Nina Amenta. Building an Efficient Hash Table on the GPU. In Wen-mei W. Hwu, editor, GPU Computing Gems, volume 2, chapter 1. Morgan Kaufmann, August 2011. 
 - Ritesh A. Patel, Yao Zhang, Jason Mak, Andrew Davidson, John D. Owens. "Parallel Lossless Data Compression on the GPU". In <i>Proceedings of Innovative Parallel Computing (InPar '12)</i>, May 2012. http://idav.ucdavis.edu/publications/print_pub?pub_id=1087
+- Andrew Davidson, David Tarjan, Michael Garland, and John D. Owens. Efficient Parallel Merge Sort for Fixed and Variable Length Keys. <i>In Proceedings of Innovative Parallel Computing (InPar '12)</i>, May 2012. http://www.idav.ucdavis.edu/publications/print_pub?pub_id=1085
 
 Many researchers are using CUDPP in their work, and there are many publications that 
 have used it ([references](@ref cudpp_refs)). If your work uses CUDPP, please let us know 

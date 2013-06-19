@@ -7,7 +7,7 @@ Release 2.1
   Huffman encoding
 - Added cudppMoveToFrontTransform and cudppBurrowsWheelerTransform
 - Added cudppListRank parallel list ranking
-- cudppSort has been removed
+- Renamed cudppSort to cudppRadixSort
 - Added cudppMergeSort parallel merge sort
 - Added cudppStringSort parallel string sort
 - Moved source code to Github: http://cudpp.github.io
