@@ -307,16 +307,16 @@ CUDPPResult cudppCompress(CUDPPHandle planHandle,
 // Burrows-Wheeler Transform
 CUDPP_DLL
 CUDPPResult cudppBurrowsWheelerTransform(CUDPPHandle planHandle,
-                                         unsigned char *d_bwtIn,
-                                         unsigned char *d_bwtOut,
-                                         int *d_bwtIndex,
+                                         unsigned char *d_in,
+                                         unsigned char *d_out,
+                                         int *d_index,
                                          size_t numElements);
 
 // Move-to-Front Transform
 CUDPP_DLL
 CUDPPResult cudppMoveToFrontTransform(CUDPPHandle planHandle,
-                                      unsigned char *d_mtfIn,
-                                      unsigned char *d_mtfOut,
+                                      unsigned char *d_in,
+                                      unsigned char *d_out,
                                       size_t numElements);
 
 // List ranking

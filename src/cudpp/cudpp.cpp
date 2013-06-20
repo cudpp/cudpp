@@ -453,11 +453,11 @@ CUDPPResult cudppMergeSort(const CUDPPHandle planHandle,
  */
 CUDPP_DLL
 CUDPPResult cudppStringSort(const CUDPPHandle planHandle,
-                      void              *d_keys,
-                      void              *d_values,                      
-		              void              *stringVals,
+                      unsigned int              *d_keys,
+                      unsigned int              *d_values,                      
+                      unsigned int              *stringVals,
                       size_t            numElements,
-		              size_t            stringArrayLength)
+                      size_t            stringArrayLength)
 {    		
     CUDPPStringSortPlan *plan = 
         (CUDPPStringSortPlan*)getPlanPtrFromHandle<CUDPPStringSortPlan>(planHandle);
@@ -729,12 +729,12 @@ CUDPPResult cudppCompress(CUDPPHandle planHandle,
  * - Currently, the BWT can only be performed on 1,048,576 (uchar) elements.
  * - The transformed string is written to \a d_x.
  * - The BWT index (used during the reverse-BWT) is recorded as an int 
- * in \a d_bwtIndex.
+ * in \a d_index.
  *
  * @param[in] planHandle Handle to plan for BWT
- * @param[out] d_bwtIndex BWT Index
- * @param[out] d_bwtOut Output data
- * @param[in] d_bwtIn Input data
+ * @param[out] d_in BWT Index
+ * @param[out] d_out Output data
+ * @param[in] d_index Input data
  * @param[in] numElements Number of elements
  * @returns CUDPPResult indicating success or error condition
  *
@@ -742,9 +742,9 @@ CUDPPResult cudppCompress(CUDPPHandle planHandle,
  */
 CUDPP_DLL
 CUDPPResult cudppBurrowsWheelerTransform(CUDPPHandle planHandle,
-                                         unsigned char *d_bwtIn,
-                                         unsigned char *d_bwtOut,
-                                         int *d_bwtIndex,
+                                         unsigned char *d_in,
+                                         unsigned char *d_out,
+                                         int *d_index,
                                          size_t numElements)
 {
     // first check: is this device >= 2.0? if not, return error
@@ -772,7 +772,7 @@ CUDPPResult cudppBurrowsWheelerTransform(CUDPPHandle planHandle,
         if (numElements != 1048576)
             return CUDPP_ERROR_ILLEGAL_CONFIGURATION;
 
-        cudppBwtDispatch(d_bwtIn, d_bwtOut, d_bwtIndex, numElements, plan);
+        cudppBwtDispatch(d_in, d_out, d_index, numElements, plan);
         return CUDPP_SUCCESS;
     }
     else
@@ -791,8 +791,8 @@ CUDPPResult cudppBurrowsWheelerTransform(CUDPPHandle planHandle,
  * - The transformed string is written to \a d_mtfOut.
  *
  * @param[in] planHandle Handle to plan for MTF
- * @param[out] d_mtfOut Output data
- * @param[in] d_mtfIn Input data
+ * @param[out] d_out Output data
+ * @param[in] d_in Input data
  * @param[in] numElements Number of elements
  * @returns CUDPPResult indicating success or error condition
  *
@@ -800,8 +800,8 @@ CUDPPResult cudppBurrowsWheelerTransform(CUDPPHandle planHandle,
  */
 CUDPP_DLL
 CUDPPResult cudppMoveToFrontTransform(CUDPPHandle planHandle,
-                                      unsigned char *d_mtfIn,
-                                      unsigned char *d_mtfOut,
+                                      unsigned char *d_in,
+                                      unsigned char *d_out,
                                       size_t numElements)
 {
     // first check: is this device >= 2.0? if not, return error
@@ -827,7 +827,7 @@ CUDPPResult cudppMoveToFrontTransform(CUDPPHandle planHandle,
         if (plan->m_config.datatype != CUDPP_UCHAR)
             return CUDPP_ERROR_ILLEGAL_CONFIGURATION;
 
-        cudppMtfDispatch(d_mtfIn, d_mtfOut, numElements, plan);
+        cudppMtfDispatch(d_in, d_out, numElements, plan);
         return CUDPP_SUCCESS;
     }
     else

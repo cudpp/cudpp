@@ -48,9 +48,9 @@ extern "C"
 void freeBwtStorage(CUDPPBwtPlan* plan);
 
 extern "C"
-void cudppBwtDispatch(unsigned char *d_bwtIn,
-                      unsigned char *d_bwtOut,
-                      int *d_bwtIndex,
+void cudppBwtDispatch(unsigned char *d_in,
+                      unsigned char *d_out,
+                      int *d_index,
                       size_t numElements,
                       const CUDPPBwtPlan *plan);
 
@@ -62,8 +62,8 @@ extern "C"
 void freeMtfStorage(CUDPPMtfPlan* plan);
 
 extern "C"
-void cudppMtfDispatch(unsigned char *d_mtfIn,
-                      unsigned char *d_mtfOut,
+void cudppMtfDispatch(unsigned char *d_in,
+                      unsigned char *d_out,
                       size_t numElements,
                       const CUDPPMtfPlan *plan);
 
