@@ -30,13 +30,13 @@ extern "C"
 void freeCompressStorage(CUDPPCompressPlan* plan);
 
 extern "C"
-void cudppCompressDispatch(void *d_uncompressed,
-                           void *d_bwtIndex,
-                           void *d_histSize,
-                           void *d_hist,
-                           void *d_encodeOffset,
-                           void *d_compressedSize,
-                           void *d_compressed,
+void cudppCompressDispatch(unsigned char *d_uncompressed,
+                           int *d_bwtIndex,
+                           unsigned int *d_histSize,
+                           unsigned int *d_hist,
+                           unsigned int *d_encodeOffset,
+                           unsigned int *d_compressedSize,
+                           unsigned int *d_compressed,
                            size_t numElements,
                            const CUDPPCompressPlan *plan);
 
@@ -48,9 +48,9 @@ extern "C"
 void freeBwtStorage(CUDPPBwtPlan* plan);
 
 extern "C"
-void cudppBwtDispatch(void *d_bwtIn,
-                      void *d_bwtOut,
-                      void *d_bwtIndex,
+void cudppBwtDispatch(unsigned char *d_bwtIn,
+                      unsigned char *d_bwtOut,
+                      int *d_bwtIndex,
                       size_t numElements,
                       const CUDPPBwtPlan *plan);
 
@@ -62,8 +62,8 @@ extern "C"
 void freeMtfStorage(CUDPPMtfPlan* plan);
 
 extern "C"
-void cudppMtfDispatch(void *d_mtfIn,
-                      void *d_mtfOut,
+void cudppMtfDispatch(unsigned char *d_mtfIn,
+                      unsigned char *d_mtfOut,
                       size_t numElements,
                       const CUDPPMtfPlan *plan);
 

@@ -647,46 +647,46 @@ CUDPPResult cudppTridiagonal(CUDPPHandle planHandle,
  * Data Compression on the GPU". (See the \ref references bibliography).
  *
  * - Only unsigned char type is supported.
- * - Currently, the input stream (d_a) must be a buffer of 1,048,576 (uchar) elements (~1MB).
- * - The BWT Index (d_x) is an integer number (int). This is used during the reverse-BWT stage.
- * - The Histogram size pointer (d_y) can be ignored and can be passed a null pointer.
- * - The Histrogram (d_z) is a 256-entry (unsigned int) buffer. The histogram is used to
+ * - Currently, the input stream (d_uncompressed) must be a buffer of 1,048,576 (uchar) elements (~1MB).
+ * - The BWT Index (d_bwtIndex) is an integer number (int). This is used during the reverse-BWT stage.
+ * - The Histogram size pointer (d_histSize) can be ignored and can be passed a null pointer.
+ * - The Histrogram (d_hist) is a 256-entry (unsigned int) buffer. The histogram is used to
  * construct the Huffman tree during decoding.
- * - The Encoded offset table (d_w) is a 256-entry (unsigned int) buffer. Since the input
+ * - The Encoded offset table (d_encodeOffset) is a 256-entry (unsigned int) buffer. Since the input
  * stream is compressed in blocks of 4096 characters, the offset table gives the starting offset of
- * where each block starts in the compressed data (d_xx). The very first uint at each starting offset
+ * where each block starts in the compressed data (d_compressedSize). The very first uint at each starting offset
  * gives the size (in words) of that corresponding compressed block. This allows us to decompress each 4096
  * character-block in parallel.
- * - The size of compressed data (d_xx) is a uint and gives the final size (in words)
+ * - The size of compressed data (d_compressedSize) is a uint and gives the final size (in words)
  * of the compressed data.
- * - The compress data stream (d_yy) is a uint buffer. The user should allocate enough
+ * - The compress data stream (d_compressed) is a uint buffer. The user should allocate enough
  * memory for worst-case (no compression occurs).
  * - \a numElements is a uint and must be set to 1048576.
  *
- * @param[out] d_x BWT Index (int)
- * @param[out] d_y Histogram size (ignored, null ptr)
- * @param[out] d_z Histogram (256-entry, uint)
- * @param[out] d_w Encoded offset table (256-entry, uint)
- * @param[out] d_xx Size of compressed data (uint)
- * @param[out] d_yy Compressed data
+ * @param[out] d_bwtIndex BWT Index (int)
+ * @param[out] d_histSize Histogram size (ignored, null ptr)
+ * @param[out] d_hist Histogram (256-entry, uint)
+ * @param[out] d_encodeOffset Encoded offset table (256-entry, uint)
+ * @param[out] d_compressedSize Size of compressed data (uint)
+ * @param[out] d_compressed Compressed data
  * @param[in] planHandle Handle to plan for compressor
- * @param[in] d_a Uncompressed data
+ * @param[in] d_uncompressed Uncompressed data
  * @param[in] numElements Number of elements to compress
  * @returns CUDPPResult indicating success or error condition
  *
  * @see cudppPlan, CUDPPConfiguration, CUDPPAlgorithm
  */
 CUDPP_DLL
-CUDPPResult cudppCompress(CUDPPHandle planHandle, 
-                          void *d_a, 
-                          void *d_x, 
-                          void *d_y, 
-                          void *d_z, 
-                          void *d_w,
-                          void *d_xx,
-                          void *d_yy,
+CUDPPResult cudppCompress(CUDPPHandle planHandle,
+                          unsigned char *d_uncompressed,
+                          int *d_bwtIndex,
+                          unsigned int *d_histSize,
+                          unsigned int *d_hist,
+                          unsigned int *d_encodeOffset,
+                          unsigned int *d_compressedSize,
+                          unsigned int *d_compressed,
                           size_t numElements)
-{   
+{
     // first check: is this device >= 2.0? if not, return error
     int dev;
     cudaGetDevice(&dev);
@@ -700,7 +700,7 @@ CUDPPResult cudppCompress(CUDPPHandle planHandle,
         return CUDPP_ERROR_ILLEGAL_CONFIGURATION;
     }
 
-    CUDPPCompressPlan * plan = 
+    CUDPPCompressPlan * plan =
         (CUDPPCompressPlan *) getPlanPtrFromHandle<CUDPPCompressPlan>(planHandle);
     
     if(plan != NULL)
@@ -712,8 +712,8 @@ CUDPPResult cudppCompress(CUDPPHandle planHandle,
         if (numElements != 1048576)
             return CUDPP_ERROR_ILLEGAL_CONFIGURATION;
 
-        cudppCompressDispatch(d_a, d_x, d_y, d_z, d_w, 
-            d_xx, d_yy, numElements, plan);
+        cudppCompressDispatch(d_uncompressed, d_bwtIndex, d_histSize, d_hist, d_encodeOffset,
+            d_compressedSize, d_compressed, numElements, plan);
         return CUDPP_SUCCESS;
     }
     else
@@ -729,12 +729,12 @@ CUDPPResult cudppCompress(CUDPPHandle planHandle,
  * - Currently, the BWT can only be performed on 1,048,576 (uchar) elements.
  * - The transformed string is written to \a d_x.
  * - The BWT index (used during the reverse-BWT) is recorded as an int 
- * in \a d_y.
+ * in \a d_bwtIndex.
  *
  * @param[in] planHandle Handle to plan for BWT
- * @param[out] d_y BWT Index
- * @param[out] d_x Output data
- * @param[in] d_a Input data
+ * @param[out] d_bwtIndex BWT Index
+ * @param[out] d_bwtOut Output data
+ * @param[in] d_bwtIn Input data
  * @param[in] numElements Number of elements
  * @returns CUDPPResult indicating success or error condition
  *
@@ -742,9 +742,9 @@ CUDPPResult cudppCompress(CUDPPHandle planHandle,
  */
 CUDPP_DLL
 CUDPPResult cudppBurrowsWheelerTransform(CUDPPHandle planHandle,
-                                         void *d_a,
-                                         void *d_x,
-                                         void *d_y,
+                                         unsigned char *d_bwtIn,
+                                         unsigned char *d_bwtOut,
+                                         int *d_bwtIndex,
                                          size_t numElements)
 {
     // first check: is this device >= 2.0? if not, return error
@@ -772,7 +772,7 @@ CUDPPResult cudppBurrowsWheelerTransform(CUDPPHandle planHandle,
         if (numElements != 1048576)
             return CUDPP_ERROR_ILLEGAL_CONFIGURATION;
 
-        cudppBwtDispatch(d_a, d_x, d_y, numElements, plan);
+        cudppBwtDispatch(d_bwtIn, d_bwtOut, d_bwtIndex, numElements, plan);
         return CUDPP_SUCCESS;
     }
     else
@@ -788,11 +788,11 @@ CUDPPResult cudppBurrowsWheelerTransform(CUDPPHandle planHandle,
  * Lossless Data Compression on the GPU". (See the \ref references bibliography).
  *
  * - Currently, the MTF can only be performed on 1,048,576 (uchar) elements.
- * - The transformed string is written to \a d_x.
+ * - The transformed string is written to \a d_mtfOut.
  *
  * @param[in] planHandle Handle to plan for MTF
- * @param[out] d_x Output data
- * @param[in] d_a Input data
+ * @param[out] d_mtfOut Output data
+ * @param[in] d_mtfIn Input data
  * @param[in] numElements Number of elements
  * @returns CUDPPResult indicating success or error condition
  *
@@ -800,8 +800,8 @@ CUDPPResult cudppBurrowsWheelerTransform(CUDPPHandle planHandle,
  */
 CUDPP_DLL
 CUDPPResult cudppMoveToFrontTransform(CUDPPHandle planHandle,
-                                      void *d_a,
-                                      void *d_x,
+                                      unsigned char *d_mtfIn,
+                                      unsigned char *d_mtfOut,
                                       size_t numElements)
 {
     // first check: is this device >= 2.0? if not, return error
@@ -827,7 +827,7 @@ CUDPPResult cudppMoveToFrontTransform(CUDPPHandle planHandle,
         if (plan->m_config.datatype != CUDPP_UCHAR)
             return CUDPP_ERROR_ILLEGAL_CONFIGURATION;
 
-        cudppMtfDispatch(d_a, d_x, numElements, plan);
+        cudppMtfDispatch(d_mtfIn, d_mtfOut, numElements, plan);
         return CUDPP_SUCCESS;
     }
     else
@@ -841,10 +841,10 @@ CUDPPResult cudppMoveToFrontTransform(CUDPPHandle planHandle,
  * using a pointer-jumping algorithm.
  *
  * Takes as input an array of values in GPU memory
- * (\a d_a) and an equal-sized int array in GPU memory
- * (\a d_b) that represents the next indices of the linked
+ * (\a d_unranked_values) and an equal-sized int array in GPU memory
+ * (\a d_next_indices) that represents the next indices of the linked
  * list. The index of the head node (\a head) is given as an
- * unsigned int. The output (\a d_x) is an equal-sized array,
+ * unsigned int. The output (\a d_ranked_values) is an equal-sized array,
  * in GPU memory, that has the values ranked in-order.
  *
  * Example:
@@ -857,9 +857,9 @@ CUDPPResult cudppMoveToFrontTransform(CUDPPHandle planHandle,
  *
  *
  * @param[in] planHandle Handle to plan for list ranking
- * @param[out] d_x Output ranked values
- * @param[in] d_a Input unranked values
- * @param[in] d_b Input next indices
+ * @param[out] d_ranked_values Output ranked values
+ * @param[in] d_unranked_values Input unranked values
+ * @param[in] d_next_indices Input next indices
  * @param[in] head Input head node index
  * @param[in] numElements number of nodes
  * @returns CUDPPResult indicating success or error condition
@@ -868,9 +868,9 @@ CUDPPResult cudppMoveToFrontTransform(CUDPPHandle planHandle,
  */
 CUDPP_DLL
 CUDPPResult cudppListRank(CUDPPHandle planHandle,
-                          void *d_x,  
-                          void *d_a,
-                          void *d_b,
+                          void *d_ranked_values,  
+                          void *d_unranked_values,
+                          void *d_next_indices,
                           size_t head,
                           size_t numElements)
 {
@@ -882,7 +882,7 @@ CUDPPResult cudppListRank(CUDPPHandle planHandle,
         if (plan->m_config.algorithm != CUDPP_LISTRANK)
             return CUDPP_ERROR_INVALID_PLAN;
 
-        return cudppListRankDispatch(d_x, d_a, d_b, head, numElements, plan);
+        return cudppListRankDispatch(d_ranked_values, d_unranked_values, d_next_indices, head, numElements, plan);
     }
     else
         return CUDPP_ERROR_INVALID_HANDLE;
