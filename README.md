@@ -1,8 +1,6 @@
 CUDPP documentation                         {#mainpage}
 ===================
 
-[TOC]
-
 Introduction
 ============
 
