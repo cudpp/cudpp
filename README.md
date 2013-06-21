@@ -1,8 +1,6 @@
 CUDPP documentation                         {#mainpage}
 ===================
 
-[TOC]
-
 Introduction
 ============
 
@@ -92,7 +90,8 @@ CUDPP_COMPRESS       | 1,048,576 elements
 CUDPP_LISTRANK       | NO LIMIT
 CUDPP_MTF            | 1,048,576 elements
 CUDPP_BWT            | 1,048,576 elements
-CUDPP_SORT           | 2,147,450,880 elements
+CUDPP_STRINGSORT     | 2,147,450,880 elements
+CUDPP_MERGESORT      | 2,147,450,880 elements
 CUDPP_REDUCE         | NO LIMIT
 CUDPP_RAND           | 33,554,432 elements
 CUDPP_SPMVMULT       | 67,107,840 non-zero elements
@@ -102,29 +101,25 @@ CUDPP_TRIDIAGONAL    | 65535 systems, 1024 equations per system (Compute capabil
 Operating System Support and Requirements
 ========================================= 
  
-This release (2.0) has been thoroughly tested on the following OSes.
+This release (2.1) has been thoroughly tested on the following OSes.  For more information, visit our [test results page](https://github.com/cudpp/cudpp/wiki/RegressionStatus2.1).
 
-- Windows 7 (64-bit) (CUDA 4.0)
-- CentOS Linux (64-bit) (CUDA 4.0)
-- Mac OS X 10.6.8 and 10.8 (Snow Leopard/Lion, 64-bit) (CUDA 4.0)
+- Windows 7 (64-bit) (CUDA 5.0)
+- Ubuntu Linux (64-bit) (CUDA 5.0, CUDA 5.5)
+- Mac OS X 10.8.3 (Snow Leopard/Lion, 64-bit) (CUDA 5.0, CUDA 5.5)
 
-We expect CUDPP to build and run correctly on other flavors of Linux and Windows, 
-including 32-bit OSes, but only the above are actively tested at this time.
+We expect CUDPP to build and run correctly on other flavors of Linux and Windows, but only the above are actively tested at this time.  Version 2.1 does not currently support 32-bit operating systems.
 
 Requirements 
 ------------
 
-CUDPP 2.0 requires at least CUDA 3.0, and has not been tested with any 
-CUDA version < 3.2.  CUDA 4.0 or higher is preferred. If you require an earlier CUDA
-version, then you should use CUDPP release 1.1.1.
+CUDPP 2.1 has not been tested with any CUDA version < 5.0.  
 
 CUDA
 ====
 
-CUDPP is implemented in
-[CUDA C/C++](http://developer.nvidia.com/cuda). It requires the CUDA Toolkit. 
-Please see the NVIDIA [CUDA](http://developer.nvidia.com/cuda) homepage to download 
-CUDA as well as the CUDA Programming Guide and CUDA SDK, which includes many 
+CUDPP is implemented in [CUDA C/C++](http://developer.nvidia.com/cuda). It requires the
+CUDA Toolkit. Please see the NVIDIA [CUDA](http://developer.nvidia.com/cuda) homepage to
+download CUDA as well as the CUDA Programming Guide and CUDA SDK, which includes many 
 CUDA code examples.  
 
 Design Goals
@@ -188,6 +183,7 @@ The following publications describe work incorporated in CUDPP.
 - Dan A. Alcantara, Andrei Sharf, Fatemeh Abbasinejad, Shubhabrata Sengupta, Michael Mitzenmacher, John D. Owens, and Nina Amenta. Real-Time Parallel Hashing on the GPU. ACM Transactions on Graphics, 28(5):154:1–154:9, December 2009. http://www.idav.ucdavis.edu/publications/print_pub?pub_id=973
 - Dan A. Alcantara, Vasily Volkov, Shubhabrata Sengupta, Michael Mitzenmacher, John D. Owens, and Nina Amenta. Building an Efficient Hash Table on the GPU. In Wen-mei W. Hwu, editor, GPU Computing Gems, volume 2, chapter 1. Morgan Kaufmann, August 2011. 
 - Ritesh A. Patel, Yao Zhang, Jason Mak, Andrew Davidson, John D. Owens. "Parallel Lossless Data Compression on the GPU". In <i>Proceedings of Innovative Parallel Computing (InPar '12)</i>, May 2012. http://idav.ucdavis.edu/publications/print_pub?pub_id=1087
+- Andrew Davidson, David Tarjan, Michael Garland, and John D. Owens. Efficient Parallel Merge Sort for Fixed and Variable Length Keys. <i>In Proceedings of Innovative Parallel Computing (InPar '12)</i>, May 2012. http://www.idav.ucdavis.edu/publications/print_pub?pub_id=1085
 
 Many researchers are using CUDPP in their work, and there are many publications that 
 have used it ([references](@ref cudpp_refs)). If your work uses CUDPP, please let us know 
@@ -218,8 +214,8 @@ CUDPP Developers
 - [Mark Harris](http://www.markmark.net), NVIDIA Corporation
 - [John D. Owens](http://www.ece.ucdavis.edu/~jowens/), University of California, Davis
 - [Shubho Sengupta](http://graphics.cs.ucdavis.edu/~shubho/), University of California, Davis
-- [Stanley Tzeng](http://wwwcsif.cs.ucdavis.edu/~tzeng/), University of California, Davis
-- [Yao Zhang](http://www.ece.ucdavis.edu/~yaozhang/), University of California, Davis
+- [Stanley Tzeng](http://csiflabs.cs.ucdavis.edu/~stzeng/), University of California, Davis
+- [Yao Zhang](http://www.alcf.anl.gov/~yaozhang/), University of California, Davis
 - [Andrew Davidson](http://www.ece.ucdavis.edu/~aaldavid/), University of California, Davis
 - [Ritesh Patel](http://www.ece.ucdavis.edu/~ritesh88/), University of California, Davis
  
@@ -228,7 +224,7 @@ Other CUDPP Contributors
  
 - [Dan Alcantara](http://idav.ucdavis.edu/~dfalcant/research.php), University of California, Davis [hash tables]
 - [Anjul Patney](http://idav.ucdavis.edu/~anjul/), University of California, Davis [general help]
-- [Nadatur Satish](http://www.eecs.berkeley.edu/~nrsatish/), University of California, Berkeley [(old)radix sort]
+- [Nadatur Satish](http://pcl.intel-research.net/people/satish.htm), University of California, Berkeley [(old)radix sort]
 
 Acknowledgments
 ---------------

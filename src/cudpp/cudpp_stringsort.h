@@ -21,9 +21,9 @@ extern "C"
 void freeStringSortStorage(CUDPPStringSortPlan* plan);
 
 extern "C"
-void cudppStringSortDispatch(void       *keys,
-                            void        *values,
-			                void        *stringVals,
+void cudppStringSortDispatch(unsigned int       *keys,
+                            unsigned int        *values,
+                            unsigned int        *stringVals,
                             size_t      numElements,
 							size_t      stringArrayLength,
                             const       CUDPPStringSortPlan *plan);

@@ -295,36 +295,36 @@ CUDPPResult cudppTridiagonal(CUDPPHandle planHandle,
 // lossless data compression algorithms
 CUDPP_DLL
 CUDPPResult cudppCompress(CUDPPHandle planHandle, 
-                          void *d_a, 
-                          void *d_x, 
-                          void *d_y, 
-                          void *d_z, 
-                          void *d_w,
-                          void *d_xx,
-                          void *d_yy,
+                          unsigned char *d_uncompressed,
+                          int *d_bwtIndex,
+                          unsigned int *d_histSize,
+                          unsigned int *d_hist,
+                          unsigned int *d_encodeOffset,
+                          unsigned int *d_compressedSize,
+                          unsigned int *d_compressed,
                           size_t numElements);
 
 // Burrows-Wheeler Transform
 CUDPP_DLL
 CUDPPResult cudppBurrowsWheelerTransform(CUDPPHandle planHandle,
-                                         void *d_a,
-                                         void *d_x,
-                                         void *d_y,
+                                         unsigned char *d_in,
+                                         unsigned char *d_out,
+                                         int *d_index,
                                          size_t numElements);
 
 // Move-to-Front Transform
 CUDPP_DLL
 CUDPPResult cudppMoveToFrontTransform(CUDPPHandle planHandle,
-                                      void *d_a,
-                                      void *d_x,
+                                      unsigned char *d_in,
+                                      unsigned char *d_out,
                                       size_t numElements);
 
 // List ranking
 CUDPP_DLL
 CUDPPResult cudppListRank(CUDPPHandle planHandle, 
-                          void *d_x,  
-                          void *d_a,
-                          void *d_b,
+                          void *d_ranked_values,  
+                          void *d_unranked_values,
+                          void *d_next_indices,
                           size_t head,
                           size_t numElements);
 
