@@ -54,7 +54,7 @@ typedef unsigned int uint;
  * @param[in] stringSize Size of our input string
  * @return Returns 1 if cmpVal > myVal 0 otherwise
  **/
-__device__ int tie_break_simp(unsigned int myLoc, unsigned int cmpLoc, unsigned int myBound, unsigned int cmpBound, unsigned int myAdd, unsigned int cmpAdd, unsigned int* stringLoc, unsigned int stringSize)
+__device__ int tie_break_simp(unsigned int myLoc, unsigned int cmpLoc, unsigned int myBound, unsigned int cmpBound, unsigned int myAdd, unsigned int cmpAdd, unsigned int* stringLoc, unsigned int stringSize, unsigned char termC)
 {
 	
 	if(myLoc >= myBound && cmpLoc >= cmpBound)
@@ -73,13 +73,17 @@ __device__ int tie_break_simp(unsigned int myLoc, unsigned int cmpLoc, unsigned 
 	unsigned int a = stringLoc[myAdd];
 	unsigned int b = stringLoc[cmpAdd];
 	
-	while(a == b && ((a&255) != 0) && ((b&255) != 0) && myAdd < (stringSize-1) && cmpAdd < (stringSize-1) )
-	{		
+	
+	while(a == b && ((a&255) != termC) && ((b&255) != termC) && myAdd < (stringSize-1) && cmpAdd < (stringSize-1) )
+	{
+		
 
 	    a = stringLoc[++myAdd];
 	    b = stringLoc[++cmpAdd];
+		
 	}
-	
+	if(a==b)
+		return (myAdd > cmpAdd ? 0 : 1);
 
 	return a > b ? 0 : 1;
 	
@@ -96,7 +100,7 @@ __device__ int tie_break_simp(unsigned int myLoc, unsigned int cmpLoc, unsigned 
  * @param[in] stringSize Size of our global string array (for tie breaks)
  **/
 template<class T, int depth>
-__device__ void bin_search_block_string(T &cmpValue, T tmpVal, T* in, T* addressPad, T* stringVals, int & j, int bump, int sizeRemain, unsigned int stringSize)
+__device__ void bin_search_block_string(T &cmpValue, T tmpVal, T* in, T* addressPad, T* stringVals, int & j, int bump, int sizeRemain, unsigned int stringSize, unsigned char termC)
 {
 
 
@@ -111,7 +115,7 @@ __device__ void bin_search_block_string(T &cmpValue, T tmpVal, T* in, T* address
 		unsigned int cmpAdd = addressPad[j];
 
 		
-		j = (tie_break_simp(depth*threadIdx.x, j, sizeRemain, sizeRemain, myAdd, cmpAdd, stringVals, stringSize) == 0 ? j + bump : j - bump);                
+		j = (tie_break_simp(depth*threadIdx.x, j, sizeRemain, sizeRemain, myAdd, cmpAdd, stringVals, stringSize, termC) == 0 ? j + bump : j - bump);                
 		
     }
     else
@@ -132,7 +136,7 @@ __device__ void bin_search_block_string(T &cmpValue, T tmpVal, T* in, T* address
  * @param[in] stringSize Size of our global string array
  **/
 template<class T, int depth>
-__device__ void lin_search_block_string(T &cmpValue, T &tmpVal, T* in, T* addressPad, T* stringVals, int &j, int offset, int last, int startAddress, int stringSize){			
+__device__ void lin_search_block_string(T &cmpValue, T &tmpVal, T* in, T* addressPad, T* stringVals, int &j, int offset, int last, int startAddress, int stringSize, unsigned char termC){			
 	
 	
 	while (cmpValue < tmpVal && j < last)		
@@ -183,7 +187,7 @@ __device__ void lin_search_block_string(T &cmpValue, T &tmpVal, T* in, T* addres
 		int myAdd = addressPad[depth*threadIdx.x+offset];
 		int cmpAdd = addressPad[j];
 
-		j = tie_break_simp(myLoc, cmpLoc, BLOCKSORT_SIZE, BLOCKSORT_SIZE, myAdd, cmpAdd, stringVals, stringSize) == 0 ? j+1 : j;	 
+		j = tie_break_simp(myLoc, cmpLoc, BLOCKSORT_SIZE, BLOCKSORT_SIZE, myAdd, cmpAdd, stringVals, stringSize, termC) == 0 ? j+1 : j;	 
         
 	}
     tmpVal = j+startAddress+offset;
@@ -201,7 +205,7 @@ __device__ void lin_search_block_string(T &cmpValue, T &tmpVal, T* in, T* addres
  *                        
  **/
 template<class T>
-__device__ void compareSwapVal(T &A1, T &A2, const int index1, const int index2, T* scratch, T* stringVals, unsigned int size)
+__device__ void compareSwapVal(T &A1, T &A2, const int index1, const int index2, T* scratch, T* stringVals, unsigned int size, unsigned char termC)
 {
 
 
@@ -248,7 +252,7 @@ __device__ void compareSwapVal(T &A1, T &A2, const int index1, const int index2,
 template<class T, int depth>
 __device__ 
 void  binSearch_fragment(T* keys, T* address, int offset, int &mid, T cmpValue, T testValue, T myAddress,  
-						 int myLoc, int cmpLoc, int myBound, int cmpBound, T* globalStringArray, int stringSize)
+						 int myLoc, int cmpLoc, int myBound, int cmpBound, T* globalStringArray, int stringSize, unsigned char termC)
 {						
 
 	cmpValue = keys[mid];
@@ -261,7 +265,7 @@ void  binSearch_fragment(T* keys, T* address, int offset, int &mid, T cmpValue, 
 	if(cmpKey == testValue)
 	{
 		unsigned int cmpAdd = address[mid];				
-		mid = tie_break_simp(myLoc, cmpLoc, myBound, cmpBound, myAddress, cmpAdd, globalStringArray, stringSize) == 0 ? mid + offset : mid - offset;					
+		mid = tie_break_simp(myLoc, cmpLoc, myBound, cmpBound, myAddress, cmpAdd, globalStringArray, stringSize, termC) == 0 ? mid + offset : mid - offset;					
 	}	
 
 	
@@ -273,7 +277,7 @@ void  binSearch_fragment(T* keys, T* address, int offset, int &mid, T cmpValue, 
 template<class T, int depth>
 __device__ 
 void  binSearch_frag_mult(T* keyArraySmem, T* valueArraySmem, int offset, int &mid, T cmpValue, T testValue, int myAddress, 
-						 T* globalStringArray, int myStartIdxA, int myStartIdxB, int aIndex, int bIndex, int size, int stringSize)
+						 T* globalStringArray, int myStartIdxA, int myStartIdxB, int aIndex, int bIndex, int size, int stringSize, unsigned char termC)
 {			
 	cmpValue = keyArraySmem[mid];
 	if(cmpValue != testValue)
@@ -283,7 +287,7 @@ void  binSearch_frag_mult(T* keyArraySmem, T* valueArraySmem, int offset, int &m
 	{
 		int myLoc = myStartIdxA + aIndex + depth*threadIdx.x;
 		int cmpLoc = myStartIdxB + bIndex + mid;
-		mid = (tie_break_simp(myLoc, cmpLoc, size, size, myAddress, valueArraySmem[mid], globalStringArray, stringSize) == 0 ? mid + offset : mid - offset);
+		mid = (tie_break_simp(myLoc, cmpLoc, size, size, myAddress, valueArraySmem[mid], globalStringArray, stringSize, termC) == 0 ? mid + offset : mid - offset);
 	}
 }
 
@@ -305,7 +309,7 @@ template<class T, int depth>
 __device__
 void lin_merge_simple(T& cmpValue, T myKey, T myAddress, int& index, T* BKeys, T* BValues, T* stringValues, T* A_keys, T* A_values, T*A_keys_out, T*A_values_out,
 					  int myStartIdxA, int myStartIdxB, int myStartIdxC, T localMinB, T localMaxB, int aCont, int bCont, int totalSize, int mySizeA,
-					  int mySizeB, unsigned int stringSize, int i, int stepNum, bool &placed)
+					  int mySizeB, unsigned int stringSize, int i, int stepNum, bool &placed, unsigned char termC)
 {
 
 	int tid = threadIdx.x;	
@@ -334,7 +338,9 @@ void lin_merge_simple(T& cmpValue, T myKey, T myAddress, int& index, T* BKeys, T
 		int cmpLoc = myStartIdxB + bCont + index;
 		int cmpAdd = BValues[index];	
 	
-		if(tie_break_simp(myLoc, cmpLoc, totalSize, totalSize, myAddress, cmpAdd, stringValues, stringSize) == 0)
+		//if(myKey == 1820065792)
+		//	printf("B: (%d %d %d) (%d %d %d) %u %u\n", myLoc, cmpLoc, totalSize, cmpAdd, myAddress, stringSize, stringValues[cmpAdd], stringValues[myAddress]);
+		if(tie_break_simp(myLoc, cmpLoc, totalSize, totalSize, myAddress, cmpAdd, stringValues, stringSize, termC) == 0)
 		{
 			index = index + 1;	
 			if(index < INTERSECT_B_BLOCK_SIZE_simple)
@@ -363,6 +369,9 @@ void lin_merge_simple(T& cmpValue, T myKey, T myAddress, int& index, T* BKeys, T
 
 	
 
+	//if(myKey >= 1820065792 && myKey <= 1820916440)
+	//			printf("key %u %u index %u placed %u %d (min %u max %u %d)\n", myKey, cmpValue, globalCAddress, placed, myStartIdxA+aCont+i, localMinB, localMaxB, index);
+
 	if(!isInWindow && index == 0 && myKey <= localMinB)
 	{
 		
@@ -378,7 +387,7 @@ void lin_merge_simple(T& cmpValue, T myKey, T myAddress, int& index, T* BKeys, T
 		unsigned int cmpAdd = (bCont+index < mySizeB ? A_values[cmpLoc] : UINT_MAX);
 		
 		
-		if(cmpAdd > totalSize || tie_break_simp(myLoc, cmpLoc, totalSize, totalSize, myAddress, cmpAdd, stringValues, stringSize) == 0)
+		if(cmpAdd > totalSize || tie_break_simp(myLoc, cmpLoc, totalSize, totalSize, myAddress, cmpAdd, stringValues, stringSize, termC) == 1)
 			isInWindow = true;
 	}	
 	 
@@ -400,7 +409,7 @@ template<class T, int depth>
 __device__
 void linearStringMerge(T* BKeys, T* BValues, T myKey, T myAddress, bool &placed, int &index,  T &cmpValue, T* A_keys, T* A_values, T* A_keys_out, 
 					   T* A_values_out, T* stringValues, int myStartIdxC, int myStartIdxA, int myStartIdxB, int localAPartSize, int localBPartSize, int localCPartSize,
-                       T localMaxB, T localMinB, int tid, int aIndex, int bIndex, int i, int stringSize, int totalSize)
+                       T localMaxB, T localMinB, int tid, int aIndex, int bIndex, int i, int stringSize, int totalSize, unsigned char termC)
 {		
 	
 	while(cmpValue < myKey && index < INTERSECT_B_BLOCK_SIZE_multi )
@@ -424,7 +433,7 @@ void linearStringMerge(T* BKeys, T* BValues, T myKey, T myAddress, bool &placed,
 		int cmpLoc = myStartIdxB + bIndex + index;
 		int cmpAdd = BValues[index];	
 	
-		if(tie_break_simp(myLoc, cmpLoc, totalSize, totalSize, myAddress, cmpAdd, stringValues, stringSize) == 0)
+		if(tie_break_simp(myLoc, cmpLoc, totalSize, totalSize, myAddress, cmpAdd, stringValues, stringSize, termC) == 0)
 		{
 			index = index + 1;	
 			if(index < INTERSECT_B_BLOCK_SIZE_multi)
@@ -462,7 +471,7 @@ void linearStringMerge(T* BKeys, T* BValues, T myKey, T myAddress, bool &placed,
 		unsigned int cmpAdd = (bIndex+index < localBPartSize ? A_values[cmpLoc] : UINT_MAX);
 		
 		
-		if(cmpAdd > totalSize || tie_break_simp(myLoc, cmpLoc, totalSize, totalSize, myAddress, cmpAdd, stringValues, stringSize) == 1)
+		if(cmpAdd > totalSize || tie_break_simp(myLoc, cmpLoc, totalSize, totalSize, myAddress, cmpAdd, stringValues, stringSize, termC) == 1)
 			isInWindow = true;
 	
 	}
@@ -476,7 +485,7 @@ void linearStringMerge(T* BKeys, T* BValues, T myKey, T myAddress, bool &placed,
 		
 		
 
-		if(!placed || tie_break_simp(myLoc, cmpLoc, totalSize, totalSize, myAddress, cmpAdd, stringValues, stringSize) == 0)
+		if(!placed || tie_break_simp(myLoc, cmpLoc, totalSize, totalSize, myAddress, cmpAdd, stringValues, stringSize, termC) == 0)
 			isInWindow = true;
 		
 	}

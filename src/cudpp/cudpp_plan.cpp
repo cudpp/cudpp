@@ -528,9 +528,24 @@ CUDPPStringSortPlan::CUDPPStringSortPlan(CUDPPManager *mgr,
 										 CUDPPConfiguration config,
 										 size_t numElements, 
 										 size_t stringArrayLength)
-: CUDPPPlan(mgr, config, numElements, stringArrayLength, 0), m_tempKeys(0), m_tempValues(0)
-{
+: CUDPPPlan(mgr, config, numElements, stringArrayLength, 0)
+{ 
+	
+	CUDPPConfiguration scanConfig = 
+    { 
+      CUDPP_SCAN, 
+      CUDPP_ADD, 
+      CUDPP_UINT, 
+      CUDPP_OPTION_FORWARD | CUDPP_OPTION_EXCLUSIVE 
+    };    
+	printf("String sort plan");
+
+	m_scanPlan = new CUDPPScanPlan(mgr, scanConfig, numElements+1, 1, 0);
+	CUDA_SAFE_CALL(cudaThreadSynchronize());
+	printf("After scan plan\n");
+	m_numElements = numElements;
 	allocStringSortStorage(this);
+	printf("After storage alloc\n");
 }
 
 /** @brief String sort plan destructor */

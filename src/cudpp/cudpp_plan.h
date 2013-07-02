@@ -139,8 +139,20 @@ public:
     virtual ~CUDPPStringSortPlan();
 
     unsigned int m_stringArrayLength;
-    mutable void *m_tempKeys;
-    mutable void *m_tempValues;
+
+	CUDPPScanPlan *m_scanPlan;
+	unsigned int m_numElements;
+	unsigned int *m_keys;
+    unsigned int *m_tempKeys;
+    unsigned int *m_tempAddress;
+	unsigned int *m_packedAddress;
+	unsigned int *m_packedAddressRef;
+	unsigned int *m_addressRef;
+	unsigned int *m_numSpaces;
+	unsigned int *m_spaceScan;
+
+
+	
 };
 
 /** @brief Plan class for radixsort algorithm
