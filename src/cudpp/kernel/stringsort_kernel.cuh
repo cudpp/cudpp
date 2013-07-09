@@ -26,6 +26,195 @@
 /** \addtogroup cudpp_kernel
  * @{
  */
+/*
+*/
+__global__
+void dotAddInclusive(unsigned int* numSpaces, unsigned int* d_address, unsigned int* packedAddress, unsigned int numElements, unsigned int stringSize)
+{
+	int tid = threadIdx.x;
+	int bid = blockIdx.x;
+	int myId = bid*blockDim.x + tid;
+
+	if(myId >= numElements)
+		return;
+
+	if(myId > 0 && myId < (numElements-1))
+	{
+		packedAddress[myId] = (d_address[myId] + numSpaces[myId])  >> 2;		
+	}
+	else if (myId == (numElements-1))
+	{
+		packedAddress[myId] = (stringSize + numSpaces[myId]) >> 2;		
+	}
+	else
+		packedAddress[myId] = 0;
+
+	
+	
+}
+
+/** @brief Calculate the number of spaces required for each string to align the string array.
+ * @param[out] numSpaces Number of spaces required for each string
+ * @param[in] d_address Input addresses of each string
+ * @param[in] d_stringVals String array
+ * @param[in] address Input addresses of unpacked strings  
+ * @param[in] termC Termination character for the strings
+ * @param[in] numElements Number of strings
+ * @param[in] stringSize Number of characters in the string array
+ **/
+
+__global__
+void alignedOffsets(unsigned int* numSpaces, unsigned int* d_address, 
+					unsigned char* d_stringVals, unsigned char termC, unsigned int numElements, unsigned int stringSize)
+{
+	int tid = threadIdx.x;
+	int bid = blockIdx.x;
+	int myId = bid*blockDim.x + tid;
+
+	if(myId >= numElements)
+		return;
+
+	unsigned int startAddress = d_address[myId];
+	unsigned int endAddress = startAddress;
+
+	unsigned char c;
+	do
+	{
+		c = d_stringVals[endAddress++];			
+	}
+	while (c != termC && endAddress < stringSize);
+
+	
+
+	int length = endAddress - startAddress;
+	numSpaces[myId] = ((4-(length%4))%4);
+
+	//printf("Id %d starts %d ends %d numChars %d packedSpace %d\n", myId, startAddress, endAddress, length, (length + (4-(length%4))%4) >> 2);
+
+}
+
+/** @brief Packs strings into unsigned ints to be sorted later. These packed strings will also
+ * be aligned
+ * @param[out] packedStrings Resulting packed strings. 
+ * @param[in] d_stringVals Unpacked string array which we will pack
+ * @param[out] packedAddresses Resulting addresses for each string to the packedStrings array
+ * @param[in] address Input addresses of unpacked strings 
+ * @param[in] numElements Number of strings
+ * @param[in] stringArrayLength Number of characters in the string array
+ * @param[in] termC Termination character for the strings
+ **/
+
+__global__
+void alignString(unsigned int* packedStrings, unsigned char* d_stringVals, unsigned int* packedAddress, unsigned int* address, 
+				 unsigned int numElements, unsigned int stringArrayLength, unsigned char termC)
+{
+	int tid = threadIdx.x;
+	int bid = blockIdx.x;
+	int myId = bid*blockDim.x + tid;
+
+	if(myId >= numElements)
+		return;
+	int oldAddress = address[myId];
+	int newAddress = packedAddress[myId];
+	
+
+
+	unsigned char c1, c2, c3, c4;
+
+	int i = 0;
+	do
+	{
+		c1 = d_stringVals[oldAddress + i];
+		c2 = ((oldAddress+i+1) < stringArrayLength && c1 != termC) ? d_stringVals[oldAddress+i+1] : termC;
+		c3 = ((oldAddress+i+2) < stringArrayLength && c2 != termC) ? d_stringVals[oldAddress+i+2] : termC;
+		c4 = ((oldAddress+i+3) < stringArrayLength && c3 != termC) ? d_stringVals[oldAddress+i+3] : termC;
+
+		
+		unsigned int val = (c1 << 24) + (c2 << 16) + (c3 << 8) + c4;
+		packedStrings[newAddress + (i>>2)] = val;
+		//printf("Id %d is saving %d in %d (%c%c%c%c)\n", myId, val, newAddress+i/4, c1, c2, c3, c4);
+		i+=4;
+	}
+	while(c1 != termC && c2 != termC && c3 != termC && c4 != termC && i < stringArrayLength);
+
+}
+
+/** @brief Create keys (first four characters stuffed in an uint) from the addresses to the strings, and the string array.
+ * @param[out] d_keys Resulting keys
+ * @param[in] packedStrings Packed string array.
+ * @param[in] packedAddress Addresses which point to the string array. 
+ * @param[in] numElements Number of strings
+ **/
+__global__
+void createKeys(unsigned int* d_keys, unsigned int* packedStrings, unsigned int* packedAddress, unsigned int numElements)
+{
+	int tid = threadIdx.x;
+	int bid = blockIdx.x;
+	int myId = bid*blockDim.x + tid;
+
+	if(myId >= numElements)
+		return;
+
+	int newAddress = packedAddress[myId];
+	d_keys[myId] = packedStrings[newAddress];
+}
+
+
+/** @brief Converts addresses from packed (unaligned) form to unpacked and unaligned form
+ * Resulting aligned strings begin in our string array packed in an unsigned int
+ * and aligned such that each string begins at the start of a uint (divisible by 4)
+ * @param[in] packedAddress Resulting packed addresses that have been sorted. All strings are aligned.
+ * @param[in] packedAddressRef Original array after packing (before sort). Used as a reference.
+ * @param[out] address Final output of sorted addresses in unpacked form.
+ * @param[in] addressRef Reference array of original unpacked addresses. 
+ * @param[in] numElements Number of strings
+ **/
+__global__
+void unpackAddresses(unsigned int* packedAddress,
+				     unsigned int* packedAddressRef,
+				     unsigned int* address,
+				     unsigned int* addressRef,				   
+				     size_t numElements)
+{
+	int tid = threadIdx.x;
+	int bid = blockIdx.x;
+	int myId = bid*blockDim.x + tid;
+
+	if(myId >= numElements)
+		return;
+
+	int myAddress = packedAddress[myId];
+	int begin = 0;
+	int last = numElements-1;
+	int mid = (begin+last)/2;
+	
+	unsigned int val = packedAddressRef[mid];
+	while(val != myAddress && (mid != begin) && (mid != last))
+	{
+		if(val > myAddress)
+			last = mid;
+		else
+			begin = mid;
+
+		mid = (begin + last) / 2;		
+		val = packedAddressRef[mid];
+	}
+
+	while(val < myAddress && mid < (numElements-1))
+		val = packedAddressRef[++mid];
+
+	while(val > myAddress && mid > 0)
+		val = packedAddressRef[--mid];
+
+	if(val != myAddress)
+		printf("Error saving to myId %d\n", myId);
+
+
+	address[myId] = addressRef[mid];
+
+
+}
+
 
 /** @brief Copies unused portions of arrays in our ping-pong strategy
  * @param[in] A_keys_dev The keys we will be copying
@@ -56,7 +245,7 @@ void simpleCopy(T* A_keys_dev, unsigned int* A_vals_dev, T* A_keys_out_dev, unsi
  **/
 template<class T, int depth>
 __global__
-void blockWiseStringSort(T *A_keys, T* A_address, T* stringVals, int blockSize, int totalSize, unsigned int stringSize)
+void blockWiseStringSort(T *A_keys, T* A_address, T* stringVals, int blockSize, int totalSize, unsigned int stringSize, unsigned char termC)
 {
         
     //load into registers
@@ -86,40 +275,40 @@ void blockWiseStringSort(T *A_keys, T* A_address, T* stringVals, int blockSize, 
     
     int offset = tid*depth;
     int sizeRemaining = totalSize - bid*blockSize;
-    compareSwapVal<T>(Aval[0], Aval[1], offset,     offset+1, addressPad, stringVals, sizeRemaining);       
-    compareSwapVal<T>(Aval[1], Aval[2], offset+1,   offset+2, addressPad, stringVals, sizeRemaining);       
-    compareSwapVal<T>(Aval[2], Aval[3], offset+2,   offset+3, addressPad, stringVals, sizeRemaining);       
-    compareSwapVal<T>(Aval[3], Aval[4], offset+3,   offset+4, addressPad, stringVals, sizeRemaining);       
-    compareSwapVal<T>(Aval[4], Aval[5], offset+4,   offset+5, addressPad, stringVals, sizeRemaining);       
-    compareSwapVal<T>(Aval[5], Aval[6], offset+5,   offset+6, addressPad, stringVals, sizeRemaining);       
-    compareSwapVal<T>(Aval[6], Aval[7], offset+6,   offset+7, addressPad, stringVals, sizeRemaining);       
+    compareSwapVal<T>(Aval[0], Aval[1], offset,     offset+1, addressPad, stringVals, sizeRemaining, termC);       
+    compareSwapVal<T>(Aval[1], Aval[2], offset+1,   offset+2, addressPad, stringVals, sizeRemaining, termC);       
+    compareSwapVal<T>(Aval[2], Aval[3], offset+2,   offset+3, addressPad, stringVals, sizeRemaining, termC);       
+    compareSwapVal<T>(Aval[3], Aval[4], offset+3,   offset+4, addressPad, stringVals, sizeRemaining, termC);       
+    compareSwapVal<T>(Aval[4], Aval[5], offset+4,   offset+5, addressPad, stringVals, sizeRemaining, termC);       
+    compareSwapVal<T>(Aval[5], Aval[6], offset+5,   offset+6, addressPad, stringVals, sizeRemaining, termC);       
+    compareSwapVal<T>(Aval[6], Aval[7], offset+6,   offset+7, addressPad, stringVals, sizeRemaining, termC);       
         
-    compareSwapVal<T>(Aval[0], Aval[1], offset,     offset+1, addressPad, stringVals, sizeRemaining);       
-    compareSwapVal<T>(Aval[1], Aval[2], offset+1,   offset+2, addressPad, stringVals, sizeRemaining);       
-    compareSwapVal<T>(Aval[2], Aval[3], offset+2,   offset+3, addressPad, stringVals, sizeRemaining);       
-    compareSwapVal<T>(Aval[3], Aval[4], offset+3,   offset+4, addressPad, stringVals, sizeRemaining);       
-    compareSwapVal<T>(Aval[4], Aval[5], offset+4,   offset+5, addressPad, stringVals, sizeRemaining);       
-    compareSwapVal<T>(Aval[5], Aval[6], offset+5,   offset+6, addressPad, stringVals, sizeRemaining);       
+    compareSwapVal<T>(Aval[0], Aval[1], offset,     offset+1, addressPad, stringVals, sizeRemaining, termC);       
+    compareSwapVal<T>(Aval[1], Aval[2], offset+1,   offset+2, addressPad, stringVals, sizeRemaining, termC);       
+    compareSwapVal<T>(Aval[2], Aval[3], offset+2,   offset+3, addressPad, stringVals, sizeRemaining, termC);       
+    compareSwapVal<T>(Aval[3], Aval[4], offset+3,   offset+4, addressPad, stringVals, sizeRemaining, termC);       
+    compareSwapVal<T>(Aval[4], Aval[5], offset+4,   offset+5, addressPad, stringVals, sizeRemaining, termC);       
+    compareSwapVal<T>(Aval[5], Aval[6], offset+5,   offset+6, addressPad, stringVals, sizeRemaining, termC);       
 
-    compareSwapVal<T>(Aval[0], Aval[1], offset,     offset+1, addressPad, stringVals, sizeRemaining);       
-    compareSwapVal<T>(Aval[1], Aval[2], offset+1,   offset+2, addressPad, stringVals, sizeRemaining);       
-    compareSwapVal<T>(Aval[2], Aval[3], offset+2,   offset+3, addressPad, stringVals, sizeRemaining);       
-    compareSwapVal<T>(Aval[3], Aval[4], offset+3,   offset+4, addressPad, stringVals, sizeRemaining);       
-    compareSwapVal<T>(Aval[4], Aval[5], offset+4,   offset+5, addressPad, stringVals, sizeRemaining);       
+    compareSwapVal<T>(Aval[0], Aval[1], offset,     offset+1, addressPad, stringVals, sizeRemaining, termC);       
+    compareSwapVal<T>(Aval[1], Aval[2], offset+1,   offset+2, addressPad, stringVals, sizeRemaining, termC);       
+    compareSwapVal<T>(Aval[2], Aval[3], offset+2,   offset+3, addressPad, stringVals, sizeRemaining, termC);       
+    compareSwapVal<T>(Aval[3], Aval[4], offset+3,   offset+4, addressPad, stringVals, sizeRemaining, termC);       
+    compareSwapVal<T>(Aval[4], Aval[5], offset+4,   offset+5, addressPad, stringVals, sizeRemaining, termC);       
 
-    compareSwapVal<T>(Aval[0], Aval[1], offset,     offset+1, addressPad, stringVals, sizeRemaining);       
-    compareSwapVal<T>(Aval[1], Aval[2], offset+1,   offset+2, addressPad, stringVals, sizeRemaining);       
-    compareSwapVal<T>(Aval[2], Aval[3], offset+2,   offset+3, addressPad, stringVals, sizeRemaining);       
-    compareSwapVal<T>(Aval[3], Aval[4], offset+3,   offset+4, addressPad, stringVals, sizeRemaining);       
+    compareSwapVal<T>(Aval[0], Aval[1], offset,     offset+1, addressPad, stringVals, sizeRemaining, termC);       
+    compareSwapVal<T>(Aval[1], Aval[2], offset+1,   offset+2, addressPad, stringVals, sizeRemaining, termC);       
+    compareSwapVal<T>(Aval[2], Aval[3], offset+2,   offset+3, addressPad, stringVals, sizeRemaining, termC);       
+    compareSwapVal<T>(Aval[3], Aval[4], offset+3,   offset+4, addressPad, stringVals, sizeRemaining, termC);       
 
-    compareSwapVal<T>(Aval[0], Aval[1], offset,     offset+1, addressPad, stringVals, sizeRemaining);       
-    compareSwapVal<T>(Aval[1], Aval[2], offset+1,   offset+2, addressPad, stringVals, sizeRemaining);       
-    compareSwapVal<T>(Aval[2], Aval[3], offset+2,   offset+3, addressPad, stringVals, sizeRemaining);       
+    compareSwapVal<T>(Aval[0], Aval[1], offset,     offset+1, addressPad, stringVals, sizeRemaining, termC);       
+    compareSwapVal<T>(Aval[1], Aval[2], offset+1,   offset+2, addressPad, stringVals, sizeRemaining, termC);       
+    compareSwapVal<T>(Aval[2], Aval[3], offset+2,   offset+3, addressPad, stringVals, sizeRemaining, termC);       
 
-    compareSwapVal<T>(Aval[0], Aval[1], offset,     offset+1, addressPad, stringVals, sizeRemaining);       
-    compareSwapVal<T>(Aval[1], Aval[2], offset+1,   offset+2, addressPad, stringVals, sizeRemaining);       
+    compareSwapVal<T>(Aval[0], Aval[1], offset,     offset+1, addressPad, stringVals, sizeRemaining, termC);       
+    compareSwapVal<T>(Aval[1], Aval[2], offset+1,   offset+2, addressPad, stringVals, sizeRemaining, termC);       
 
-    compareSwapVal<T>(Aval[0], Aval[1], offset,     offset+1, addressPad, stringVals, sizeRemaining);       
+    compareSwapVal<T>(Aval[0], Aval[1], offset,     offset+1, addressPad, stringVals, sizeRemaining, termC);       
    
         
     __syncthreads();
@@ -173,21 +362,23 @@ void blockWiseStringSort(T *A_keys, T* A_address, T* stringVals, int blockSize, 
         //Begin binary search
         switch(range)
         {
-        case 1023: bin_search_block_string<T, depth>(cmpValue, tmpVal, in, addressPad, stringVals, j, 256, sizeRemaining, stringSize);                                   
-        case 511: bin_search_block_string<T, depth>(cmpValue, tmpVal, in, addressPad, stringVals, j, 128, sizeRemaining, stringSize);            
-        case 255: bin_search_block_string<T, depth>(cmpValue, tmpVal, in, addressPad, stringVals, j, 64, sizeRemaining, stringSize);            
-        case 127: bin_search_block_string<T, depth>(cmpValue, tmpVal, in, addressPad, stringVals, j, 32, sizeRemaining, stringSize);                    
-        case 63: bin_search_block_string<T, depth>(cmpValue, tmpVal, in, addressPad, stringVals, j, 16, sizeRemaining, stringSize);     
-        case 31: bin_search_block_string<T, depth>(cmpValue, tmpVal, in, addressPad, stringVals, j, 8, sizeRemaining, stringSize);                       
-        case 15: bin_search_block_string<T, depth>(cmpValue, tmpVal, in, addressPad, stringVals, j, 4, sizeRemaining, stringSize);            
-        case 7: bin_search_block_string<T, depth>(cmpValue, tmpVal, in,  addressPad,stringVals, j, 2, sizeRemaining, stringSize);            
-        case 3: bin_search_block_string<T, depth>(cmpValue, tmpVal, in, addressPad, stringVals, j, 1, sizeRemaining, stringSize);                        
+        case 1023: bin_search_block_string<T, depth>(cmpValue, tmpVal, in, addressPad, stringVals, j, 256, sizeRemaining, stringSize, termC);                                   
+        case 511: bin_search_block_string<T, depth>(cmpValue, tmpVal, in, addressPad, stringVals, j, 128, sizeRemaining, stringSize, termC);            
+        case 255: bin_search_block_string<T, depth>(cmpValue, tmpVal, in, addressPad, stringVals, j, 64, sizeRemaining, stringSize, termC);            
+        case 127: bin_search_block_string<T, depth>(cmpValue, tmpVal, in, addressPad, stringVals, j, 32, sizeRemaining, stringSize, termC);                    
+        case 63: bin_search_block_string<T, depth>(cmpValue, tmpVal, in, addressPad, stringVals, j, 16, sizeRemaining, stringSize, termC);     
+        case 31: bin_search_block_string<T, depth>(cmpValue, tmpVal, in, addressPad, stringVals, j, 8, sizeRemaining, stringSize, termC);                       
+        case 15: bin_search_block_string<T, depth>(cmpValue, tmpVal, in, addressPad, stringVals, j, 4, sizeRemaining, stringSize, termC);            
+        case 7: bin_search_block_string<T, depth>(cmpValue, tmpVal, in,  addressPad,stringVals, j, 2, sizeRemaining, stringSize, termC);            
+        case 3: bin_search_block_string<T, depth>(cmpValue, tmpVal, in, addressPad, stringVals, j, 1, sizeRemaining, stringSize, termC);                        
         }
 
                 
                 
 
         //possible need for slight correction   
+		//TODO: blockSort doesn't handle duplicate strings yet
+		//Need to fix
         cmpValue = in[j];
         if(cmpValue == tmpVal && offset < (sizeRemaining) && j < sizeRemaining)              
         {
@@ -221,7 +412,7 @@ void blockWiseStringSort(T *A_keys, T* A_address, T* stringVals, int blockSize, 
                 tmp2 = stringVals[addressPad[j]+i];
                 i++;
             }                      
-            j = (tmp2 < tmp ? j +1 : j);                
+            j = (tmp2 < tmp ? j + 1 : j);                
         }
         else if(cmpValue < tmpVal && j == last && j < sizeRemaining && depth*tid < sizeRemaining)                       
             j++;          
@@ -234,13 +425,13 @@ void blockWiseStringSort(T *A_keys, T* A_address, T* stringVals, int blockSize, 
         __syncthreads();        
         __threadfence();
         Aval[0] = j+startAddress;                       
-        lin_search_block_string<T, depth>(cmpValue,  Aval[1], in, addressPad, stringVals, j, 1, last, startAddress, stringSize);                                
-        lin_search_block_string<T, depth>(cmpValue,  Aval[2], in, addressPad, stringVals, j, 2, last, startAddress, stringSize);                
-        lin_search_block_string<T, depth>(cmpValue,  Aval[3], in, addressPad, stringVals, j, 3, last, startAddress, stringSize);                
-        lin_search_block_string<T, depth>(cmpValue,  Aval[4], in, addressPad, stringVals, j, 4, last, startAddress, stringSize);                
-        lin_search_block_string<T, depth>(cmpValue,  Aval[5], in, addressPad, stringVals, j, 5, last, startAddress, stringSize);                
-        lin_search_block_string<T, depth>(cmpValue,  Aval[6], in, addressPad, stringVals, j, 6, last, startAddress, stringSize);                
-        lin_search_block_string<T, depth>(cmpValue,  Aval[7], in, addressPad, stringVals, j, 7, last, startAddress, stringSize);
+        lin_search_block_string<T, depth>(cmpValue,  Aval[1], in, addressPad, stringVals, j, 1, last, startAddress, stringSize, termC);                                
+        lin_search_block_string<T, depth>(cmpValue,  Aval[2], in, addressPad, stringVals, j, 2, last, startAddress, stringSize, termC);                
+        lin_search_block_string<T, depth>(cmpValue,  Aval[3], in, addressPad, stringVals, j, 3, last, startAddress, stringSize, termC);                
+        lin_search_block_string<T, depth>(cmpValue,  Aval[4], in, addressPad, stringVals, j, 4, last, startAddress, stringSize, termC);                
+        lin_search_block_string<T, depth>(cmpValue,  Aval[5], in, addressPad, stringVals, j, 5, last, startAddress, stringSize, termC);                
+        lin_search_block_string<T, depth>(cmpValue,  Aval[6], in, addressPad, stringVals, j, 6, last, startAddress, stringSize, termC);                
+        lin_search_block_string<T, depth>(cmpValue,  Aval[7], in, addressPad, stringVals, j, 7, last, startAddress, stringSize, termC);
                 
         __threadfence();
         __syncthreads();
@@ -333,7 +524,7 @@ void blockWiseStringSort(T *A_keys, T* A_address, T* stringVals, int blockSize, 
  **/
 template<class T, int depth>
 __global__
-void simpleStringMerge(T *A_keys, T *A_keys_out, T *A_values, T* A_values_out, T* stringValues, int sizePerPartition, int size, int step, int stringSize)
+void simpleStringMerge(T *A_keys, T *A_keys_out, T *A_values, T* A_values_out, T* stringValues, int sizePerPartition, int size, int step, int stringSize, unsigned char termC)
 {
     //each block will be responsible for a submerge
     int myStartIdxA, myStartIdxB, myStartIdxC;
@@ -458,18 +649,18 @@ void simpleStringMerge(T *A_keys, T *A_keys_out, T *A_values, T* A_values_out, T
             index = -1;                                             
             mid = (INTERSECT_B_BLOCK_SIZE_simple/2)-1;
             if(INTERSECT_B_BLOCK_SIZE_simple >= 1024)
-                binSearch_fragment<T,depth>(BKeys, BValues, 256, mid, cmpValue, myKey[0], myValue[0], cumulativeAddressA, cumulateAddressB, size, size, stringValues, stringSize);              
+                binSearch_fragment<T,depth>(BKeys, BValues, 256, mid, cmpValue, myKey[0], myValue[0], cumulativeAddressA, cumulateAddressB, size, size, stringValues, stringSize, termC);              
             if(INTERSECT_B_BLOCK_SIZE_simple >= 512)
-                binSearch_fragment<T,depth>(BKeys, BValues, 128, mid, cmpValue, myKey[0], myValue[0], cumulativeAddressA, cumulateAddressB, size, size, stringValues, stringSize);              
+                binSearch_fragment<T,depth>(BKeys, BValues, 128, mid, cmpValue, myKey[0], myValue[0], cumulativeAddressA, cumulateAddressB, size, size, stringValues, stringSize, termC);              
             if(INTERSECT_B_BLOCK_SIZE_simple >= 256)
-                binSearch_fragment<T,depth>(BKeys, BValues, 64, mid, cmpValue, myKey[0], myValue[0], cumulativeAddressA, cumulateAddressB, size, size, stringValues, stringSize);       
+                binSearch_fragment<T,depth>(BKeys, BValues, 64, mid, cmpValue, myKey[0], myValue[0], cumulativeAddressA, cumulateAddressB, size, size, stringValues, stringSize, termC);       
 
-            binSearch_fragment<T,depth>(BKeys, BValues, 32, mid, cmpValue, myKey[0], myValue[0], cumulativeAddressA, cumulateAddressB, size, size, stringValues, stringSize);                       
-            binSearch_fragment<T,depth>(BKeys, BValues, 16, mid, cmpValue, myKey[0], myValue[0], cumulativeAddressA, cumulateAddressB, size, size, stringValues, stringSize);                       
-            binSearch_fragment<T,depth>(BKeys, BValues,  8, mid, cmpValue, myKey[0], myValue[0], cumulativeAddressA, cumulateAddressB, size, size, stringValues, stringSize);                       
-            binSearch_fragment<T,depth>(BKeys, BValues,  4, mid, cmpValue, myKey[0], myValue[0], cumulativeAddressA, cumulateAddressB, size, size, stringValues, stringSize);                       
-            binSearch_fragment<T,depth>(BKeys, BValues,  2, mid, cmpValue, myKey[0], myValue[0], cumulativeAddressA, cumulateAddressB, size, size, stringValues, stringSize);                       
-            binSearch_fragment<T,depth>(BKeys, BValues,  1, mid, cmpValue, myKey[0], myValue[0], cumulativeAddressA, cumulateAddressB, size, size, stringValues, stringSize);                       
+            binSearch_fragment<T,depth>(BKeys, BValues, 32, mid, cmpValue, myKey[0], myValue[0], cumulativeAddressA, cumulateAddressB, size, size, stringValues, stringSize, termC);                       
+            binSearch_fragment<T,depth>(BKeys, BValues, 16, mid, cmpValue, myKey[0], myValue[0], cumulativeAddressA, cumulateAddressB, size, size, stringValues, stringSize, termC);                       
+            binSearch_fragment<T,depth>(BKeys, BValues,  8, mid, cmpValue, myKey[0], myValue[0], cumulativeAddressA, cumulateAddressB, size, size, stringValues, stringSize, termC);                       
+            binSearch_fragment<T,depth>(BKeys, BValues,  4, mid, cmpValue, myKey[0], myValue[0], cumulativeAddressA, cumulateAddressB, size, size, stringValues, stringSize, termC);                       
+            binSearch_fragment<T,depth>(BKeys, BValues,  2, mid, cmpValue, myKey[0], myValue[0], cumulativeAddressA, cumulateAddressB, size, size, stringValues, stringSize, termC);                       
+            binSearch_fragment<T,depth>(BKeys, BValues,  1, mid, cmpValue, myKey[0], myValue[0], cumulativeAddressA, cumulateAddressB, size, size, stringValues, stringSize, termC);                       
                 
             index = mid;                    
                         
@@ -487,8 +678,9 @@ void simpleStringMerge(T *A_keys, T *A_keys_out, T *A_values, T* A_values_out, T
                 int cmpLoc = myStartIdxB + bIndex + index;
                 int cmpAdd = BValues[index];    
 
-                                
-                if(tie_break_simp(myLoc, cmpLoc, size, size, myValue[0], cmpAdd, stringValues, stringSize) == 0)
+                //if(myKey[0] == 1820065792)
+			     //   printf("%d %d %d)\n", myLoc, cmpLoc, size);              
+                if(tie_break_simp(myLoc, cmpLoc, size, size, myValue[0], cmpAdd, stringValues, stringSize, termC) == 0)
                     cmpValue = BKeys[++index];                                      
                                 
             }       
@@ -506,8 +698,10 @@ void simpleStringMerge(T *A_keys, T *A_keys_out, T *A_values, T* A_values_out, T
                 int cmpLoc = myStartIdxB + bIndex + index;
                 int cmpAdd = BValues[index];    
 
+				//if(myKey[0] == 1820065792)
+			     //   printf("(%d %d %d) (%d %d %d) %u %u\n", myLoc, cmpLoc, size, cmpAdd, myValue[0], stringSize, stringValues[cmpAdd], stringValues[myValue[0]]);              
                                 
-                if(tie_break_simp(myLoc, cmpLoc, size, size, myValue[0], cmpAdd, stringValues, stringSize) == 0)
+                if(tie_break_simp(myLoc, cmpLoc, size, size, myValue[0], cmpAdd, stringValues, stringSize, termC) == 0)
                     index++;
                 cmpValue = A_keys[myStartIdxB+bIndex+index];
                                                                                         
@@ -523,6 +717,9 @@ void simpleStringMerge(T *A_keys, T *A_keys_out, T *A_values, T* A_values_out, T
             //unsigned int tmpKey, cmpKey;
             //int count = 0 ;
 
+			//if(myKey[0] >= 1820065792 && myKey[0] <= 1820916440)
+			//	printf("key %u cmpValue %u index %u placed %u %d (min %u max %u index %d)\n",
+			//	myKey[0], cmpValue, myStartIdxC + bIndex + aIndex + depth*tid + index, placed[0], myStartIdxA+aIndex, localMinB, localMaxB, index);
                         
             //Base case
             if(!placed[0] && ((index > 0 && index < INTERSECT_B_BLOCK_SIZE_simple) || (myKey[0] < localMaxB) || (index+bIndex) >= mySizeB))
@@ -540,7 +737,7 @@ void simpleStringMerge(T *A_keys, T *A_keys_out, T *A_values, T* A_values_out, T
                 int cmpAdd = A_values[cmpLoc];     
 
                         
-                if(tie_break_simp(myLoc, cmpLoc, size, size, myValue[0], cmpAdd, stringValues, stringSize) == 1)
+                if(tie_break_simp(myLoc, cmpLoc, size, size, myValue[0], cmpAdd, stringValues, stringSize, termC) == 1)
                 {
                     A_keys_out  [myStartIdxC + bIndex + aIndex + depth*tid + index] = myKey[0];     
                     A_values_out[myStartIdxC + bIndex + aIndex + depth*tid + index] = myValue[0];           
@@ -563,7 +760,7 @@ void simpleStringMerge(T *A_keys, T *A_keys_out, T *A_values, T* A_values_out, T
         //After binary search, linear merge
         if(aIndex+depth*tid+1 < mySizeA)
             lin_merge_simple<T, depth>(cmpValue, myKey[1], myValue[1], index, BKeys, BValues, stringValues, A_keys, A_values, A_keys_out, A_values_out,
-                                       myStartIdxA, myStartIdxB, myStartIdxC, localMinB, localMaxB, aIndex+tid*depth, bIndex, totalSize, mySizeA, mySizeB, stringSize, 1, step, placed[1]);
+                                       myStartIdxA, myStartIdxB, myStartIdxC, localMinB, localMaxB, aIndex+tid*depth, bIndex, totalSize, mySizeA, mySizeB, stringSize, 1, step, placed[1], termC);
 
 
         
@@ -664,7 +861,7 @@ void simpleStringMerge(T *A_keys, T *A_keys_out, T *A_values, T* A_values_out, T
 template<class T>
 __global__
 void findMultiPartitions(T *A_keys, T* A_address, T* stringValues, int splitsPP, int numPartitions, int partitionSize,  unsigned int* partitionBeginA, unsigned int* partitionSizesA, 
-                         unsigned int* partitionBeginB, unsigned int* partitionSizesB, size_t size, size_t stringSize)
+                         unsigned int* partitionBeginB, unsigned int* partitionSizesB, size_t size, size_t stringSize, unsigned char termC)
 {
     int myId = threadIdx.x + blockIdx.x*blockDim.x;
     int myIdLoc = myId%splitsPP + (myId/splitsPP)*splitsPP*2;
@@ -731,7 +928,7 @@ void findMultiPartitions(T *A_keys, T* A_address, T* stringValues, int splitsPP,
                 last = mid;
             else
             {
-                if(tie_break_simp(myStartA-1, mid, size, size, A_address[myStartA-1], A_address[mid], stringValues, stringSize) == 1)
+                if(tie_break_simp(myStartA-1, mid, size, size, A_address[myStartA-1], A_address[mid], stringValues, stringSize, termC) == 1)
                     last = mid;
                 else
                     first = mid;
@@ -749,7 +946,7 @@ void findMultiPartitions(T *A_keys, T* A_address, T* stringValues, int splitsPP,
             prevSample = A_keys[--mid];
         while(prevSample == myStartSample && mid > myStartRange)
         {
-            if(tie_break_simp(myStartA, mid, size, size, A_address[myStartA], A_address[mid], stringValues, stringSize) == 1)
+            if(tie_break_simp(myStartA, mid, size, size, A_address[myStartA], A_address[mid], stringValues, stringSize, termC) == 1)
                 prevSample = A_keys[--mid];
             else
                 break;
@@ -761,7 +958,7 @@ void findMultiPartitions(T *A_keys, T* A_address, T* stringValues, int splitsPP,
             testSample = A_keys[++mid];
         while(testSample == myPrevSample && mid < myEndRange-1)
         {
-            if(tie_break_simp(myStartA-1, mid, size, size, A_address[myStartA-1], A_address[mid], stringValues, stringSize) == 0)
+            if(tie_break_simp(myStartA-1, mid, size, size, A_address[myStartA-1], A_address[mid], stringValues, stringSize, termC) == 0)
                 testSample = A_keys[++mid];
             else
                 break;
@@ -771,7 +968,7 @@ void findMultiPartitions(T *A_keys, T* A_address, T* stringValues, int splitsPP,
             mid++;
         if(testSample == myPrevSample && mid < myEndRange)
         {
-            if(tie_break_simp(myStartA-1, mid, size, size, A_address[myStartA-1], A_address[mid], stringValues, stringSize) == 0)
+            if(tie_break_simp(myStartA-1, mid, size, size, A_address[myStartA-1], A_address[mid], stringValues, stringSize, termC) == 0)
                 mid++;
         }
 
@@ -815,7 +1012,7 @@ void findMultiPartitions(T *A_keys, T* A_address, T* stringValues, int splitsPP,
                 last = mid;
             else 
             {
-                if(tie_break_simp(myEndA-1, mid, size, size, A_address[myEndA-1], A_address[mid], stringValues, stringSize) == 1)
+                if(tie_break_simp(myEndA-1, mid, size, size, A_address[myEndA-1], A_address[mid], stringValues, stringSize, termC) == 1)
                     last = mid;
                 else
                     first = mid;
@@ -832,7 +1029,7 @@ void findMultiPartitions(T *A_keys, T* A_address, T* stringValues, int splitsPP,
             prevSample = A_keys[--mid];
         while(prevSample == myEndSample && mid > myStartRange)
         {
-            if(tie_break_simp(myEndA, mid, size, size, A_address[myEndA], A_address[mid], stringValues, stringSize) == 1)
+            if(tie_break_simp(myEndA, mid, size, size, A_address[myEndA], A_address[mid], stringValues, stringSize, termC) == 1)
                 prevSample = A_keys[--mid];
             else
                 break;
@@ -843,7 +1040,7 @@ void findMultiPartitions(T *A_keys, T* A_address, T* stringValues, int splitsPP,
             testSample = A_keys[++mid];
         while(testSample == myPrevSample && mid < myEndRange-1)
         {
-            if(tie_break_simp(myEndA-1, mid, size, size, A_address[myEndA-1], A_address[mid], stringValues, stringSize) == 0)
+            if(tie_break_simp(myEndA-1, mid, size, size, A_address[myEndA-1], A_address[mid], stringValues, stringSize, termC) == 0)
                 testSample = A_keys[++mid];
             else
                 break;
@@ -853,7 +1050,7 @@ void findMultiPartitions(T *A_keys, T* A_address, T* stringValues, int splitsPP,
             mid++;
         if(testSample == myPrevSample && mid < myEndRange)
         {
-            if(tie_break_simp(myEndA-1, mid, size, size, A_address[myEndA-1], A_address[mid], stringValues, stringSize) == 0)
+            if(tie_break_simp(myEndA-1, mid, size, size, A_address[myEndA-1], A_address[mid], stringValues, stringSize, termC) == 0)
                 mid++;
                         
         }               
@@ -893,7 +1090,7 @@ template<class T, int depth>
 __global__
 void stringMergeMulti(T *A_keys, T*A_keys_out, T* A_values, T *A_values_out, T* stringValues, int subPartitions, int numBlocks, 
                       unsigned int *partitionBeginA, unsigned int *partitionSizeA, unsigned int *partitionBeginB, unsigned int* partitionSizeB, 
-                      int entirePartitionSize, int step, size_t size, size_t stringSize)
+                      int entirePartitionSize, int step, size_t size, size_t stringSize, unsigned char termC)
 {
     int myId = blockIdx.x;
     int myMergeId = (myId/(2*subPartitions))*2;
@@ -1008,21 +1205,21 @@ void stringMergeMulti(T *A_keys, T*A_keys_out, T* A_values, T *A_values_out, T* 
 
             mid = (INTERSECT_B_BLOCK_SIZE_multi/2)-1;
             if(INTERSECT_B_BLOCK_SIZE_multi >= 1024)
-                binSearch_fragment<T, depth> (BKeys, BValues, 256, mid, cmpValue, myKey[0], myValue[0], myStartIdxA+aIndex+tid*depth, myStartIdxB+bIndex+index, myStartIdxA+localAPartSize, myStartIdxB+localBPartSize, stringValues, stringSize);
+                binSearch_fragment<T, depth> (BKeys, BValues, 256, mid, cmpValue, myKey[0], myValue[0], myStartIdxA+aIndex+tid*depth, myStartIdxB+bIndex+index, myStartIdxA+localAPartSize, myStartIdxB+localBPartSize, stringValues, stringSize, termC);
 
                         
             if(INTERSECT_B_BLOCK_SIZE_multi>= 512)
-                binSearch_fragment<T, depth> (BKeys, BValues, 128, mid, cmpValue, myKey[0], myValue[0], myStartIdxA+aIndex+tid*depth, myStartIdxB+bIndex+index, myStartIdxA+localAPartSize, myStartIdxB+localBPartSize, stringValues, stringSize);
+                binSearch_fragment<T, depth> (BKeys, BValues, 128, mid, cmpValue, myKey[0], myValue[0], myStartIdxA+aIndex+tid*depth, myStartIdxB+bIndex+index, myStartIdxA+localAPartSize, myStartIdxB+localBPartSize, stringValues, stringSize, termC);
 
             if(INTERSECT_B_BLOCK_SIZE_multi >= 256)
-                binSearch_fragment<T, depth> (BKeys, BValues, 64, mid, cmpValue, myKey[0], myValue[0], myStartIdxA+aIndex+tid*depth, myStartIdxB+bIndex+index, myStartIdxA+localAPartSize, myStartIdxB+localBPartSize, stringValues, stringSize);
+                binSearch_fragment<T, depth> (BKeys, BValues, 64, mid, cmpValue, myKey[0], myValue[0], myStartIdxA+aIndex+tid*depth, myStartIdxB+bIndex+index, myStartIdxA+localAPartSize, myStartIdxB+localBPartSize, stringValues, stringSize, termC);
 
-            binSearch_fragment<T, depth> (BKeys, BValues, 32, mid, cmpValue, myKey[0], myValue[0], myStartIdxA+aIndex+tid*depth, myStartIdxB+bIndex+index, myStartIdxA+localAPartSize, myStartIdxB+localBPartSize, stringValues, stringSize);
-            binSearch_fragment<T, depth> (BKeys, BValues, 16, mid, cmpValue, myKey[0], myValue[0], myStartIdxA+aIndex+tid*depth, myStartIdxB+bIndex+index, myStartIdxA+localAPartSize, myStartIdxB+localBPartSize, stringValues, stringSize);
-            binSearch_fragment<T, depth> (BKeys, BValues, 8, mid, cmpValue, myKey[0], myValue[0], myStartIdxA+aIndex+tid*depth, myStartIdxB+bIndex+index, myStartIdxA+localAPartSize, myStartIdxB+localBPartSize, stringValues, stringSize);
-            binSearch_fragment<T, depth> (BKeys, BValues, 4, mid, cmpValue, myKey[0], myValue[0], myStartIdxA+aIndex+tid*depth, myStartIdxB+bIndex+index, myStartIdxA+localAPartSize, myStartIdxB+localBPartSize, stringValues, stringSize);
-            binSearch_fragment<T, depth> (BKeys, BValues, 2, mid, cmpValue, myKey[0], myValue[0], myStartIdxA+aIndex+tid*depth, myStartIdxB+bIndex+index, myStartIdxA+localAPartSize, myStartIdxB+localBPartSize, stringValues, stringSize);
-            binSearch_fragment<T, depth> (BKeys, BValues, 1, mid, cmpValue, myKey[0], myValue[0], myStartIdxA+aIndex+tid*depth, myStartIdxB+bIndex+index, myStartIdxA+localAPartSize, myStartIdxB+localBPartSize, stringValues, stringSize);
+            binSearch_fragment<T, depth> (BKeys, BValues, 32, mid, cmpValue, myKey[0], myValue[0], myStartIdxA+aIndex+tid*depth, myStartIdxB+bIndex+index, myStartIdxA+localAPartSize, myStartIdxB+localBPartSize, stringValues, stringSize, termC);
+            binSearch_fragment<T, depth> (BKeys, BValues, 16, mid, cmpValue, myKey[0], myValue[0], myStartIdxA+aIndex+tid*depth, myStartIdxB+bIndex+index, myStartIdxA+localAPartSize, myStartIdxB+localBPartSize, stringValues, stringSize, termC);
+            binSearch_fragment<T, depth> (BKeys, BValues, 8, mid, cmpValue, myKey[0], myValue[0], myStartIdxA+aIndex+tid*depth, myStartIdxB+bIndex+index, myStartIdxA+localAPartSize, myStartIdxB+localBPartSize, stringValues, stringSize, termC);
+            binSearch_fragment<T, depth> (BKeys, BValues, 4, mid, cmpValue, myKey[0], myValue[0], myStartIdxA+aIndex+tid*depth, myStartIdxB+bIndex+index, myStartIdxA+localAPartSize, myStartIdxB+localBPartSize, stringValues, stringSize, termC);
+            binSearch_fragment<T, depth> (BKeys, BValues, 2, mid, cmpValue, myKey[0], myValue[0], myStartIdxA+aIndex+tid*depth, myStartIdxB+bIndex+index, myStartIdxA+localAPartSize, myStartIdxB+localBPartSize, stringValues, stringSize, termC);
+            binSearch_fragment<T, depth> (BKeys, BValues, 1, mid, cmpValue, myKey[0], myValue[0], myStartIdxA+aIndex+tid*depth, myStartIdxB+bIndex+index, myStartIdxA+localAPartSize, myStartIdxB+localBPartSize, stringValues, stringSize, termC);
         
             index = mid;                    
             cmpValue = BKeys[index];
@@ -1035,7 +1232,7 @@ void stringMergeMulti(T *A_keys, T*A_keys_out, T* A_values, T *A_values_out, T* 
                 cmpLoc = myStartIdxB + bIndex + index;
                 int cmpAdd = BValues[index];
                         
-                if(cmpLoc != myLoc && cmpAdd > 0 && tie_break_simp(myLoc, cmpLoc, size, size, myValue[0], cmpAdd, stringValues, stringSize) == 0)
+                if(cmpLoc != myLoc && cmpAdd > 0 && tie_break_simp(myLoc, cmpLoc, size, size, myValue[0], cmpAdd, stringValues, stringSize, termC) == 0)
                 {
                     cmpValue = BKeys[++index];              
                 }
@@ -1057,7 +1254,7 @@ void stringMergeMulti(T *A_keys, T*A_keys_out, T* A_values, T *A_values_out, T* 
                                 
                 int cmpAdd = BValues[index];    
                         
-                if(cmpAdd > 0 && tie_break_simp(myLoc, cmpLoc, size, size, myValue[0], cmpAdd, stringValues, stringSize) == 0)
+                if(cmpAdd > 0 && tie_break_simp(myLoc, cmpLoc, size, size, myValue[0], cmpAdd, stringValues, stringSize, termC) == 0)
                 {
                     index++;                                                
                     cmpValue = bIndex+index < localBPartSize ? A_keys[myStartIdxB+bIndex+index] : UINT_MAX;
@@ -1085,7 +1282,7 @@ void stringMergeMulti(T *A_keys, T*A_keys_out, T* A_values, T *A_values_out, T* 
                                 
                 unsigned int cmpAdd = A_values[cmpLoc];                                                         
                                 
-                if(tie_break_simp(myLoc, cmpLoc, size, size, myValue[0], cmpAdd, stringValues, stringSize) == 1)
+                if(tie_break_simp(myLoc, cmpLoc, size, size, myValue[0], cmpAdd, stringValues, stringSize, termC) == 1)
                 {                                       
                     A_keys_out  [myStartIdxC + bIndex + aIndex+depth*tid+index] = myKey[0]; 
                     A_values_out[myStartIdxC + bIndex + aIndex+depth*tid+index] = myValue[0];       
@@ -1107,7 +1304,7 @@ void stringMergeMulti(T *A_keys, T*A_keys_out, T* A_values, T *A_values_out, T* 
                     A_values_out[myStartIdxC + bIndex + aIndex+depth*tid+index] = myValue[0];       
                     placed[0] = true;
                 }
-                if(!placed[0] && myKey[0] == localMinB && cmpAdd > 0 || tie_break_simp(myLoc, cmpLoc, size, size, myValue[0], cmpAdd, stringValues, stringSize) == 0)
+                if(!placed[0] && myKey[0] == localMinB && cmpAdd > 0 || tie_break_simp(myLoc, cmpLoc, size, size, myValue[0], cmpAdd, stringValues, stringSize, termC) == 0)
                 {                                       
                     A_keys_out  [myStartIdxC + bIndex + aIndex+depth*tid+index] = myKey[0]; 
                     A_values_out[myStartIdxC + bIndex + aIndex+depth*tid+index] = myValue[0];       
@@ -1118,7 +1315,7 @@ void stringMergeMulti(T *A_keys, T*A_keys_out, T* A_values, T *A_values_out, T* 
             if(aIndex+depth*tid+1 < localAPartSize)
                 linearStringMerge<T, depth>(BKeys, BValues, myKey[1], myValue[1], placed[1], index, cmpValue, A_keys, A_values, A_keys_out, A_values_out, stringValues, 
                                             myStartIdxC, myStartIdxA, myStartIdxB, localAPartSize, localBPartSize, localCPartSize, localMaxB, localMinB, tid, aIndex, bIndex, 
-                                            1, stringSize, size);                       
+                                            1, stringSize, size, termC);                       
                         
         }       
  

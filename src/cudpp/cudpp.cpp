@@ -54,6 +54,7 @@
 #include "cudpp_tridiagonal.h"
 #include "cudpp_compress.h"
 #include "cudpp_listrank.h"
+#include <stdio.h>
 
 /**
  * @brief Performs a scan operation of numElements on its input in
@@ -466,7 +467,75 @@ CUDPPResult cudppStringSort(const CUDPPHandle planHandle,
     {
         if (plan->m_config.algorithm != CUDPP_SORT_STRING)
             return CUDPP_ERROR_INVALID_PLAN;   	
-		cudppStringSortDispatch(d_keys, d_values, stringVals, numElements, stringArrayLength, plan);
+		cudppStringSortDispatch(d_keys, d_values, stringVals, numElements, stringArrayLength, 0, plan);
+	    return CUDPP_SUCCESS;
+    }
+    else
+        return CUDPP_ERROR_INVALID_HANDLE;
+}
+
+/**
+ * @brief Sorts strings. Keys are the first four characters of the string, 
+ * and values are the addresses where the strings reside in memory (stringVals)
+ * 
+ * Takes as input an array of strings arranged as a char* array with NULL terminating
+ * characters. This function will reformat this info into keys (first four chars)
+ * values(pointers to string array addresses) and aligned string value array.
+ *
+ * 
+ * 
+ * @param[in] planHandle handle to CUDPPSortPlan 
+ * @param[in] stringVals Original string input, no need for alignment or offsets. 
+ * @param[in] numElements number of strings
+ * @param[in] stringArrayLength Length in uint of the size of all strings
+ * @returns CUDPPResult indicating success or error condition 
+ *
+ * @see cudppPlan, CUDPPConfiguration, CUDPPAlgorithm
+ */
+CUDPP_DLL
+CUDPPResult cudppStringSort(const CUDPPHandle planHandle,                      
+                      unsigned char     *d_stringVals,					  
+					  unsigned int      *d_address,
+					  unsigned char     termC,
+                      size_t            numElements,
+                      size_t            stringArrayLength)
+{    			
+    CUDPPStringSortPlan *plan = 
+        (CUDPPStringSortPlan*)getPlanPtrFromHandle<CUDPPStringSortPlan>(planHandle);
+
+	
+    if (plan != NULL)
+    {
+        if (plan->m_config.algorithm != CUDPP_SORT_STRING)
+            return CUDPP_ERROR_INVALID_PLAN;   	
+		
+
+		
+		
+		unsigned int* packedStringVals; 
+		unsigned int *packedStringLength = (unsigned int*)malloc(sizeof(unsigned int));;		
+				
+		calculateAlignedOffsets(d_address, plan->m_numSpaces, d_stringVals, termC, numElements, stringArrayLength);
+		cudppScanDispatch(plan->m_spaceScan, plan->m_numSpaces, numElements+1, 1, plan->m_scanPlan);
+		dotAdd(d_address, plan->m_spaceScan, plan->m_packedAddress, numElements+1, stringArrayLength);
+		
+		cudaMemcpy(packedStringLength, (plan->m_packedAddress)+numElements, sizeof(unsigned int), cudaMemcpyDeviceToHost);
+		cudaMemcpy(plan->m_packedAddressRef, plan->m_packedAddress, sizeof(unsigned int)*numElements, cudaMemcpyDeviceToDevice);
+		cudaMemcpy(plan->m_addressRef, d_address, sizeof(unsigned int)*numElements, cudaMemcpyDeviceToDevice);
+
+		
+		
+	
+		//system("PAUSE");
+		cudaMalloc((void**)&packedStringVals, sizeof(unsigned int)*packedStringLength[0]);		
+
+		packStrings(packedStringVals, d_stringVals, plan->m_keys, plan->m_packedAddress, d_address, numElements, stringArrayLength, termC);				
+
+	
+		cudppStringSortDispatch(plan->m_keys, plan->m_packedAddress, packedStringVals, numElements, packedStringLength[0], termC, plan);
+		unpackStrings(plan->m_packedAddress, plan->m_packedAddressRef, d_address, plan->m_addressRef, numElements);
+		
+
 	    return CUDPP_SUCCESS;
     }
     else

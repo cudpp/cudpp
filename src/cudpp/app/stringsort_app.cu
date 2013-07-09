@@ -34,6 +34,61 @@
 #define BLOCKSORT_SIZE 1024
 #define DEPTH 8
 
+void dotAdd(unsigned int* d_address,	
+	   unsigned int* numSpaces,
+	   unsigned int* packedAddress,
+	   size_t numElements,
+	   size_t stringArrayLength)
+{
+	int numThreads = 128;
+	int numBlocks = (numElements+numThreads-1)/numThreads;
+	dotAddInclusive<<<numBlocks, numThreads>>>(numSpaces, d_address, packedAddress, numElements, stringArrayLength);
+}
+void calculateAlignedOffsets(unsigned int* d_address,	
+							 unsigned int* numSpaces,
+							 unsigned char* d_stringVals, 
+							 unsigned char termC,
+							 size_t numElements,
+							 size_t stringArrayLength)
+{
+	int numThreads = 128;
+	int numBlocks = (numElements+numThreads-1)/numThreads;
+
+	alignedOffsets<<<numBlocks, numThreads>>>(numSpaces, d_address, d_stringVals, termC, numElements, stringArrayLength);
+
+}
+void packStrings(unsigned int* packedStrings, 
+						 unsigned char* d_stringVals, 
+						 unsigned int* d_keys, 						 
+						 unsigned int* packedAddress, 
+						 unsigned int* address, 
+						 size_t numElements,
+						 size_t stringArrayLength,
+						 unsigned char termC)
+{
+	unsigned int numThreads = 128;
+	unsigned int numBlocks = (numElements + numThreads - 1)/numThreads;
+
+	//Each thread handles one string (irregular parrallelism) other option is to do per character (set of chars)
+	//but that requires a binary search per character. Efficiency depends on the dataset
+	alignString<<<numBlocks, numThreads>>>(packedStrings, d_stringVals, packedAddress, address, numElements, stringArrayLength, termC);
+	createKeys<<<numBlocks, numThreads>>>(d_keys, packedStrings, packedAddress, numElements);
+
+}
+
+
+void unpackStrings(unsigned int* packedAddress,
+				   unsigned int* packedAddressRef,
+				   unsigned int* address,
+				   unsigned int* addressRef,				   
+				   size_t numElements)
+{
+	unsigned int numThreads = 128;
+	unsigned int numBlocks = (numElements + numThreads - 1)/numThreads;
+
+	unpackAddresses<<<numBlocks, numThreads>>>(packedAddress, packedAddressRef, address, addressRef, numElements);
+}
+
 /** @brief Performs merge sor utilzing three stages. 
 * (1) Blocksort, (2) simple merge and (3) multi merge on a 
 * set of strings 
@@ -44,54 +99,49 @@
 * @param[in] numElements Number of elements in the sort.
 * @param[in] stringArrayLength The size of our string array in uints (4 chars per uint)
 * @param[in] plan Configuration information for mergesort.
+* @param[in] termC Termination character for our strings
 **/
 void runStringSort(unsigned int *pkeys, 
 				   unsigned int *pvals,
 				   unsigned int *stringVals,
 				   size_t numElements,
 				   size_t stringArrayLength,
+				   unsigned char termC,
 				   const CUDPPStringSortPlan *plan)
 {
 	int numPartitions = (numElements+BLOCKSORT_SIZE-1)/BLOCKSORT_SIZE;
 	int numBlocks = numPartitions/2;
 	int partitionSize = BLOCKSORT_SIZE;
-	int subPartitions = 4;
+	
+
+	
+
+	unsigned int swapPoint = plan->m_swapPoint;
+	unsigned int subPartitions = plan->m_subPartitions;
+	int blockLimit = swapPoint*subPartitions*4;	
 
 
-	unsigned int* temp_keys;
-	unsigned int* temp_vals;
-
-	CUDA_SAFE_CALL( cudaMalloc((void **) &temp_keys, sizeof(unsigned int)*numElements));
-	CUDA_SAFE_CALL( cudaMalloc((void **) &temp_vals, sizeof(unsigned int)*numElements));
-
-
-	unsigned int *partitionSizeA, *partitionBeginA, *partitionSizeB, *partitionBeginB;
-	unsigned int swapPoint = 32;
-	int blockLimit = swapPoint*subPartitions;	
-
-	CUDA_SAFE_CALL( cudaMalloc((void**)&partitionBeginA, blockLimit*sizeof(unsigned int))); 
-	CUDA_SAFE_CALL( cudaMalloc((void**)&partitionSizeA, blockLimit*sizeof(unsigned int)));
-	CUDA_SAFE_CALL( cudaMalloc((void**)&partitionBeginB, blockLimit*sizeof(unsigned int)));
-	CUDA_SAFE_CALL( cudaMalloc((void**)&partitionSizeB, blockLimit*sizeof(unsigned int)));
-
+	
 	int numThreads = 128;	
 
-	blockWiseStringSort<unsigned int, DEPTH>
-		<<<numPartitions, BLOCKSORT_SIZE/DEPTH, 2*(BLOCKSORT_SIZE)*sizeof(unsigned int)>>>(pkeys, pvals, stringVals, BLOCKSORT_SIZE, numElements, stringArrayLength);
+	blockWiseStringSort<unsigned int, DEPTH> <<<numPartitions, BLOCKSORT_SIZE/DEPTH, 2*(BLOCKSORT_SIZE)*sizeof(unsigned int)>>>
+		                     (pkeys, pvals, stringVals, BLOCKSORT_SIZE, numElements, stringArrayLength, termC);
+	
 
 	int mult = 1; int count = 0;
 
+	unsigned int* temp = (unsigned int*) malloc(sizeof(unsigned int)*numElements);
 	CUDA_SAFE_CALL(cudaThreadSynchronize());
 	//we run p stages of simpleMerge until numBlocks <= some Critical level
-	while(numPartitions > 32 || (partitionSize*mult < 16384 && numPartitions > 1))
+	while(numPartitions > swapPoint || (partitionSize*mult < 16384 && numPartitions > 1)/* && numPartitions > 1*/)
 	{	
 		//printf("Running simple merge for %d partitions of size %d\n", numPartitions, partitionSize*mult);
 		numBlocks = (numPartitions&0xFFFE);	    
 		if(count%2 == 0)
 		{ 				
 			simpleStringMerge<unsigned int, 2>
-				<<<numBlocks, CTASIZE_simple, sizeof(unsigned int)*(2*INTERSECT_B_BLOCK_SIZE_simple+4)>>>(pkeys, temp_keys, 				
-				pvals, temp_vals, stringVals, partitionSize*mult, numElements, count, stringArrayLength);		
+				<<<numBlocks, CTASIZE_simple, sizeof(unsigned int)*(2*INTERSECT_B_BLOCK_SIZE_simple+4)>>>(pkeys, plan->m_tempKeys, 				
+				pvals, plan->m_tempAddress, stringVals, partitionSize*mult, numElements, count, stringArrayLength, termC);		
 
 			if(numPartitions%2 == 1)
 			{			
@@ -99,28 +149,27 @@ void runStringSort(unsigned int *pkeys,
 				int offset = (partitionSize*mult*(numPartitions-1));
 				int numElementsToCopy = numElements-offset;												
 				simpleCopy<unsigned int>
-					<<<(numElementsToCopy+numThreads-1)/numThreads, numThreads>>>(pkeys, pvals, temp_keys, temp_vals, offset, numElementsToCopy);
+					<<<(numElementsToCopy+numThreads-1)/numThreads, numThreads>>>(pkeys, pvals, plan->m_tempKeys, plan->m_tempAddress, offset, numElementsToCopy);
 			}
 		}
 		else
 		{			
 			simpleStringMerge<unsigned int, 2>
-				<<<numBlocks, CTASIZE_simple, sizeof(unsigned int)*(2*INTERSECT_B_BLOCK_SIZE_simple+4)>>>(temp_keys, pkeys, 				
-				temp_vals, pvals, stringVals, partitionSize*mult, numElements, count, stringArrayLength);		
+				<<<numBlocks, CTASIZE_simple, sizeof(unsigned int)*(2*INTERSECT_B_BLOCK_SIZE_simple+4)>>>(plan->m_tempKeys, pkeys, 				
+				plan->m_tempAddress, pvals, stringVals, partitionSize*mult, numElements, count, stringArrayLength, termC);		
 			
 			if(numPartitions%2 == 1)
 			{			
 				int offset = (partitionSize*mult*(numPartitions-1));
 				int numElementsToCopy = numElements-offset;						
 				simpleCopy<unsigned int>
-					<<<(numElementsToCopy+numThreads-1)/numThreads, numThreads>>>(temp_keys, temp_vals, pkeys, pvals, offset, numElementsToCopy);
+					<<<(numElementsToCopy+numThreads-1)/numThreads, numThreads>>>(plan->m_tempKeys, plan->m_tempAddress, pkeys, pvals, offset, numElementsToCopy);
 			}
 		}
 
 		mult*=2;
 		count++;
-		numPartitions = (numPartitions+1)/2;
-		
+		numPartitions = (numPartitions+1)/2;		
 	}				
 
 
@@ -128,29 +177,29 @@ void runStringSort(unsigned int *pkeys,
 	
 	//End of simpleMerge, now blocks cooperate to merge partitions
 	while (numPartitions > 1)
-	{		
-		//printf("Running multi merge for %d partitions of size %d\n", numPartitions, partitionSize*mult);
+	{				
 		numBlocks = (numPartitions&0xFFFE);	 
 		int secondBlocks = ((numBlocks)*subPartitions+numThreads-1)/numThreads;			
 		if(count%2 == 1)
 		{								
 			findMultiPartitions<unsigned int>
-				<<<secondBlocks, numThreads>>>(temp_keys, temp_vals, stringVals, subPartitions, numBlocks, partitionSize*mult, partitionBeginA, partitionSizeA, 
-				partitionBeginB, partitionSizeB, numElements, stringArrayLength);			
+				<<<secondBlocks, numThreads>>>(plan->m_tempKeys, plan->m_tempAddress, stringVals, subPartitions, numBlocks, partitionSize*mult, plan->m_partitionStartA, plan->m_partitionSizeA, 
+				plan->m_partitionStartB, plan->m_partitionSizeB, numElements, stringArrayLength, termC);			
 			
 
 			//int lastSubPart = getLastSubPart(numBlocks, subPartitions, partitionSize, mult, numElements);
 			CUDA_SAFE_CALL(cudaThreadSynchronize());
 			stringMergeMulti<unsigned int, DEPTH_multi>
-				<<<numBlocks*subPartitions, CTASIZE_multi, (2*INTERSECT_B_BLOCK_SIZE_multi+4)*sizeof(unsigned int)>>>(temp_keys, pkeys, temp_vals, 
-				pvals, stringVals, subPartitions, numBlocks, partitionBeginA, partitionSizeA, partitionBeginB, partitionSizeB, mult*partitionSize, count, numElements, stringArrayLength);
+				<<<numBlocks*subPartitions, CTASIZE_multi, (2*INTERSECT_B_BLOCK_SIZE_multi+4)*sizeof(unsigned int)>>>(plan->m_tempKeys, pkeys, plan->m_tempAddress, 
+				pvals, stringVals, subPartitions, numBlocks, plan->m_partitionStartA, plan->m_partitionSizeA, plan->m_partitionStartB, plan->m_partitionSizeB, mult*partitionSize, 
+				count, numElements, stringArrayLength, termC);
 			CUDA_SAFE_CALL(cudaThreadSynchronize());
 			if(numPartitions%2 == 1)
 			{			
 				int offset = (partitionSize*mult*(numPartitions-1));
 				int numElementsToCopy = numElements-offset;				
 				simpleCopy<unsigned int>
-					<<<(numElementsToCopy+numThreads-1)/numThreads, numThreads>>>(temp_keys, temp_vals, pkeys, pvals, offset, numElementsToCopy);
+					<<<(numElementsToCopy+numThreads-1)/numThreads, numThreads>>>(plan->m_tempKeys, plan->m_tempAddress, pkeys, pvals, offset, numElementsToCopy);
 			}
 
 		}
@@ -158,13 +207,14 @@ void runStringSort(unsigned int *pkeys,
 		{
 
 			findMultiPartitions<unsigned int>
-				<<<secondBlocks, numThreads>>>(pkeys, pvals, stringVals, subPartitions, numBlocks, partitionSize*mult, partitionBeginA, partitionSizeA, 
-				partitionBeginB, partitionSizeB, numElements, stringArrayLength);											
+				<<<secondBlocks, numThreads>>>(pkeys, pvals, stringVals, subPartitions, numBlocks, partitionSize*mult, plan->m_partitionStartA, plan->m_partitionSizeA, 
+				plan->m_partitionStartB, plan->m_partitionSizeB, numElements, stringArrayLength, termC);											
 			CUDA_SAFE_CALL(cudaThreadSynchronize());
 			//int lastSubPart = getLastSubPart(numBlocks, subPartitions, partitionSize, mult, numElements);
 			stringMergeMulti<unsigned int, DEPTH_multi>
-				<<<numBlocks*subPartitions, CTASIZE_multi, (2*INTERSECT_B_BLOCK_SIZE_multi+4)*sizeof(unsigned int)>>>(pkeys, temp_keys, pvals, 
-				temp_vals, stringVals, subPartitions, numBlocks, partitionBeginA, partitionSizeA, partitionBeginB, partitionSizeB, mult*partitionSize, count, numElements, stringArrayLength);
+				<<<numBlocks*subPartitions, CTASIZE_multi, (2*INTERSECT_B_BLOCK_SIZE_multi+4)*sizeof(unsigned int)>>>(pkeys, plan->m_tempKeys, pvals, 
+				plan->m_tempAddress, stringVals, subPartitions, numBlocks, plan->m_partitionStartA, plan->m_partitionSizeA, plan->m_partitionStartB, plan->m_partitionSizeB, mult*partitionSize, 
+				count, numElements, stringArrayLength, termC);
 
 			CUDA_SAFE_CALL(cudaThreadSynchronize());
 			if(numPartitions%2 == 1)
@@ -172,7 +222,7 @@ void runStringSort(unsigned int *pkeys,
 				int offset = (partitionSize*mult*(numPartitions-1));
 				int numElementsToCopy = numElements-offset;				
 				simpleCopy<unsigned int>
-					<<<(numElementsToCopy+numThreads-1)/numThreads, numThreads>>>(pkeys, pvals, temp_keys, temp_vals, offset, numElementsToCopy);
+					<<<(numElementsToCopy+numThreads-1)/numThreads, numThreads>>>(pkeys, pvals, plan->m_tempKeys, plan->m_tempAddress, offset, numElementsToCopy);
 			}
 
 		}
@@ -186,17 +236,10 @@ void runStringSort(unsigned int *pkeys,
 
 	if(count%2==1)
 	{
-		CUDA_SAFE_CALL(cudaMemcpy(pkeys, temp_keys, numElements*sizeof(unsigned int), cudaMemcpyDeviceToDevice));
-		CUDA_SAFE_CALL(cudaMemcpy(pvals, temp_vals, numElements*sizeof(unsigned int), cudaMemcpyDeviceToDevice));
+		CUDA_SAFE_CALL(cudaMemcpy(pkeys, plan->m_tempKeys, numElements*sizeof(unsigned int), cudaMemcpyDeviceToDevice));
+		CUDA_SAFE_CALL(cudaMemcpy(pvals, plan->m_tempAddress, numElements*sizeof(unsigned int), cudaMemcpyDeviceToDevice));
 	}
-
-	CUDA_SAFE_CALL(cudaFree(partitionBeginA));
-	CUDA_SAFE_CALL(cudaFree(partitionBeginB));
-	CUDA_SAFE_CALL(cudaFree(partitionSizeA));
-	CUDA_SAFE_CALL(cudaFree(partitionSizeB));
-
-	CUDA_SAFE_CALL(cudaFree(temp_keys));
-	CUDA_SAFE_CALL(cudaFree(temp_vals));	
+	
 }
 
 #ifdef __cplusplus
@@ -212,7 +255,23 @@ extern "C"
 	* @param[in] plan Pointer to CUDPPStringSortPlan object
 	**/
 	void allocStringSortStorage(CUDPPStringSortPlan *plan)
-	{               
+	{
+		
+		 	
+		CUDA_SAFE_CALL(cudaMalloc((void**)&plan->m_keys, sizeof(unsigned int)*plan->m_numElements));				
+		CUDA_SAFE_CALL(cudaMalloc((void**)&plan->m_tempKeys,    sizeof(unsigned int)*plan->m_numElements));		
+		CUDA_SAFE_CALL(cudaMalloc((void**)&plan->m_tempAddress,    sizeof(unsigned int)*plan->m_numElements));		
+		CUDA_SAFE_CALL(cudaMalloc((void**)&plan->m_packedAddress, sizeof(unsigned int)*(plan->m_numElements+1)));
+		CUDA_SAFE_CALL(cudaMalloc((void**)&plan->m_packedAddressRef, sizeof(unsigned int)*(plan->m_numElements)));		
+		CUDA_SAFE_CALL(cudaMalloc((void**)&plan->m_addressRef, sizeof(unsigned int)*(plan->m_numElements)));		
+
+		CUDA_SAFE_CALL(cudaMalloc((void**)&plan->m_spaceScan, sizeof(unsigned int)*(plan->m_numElements+1)));		
+		CUDA_SAFE_CALL(cudaMalloc((void**)&plan->m_numSpaces, sizeof(unsigned int)*(plan->m_numElements+1)));		
+
+		CUDA_SAFE_CALL(cudaMalloc((void**)&plan->m_partitionSizeA, sizeof(unsigned int)*(plan->m_swapPoint*plan->m_subPartitions*4)));		
+		CUDA_SAFE_CALL(cudaMalloc((void**)&plan->m_partitionSizeB, sizeof(unsigned int)*(plan->m_swapPoint*plan->m_subPartitions*4)));		
+		CUDA_SAFE_CALL(cudaMalloc((void**)&plan->m_partitionStartA, sizeof(unsigned int)*(plan->m_swapPoint*plan->m_subPartitions*4)));		
+		CUDA_SAFE_CALL(cudaMalloc((void**)&plan->m_partitionStartB, sizeof(unsigned int)*(plan->m_swapPoint*plan->m_subPartitions*4)));		
 	}
 
 	/** @brief Deallocates intermediate memory from allocStringSortStorage.
@@ -223,6 +282,20 @@ extern "C"
 
 	void freeStringSortStorage(CUDPPStringSortPlan* plan)
 	{
+		cudaFree(plan->m_keys);
+		cudaFree(plan->m_packedAddress);
+		cudaFree(plan->m_packedAddressRef);
+		cudaFree(plan->m_tempKeys);
+		cudaFree(plan->m_tempAddress);
+		cudaFree(plan->m_addressRef);
+
+		cudaFree(plan->m_numSpaces);
+		cudaFree(plan->m_spaceScan);
+
+		cudaFree(plan->m_partitionSizeA);
+		cudaFree(plan->m_partitionSizeB);
+		cudaFree(plan->m_partitionStartA);
+		cudaFree(plan->m_partitionStartB);
 	}
 
 	/** @brief Dispatch function to perform a sort on an array with 
@@ -236,17 +309,19 @@ extern "C"
 	* @param[in] stringVals Global string array
 	* @param[in] numElements Number of elements in the sort.
 	* @param[in] stringArrayLength The size of our string array in uints (4 chars per uint)
-	* @param[in] plan Configuration information for mergeSort.
+	* @param[in] termC Termination character for our strings
+	* @param[in] plan Configuration information for mergeSort.	
 	**/
 
-	void cudppStringSortDispatch(void  *keys,
-		                         void  *values,
-		                         void  *stringVals,
+	void cudppStringSortDispatch(unsigned int  *keys,
+		                         unsigned int  *values,
+		                         unsigned int  *stringVals,
 		                         size_t numElements,
 								 size_t stringArrayLength,
+								 unsigned char termC,
 		                         const CUDPPStringSortPlan *plan)
 	{
-		runStringSort((unsigned int*)keys, (unsigned int*)values, (unsigned int*) stringVals, numElements, stringArrayLength, plan);
+		runStringSort(keys, values, stringVals, numElements, stringArrayLength, termC, plan);
 	}                            
 
 #ifdef __cplusplus

@@ -243,10 +243,10 @@ CUDPPResult cudppMergeSort(const CUDPPHandle planHandle,
                       size_t            numElements);
 
 CUDPP_DLL
-CUDPPResult cudppStringSort(const CUDPPHandle planHandle,
-						   void              *d_keys,                                          
-						   void              *d_values, 
-						   void              *stringVals,		      
+CUDPPResult cudppStringSort(const CUDPPHandle planHandle,						   
+						   unsigned char              *d_stringVals,
+						   unsigned int      *d_address,
+						   unsigned char              termC,
 						   size_t            numElements,
 						   size_t            stringArrayLength);
 // Sparse matrix allocation

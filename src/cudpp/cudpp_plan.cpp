@@ -528,9 +528,23 @@ CUDPPStringSortPlan::CUDPPStringSortPlan(CUDPPManager *mgr,
 										 CUDPPConfiguration config,
 										 size_t numElements, 
 										 size_t stringArrayLength)
-: CUDPPPlan(mgr, config, numElements, stringArrayLength, 0), m_tempKeys(0), m_tempValues(0)
-{
-	allocStringSortStorage(this);
+: CUDPPPlan(mgr, config, numElements, stringArrayLength, 0)
+{ 
+	m_subPartitions = 4;
+	m_swapPoint = 64;
+	
+	CUDPPConfiguration scanConfig = 
+    { 
+      CUDPP_SCAN, 
+      CUDPP_ADD, 
+      CUDPP_UINT, 
+      CUDPP_OPTION_FORWARD | CUDPP_OPTION_EXCLUSIVE 
+    };    
+	
+
+	m_scanPlan = new CUDPPScanPlan(mgr, scanConfig, numElements+1, 1, 0);	
+	m_numElements = numElements;
+	allocStringSortStorage(this);	
 }
 
 /** @brief String sort plan destructor */

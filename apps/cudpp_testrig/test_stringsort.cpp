@@ -28,23 +28,38 @@
 
 using namespace cudpp_app;
 
-//TODO: right now just checking the keys, need to check in case of ties (and values)
-int verifyStringSort(unsigned int* keysSorted, unsigned int *valuesSorted, unsigned int* keysUnsorted,
-					  unsigned int* stringVals, size_t numElements, int stringSize)
+
+int verifyStringSort(unsigned int *valuesSorted,
+					  unsigned char* stringVals, size_t numElements, int stringSize, unsigned char termC)
 {
 	int retval = 0;
 	
 	for(unsigned int i = 0; i < numElements-1; ++i)
 	{
-		bool unordered = (keysSorted[i])>(keysSorted[i+1]);
-        if (unordered)
+		unsigned int add1, add2;
+		add1 = valuesSorted[i];
+		add2 = valuesSorted[i+1];
+
+		unsigned char c1, c2;		
+
+        do
         {
-            cout << "Unordered key[" << i << "]:" << keysSorted[i] 
-                 << (" > ") << "key["
-                 << i+1 << "]:" << keysSorted[i+1] << endl;
-            retval = 1;
-            break;
+			c1 = (stringVals[add1]);
+			c2 = (stringVals[add2]);
+			
+          
+			add1++;
+			add2++;
+			
         } 
+		while(c1 == c2 && c1 != termC && c2 != termC && add1 < stringSize && add2 < stringSize);
+
+		if(c1 > c2)		
+		{
+			printf("Error comparing index %d to %d (%d > %d) (add1 %d add2 %d)\n", i, i+1, c1, c2, valuesSorted[i], valuesSorted[i+1]);
+			return 1;
+		}
+
 	}	
 	return retval;
 }
@@ -55,81 +70,85 @@ int stringSortTest(CUDPPHandle theCudpp, CUDPPConfiguration config, size_t *test
 {
     int retval = 0;
     srand(1);
-    unsigned int *h_keys, *h_keysSorted, *d_keys;
-    unsigned int *h_values, *h_valuesSorted, *h_valSend, *d_values;
+
+    unsigned int  *h_valuesSorted, *h_valSend, *d_address;
     unsigned int *string_length;
-	unsigned int *d_stringVals;
-    unsigned int *stringVals;
+	unsigned char *d_stringVals;
+    unsigned char *stringVals;
 	config.algorithm = CUDPP_SORT_STRING;
 	config.datatype = CUDPP_UINT;
 	config.options = CUDPP_OPTION_FORWARD;
 
-	unsigned int maxStringLength = 4;
-    h_keys       = (unsigned int*)malloc(numElements*sizeof(unsigned int));
-    h_keysSorted = (unsigned int*)malloc(numElements*sizeof(unsigned int));
-
-    
-    h_values       = (unsigned int*)malloc(numElements*sizeof(unsigned int));
-	h_valSend = (unsigned int*)malloc(numElements*sizeof(unsigned int));
-    h_valuesSorted = (unsigned int*)malloc(numElements*sizeof(unsigned int));
-
+	unsigned int maxStringLength = 14;
+  
 
     unsigned int stringSize = 0;
+	h_valSend = (unsigned int*)malloc(numElements*sizeof(unsigned int));
+	h_valuesSorted = (unsigned int*)malloc(numElements*sizeof(unsigned int));
     string_length = (unsigned int*)malloc(numElements*sizeof(unsigned int));
-    //We want to create numElements unique strings with varying size
-    //We add its starting address to the end to make it unique 
-    //For the sake of simplicity in this test we make all strings 
-    //multiples of 4 characters
-	//printf("making strings\n");
+	unsigned int* unique_qualifier_length = (unsigned int*) malloc(numElements*sizeof(unsigned int));
+   
     for(unsigned int i=0; i < numElements; ++i)                     
     {				
-        h_values[i] = 2 + rand()%maxStringLength;    
-		h_valSend[i] = i == 0 ? 0 : h_values[i-1];
-	    stringSize += h_values[i];		
+		int append = i+1;
+		unique_qualifier_length[i] = 0;
+		while(append > 0)
+		{
+			append /=255;
+			unique_qualifier_length[i]++;
+		}
+
+        string_length[i] = 3 + (rand()%maxStringLength) + unique_qualifier_length[i];    
+		h_valSend[i] = i == 0 ? 0 : string_length[i-1];
+	    stringSize += string_length[i];		
     }
-    stringVals = (unsigned int*) malloc(sizeof(unsigned int)*stringSize);
+    stringVals = (unsigned char*) malloc(sizeof(unsigned char)*stringSize);
     unsigned int index = 0;
-	printf("%lu elements and %d characters\n", numElements, 4*stringSize);
+	//printf("%lu elements and %d characters\n", numElements, stringSize);
 	unsigned int temp = 0;
-	char c1, c2, c3, c4;
+	unsigned char c;	
     for(unsigned int i = 0; i < numElements; ++i)
     {
-	    for(unsigned int j = 0; j < h_values[i]-1; j++)
+		
+	    for(unsigned int j = 0; j < (string_length[i]-unique_qualifier_length[i])-1 ; j++)
 	    {
-		    c1 = (rand()%255)+1;
-			c2 = (rand()%255)+1;
-			c3 = (rand()%255)+1;
-			c4 = (rand()%255)+1;
-			unsigned int val = (c1 << 24) + (c2 << 16) + (c3 << 8) + c4;
-		    stringVals[index++] = val;
-		    if(j == 0)			
-				h_keys[i] = val;				
-			
-
+		    c = (rand()%254)+1;						
+		    stringVals[index++] = c;		    
 	    }
 		
-
-		c1 = rand()%255+1;
-		c2 = rand()%255+1;
-		c3 = rand()%255+1;		
-		unsigned int val = (c1 << 24) + (c2 << 16) + (c3 << 8);
+		int append = i+1;		
+		for(int k = 0; k < unique_qualifier_length[i]; k++)
+		{
+			if ((append&255) == 0)
+				append++;
+				
+			stringVals[index++] = (append&255);
+			append /=255;
+			
+		}
+		
+		stringVals[index++] = 0;
+		
 		
 	    if( i > 0 )					
 		    h_valSend[i] += h_valSend[i-1];					
-		
-
-	    stringVals[index++] = val; // Make sure there is a character with a 0
-	    //so the algorithm knows the string has terminated
+			    	    
     }
     
 
-    //printf("made strings %d long %d stringSize\n", index, stringSize);
+	//printf("made strings %d long %d stringSize\n", index, stringSize);
+	/*printf("addresses\n");
+	for(int i = 0; i < numElements; i++)
+		printf("%d\n", h_valSend[i]);
+    
+	for(int i  = 0; i < stringSize; i ++)
+	    printf("%d %d\n", i, stringVals[i]);*/
 	
 	
-    CUDA_SAFE_CALL(cudaMalloc((void **)&d_keys, numElements*sizeof(unsigned int)));
-    CUDA_SAFE_CALL(cudaMalloc((void **)&d_values, numElements*sizeof(unsigned int)));
-    CUDA_SAFE_CALL(cudaMalloc((void **)&d_stringVals, stringSize*sizeof(unsigned int)));
-    CUDA_SAFE_CALL(cudaMemcpy(d_stringVals, stringVals, stringSize*sizeof(unsigned int), cudaMemcpyHostToDevice));
+    
+	CUDA_SAFE_CALL(cudaMalloc((void **)&d_address, numElements*sizeof(unsigned int)));
+    CUDA_SAFE_CALL(cudaMalloc((void **)&d_stringVals, stringSize*sizeof(unsigned char)));
+    CUDA_SAFE_CALL(cudaMemcpy(d_stringVals, stringVals, stringSize*sizeof(unsigned char), cudaMemcpyHostToDevice));
 
   
     
@@ -152,6 +171,7 @@ int stringSortTest(CUDPPHandle theCudpp, CUDPPConfiguration config, size_t *test
     CUDA_SAFE_CALL( cudaEventCreate(&stop_event) );
 
 	
+	
     for (unsigned int k = 0; k < numTests; ++k)
     {
         if(numTests == 1)
@@ -170,15 +190,11 @@ int stringSortTest(CUDPPHandle theCudpp, CUDPPConfiguration config, size_t *test
         {		
 			
 			
-            CUDA_SAFE_CALL(cudaMemcpy(d_keys, h_keys, tests[k] * sizeof(unsigned int), cudaMemcpyHostToDevice));
-          			
-            CUDA_SAFE_CALL( cudaMemcpy(d_values, h_valSend, tests[k] * sizeof(unsigned int), cudaMemcpyHostToDevice) );
-
-            
+            CUDA_SAFE_CALL( cudaMemcpy(d_address, h_valSend, tests[k] * sizeof(unsigned int), cudaMemcpyHostToDevice) );            
             CUDA_SAFE_CALL( cudaEventRecord(start_event, 0) );
 
 			
-            cudppStringSort(plan, d_keys, d_values, d_stringVals, tests[k], stringSize);
+            cudppStringSort(plan, d_stringVals, d_address, 0, tests[k], stringSize);
 
             CUDA_SAFE_CALL( cudaEventRecord(stop_event, 0) );
             CUDA_SAFE_CALL( cudaEventSynchronize(stop_event) );
@@ -191,15 +207,19 @@ int stringSortTest(CUDPPHandle theCudpp, CUDPPConfiguration config, size_t *test
         CUDA_CHECK_ERROR("teststringSort - cudppStringSort");
 		
         // copy results
-        CUDA_SAFE_CALL(cudaMemcpy(h_keysSorted, d_keys, tests[k] * sizeof(unsigned int), cudaMemcpyDeviceToHost));
+
+	    CUDA_SAFE_CALL( cudaMemcpy(h_valuesSorted, 
+                                   d_address, 
+                                   numElements * sizeof(unsigned int), 
+                                   cudaMemcpyDeviceToHost));
        
-        CUDA_SAFE_CALL( cudaMemcpy((void*)h_valuesSorted, 
-                                   (void*)d_values, 
-                                   tests[k] * sizeof(unsigned int), 
-                                   cudaMemcpyDeviceToHost) );
+        CUDA_SAFE_CALL( cudaMemcpy(stringVals, 
+                                   d_stringVals, 
+                                   stringSize * sizeof(unsigned char), 
+                                   cudaMemcpyDeviceToHost));
        
-		retval += verifyStringSort(h_keysSorted, h_valuesSorted, h_keys,
-					  stringVals, tests[k], stringSize);
+		retval += verifyStringSort(h_valuesSorted,
+					  stringVals, tests[k], stringSize, 0);
         
 	//Verify that the keys make sense
 	//TODO: Verify that all strings are in correct order using addresses
@@ -231,13 +251,10 @@ int stringSortTest(CUDPPHandle theCudpp, CUDPPConfiguration config, size_t *test
     cudaEventDestroy(start_event);
     cudaEventDestroy(stop_event);
 
-    cudaFree(d_keys);
-    cudaFree(d_values);
+    cudaFree(d_address);
     cudaFree(d_stringVals);
 	
-    free(h_keys);
-    free(h_keysSorted);
-    free(h_values);
+
     free(h_valuesSorted);
     free(stringVals);
     
