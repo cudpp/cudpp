@@ -151,6 +151,9 @@ public:
 	unsigned int *m_numSpaces;
 	unsigned int *m_spaceScan;
 
+	unsigned int m_subPartitions, m_swapPoint;
+	unsigned int *m_partitionSizeA, *m_partitionSizeB, *m_partitionStartA, *m_partitionStartB;
+
 
 	
 };

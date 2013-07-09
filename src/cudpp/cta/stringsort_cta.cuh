@@ -52,7 +52,8 @@ typedef unsigned int uint;
  * @param[in] cmpAdd Address into global memory of the value we are comparing against
  * @param[in] stringLoc Global memory array (input string)
  * @param[in] stringSize Size of our input string
- * @return Returns 1 if cmpVal > myVal 0 otherwise
+ * @param[in] termC Termination character for our strings
+ * @return Returns 1 if cmpVal > myVal 0 otherwise 
  **/
 __device__ int tie_break_simp(unsigned int myLoc, unsigned int cmpLoc, unsigned int myBound, unsigned int cmpBound, unsigned int myAdd, unsigned int cmpAdd, unsigned int* stringLoc, unsigned int stringSize, unsigned char termC)
 {
@@ -98,6 +99,7 @@ __device__ int tie_break_simp(unsigned int myLoc, unsigned int cmpLoc, unsigned 
  * @param[in] bump The offset we update by
  * @param[in] sizeRemain Size of our block (if it's smaller than blockSize)
  * @param[in] stringSize Size of our global string array (for tie breaks)
+ * @param[in] termC Termination character for our strings
  **/
 template<class T, int depth>
 __device__ void bin_search_block_string(T &cmpValue, T tmpVal, T* in, T* addressPad, T* stringVals, int & j, int bump, int sizeRemain, unsigned int stringSize, unsigned char termC)
@@ -134,6 +136,7 @@ __device__ void bin_search_block_string(T &cmpValue, T tmpVal, T* in, T* address
  * @param[in] last The end of partition B we are allowed to look upto
  * @param[in] startAddress The beginning of our partition 
  * @param[in] stringSize Size of our global string array
+ * @param[in] termC Termination character for our strings
  **/
 template<class T, int depth>
 __device__ void lin_search_block_string(T &cmpValue, T &tmpVal, T* in, T* addressPad, T* stringVals, int &j, int offset, int last, int startAddress, int stringSize, unsigned char termC){			
@@ -202,6 +205,7 @@ __device__ void lin_search_block_string(T &cmpValue, T &tmpVal, T* in, T* addres
  * @param[in,out] scratch Scratch memory storing the addresses
  * @param[in] stringVals String Values for tie breaks
  * @param[in] size size of our array
+ * @param[in] termC Termination character for our strings
  *                        
  **/
 template<class T>
@@ -248,6 +252,7 @@ __device__ void compareSwapVal(T &A1, T &A2, const int index1, const int index2,
  * @param[in] cmpValue, testValue testValue is the value we are searching for from array A, cmpValue the value we have currently in B
  * @param[in] myAddress, myLoc, cmpLoc, myBound, cmpBound Same values from tie_break_simp which will be passed along
  * @param[in] globalStringArray, stringSize Our string array for breaking ties, and stringSize so we don't go out of bounds
+ * @param[in] termC Termination character for our strings
 **/
 template<class T, int depth>
 __device__ 
@@ -304,6 +309,7 @@ void  binSearch_frag_mult(T* keyArraySmem, T* valueArraySmem, int offset, int &m
  * @param[in] i The index of the local element we are merging
  * @param[in] stepNum Debug helper
  * @param[in] placed Whether value has been placed yet or not
+ * @param[in] termC Termination character for our strings
 **/
 template<class T, int depth>
 __device__
@@ -404,7 +410,20 @@ void lin_merge_simple(T& cmpValue, T myKey, T myAddress, int& index, T* BKeys, T
 	}				
 		
 }
-
+/** @brief Performs a linear search in our shared memory, used by multiMerge kernel 
+ * @param[in] BKeys, BValues Keys and Addresses for array B
+ * @param[in] myKey, myAddress Keys and address from our array
+ * @param[in] placed Whether value has been placed yet or not
+ * @param[in] index Current index we are considering in our B array
+ * @param[in, out] cmpValue The current value we are looking at in our B array
+ * @param[in, out] stringValues, A_keys, A_values, A_keys_out, A_values_out Global arrays for our strings, keys, values
+ * @param[in] myStartIdxA, myStartIdxB, myStartIdxC Beginning indices for our partitions
+ * @param[in] localAPartSize, localBPartSize, localCPartSize Array of partition sizes for our inputs and outputs
+ * @param[in] localMinB, localMaxB The minimum and maximum values in our B partition
+ * @param[in] aIndex, bIndex, totalSize, stringSize Address bounds and calculation helpers
+ * @param[in] i The index of the local element we are merging
+ * @param[in] termC Termination character for our strings 
+**/
 template<class T, int depth>
 __device__
 void linearStringMerge(T* BKeys, T* BValues, T myKey, T myAddress, bool &placed, int &index,  T &cmpValue, T* A_keys, T* A_values, T* A_keys_out, 

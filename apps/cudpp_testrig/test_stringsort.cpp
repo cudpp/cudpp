@@ -104,7 +104,7 @@ int stringSortTest(CUDPPHandle theCudpp, CUDPPConfiguration config, size_t *test
     }
     stringVals = (unsigned char*) malloc(sizeof(unsigned char)*stringSize);
     unsigned int index = 0;
-	printf("%lu elements and %d characters\n", numElements, stringSize);
+	//printf("%lu elements and %d characters\n", numElements, stringSize);
 	unsigned int temp = 0;
 	unsigned char c;	
     for(unsigned int i = 0; i < numElements; ++i)
@@ -136,7 +136,7 @@ int stringSortTest(CUDPPHandle theCudpp, CUDPPConfiguration config, size_t *test
     }
     
 
-	printf("made strings %d long %d stringSize\n", index, stringSize);
+	//printf("made strings %d long %d stringSize\n", index, stringSize);
 	/*printf("addresses\n");
 	for(int i = 0; i < numElements; i++)
 		printf("%d\n", h_valSend[i]);

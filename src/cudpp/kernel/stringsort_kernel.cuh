@@ -26,6 +26,8 @@
 /** \addtogroup cudpp_kernel
  * @{
  */
+/*
+*/
 __global__
 void dotAddInclusive(unsigned int* numSpaces, unsigned int* d_address, unsigned int* packedAddress, unsigned int numElements, unsigned int stringSize)
 {
@@ -48,8 +50,18 @@ void dotAddInclusive(unsigned int* numSpaces, unsigned int* d_address, unsigned 
 		packedAddress[myId] = 0;
 
 	
-	//printf("%d %d %d %d %d\n", myId, numSpaces[myId], d_address[myId], d_address[myId]+numSpaces[myId], packedAddress[myId]);
+	
 }
+
+/** @brief Calculate the number of spaces required for each string to align the string array.
+ * @param[out] numSpaces Number of spaces required for each string
+ * @param[in] d_address Input addresses of each string
+ * @param[in] d_stringVals String array
+ * @param[in] address Input addresses of unpacked strings  
+ * @param[in] termC Termination character for the strings
+ * @param[in] numElements Number of strings
+ * @param[in] stringSize Number of characters in the string array
+ **/
 
 __global__
 void alignedOffsets(unsigned int* numSpaces, unsigned int* d_address, 
@@ -80,6 +92,18 @@ void alignedOffsets(unsigned int* numSpaces, unsigned int* d_address,
 	//printf("Id %d starts %d ends %d numChars %d packedSpace %d\n", myId, startAddress, endAddress, length, (length + (4-(length%4))%4) >> 2);
 
 }
+
+/** @brief Packs strings into unsigned ints to be sorted later. These packed strings will also
+ * be aligned
+ * @param[out] packedStrings Resulting packed strings. 
+ * @param[in] d_stringVals Unpacked string array which we will pack
+ * @param[out] packedAddresses Resulting addresses for each string to the packedStrings array
+ * @param[in] address Input addresses of unpacked strings 
+ * @param[in] numElements Number of strings
+ * @param[in] stringArrayLength Number of characters in the string array
+ * @param[in] termC Termination character for the strings
+ **/
+
 __global__
 void alignString(unsigned int* packedStrings, unsigned char* d_stringVals, unsigned int* packedAddress, unsigned int* address, 
 				 unsigned int numElements, unsigned int stringArrayLength, unsigned char termC)
@@ -115,6 +139,12 @@ void alignString(unsigned int* packedStrings, unsigned char* d_stringVals, unsig
 
 }
 
+/** @brief Create keys (first four characters stuffed in an uint) from the addresses to the strings, and the string array.
+ * @param[out] d_keys Resulting keys
+ * @param[in] packedStrings Packed string array.
+ * @param[in] packedAddress Addresses which point to the string array. 
+ * @param[in] numElements Number of strings
+ **/
 __global__
 void createKeys(unsigned int* d_keys, unsigned int* packedStrings, unsigned int* packedAddress, unsigned int numElements)
 {
@@ -130,6 +160,15 @@ void createKeys(unsigned int* d_keys, unsigned int* packedStrings, unsigned int*
 }
 
 
+/** @brief Converts addresses from packed (unaligned) form to unpacked and unaligned form
+ * Resulting aligned strings begin in our string array packed in an unsigned int
+ * and aligned such that each string begins at the start of a uint (divisible by 4)
+ * @param[in] packedAddress Resulting packed addresses that have been sorted. All strings are aligned.
+ * @param[in] packedAddressRef Original array after packing (before sort). Used as a reference.
+ * @param[out] address Final output of sorted addresses in unpacked form.
+ * @param[in] addressRef Reference array of original unpacked addresses. 
+ * @param[in] numElements Number of strings
+ **/
 __global__
 void unpackAddresses(unsigned int* packedAddress,
 				     unsigned int* packedAddressRef,

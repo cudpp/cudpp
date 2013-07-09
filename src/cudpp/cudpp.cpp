@@ -531,41 +531,7 @@ CUDPPResult cudppStringSort(const CUDPPHandle planHandle,
 
 		packStrings(packedStringVals, d_stringVals, plan->m_keys, plan->m_packedAddress, d_address, numElements, stringArrayLength, termC);				
 
-		/*unsigned int* packedAdd = (unsigned int*) malloc(sizeof(unsigned int)*numElements);
-		unsigned int* cpuPackedStrings = (unsigned int*) malloc(sizeof(unsigned int)*packedStringLength[0]);
-
-		unsigned int* unpackedAdd = (unsigned int*) malloc(sizeof(unsigned int)*numElements);
-		unsigned char* cpuStrings = (unsigned char*) malloc(sizeof(unsigned char)*stringArrayLength);
-
-		cudaMemcpy(packedAdd, plan->m_packedAddress, sizeof(unsigned int)*numElements, cudaMemcpyDeviceToHost);
-		cudaMemcpy(cpuPackedStrings, packedStringVals, sizeof(unsigned int)*packedStringLength[0], cudaMemcpyDeviceToHost);
-
-		cudaMemcpy(unpackedAdd, d_address, sizeof(unsigned int)*numElements, cudaMemcpyDeviceToHost);
-		cudaMemcpy(cpuStrings, d_stringVals, sizeof(unsigned char)*stringArrayLength, cudaMemcpyDeviceToHost);
-
-		for(int i = 0; i < numElements; i++)
-		{
-			unsigned int unpacked = unpackedAdd[i];
-			unsigned int packed = packedAdd[i];
-
-			unsigned char c;
-			unsigned int packedC;
-
-			
-			printf("Unpacked Add %d Packed Add %d\n", unpacked, packed);
-			do
-			{ 
-				c = cpuStrings[unpacked++];  printf("%d ", c);
-			} 
-			while(c!=termC);
-			printf("                 ");
-			
-			do{ packedC = cpuPackedStrings[packed++ ]; printf("%d %d% d %d ", (packedC>>24), (packedC>>16)&255, (packedC>>8)&255, (packedC&255)); }while((packedC&255)!=termC);
-			printf("\n");
-			
-
-			system("PAUSE");
-		}*/
+	
 		cudppStringSortDispatch(plan->m_keys, plan->m_packedAddress, packedStringVals, numElements, packedStringLength[0], termC, plan);
 		unpackStrings(plan->m_packedAddress, plan->m_packedAddressRef, d_address, plan->m_addressRef, numElements);
 		
