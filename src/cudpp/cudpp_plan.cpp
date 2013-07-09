@@ -506,6 +506,9 @@ CUDPPMergeSortPlan::CUDPPMergeSortPlan(CUDPPManager *mgr,
 				       size_t numElements)
 : CUDPPPlan(mgr, config, numElements, 1, 0), m_tempKeys(0), m_tempValues(0)
 {
+	m_subPartitions = 4;
+	m_swapPoint = 64;
+	m_numElements = numElements;
 	allocMergeSortStorage(this);
 
 }

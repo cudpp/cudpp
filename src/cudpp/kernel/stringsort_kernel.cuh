@@ -206,10 +206,6 @@ void unpackAddresses(unsigned int* packedAddress,
 	while(val > myAddress && mid > 0)
 		val = packedAddressRef[--mid];
 
-	if(val != myAddress)
-		printf("Error saving to myId %d\n", myId);
-
-
 	address[myId] = addressRef[mid];
 
 

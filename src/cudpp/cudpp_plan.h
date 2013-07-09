@@ -125,7 +125,12 @@ public:
     virtual ~CUDPPMergeSortPlan();
 
     mutable void *m_tempKeys;
-    mutable void *m_tempValues;
+    unsigned int *m_tempValues;
+	int *m_partitionBeginA;
+	int *m_partitionSizeA;
+
+	unsigned int m_numElements;
+	unsigned int m_subPartitions, m_swapPoint;
 };
 
 /** @brief Plan class for stringsort algorithm
