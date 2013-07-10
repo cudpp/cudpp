@@ -57,8 +57,7 @@ void runMergeSort(T *pkeys,
 		
 	
 	unsigned int swapPoint = plan->m_swapPoint;
-	unsigned int blockLimit = swapPoint*subPartitions;	
-
+	
 	
 
 	int numThreads = 128;	
@@ -68,7 +67,7 @@ void runMergeSort(T *pkeys,
 	int mult = 1; int count = 0;
 
 	//we run p stages of simpleMerge until numBlocks <= some Critical level
-	while(numPartitions > 32 )
+	while(numPartitions > swapPoint )
 	{				
 		if(count%2 == 0)
 		{ 				
