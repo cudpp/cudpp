@@ -117,8 +117,7 @@ void runStringSort(unsigned int *pkeys,
 	
 
 	unsigned int swapPoint = plan->m_swapPoint;
-	unsigned int subPartitions = plan->m_subPartitions;
-	int blockLimit = swapPoint*subPartitions*4;	
+	unsigned int subPartitions = plan->m_subPartitions;	
 
 
 	
