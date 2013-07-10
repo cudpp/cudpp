@@ -129,7 +129,6 @@ void runStringSort(unsigned int *pkeys,
 
 	int mult = 1; int count = 0;
 
-	unsigned int* temp = (unsigned int*) malloc(sizeof(unsigned int)*numElements);
 	CUDA_SAFE_CALL(cudaThreadSynchronize());
 	//we run p stages of simpleMerge until numBlocks <= some Critical level
 	while(numPartitions > swapPoint || (partitionSize*mult < 16384 && numPartitions > 1)/* && numPartitions > 1*/)

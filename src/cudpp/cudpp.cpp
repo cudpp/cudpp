@@ -536,6 +536,8 @@ CUDPPResult cudppStringSort(const CUDPPHandle planHandle,
 		unpackStrings(plan->m_packedAddress, plan->m_packedAddressRef, d_address, plan->m_addressRef, numElements);
 		
 
+		free(packedStringLength);
+		cudaFree(packedStringVals);
 	    return CUDPP_SUCCESS;
     }
     else
