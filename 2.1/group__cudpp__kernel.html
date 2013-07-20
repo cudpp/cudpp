@@ -87,22 +87,34 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:ga625c2ba9beb866df6b191a973b83b3f4"><td class="memTemplParams" colspan="2">template&lt;class T , int depth&gt; </td></tr>
-<tr class="memitem:ga625c2ba9beb866df6b191a973b83b3f4"><td class="memTemplItemLeft" align="right" valign="top">__global__ void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="group__cudpp__kernel.html#ga625c2ba9beb866df6b191a973b83b3f4">blockWiseStringSort</a> (T *A_keys, T *A_address, T *stringVals, int blockSize, int totalSize, unsigned int stringSize)</td></tr>
-<tr class="memdesc:ga625c2ba9beb866df6b191a973b83b3f4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Does an initial blockSort based on the size of our partition (limited by shared memory size)  <a href="#ga625c2ba9beb866df6b191a973b83b3f4">More...</a><br/></td></tr>
-<tr class="separator:ga625c2ba9beb866df6b191a973b83b3f4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga8ab1d47b310751942e0005bf87c266fe"><td class="memTemplParams" colspan="2">template&lt;class T , int depth&gt; </td></tr>
-<tr class="memitem:ga8ab1d47b310751942e0005bf87c266fe"><td class="memTemplItemLeft" align="right" valign="top">__global__ void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="group__cudpp__kernel.html#ga8ab1d47b310751942e0005bf87c266fe">simpleStringMerge</a> (T *A_keys, T *A_keys_out, T *A_values, T *A_values_out, T *stringValues, int sizePerPartition, int size, int step, int stringSize)</td></tr>
-<tr class="memdesc:ga8ab1d47b310751942e0005bf87c266fe"><td class="mdescLeft">&#160;</td><td class="mdescRight">Merges two independent sets. Each CUDA block works on two partitions of data without cooperating.  <a href="#ga8ab1d47b310751942e0005bf87c266fe">More...</a><br/></td></tr>
-<tr class="separator:ga8ab1d47b310751942e0005bf87c266fe"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga5fa492eeae2c9b13884ff681fef2bce8"><td class="memTemplParams" colspan="2">template&lt;class T &gt; </td></tr>
-<tr class="memitem:ga5fa492eeae2c9b13884ff681fef2bce8"><td class="memTemplItemLeft" align="right" valign="top">__global__ void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="group__cudpp__kernel.html#ga5fa492eeae2c9b13884ff681fef2bce8">findMultiPartitions</a> (T *A_keys, T *A_address, T *stringValues, int splitsPP, int numPartitions, int partitionSize, unsigned int *partitionBeginA, unsigned int *partitionSizesA, unsigned int *partitionBeginB, unsigned int *partitionSizesB, size_t size, size_t stringSize)</td></tr>
-<tr class="memdesc:ga5fa492eeae2c9b13884ff681fef2bce8"><td class="mdescLeft">&#160;</td><td class="mdescRight">For our multiMerge kernels we need to divide our partitions into smaller partitions. This kernel breaks up a set of partitions into splitsPP*numPartitions subpartitions.  <a href="#ga5fa492eeae2c9b13884ff681fef2bce8">More...</a><br/></td></tr>
-<tr class="separator:ga5fa492eeae2c9b13884ff681fef2bce8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gab4780f74ca145399ed9875c0449f841e"><td class="memTemplParams" colspan="2">template&lt;class T , int depth&gt; </td></tr>
-<tr class="memitem:gab4780f74ca145399ed9875c0449f841e"><td class="memTemplItemLeft" align="right" valign="top">__global__ void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="group__cudpp__kernel.html#gab4780f74ca145399ed9875c0449f841e">stringMergeMulti</a> (T *A_keys, T *A_keys_out, T *A_values, T *A_values_out, T *stringValues, int subPartitions, int numBlocks, unsigned int *partitionBeginA, unsigned int *partitionSizeA, unsigned int *partitionBeginB, unsigned int *partitionSizeB, int entirePartitionSize, int step, size_t size, size_t stringSize)</td></tr>
-<tr class="memdesc:gab4780f74ca145399ed9875c0449f841e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Main merge kernel where multiple CUDA blocks cooperate to merge a partition(s)  <a href="#gab4780f74ca145399ed9875c0449f841e">More...</a><br/></td></tr>
-<tr class="separator:gab4780f74ca145399ed9875c0449f841e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga70ad10920cae47887cda3b7f3b054663"><td class="memItemLeft" align="right" valign="top">__global__ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cudpp__kernel.html#ga70ad10920cae47887cda3b7f3b054663">alignedOffsets</a> (unsigned int *numSpaces, unsigned int *d_address, unsigned char *d_stringVals, unsigned char termC, unsigned int numElements, unsigned int stringSize)</td></tr>
+<tr class="memdesc:ga70ad10920cae47887cda3b7f3b054663"><td class="mdescLeft">&#160;</td><td class="mdescRight">Calculate the number of spaces required for each string to align the string array.  <a href="#ga70ad10920cae47887cda3b7f3b054663">More...</a><br/></td></tr>
+<tr class="separator:ga70ad10920cae47887cda3b7f3b054663"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga594b6e4c562178da2f9371ba419e6ec0"><td class="memItemLeft" align="right" valign="top">__global__ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cudpp__kernel.html#ga594b6e4c562178da2f9371ba419e6ec0">alignString</a> (unsigned int *packedStrings, unsigned char *d_stringVals, unsigned int *packedAddress, unsigned int *address, unsigned int numElements, unsigned int stringArrayLength, unsigned char termC)</td></tr>
+<tr class="memdesc:ga594b6e4c562178da2f9371ba419e6ec0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Packs strings into unsigned ints to be sorted later. These packed strings will also be aligned.  <a href="#ga594b6e4c562178da2f9371ba419e6ec0">More...</a><br/></td></tr>
+<tr class="separator:ga594b6e4c562178da2f9371ba419e6ec0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaffe16a1f50800b5e68d28595dda134fd"><td class="memItemLeft" align="right" valign="top">__global__ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cudpp__kernel.html#gaffe16a1f50800b5e68d28595dda134fd">createKeys</a> (unsigned int *d_keys, unsigned int *packedStrings, unsigned int *packedAddress, unsigned int numElements)</td></tr>
+<tr class="memdesc:gaffe16a1f50800b5e68d28595dda134fd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create keys (first four characters stuffed in an uint) from the addresses to the strings, and the string array.  <a href="#gaffe16a1f50800b5e68d28595dda134fd">More...</a><br/></td></tr>
+<tr class="separator:gaffe16a1f50800b5e68d28595dda134fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga689cbede029512b4cdc4978943161594"><td class="memItemLeft" align="right" valign="top">__global__ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cudpp__kernel.html#ga689cbede029512b4cdc4978943161594">unpackAddresses</a> (unsigned int *packedAddress, unsigned int *packedAddressRef, unsigned int *address, unsigned int *addressRef, size_t numElements)</td></tr>
+<tr class="memdesc:ga689cbede029512b4cdc4978943161594"><td class="mdescLeft">&#160;</td><td class="mdescRight">Converts addresses from packed (unaligned) form to unpacked and unaligned form Resulting aligned strings begin in our string array packed in an unsigned int and aligned such that each string begins at the start of a uint (divisible by 4)  <a href="#ga689cbede029512b4cdc4978943161594">More...</a><br/></td></tr>
+<tr class="separator:ga689cbede029512b4cdc4978943161594"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga0b3a522a516d07de956b9322fd705f2e"><td class="memTemplParams" colspan="2">template&lt;class T , int depth&gt; </td></tr>
+<tr class="memitem:ga0b3a522a516d07de956b9322fd705f2e"><td class="memTemplItemLeft" align="right" valign="top">__global__ void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="group__cudpp__kernel.html#ga0b3a522a516d07de956b9322fd705f2e">blockWiseStringSort</a> (T *A_keys, T *A_address, T *stringVals, int blockSize, int totalSize, unsigned int stringSize, unsigned char termC)</td></tr>
+<tr class="memdesc:ga0b3a522a516d07de956b9322fd705f2e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Does an initial blockSort based on the size of our partition (limited by shared memory size)  <a href="#ga0b3a522a516d07de956b9322fd705f2e">More...</a><br/></td></tr>
+<tr class="separator:ga0b3a522a516d07de956b9322fd705f2e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga88d04c464169fdfd0fab7ca254008282"><td class="memTemplParams" colspan="2">template&lt;class T , int depth&gt; </td></tr>
+<tr class="memitem:ga88d04c464169fdfd0fab7ca254008282"><td class="memTemplItemLeft" align="right" valign="top">__global__ void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="group__cudpp__kernel.html#ga88d04c464169fdfd0fab7ca254008282">simpleStringMerge</a> (T *A_keys, T *A_keys_out, T *A_values, T *A_values_out, T *stringValues, int sizePerPartition, int size, int step, int stringSize, unsigned char termC)</td></tr>
+<tr class="memdesc:ga88d04c464169fdfd0fab7ca254008282"><td class="mdescLeft">&#160;</td><td class="mdescRight">Merges two independent sets. Each CUDA block works on two partitions of data without cooperating.  <a href="#ga88d04c464169fdfd0fab7ca254008282">More...</a><br/></td></tr>
+<tr class="separator:ga88d04c464169fdfd0fab7ca254008282"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga4b72611f4d03803fbdb455537140fac6"><td class="memTemplParams" colspan="2">template&lt;class T &gt; </td></tr>
+<tr class="memitem:ga4b72611f4d03803fbdb455537140fac6"><td class="memTemplItemLeft" align="right" valign="top">__global__ void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="group__cudpp__kernel.html#ga4b72611f4d03803fbdb455537140fac6">findMultiPartitions</a> (T *A_keys, T *A_address, T *stringValues, int splitsPP, int numPartitions, int partitionSize, unsigned int *partitionBeginA, unsigned int *partitionSizesA, unsigned int *partitionBeginB, unsigned int *partitionSizesB, size_t size, size_t stringSize, unsigned char termC)</td></tr>
+<tr class="memdesc:ga4b72611f4d03803fbdb455537140fac6"><td class="mdescLeft">&#160;</td><td class="mdescRight">For our multiMerge kernels we need to divide our partitions into smaller partitions. This kernel breaks up a set of partitions into splitsPP*numPartitions subpartitions.  <a href="#ga4b72611f4d03803fbdb455537140fac6">More...</a><br/></td></tr>
+<tr class="separator:ga4b72611f4d03803fbdb455537140fac6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga3d49363709d861ae8ff4468595144f0d"><td class="memTemplParams" colspan="2">template&lt;class T , int depth&gt; </td></tr>
+<tr class="memitem:ga3d49363709d861ae8ff4468595144f0d"><td class="memTemplItemLeft" align="right" valign="top">__global__ void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="group__cudpp__kernel.html#ga3d49363709d861ae8ff4468595144f0d">stringMergeMulti</a> (T *A_keys, T *A_keys_out, T *A_values, T *A_values_out, T *stringValues, int subPartitions, int numBlocks, unsigned int *partitionBeginA, unsigned int *partitionSizeA, unsigned int *partitionBeginB, unsigned int *partitionSizeB, int entirePartitionSize, int step, size_t size, size_t stringSize, unsigned char termC)</td></tr>
+<tr class="memdesc:ga3d49363709d861ae8ff4468595144f0d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Main merge kernel where multiple CUDA blocks cooperate to merge a partition(s)  <a href="#ga3d49363709d861ae8ff4468595144f0d">More...</a><br/></td></tr>
+<tr class="separator:ga3d49363709d861ae8ff4468595144f0d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="member-group"></a>
 Compact Functions</h2></td></tr>
@@ -2954,7 +2966,246 @@ template&lt;class T &gt; </div>
 
 </div>
 </div>
-<a class="anchor" id="ga625c2ba9beb866df6b191a973b83b3f4"></a>
+<a class="anchor" id="ga70ad10920cae47887cda3b7f3b054663"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">__global__ void alignedOffsets </td>
+          <td>(</td>
+          <td class="paramtype">unsigned int *&#160;</td>
+          <td class="paramname"><em>numSpaces</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned int *&#160;</td>
+          <td class="paramname"><em>d_address</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned char *&#160;</td>
+          <td class="paramname"><em>d_stringVals</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned char&#160;</td>
+          <td class="paramname"><em>termC</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned int&#160;</td>
+          <td class="paramname"><em>numElements</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned int&#160;</td>
+          <td class="paramname"><em>stringSize</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Calculate the number of spaces required for each string to align the string array. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[out]</td><td class="paramname">numSpaces</td><td>Number of spaces required for each string </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">d_address</td><td>Input addresses of each string </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">d_stringVals</td><td>String array </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">address</td><td>Input addresses of unpacked strings </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">termC</td><td>Termination character for the strings </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">numElements</td><td>Number of strings </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">stringSize</td><td>Number of characters in the string array </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="ga594b6e4c562178da2f9371ba419e6ec0"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">__global__ void alignString </td>
+          <td>(</td>
+          <td class="paramtype">unsigned int *&#160;</td>
+          <td class="paramname"><em>packedStrings</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned char *&#160;</td>
+          <td class="paramname"><em>d_stringVals</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned int *&#160;</td>
+          <td class="paramname"><em>packedAddress</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned int *&#160;</td>
+          <td class="paramname"><em>address</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned int&#160;</td>
+          <td class="paramname"><em>numElements</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned int&#160;</td>
+          <td class="paramname"><em>stringArrayLength</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned char&#160;</td>
+          <td class="paramname"><em>termC</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Packs strings into unsigned ints to be sorted later. These packed strings will also be aligned. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[out]</td><td class="paramname">packedStrings</td><td>Resulting packed strings. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">d_stringVals</td><td>Unpacked string array which we will pack </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">packedAddresses</td><td>Resulting addresses for each string to the packedStrings array </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">address</td><td>Input addresses of unpacked strings </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">numElements</td><td>Number of strings </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">stringArrayLength</td><td>Number of characters in the string array </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">termC</td><td>Termination character for the strings </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="gaffe16a1f50800b5e68d28595dda134fd"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">__global__ void createKeys </td>
+          <td>(</td>
+          <td class="paramtype">unsigned int *&#160;</td>
+          <td class="paramname"><em>d_keys</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned int *&#160;</td>
+          <td class="paramname"><em>packedStrings</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned int *&#160;</td>
+          <td class="paramname"><em>packedAddress</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned int&#160;</td>
+          <td class="paramname"><em>numElements</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Create keys (first four characters stuffed in an uint) from the addresses to the strings, and the string array. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[out]</td><td class="paramname">d_keys</td><td>Resulting keys </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">packedStrings</td><td>Packed string array. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">packedAddress</td><td>Addresses which point to the string array. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">numElements</td><td>Number of strings </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="ga689cbede029512b4cdc4978943161594"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">__global__ void unpackAddresses </td>
+          <td>(</td>
+          <td class="paramtype">unsigned int *&#160;</td>
+          <td class="paramname"><em>packedAddress</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned int *&#160;</td>
+          <td class="paramname"><em>packedAddressRef</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned int *&#160;</td>
+          <td class="paramname"><em>address</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned int *&#160;</td>
+          <td class="paramname"><em>addressRef</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>numElements</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Converts addresses from packed (unaligned) form to unpacked and unaligned form Resulting aligned strings begin in our string array packed in an unsigned int and aligned such that each string begins at the start of a uint (divisible by 4) </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">packedAddress</td><td>Resulting packed addresses that have been sorted. All strings are aligned. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">packedAddressRef</td><td>Original array after packing (before sort). Used as a reference. </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">address</td><td>Final output of sorted addresses in unpacked form. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">addressRef</td><td>Reference array of original unpacked addresses. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">numElements</td><td>Number of strings </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="ga0b3a522a516d07de956b9322fd705f2e"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
@@ -2994,7 +3245,13 @@ template&lt;class T , int depth&gt; </div>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">unsigned int&#160;</td>
-          <td class="paramname"><em>stringSize</em>&#160;</td>
+          <td class="paramname"><em>stringSize</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned char&#160;</td>
+          <td class="paramname"><em>termC</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -3018,7 +3275,7 @@ template&lt;class T , int depth&gt; </div>
 
 </div>
 </div>
-<a class="anchor" id="ga8ab1d47b310751942e0005bf87c266fe"></a>
+<a class="anchor" id="ga88d04c464169fdfd0fab7ca254008282"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
@@ -3076,7 +3333,13 @@ template&lt;class T , int depth&gt; </div>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>stringSize</em>&#160;</td>
+          <td class="paramname"><em>stringSize</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned char&#160;</td>
+          <td class="paramname"><em>termC</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -3103,7 +3366,7 @@ template&lt;class T , int depth&gt; </div>
 
 </div>
 </div>
-<a class="anchor" id="ga5fa492eeae2c9b13884ff681fef2bce8"></a>
+<a class="anchor" id="ga4b72611f4d03803fbdb455537140fac6"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
@@ -3179,7 +3442,13 @@ template&lt;class T &gt; </div>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">size_t&#160;</td>
-          <td class="paramname"><em>stringSize</em>&#160;</td>
+          <td class="paramname"><em>stringSize</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned char&#160;</td>
+          <td class="paramname"><em>termC</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -3204,7 +3473,7 @@ template&lt;class T &gt; </div>
 
 </div>
 </div>
-<a class="anchor" id="gab4780f74ca145399ed9875c0449f841e"></a>
+<a class="anchor" id="ga3d49363709d861ae8ff4468595144f0d"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
@@ -3298,7 +3567,13 @@ template&lt;class T , int depth&gt; </div>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">size_t&#160;</td>
-          <td class="paramname"><em>stringSize</em>&#160;</td>
+          <td class="paramname"><em>stringSize</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned char&#160;</td>
+          <td class="paramname"><em>termC</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -3773,7 +4048,7 @@ template&lt;class T , class Oper , bool isLastBlockFull&gt; </div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Thu Jun 13 2013 22:19:20 for CUDPP by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sat Jul 20 2013 00:55:12 for CUDPP by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.3.1
 </small></address>

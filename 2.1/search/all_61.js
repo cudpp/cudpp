@@ -1,6 +1,8 @@
 var searchData=
 [
   ['algorithm',['algorithm',['../struct_c_u_d_p_p_configuration.html#a2d11e99b0c4a2b919c0bdb1c5001acfe',1,'CUDPPConfiguration']]],
+  ['alignedoffsets',['alignedOffsets',['../group__cudpp__kernel.html#ga70ad10920cae47887cda3b7f3b054663',1,'stringsort_kernel.cuh']]],
+  ['alignstring',['alignString',['../group__cudpp__kernel.html#ga594b6e4c562178da2f9371ba419e6ec0',1,'stringsort_kernel.cuh']]],
   ['allocbwtstorage',['allocBwtStorage',['../group__cudpp__app.html#ga6e3305c8f69237c1ba7c859e4c1c8532',1,'allocBwtStorage(CUDPPBwtPlan *plan):&#160;compress_app.cu'],['../group__cudpp__app.html#ga6e3305c8f69237c1ba7c859e4c1c8532',1,'allocBwtStorage(CUDPPBwtPlan *plan):&#160;compress_app.cu']]],
   ['alloccompactstorage',['allocCompactStorage',['../group__cudpp__app.html#gae84f008f74af507fb9da9568ee22bd21',1,'allocCompactStorage(CUDPPCompactPlan *plan):&#160;compact_app.cu'],['../group__cudpp__app.html#gae84f008f74af507fb9da9568ee22bd21',1,'allocCompactStorage(CUDPPCompactPlan *plan):&#160;compact_app.cu']]],
   ['alloccompressstorage',['allocCompressStorage',['../group__cudpp__app.html#ga0e78a1777b62c4ed99d57998b6216bf6',1,'allocCompressStorage(CUDPPCompressPlan *plan):&#160;compress_app.cu'],['../group__cudpp__app.html#ga0e78a1777b62c4ed99d57998b6216bf6',1,'allocCompressStorage(CUDPPCompressPlan *plan):&#160;compress_app.cu']]],

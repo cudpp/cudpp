@@ -106,27 +106,18 @@ Functions</h2></td></tr>
 <tr class="memitem:ga2b34f7f6c5234a8b9c9a021bac8d6f15"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cudpp__app.html#ga2b34f7f6c5234a8b9c9a021bac8d6f15">freeCompressStorage</a> (CUDPPCompressPlan *plan)</td></tr>
 <tr class="memdesc:ga2b34f7f6c5234a8b9c9a021bac8d6f15"><td class="mdescLeft">&#160;</td><td class="mdescRight">Deallocate intermediate block arrays in a CUDPPCompressPlan object.  <a href="group__cudpp__app.html#ga2b34f7f6c5234a8b9c9a021bac8d6f15">More...</a><br/></td></tr>
 <tr class="separator:ga2b34f7f6c5234a8b9c9a021bac8d6f15"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gad14e0a21423bd754bd31d2cedf0cd6c3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cudpp__app.html#gad14e0a21423bd754bd31d2cedf0cd6c3">cudppCompressDispatch</a> (void *d_uncompressed, void *d_bwtIndex, void *d_histSize, void *d_hist, void *d_encodeOffset, void *d_compressedSize, void *d_compressed, size_t numElements, const CUDPPCompressPlan *plan)</td></tr>
-<tr class="memdesc:gad14e0a21423bd754bd31d2cedf0cd6c3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Dispatch function to perform parallel compression on an array with the specified configuration.  <a href="group__cudpp__app.html#gad14e0a21423bd754bd31d2cedf0cd6c3">More...</a><br/></td></tr>
-<tr class="separator:gad14e0a21423bd754bd31d2cedf0cd6c3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga6e3305c8f69237c1ba7c859e4c1c8532"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cudpp__app.html#ga6e3305c8f69237c1ba7c859e4c1c8532">allocBwtStorage</a> (<a class="el" href="class_c_u_d_p_p_bwt_plan.html">CUDPPBwtPlan</a> *plan)</td></tr>
 <tr class="memdesc:ga6e3305c8f69237c1ba7c859e4c1c8532"><td class="mdescLeft">&#160;</td><td class="mdescRight">Allocate intermediate arrays used by BWT.  <a href="group__cudpp__app.html#ga6e3305c8f69237c1ba7c859e4c1c8532">More...</a><br/></td></tr>
 <tr class="separator:ga6e3305c8f69237c1ba7c859e4c1c8532"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga2f0a7bff9b659cab266bb73538ce6521"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cudpp__app.html#ga2f0a7bff9b659cab266bb73538ce6521">freeBwtStorage</a> (<a class="el" href="class_c_u_d_p_p_bwt_plan.html">CUDPPBwtPlan</a> *plan)</td></tr>
 <tr class="memdesc:ga2f0a7bff9b659cab266bb73538ce6521"><td class="mdescLeft">&#160;</td><td class="mdescRight">Deallocate intermediate block arrays in a <a class="el" href="class_c_u_d_p_p_bwt_plan.html" title="Plan class for BWT.">CUDPPBwtPlan</a> object.  <a href="group__cudpp__app.html#ga2f0a7bff9b659cab266bb73538ce6521">More...</a><br/></td></tr>
 <tr class="separator:ga2f0a7bff9b659cab266bb73538ce6521"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga3e68297787efbb92efe2c1fb1cb6def9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cudpp__app.html#ga3e68297787efbb92efe2c1fb1cb6def9">cudppBwtDispatch</a> (void *d_bwtIn, void *d_bwtOut, void *d_bwtIndex, size_t numElements, const <a class="el" href="class_c_u_d_p_p_bwt_plan.html">CUDPPBwtPlan</a> *plan)</td></tr>
-<tr class="memdesc:ga3e68297787efbb92efe2c1fb1cb6def9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Dispatch function to perform the Burrows-Wheeler transform.  <a href="group__cudpp__app.html#ga3e68297787efbb92efe2c1fb1cb6def9">More...</a><br/></td></tr>
-<tr class="separator:ga3e68297787efbb92efe2c1fb1cb6def9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gaebe506539a6a0c0211ec5b5704a825b0"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cudpp__app.html#gaebe506539a6a0c0211ec5b5704a825b0">allocMtfStorage</a> (<a class="el" href="class_c_u_d_p_p_mtf_plan.html">CUDPPMtfPlan</a> *plan)</td></tr>
 <tr class="memdesc:gaebe506539a6a0c0211ec5b5704a825b0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Allocate intermediate arrays used by MTF.  <a href="group__cudpp__app.html#gaebe506539a6a0c0211ec5b5704a825b0">More...</a><br/></td></tr>
 <tr class="separator:gaebe506539a6a0c0211ec5b5704a825b0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gaaa0d04a5e136c191db6d4089006ebeec"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cudpp__app.html#gaaa0d04a5e136c191db6d4089006ebeec">freeMtfStorage</a> (<a class="el" href="class_c_u_d_p_p_mtf_plan.html">CUDPPMtfPlan</a> *plan)</td></tr>
 <tr class="memdesc:gaaa0d04a5e136c191db6d4089006ebeec"><td class="mdescLeft">&#160;</td><td class="mdescRight">Deallocate intermediate block arrays in a <a class="el" href="class_c_u_d_p_p_mtf_plan.html" title="Plan class for MTF.">CUDPPMtfPlan</a> object.  <a href="group__cudpp__app.html#gaaa0d04a5e136c191db6d4089006ebeec">More...</a><br/></td></tr>
 <tr class="separator:gaaa0d04a5e136c191db6d4089006ebeec"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gacb94a70fa336d25ddef1ce3833b53258"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cudpp__app.html#gacb94a70fa336d25ddef1ce3833b53258">cudppMtfDispatch</a> (void *d_mtfIn, void *d_mtfOut, size_t numElements, const <a class="el" href="class_c_u_d_p_p_mtf_plan.html">CUDPPMtfPlan</a> *plan)</td></tr>
-<tr class="memdesc:gacb94a70fa336d25ddef1ce3833b53258"><td class="mdescLeft">&#160;</td><td class="mdescRight">Dispatch function to perform the Move-to-Front transform.  <a href="group__cudpp__app.html#gacb94a70fa336d25ddef1ce3833b53258">More...</a><br/></td></tr>
-<tr class="separator:gacb94a70fa336d25ddef1ce3833b53258"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Compress functionality header file - contains CUDPP interface (not public) </p>
@@ -134,7 +125,7 @@ Functions</h2></td></tr>
 </div></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Thu Jun 13 2013 22:19:20 for CUDPP by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sat Jul 20 2013 00:55:11 for CUDPP by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.3.1
 </small></address>

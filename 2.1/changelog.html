@@ -86,14 +86,17 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"></div>
 <div class="line">Release 2.1</div>
 <div class="line">22 February 2013</div>
-<div class="line">- Added <a class="code" href="group__public_interface.html#gae537bc8a91bb7d86f670c2065473b777" title="Compresses data stream.">cudppCompress</a> lossless data compression algorithms which implement</div>
+<div class="line">- Added <a class="code" href="group__public_interface.html#ga9d6e16e3dcf36a46be5bd98a675992c8" title="Compresses data stream.">cudppCompress</a> lossless data compression algorithms which implement</div>
 <div class="line">  the Move-to-Front transform, Burrows-Wheeler Transform, and</div>
 <div class="line">  Huffman encoding</div>
-<div class="line">- Added <a class="code" href="group__public_interface.html#ga6af8e442d12a6123e788e05789280545" title="Performs the Move-to-Front Transform.">cudppMoveToFrontTransform</a> and <a class="code" href="group__public_interface.html#gacdf7365c20e6ce8a49d0a4b0211ae297" title="Performs the Burrows-Wheeler Transform.">cudppBurrowsWheelerTransform</a></div>
-<div class="line">- Added <a class="code" href="group__public_interface.html#ga4c5c71be3d243cc0c849d058827eb0e4" title="Performs list ranking of linked list node values.">cudppListRank</a> parallel list ranking</div>
-<div class="line">- cudppSort has been removed</div>
+<div class="line">- Added <a class="code" href="group__public_interface.html#gadbb42fbc58ea70582dc1110c798ece38" title="Performs the Move-to-Front Transform.">cudppMoveToFrontTransform</a> and <a class="code" href="group__public_interface.html#gab926c0dabcab709f71621a5c0eb45ea3" title="Performs the Burrows-Wheeler Transform.">cudppBurrowsWheelerTransform</a></div>
+<div class="line">- Added <a class="code" href="group__public_interface.html#ga66d4b12b41fb30088353a8091c51f85a" title="Performs list ranking of linked list node values.">cudppListRank</a> parallel list ranking</div>
+<div class="line">- Renamed cudppSort to <a class="code" href="group__public_interface.html#ga42ab36458601690c1ccc8321357755a5" title="Sorts key-value pairs or keys only.">cudppRadixSort</a></div>
 <div class="line">- Added <a class="code" href="group__public_interface.html#ga6dfdfa4fd5c580302c5ab61b45c53b0a" title="Sorts key-value pairs or keys only.">cudppMergeSort</a> parallel merge sort</div>
-<div class="line">- Added <a class="code" href="group__public_interface.html#ga9436ce9ee1b4dfefa70ece1b3776f338" title="Sorts strings. Keys are the first four characters of the string, and values are the addresses where t...">cudppStringSort</a> parallel <span class="keywordtype">string</span> sort</div>
+<div class="line">- Added <a class="code" href="group__public_interface.html#gaee8a05e38479c8b54b5d5b6655022d0a" title="Sorts strings. Keys are the first four characters of the string, and values are the addresses where t...">cudppStringSort</a> parallel <span class="keywordtype">string</span> sort</div>
+<div class="line">- Moved source code to Github: http:<span class="comment">//cudpp.github.io</span></div>
+<div class="line">- Moved documentation pages from cudpp.h to README.md</div>
+<div class="line">- Added CUDPP_GENCODE_* CMake options to make CUDA target architecture compilation more flexible</div>
 <div class="line"></div>
 <div class="line">Release 2.0</div>
 <div class="line">9 August 2011</div>
@@ -186,7 +189,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!-- fragment --> </div></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Thu Jun 13 2013 22:19:20 for CUDPP by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sat Jul 20 2013 00:55:12 for CUDPP by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.3.1
 </small></address>

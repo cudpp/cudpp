@@ -343,37 +343,37 @@ Merge Sort Functions</h2></td></tr>
 <tr class="memitem:ga91ad9478d81a7aaf2593e8d9c3d06a14"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ga91ad9478d81a7aaf2593e8d9c3d06a14"></a>
 typedef unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>uint</b></td></tr>
 <tr class="separator:ga91ad9478d81a7aaf2593e8d9c3d06a14"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gad87bcb57897cfbc6a5d46b9e9a38347c"><td class="memItemLeft" align="right" valign="top">__device__ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cudpp__cta.html#gad87bcb57897cfbc6a5d46b9e9a38347c">tie_break_simp</a> (unsigned int myLoc, unsigned int cmpLoc, unsigned int myBound, unsigned int cmpBound, unsigned int myAdd, unsigned int cmpAdd, unsigned int *stringLoc, unsigned int stringSize)</td></tr>
-<tr class="memdesc:gad87bcb57897cfbc6a5d46b9e9a38347c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Breaks ties in keys (first four characters) returns true if cmpVal &gt; myVal false otherwise.  <a href="#gad87bcb57897cfbc6a5d46b9e9a38347c">More...</a><br/></td></tr>
-<tr class="separator:gad87bcb57897cfbc6a5d46b9e9a38347c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga8df1241734e7669f1677091d6f6c60a5"><td class="memTemplParams" colspan="2">template&lt;class T , int depth&gt; </td></tr>
-<tr class="memitem:ga8df1241734e7669f1677091d6f6c60a5"><td class="memTemplItemLeft" align="right" valign="top">__device__ void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="group__cudpp__cta.html#ga8df1241734e7669f1677091d6f6c60a5">bin_search_block_string</a> (T &amp;cmpValue, T tmpVal, T *in, T *addressPad, T *stringVals, int &amp;j, int bump, int sizeRemain, unsigned int stringSize)</td></tr>
-<tr class="memdesc:ga8df1241734e7669f1677091d6f6c60a5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Binary search within a single block (blockSort)  <a href="#ga8df1241734e7669f1677091d6f6c60a5">More...</a><br/></td></tr>
-<tr class="separator:ga8df1241734e7669f1677091d6f6c60a5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gade3f7211f7d3e3fd9f48b3998f9b474b"><td class="memTemplParams" colspan="2">template&lt;class T , int depth&gt; </td></tr>
-<tr class="memitem:gade3f7211f7d3e3fd9f48b3998f9b474b"><td class="memTemplItemLeft" align="right" valign="top">__device__ void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="group__cudpp__cta.html#gade3f7211f7d3e3fd9f48b3998f9b474b">lin_search_block_string</a> (T &amp;cmpValue, T &amp;tmpVal, T *in, T *addressPad, T *stringVals, int &amp;j, int offset, int last, int startAddress, int stringSize)</td></tr>
-<tr class="memdesc:gade3f7211f7d3e3fd9f48b3998f9b474b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Linear search within a single block (blockSort)  <a href="#gade3f7211f7d3e3fd9f48b3998f9b474b">More...</a><br/></td></tr>
-<tr class="separator:gade3f7211f7d3e3fd9f48b3998f9b474b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga24cd6c528c36e33cfb22a787f06b9130"><td class="memTemplParams" colspan="2">template&lt;class T &gt; </td></tr>
-<tr class="memitem:ga24cd6c528c36e33cfb22a787f06b9130"><td class="memTemplItemLeft" align="right" valign="top">__device__ void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="group__cudpp__cta.html#ga24cd6c528c36e33cfb22a787f06b9130">compareSwapVal</a> (T &amp;A1, T &amp;A2, const int index1, const int index2, T *scratch, T *stringVals, unsigned int size)</td></tr>
-<tr class="memdesc:ga24cd6c528c36e33cfb22a787f06b9130"><td class="mdescLeft">&#160;</td><td class="mdescRight">For blockSort. Compares two values and decides to swap if A1 &gt; A2.  <a href="#ga24cd6c528c36e33cfb22a787f06b9130">More...</a><br/></td></tr>
-<tr class="separator:ga24cd6c528c36e33cfb22a787f06b9130"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga04e491c8a23e4c1678578fa9e70114a2"><td class="memTemplParams" colspan="2">template&lt;class T , int depth&gt; </td></tr>
-<tr class="memitem:ga04e491c8a23e4c1678578fa9e70114a2"><td class="memTemplItemLeft" align="right" valign="top">__device__ void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="group__cudpp__cta.html#ga04e491c8a23e4c1678578fa9e70114a2">binSearch_fragment</a> (T *keys, T *address, int offset, int &amp;mid, T cmpValue, T testValue, T myAddress, int myLoc, int cmpLoc, int myBound, int cmpBound, T *globalStringArray, int stringSize)</td></tr>
-<tr class="memdesc:ga04e491c8a23e4c1678578fa9e70114a2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Performs a binary search in our shared memory, with tie breaks for strings.  <a href="#ga04e491c8a23e4c1678578fa9e70114a2">More...</a><br/></td></tr>
-<tr class="separator:ga04e491c8a23e4c1678578fa9e70114a2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga8e5348762ad6545c65fe29e2e2beb16e"><td class="memTemplParams" colspan="2"><a class="anchor" id="ga8e5348762ad6545c65fe29e2e2beb16e"></a>
+<tr class="memitem:gafde6e87820b30fe94264f603d18b8f49"><td class="memItemLeft" align="right" valign="top">__device__ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cudpp__cta.html#gafde6e87820b30fe94264f603d18b8f49">tie_break_simp</a> (unsigned int myLoc, unsigned int cmpLoc, unsigned int myBound, unsigned int cmpBound, unsigned int myAdd, unsigned int cmpAdd, unsigned int *stringLoc, unsigned int stringSize, unsigned char termC)</td></tr>
+<tr class="memdesc:gafde6e87820b30fe94264f603d18b8f49"><td class="mdescLeft">&#160;</td><td class="mdescRight">Breaks ties in keys (first four characters) returns true if cmpVal &gt; myVal false otherwise.  <a href="#gafde6e87820b30fe94264f603d18b8f49">More...</a><br/></td></tr>
+<tr class="separator:gafde6e87820b30fe94264f603d18b8f49"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga350f1695e0964f4e9c6f2e6ce744ebd3"><td class="memTemplParams" colspan="2">template&lt;class T , int depth&gt; </td></tr>
+<tr class="memitem:ga350f1695e0964f4e9c6f2e6ce744ebd3"><td class="memTemplItemLeft" align="right" valign="top">__device__ void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="group__cudpp__cta.html#ga350f1695e0964f4e9c6f2e6ce744ebd3">bin_search_block_string</a> (T &amp;cmpValue, T tmpVal, T *in, T *addressPad, T *stringVals, int &amp;j, int bump, int sizeRemain, unsigned int stringSize, unsigned char termC)</td></tr>
+<tr class="memdesc:ga350f1695e0964f4e9c6f2e6ce744ebd3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Binary search within a single block (blockSort)  <a href="#ga350f1695e0964f4e9c6f2e6ce744ebd3">More...</a><br/></td></tr>
+<tr class="separator:ga350f1695e0964f4e9c6f2e6ce744ebd3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaa06de26b95279af5281b5c15a38ce4a0"><td class="memTemplParams" colspan="2">template&lt;class T , int depth&gt; </td></tr>
+<tr class="memitem:gaa06de26b95279af5281b5c15a38ce4a0"><td class="memTemplItemLeft" align="right" valign="top">__device__ void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="group__cudpp__cta.html#gaa06de26b95279af5281b5c15a38ce4a0">lin_search_block_string</a> (T &amp;cmpValue, T &amp;tmpVal, T *in, T *addressPad, T *stringVals, int &amp;j, int offset, int last, int startAddress, int stringSize, unsigned char termC)</td></tr>
+<tr class="memdesc:gaa06de26b95279af5281b5c15a38ce4a0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Linear search within a single block (blockSort)  <a href="#gaa06de26b95279af5281b5c15a38ce4a0">More...</a><br/></td></tr>
+<tr class="separator:gaa06de26b95279af5281b5c15a38ce4a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga220c1173df8c2372fac6cc74a56e4243"><td class="memTemplParams" colspan="2">template&lt;class T &gt; </td></tr>
+<tr class="memitem:ga220c1173df8c2372fac6cc74a56e4243"><td class="memTemplItemLeft" align="right" valign="top">__device__ void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="group__cudpp__cta.html#ga220c1173df8c2372fac6cc74a56e4243">compareSwapVal</a> (T &amp;A1, T &amp;A2, const int index1, const int index2, T *scratch, T *stringVals, unsigned int size, unsigned char termC)</td></tr>
+<tr class="memdesc:ga220c1173df8c2372fac6cc74a56e4243"><td class="mdescLeft">&#160;</td><td class="mdescRight">For blockSort. Compares two values and decides to swap if A1 &gt; A2.  <a href="#ga220c1173df8c2372fac6cc74a56e4243">More...</a><br/></td></tr>
+<tr class="separator:ga220c1173df8c2372fac6cc74a56e4243"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gae1bbafbcd2a98e2ceac6f3c0a7da3986"><td class="memTemplParams" colspan="2">template&lt;class T , int depth&gt; </td></tr>
+<tr class="memitem:gae1bbafbcd2a98e2ceac6f3c0a7da3986"><td class="memTemplItemLeft" align="right" valign="top">__device__ void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="group__cudpp__cta.html#gae1bbafbcd2a98e2ceac6f3c0a7da3986">binSearch_fragment</a> (T *keys, T *address, int offset, int &amp;mid, T cmpValue, T testValue, T myAddress, int myLoc, int cmpLoc, int myBound, int cmpBound, T *globalStringArray, int stringSize, unsigned char termC)</td></tr>
+<tr class="memdesc:gae1bbafbcd2a98e2ceac6f3c0a7da3986"><td class="mdescLeft">&#160;</td><td class="mdescRight">Performs a binary search in our shared memory, with tie breaks for strings.  <a href="#gae1bbafbcd2a98e2ceac6f3c0a7da3986">More...</a><br/></td></tr>
+<tr class="separator:gae1bbafbcd2a98e2ceac6f3c0a7da3986"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaebd3d6626676f4b10ef1d4f20e599b74"><td class="memTemplParams" colspan="2"><a class="anchor" id="gaebd3d6626676f4b10ef1d4f20e599b74"></a>
 template&lt;class T , int depth&gt; </td></tr>
-<tr class="memitem:ga8e5348762ad6545c65fe29e2e2beb16e"><td class="memTemplItemLeft" align="right" valign="top">__device__ void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>binSearch_frag_mult</b> (T *keyArraySmem, T *valueArraySmem, int offset, int &amp;mid, T cmpValue, T testValue, int myAddress, T *globalStringArray, int myStartIdxA, int myStartIdxB, int aIndex, int bIndex, int size, int stringSize)</td></tr>
-<tr class="separator:ga8e5348762ad6545c65fe29e2e2beb16e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga058aed25ffb9cef3df3d37a333d0fd13"><td class="memTemplParams" colspan="2">template&lt;class T , int depth&gt; </td></tr>
-<tr class="memitem:ga058aed25ffb9cef3df3d37a333d0fd13"><td class="memTemplItemLeft" align="right" valign="top">__device__ void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="group__cudpp__cta.html#ga058aed25ffb9cef3df3d37a333d0fd13">lin_merge_simple</a> (T &amp;cmpValue, T myKey, T myAddress, int &amp;index, T *BKeys, T *BValues, T *stringValues, T *A_keys, T *A_values, T *A_keys_out, T *A_values_out, int myStartIdxA, int myStartIdxB, int myStartIdxC, T localMinB, T localMaxB, int aCont, int bCont, int totalSize, int mySizeA, int mySizeB, unsigned int stringSize, int i, int stepNum, bool &amp;placed)</td></tr>
-<tr class="memdesc:ga058aed25ffb9cef3df3d37a333d0fd13"><td class="mdescLeft">&#160;</td><td class="mdescRight">Performs a linear search in our shared memory (done after binary search), with tie breaks for strings.  <a href="#ga058aed25ffb9cef3df3d37a333d0fd13">More...</a><br/></td></tr>
-<tr class="separator:ga058aed25ffb9cef3df3d37a333d0fd13"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gac45f3ca1f0b11aa0c686e7b2f6ccb196"><td class="memTemplParams" colspan="2"><a class="anchor" id="gac45f3ca1f0b11aa0c686e7b2f6ccb196"></a>
-template&lt;class T , int depth&gt; </td></tr>
-<tr class="memitem:gac45f3ca1f0b11aa0c686e7b2f6ccb196"><td class="memTemplItemLeft" align="right" valign="top">__device__ void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>linearStringMerge</b> (T *BKeys, T *BValues, T myKey, T myAddress, bool &amp;placed, int &amp;index, T &amp;cmpValue, T *A_keys, T *A_values, T *A_keys_out, T *A_values_out, T *stringValues, int myStartIdxC, int myStartIdxA, int myStartIdxB, int localAPartSize, int localBPartSize, int localCPartSize, T localMaxB, T localMinB, int tid, int aIndex, int bIndex, int i, int stringSize, int totalSize)</td></tr>
-<tr class="separator:gac45f3ca1f0b11aa0c686e7b2f6ccb196"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaebd3d6626676f4b10ef1d4f20e599b74"><td class="memTemplItemLeft" align="right" valign="top">__device__ void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>binSearch_frag_mult</b> (T *keyArraySmem, T *valueArraySmem, int offset, int &amp;mid, T cmpValue, T testValue, int myAddress, T *globalStringArray, int myStartIdxA, int myStartIdxB, int aIndex, int bIndex, int size, int stringSize, unsigned char termC)</td></tr>
+<tr class="separator:gaebd3d6626676f4b10ef1d4f20e599b74"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga0efc4ed0ee612e6ac36adba8e402a3a2"><td class="memTemplParams" colspan="2">template&lt;class T , int depth&gt; </td></tr>
+<tr class="memitem:ga0efc4ed0ee612e6ac36adba8e402a3a2"><td class="memTemplItemLeft" align="right" valign="top">__device__ void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="group__cudpp__cta.html#ga0efc4ed0ee612e6ac36adba8e402a3a2">lin_merge_simple</a> (T &amp;cmpValue, T myKey, T myAddress, int &amp;index, T *BKeys, T *BValues, T *stringValues, T *A_keys, T *A_values, T *A_keys_out, T *A_values_out, int myStartIdxA, int myStartIdxB, int myStartIdxC, T localMinB, T localMaxB, int aCont, int bCont, int totalSize, int mySizeA, int mySizeB, unsigned int stringSize, int i, int stepNum, bool &amp;placed, unsigned char termC)</td></tr>
+<tr class="memdesc:ga0efc4ed0ee612e6ac36adba8e402a3a2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Performs a linear search in our shared memory (done after binary search), with tie breaks for strings.  <a href="#ga0efc4ed0ee612e6ac36adba8e402a3a2">More...</a><br/></td></tr>
+<tr class="separator:ga0efc4ed0ee612e6ac36adba8e402a3a2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga55ebffb648f5c6525f36f74d269d07f0"><td class="memTemplParams" colspan="2">template&lt;class T , int depth&gt; </td></tr>
+<tr class="memitem:ga55ebffb648f5c6525f36f74d269d07f0"><td class="memTemplItemLeft" align="right" valign="top">__device__ void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="group__cudpp__cta.html#ga55ebffb648f5c6525f36f74d269d07f0">linearStringMerge</a> (T *BKeys, T *BValues, T myKey, T myAddress, bool &amp;placed, int &amp;index, T &amp;cmpValue, T *A_keys, T *A_values, T *A_keys_out, T *A_values_out, T *stringValues, int myStartIdxC, int myStartIdxA, int myStartIdxB, int localAPartSize, int localBPartSize, int localCPartSize, T localMaxB, T localMinB, int tid, int aIndex, int bIndex, int i, int stringSize, int totalSize, unsigned char termC)</td></tr>
+<tr class="memdesc:ga55ebffb648f5c6525f36f74d269d07f0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Performs a linear search in our shared memory, used by multiMerge kernel.  <a href="#ga55ebffb648f5c6525f36f74d269d07f0">More...</a><br/></td></tr>
+<tr class="separator:ga55ebffb648f5c6525f36f74d269d07f0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga67cf5220afab3f55dde96a0ee40ace3e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ga67cf5220afab3f55dde96a0ee40ace3e"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>BLOCKSORT_SIZE</b>&#160;&#160;&#160;1024</td></tr>
 <tr class="separator:ga67cf5220afab3f55dde96a0ee40ace3e"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -2470,7 +2470,7 @@ template&lt;class T , class traits &gt; </div>
 
 </div>
 </div>
-<a class="anchor" id="gad87bcb57897cfbc6a5d46b9e9a38347c"></a>
+<a class="anchor" id="gafde6e87820b30fe94264f603d18b8f49"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -2520,7 +2520,13 @@ template&lt;class T , class traits &gt; </div>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">unsigned int&#160;</td>
-          <td class="paramname"><em>stringSize</em>&#160;</td>
+          <td class="paramname"><em>stringSize</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned char&#160;</td>
+          <td class="paramname"><em>termC</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -2539,6 +2545,7 @@ template&lt;class T , class traits &gt; </div>
     <tr><td class="paramdir">[in]</td><td class="paramname">cmpAdd</td><td>Address into global memory of the value we are comparing against </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">stringLoc</td><td>Global memory array (input string) </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">stringSize</td><td>Size of our input string </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">termC</td><td>Termination character for our strings </td></tr>
   </table>
   </dd>
 </dl>
@@ -2546,7 +2553,7 @@ template&lt;class T , class traits &gt; </div>
 
 </div>
 </div>
-<a class="anchor" id="ga8df1241734e7669f1677091d6f6c60a5"></a>
+<a class="anchor" id="ga350f1695e0964f4e9c6f2e6ce744ebd3"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
@@ -2604,7 +2611,13 @@ template&lt;class T , int depth&gt; </div>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">unsigned int&#160;</td>
-          <td class="paramname"><em>stringSize</em>&#160;</td>
+          <td class="paramname"><em>stringSize</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned char&#160;</td>
+          <td class="paramname"><em>termC</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -2626,13 +2639,14 @@ template&lt;class T , int depth&gt; </div>
     <tr><td class="paramdir">[in]</td><td class="paramname">bump</td><td>The offset we update by </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">sizeRemain</td><td>Size of our block (if it's smaller than blockSize) </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">stringSize</td><td>Size of our global string array (for tie breaks) </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">termC</td><td>Termination character for our strings </td></tr>
   </table>
   </dd>
 </dl>
 
 </div>
 </div>
-<a class="anchor" id="gade3f7211f7d3e3fd9f48b3998f9b474b"></a>
+<a class="anchor" id="gaa06de26b95279af5281b5c15a38ce4a0"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
@@ -2696,7 +2710,13 @@ template&lt;class T , int depth&gt; </div>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>stringSize</em>&#160;</td>
+          <td class="paramname"><em>stringSize</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned char&#160;</td>
+          <td class="paramname"><em>termC</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -2717,13 +2737,14 @@ template&lt;class T , int depth&gt; </div>
     <tr><td class="paramdir">[in]</td><td class="paramname">last</td><td>The end of partition B we are allowed to look upto </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">startAddress</td><td>The beginning of our partition </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">stringSize</td><td>Size of our global string array </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">termC</td><td>Termination character for our strings </td></tr>
   </table>
   </dd>
 </dl>
 
 </div>
 </div>
-<a class="anchor" id="ga24cd6c528c36e33cfb22a787f06b9130"></a>
+<a class="anchor" id="ga220c1173df8c2372fac6cc74a56e4243"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
@@ -2769,7 +2790,13 @@ template&lt;class T &gt; </div>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">unsigned int&#160;</td>
-          <td class="paramname"><em>size</em>&#160;</td>
+          <td class="paramname"><em>size</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned char&#160;</td>
+          <td class="paramname"><em>termC</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -2789,13 +2816,14 @@ template&lt;class T &gt; </div>
     <tr><td class="paramdir">[in,out]</td><td class="paramname">scratch</td><td>Scratch memory storing the addresses </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">stringVals</td><td>String Values for tie breaks </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">size</td><td>size of our array </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">termC</td><td>Termination character for our strings </td></tr>
   </table>
   </dd>
 </dl>
 
 </div>
 </div>
-<a class="anchor" id="ga04e491c8a23e4c1678578fa9e70114a2"></a>
+<a class="anchor" id="gae1bbafbcd2a98e2ceac6f3c0a7da3986"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
@@ -2877,7 +2905,13 @@ template&lt;class T , int depth&gt; </div>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>stringSize</em>&#160;</td>
+          <td class="paramname"><em>stringSize</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned char&#160;</td>
+          <td class="paramname"><em>termC</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -2895,13 +2929,14 @@ template&lt;class T , int depth&gt; </div>
     <tr><td class="paramdir">[in]</td><td class="paramname">cmpValue,testValue</td><td>testValue is the value we are searching for from array A, cmpValue the value we have currently in B </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">myAddress,myLoc,cmpLoc,myBound,cmpBound</td><td>Same values from tie_break_simp which will be passed along </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">globalStringArray,stringSize</td><td>Our string array for breaking ties, and stringSize so we don't go out of bounds </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">termC</td><td>Termination character for our strings </td></tr>
   </table>
   </dd>
 </dl>
 
 </div>
 </div>
-<a class="anchor" id="ga058aed25ffb9cef3df3d37a333d0fd13"></a>
+<a class="anchor" id="ga0efc4ed0ee612e6ac36adba8e402a3a2"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
@@ -3055,7 +3090,13 @@ template&lt;class T , int depth&gt; </div>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">bool &amp;&#160;</td>
-          <td class="paramname"><em>placed</em>&#160;</td>
+          <td class="paramname"><em>placed</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned char&#160;</td>
+          <td class="paramname"><em>termC</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -3079,6 +3120,204 @@ template&lt;class T , int depth&gt; </div>
     <tr><td class="paramdir">[in]</td><td class="paramname">i</td><td>The index of the local element we are merging </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">stepNum</td><td>Debug helper </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">placed</td><td>Whether value has been placed yet or not </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">termC</td><td>Termination character for our strings </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="ga55ebffb648f5c6525f36f74d269d07f0"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class T , int depth&gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">__device__ void linearStringMerge </td>
+          <td>(</td>
+          <td class="paramtype">T *&#160;</td>
+          <td class="paramname"><em>BKeys</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">T *&#160;</td>
+          <td class="paramname"><em>BValues</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">T&#160;</td>
+          <td class="paramname"><em>myKey</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">T&#160;</td>
+          <td class="paramname"><em>myAddress</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool &amp;&#160;</td>
+          <td class="paramname"><em>placed</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int &amp;&#160;</td>
+          <td class="paramname"><em>index</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">T &amp;&#160;</td>
+          <td class="paramname"><em>cmpValue</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">T *&#160;</td>
+          <td class="paramname"><em>A_keys</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">T *&#160;</td>
+          <td class="paramname"><em>A_values</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">T *&#160;</td>
+          <td class="paramname"><em>A_keys_out</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">T *&#160;</td>
+          <td class="paramname"><em>A_values_out</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">T *&#160;</td>
+          <td class="paramname"><em>stringValues</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>myStartIdxC</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>myStartIdxA</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>myStartIdxB</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>localAPartSize</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>localBPartSize</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>localCPartSize</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">T&#160;</td>
+          <td class="paramname"><em>localMaxB</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">T&#160;</td>
+          <td class="paramname"><em>localMinB</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>tid</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>aIndex</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>bIndex</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>i</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>stringSize</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>totalSize</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned char&#160;</td>
+          <td class="paramname"><em>termC</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Performs a linear search in our shared memory, used by multiMerge kernel. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">BKeys,BValues</td><td>Keys and Addresses for array B </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">myKey,myAddress</td><td>Keys and address from our array </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">placed</td><td>Whether value has been placed yet or not </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">index</td><td>Current index we are considering in our B array </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">cmpValue</td><td>The current value we are looking at in our B array </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">stringValues,A_keys,A_values,A_keys_out,A_values_out</td><td>Global arrays for our strings, keys, values </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">myStartIdxA,myStartIdxB,myStartIdxC</td><td>Beginning indices for our partitions </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">localAPartSize,localBPartSize,localCPartSize</td><td>Array of partition sizes for our inputs and outputs </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">localMinB,localMaxB</td><td>The minimum and maximum values in our B partition </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">aIndex,bIndex,totalSize,stringSize</td><td>Address bounds and calculation helpers </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">i</td><td>The index of the local element we are merging </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">termC</td><td>Termination character for our strings </td></tr>
   </table>
   </dd>
 </dl>
@@ -3088,7 +3327,7 @@ template&lt;class T , int depth&gt; </div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Thu Jun 13 2013 22:19:20 for CUDPP by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sat Jul 20 2013 00:55:12 for CUDPP by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.3.1
 </small></address>

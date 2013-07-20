@@ -110,18 +110,30 @@ StringSort Functions</h2></td></tr>
 <tr class="memitem:ga50267d552ca6f788254032e40046b770"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ga50267d552ca6f788254032e40046b770"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>DEPTH</b>&#160;&#160;&#160;8</td></tr>
 <tr class="separator:ga50267d552ca6f788254032e40046b770"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga9efaeeadb705b5709cd2ff27bfc0bab3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cudpp__app.html#ga9efaeeadb705b5709cd2ff27bfc0bab3">runStringSort</a> (unsigned int *pkeys, unsigned int *pvals, unsigned int *stringVals, size_t numElements, size_t stringArrayLength, const <a class="el" href="class_c_u_d_p_p_string_sort_plan.html">CUDPPStringSortPlan</a> *plan)</td></tr>
-<tr class="memdesc:ga9efaeeadb705b5709cd2ff27bfc0bab3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Performs merge sor utilzing three stages. (1) Blocksort, (2) simple merge and (3) multi merge on a set of strings.  <a href="group__cudpp__app.html#ga9efaeeadb705b5709cd2ff27bfc0bab3">More...</a><br/></td></tr>
-<tr class="separator:ga9efaeeadb705b5709cd2ff27bfc0bab3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gae8f803b69e09bdb0a29176e32a0d1759"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="gae8f803b69e09bdb0a29176e32a0d1759"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>dotAdd</b> (unsigned int *d_address, unsigned int *numSpaces, unsigned int *packedAddress, size_t numElements, size_t stringArrayLength)</td></tr>
+<tr class="separator:gae8f803b69e09bdb0a29176e32a0d1759"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gadd07b8adcd5479bb49bd49e7d2ea07b6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="gadd07b8adcd5479bb49bd49e7d2ea07b6"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>calculateAlignedOffsets</b> (unsigned int *d_address, unsigned int *numSpaces, unsigned char *d_stringVals, unsigned char termC, size_t numElements, size_t stringArrayLength)</td></tr>
+<tr class="separator:gadd07b8adcd5479bb49bd49e7d2ea07b6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gabfacdceda39eb467ebd56d564e3442d8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="gabfacdceda39eb467ebd56d564e3442d8"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>packStrings</b> (unsigned int *packedStrings, unsigned char *d_stringVals, unsigned int *d_keys, unsigned int *packedAddress, unsigned int *address, size_t numElements, size_t stringArrayLength, unsigned char termC)</td></tr>
+<tr class="separator:gabfacdceda39eb467ebd56d564e3442d8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga33305fcb11eb38f4732e23f14177fbc7"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ga33305fcb11eb38f4732e23f14177fbc7"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>unpackStrings</b> (unsigned int *packedAddress, unsigned int *packedAddressRef, unsigned int *address, unsigned int *addressRef, size_t numElements)</td></tr>
+<tr class="separator:ga33305fcb11eb38f4732e23f14177fbc7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga810cdb458f43cab2fcd22a4e59da2354"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cudpp__app.html#ga810cdb458f43cab2fcd22a4e59da2354">runStringSort</a> (unsigned int *pkeys, unsigned int *pvals, unsigned int *stringVals, size_t numElements, size_t stringArrayLength, unsigned char termC, const <a class="el" href="class_c_u_d_p_p_string_sort_plan.html">CUDPPStringSortPlan</a> *plan)</td></tr>
+<tr class="memdesc:ga810cdb458f43cab2fcd22a4e59da2354"><td class="mdescLeft">&#160;</td><td class="mdescRight">Performs merge sor utilzing three stages. (1) Blocksort, (2) simple merge and (3) multi merge on a set of strings.  <a href="group__cudpp__app.html#ga810cdb458f43cab2fcd22a4e59da2354">More...</a><br/></td></tr>
+<tr class="separator:ga810cdb458f43cab2fcd22a4e59da2354"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gabe53de69a1cdb089b31247af9d0211a2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cudpp__app.html#gabe53de69a1cdb089b31247af9d0211a2">allocStringSortStorage</a> (<a class="el" href="class_c_u_d_p_p_string_sort_plan.html">CUDPPStringSortPlan</a> *plan)</td></tr>
 <tr class="memdesc:gabe53de69a1cdb089b31247af9d0211a2"><td class="mdescLeft">&#160;</td><td class="mdescRight">From the programmer-specified sort configuration, creates internal memory for performing the sort.  <a href="group__cudpp__app.html#gabe53de69a1cdb089b31247af9d0211a2">More...</a><br/></td></tr>
 <tr class="separator:gabe53de69a1cdb089b31247af9d0211a2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga9270888514859ed9d40a3fc310521cbd"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cudpp__app.html#ga9270888514859ed9d40a3fc310521cbd">freeStringSortStorage</a> (<a class="el" href="class_c_u_d_p_p_string_sort_plan.html">CUDPPStringSortPlan</a> *plan)</td></tr>
 <tr class="memdesc:ga9270888514859ed9d40a3fc310521cbd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Deallocates intermediate memory from allocStringSortStorage.  <a href="group__cudpp__app.html#ga9270888514859ed9d40a3fc310521cbd">More...</a><br/></td></tr>
 <tr class="separator:ga9270888514859ed9d40a3fc310521cbd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga607a4608ed36a84e4d35c9c75aa6297a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cudpp__app.html#ga607a4608ed36a84e4d35c9c75aa6297a">cudppStringSortDispatch</a> (void *keys, void *values, void *stringVals, size_t numElements, size_t stringArrayLength, const <a class="el" href="class_c_u_d_p_p_string_sort_plan.html">CUDPPStringSortPlan</a> *plan)</td></tr>
-<tr class="memdesc:ga607a4608ed36a84e4d35c9c75aa6297a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Dispatch function to perform a sort on an array with a specified configuration.  <a href="group__cudpp__app.html#ga607a4608ed36a84e4d35c9c75aa6297a">More...</a><br/></td></tr>
-<tr class="separator:ga607a4608ed36a84e4d35c9c75aa6297a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga25da6df4c589fcc60584ed619118984d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cudpp__app.html#ga25da6df4c589fcc60584ed619118984d">cudppStringSortDispatch</a> (unsigned int *keys, unsigned int *values, unsigned int *stringVals, size_t numElements, size_t stringArrayLength, unsigned char termC, const <a class="el" href="class_c_u_d_p_p_string_sort_plan.html">CUDPPStringSortPlan</a> *plan)</td></tr>
+<tr class="memdesc:ga25da6df4c589fcc60584ed619118984d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Dispatch function to perform a sort on an array with a specified configuration.  <a href="group__cudpp__app.html#ga25da6df4c589fcc60584ed619118984d">More...</a><br/></td></tr>
+<tr class="separator:ga25da6df4c589fcc60584ed619118984d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>CUDPP application-level merge sorting routines. </p>
@@ -129,7 +141,7 @@ StringSort Functions</h2></td></tr>
 </div></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Thu Jun 13 2013 22:19:20 for CUDPP by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sat Jul 20 2013 00:55:11 for CUDPP by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.3.1
 </small></address>

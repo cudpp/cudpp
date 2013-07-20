@@ -24,5 +24,5 @@ var searchData=
   ['reorderdatakeysonly',['reorderDataKeysOnly',['../group__cudpp__kernel.html#gacf53e3b863c610dc0c435f3cebc3ab20',1,'radixsort_kernel.cuh']]],
   ['retrieve',['Retrieve',['../class_cuda_h_t_1_1_cuckoo_hashing_1_1_compacting_hash_table.html#a01803fde59f74ed40eb3d2aa9157b3aa',1,'CudaHT::CuckooHashing::CompactingHashTable::Retrieve()'],['../class_cuda_h_t_1_1_cuckoo_hashing_1_1_multivalue_hash_table.html#aa0f70e5d52e643fd1aaebbb5ecc54f90',1,'CudaHT::CuckooHashing::MultivalueHashTable::Retrieve(const unsigned, const unsigned *, unsigned *)'],['../class_cuda_h_t_1_1_cuckoo_hashing_1_1_multivalue_hash_table.html#a31e81a76716d331e4605f5d27def4aef',1,'CudaHT::CuckooHashing::MultivalueHashTable::Retrieve(const unsigned n_queries, const unsigned *d_keys, uint2 *d_location_counts)'],['../class_cuda_h_t_1_1_cuckoo_hashing_1_1_hash_table.html#abeb75ace8f868106c883fe683812174f',1,'CudaHT::CuckooHashing::HashTable::Retrieve()']]],
   ['runmergesort',['runMergeSort',['../group__cudpp__app.html#ga925a72eb7e4c7417d0304e9872025218',1,'mergesort_app.cu']]],
-  ['runstringsort',['runStringSort',['../group__cudpp__app.html#ga9efaeeadb705b5709cd2ff27bfc0bab3',1,'stringsort_app.cu']]]
+  ['runstringsort',['runStringSort',['../group__cudpp__app.html#ga810cdb458f43cab2fcd22a4e59da2354',1,'stringsort_app.cu']]]
 ];

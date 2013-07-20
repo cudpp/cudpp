@@ -162,12 +162,12 @@ Compress Functions</h2></td></tr>
 <tr class="memitem:gad14e0a21423bd754bd31d2cedf0cd6c3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cudpp__app.html#gad14e0a21423bd754bd31d2cedf0cd6c3">cudppCompressDispatch</a> (void *d_uncompressed, void *d_bwtIndex, void *d_histSize, void *d_hist, void *d_encodeOffset, void *d_compressedSize, void *d_compressed, size_t numElements, const CUDPPCompressPlan *plan)</td></tr>
 <tr class="memdesc:gad14e0a21423bd754bd31d2cedf0cd6c3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Dispatch function to perform parallel compression on an array with the specified configuration.  <a href="#gad14e0a21423bd754bd31d2cedf0cd6c3">More...</a><br/></td></tr>
 <tr class="separator:gad14e0a21423bd754bd31d2cedf0cd6c3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga3e68297787efbb92efe2c1fb1cb6def9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cudpp__app.html#ga3e68297787efbb92efe2c1fb1cb6def9">cudppBwtDispatch</a> (void *d_bwtIn, void *d_bwtOut, void *d_bwtIndex, size_t numElements, const <a class="el" href="class_c_u_d_p_p_bwt_plan.html">CUDPPBwtPlan</a> *plan)</td></tr>
-<tr class="memdesc:ga3e68297787efbb92efe2c1fb1cb6def9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Dispatch function to perform the Burrows-Wheeler transform.  <a href="#ga3e68297787efbb92efe2c1fb1cb6def9">More...</a><br/></td></tr>
-<tr class="separator:ga3e68297787efbb92efe2c1fb1cb6def9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gacb94a70fa336d25ddef1ce3833b53258"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cudpp__app.html#gacb94a70fa336d25ddef1ce3833b53258">cudppMtfDispatch</a> (void *d_mtfIn, void *d_mtfOut, size_t numElements, const <a class="el" href="class_c_u_d_p_p_mtf_plan.html">CUDPPMtfPlan</a> *plan)</td></tr>
-<tr class="memdesc:gacb94a70fa336d25ddef1ce3833b53258"><td class="mdescLeft">&#160;</td><td class="mdescRight">Dispatch function to perform the Move-to-Front transform.  <a href="#gacb94a70fa336d25ddef1ce3833b53258">More...</a><br/></td></tr>
-<tr class="separator:gacb94a70fa336d25ddef1ce3833b53258"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga00202ecc11a1b3db90ef20cdfddf998a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cudpp__app.html#ga00202ecc11a1b3db90ef20cdfddf998a">cudppBwtDispatch</a> (void *d_in, void *d_out, void *d_index, size_t numElements, const <a class="el" href="class_c_u_d_p_p_bwt_plan.html">CUDPPBwtPlan</a> *plan)</td></tr>
+<tr class="memdesc:ga00202ecc11a1b3db90ef20cdfddf998a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Dispatch function to perform the Burrows-Wheeler transform.  <a href="#ga00202ecc11a1b3db90ef20cdfddf998a">More...</a><br/></td></tr>
+<tr class="separator:ga00202ecc11a1b3db90ef20cdfddf998a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga4beae76e9c73c3ea6a00c06de544795e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cudpp__app.html#ga4beae76e9c73c3ea6a00c06de544795e">cudppMtfDispatch</a> (void *d_in, void *d_out, size_t numElements, const <a class="el" href="class_c_u_d_p_p_mtf_plan.html">CUDPPMtfPlan</a> *plan)</td></tr>
+<tr class="memdesc:ga4beae76e9c73c3ea6a00c06de544795e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Dispatch function to perform the Move-to-Front transform.  <a href="#ga4beae76e9c73c3ea6a00c06de544795e">More...</a><br/></td></tr>
+<tr class="separator:ga4beae76e9c73c3ea6a00c06de544795e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="member-group"></a>
 ListRank Functions</h2></td></tr>
@@ -249,18 +249,30 @@ template&lt;bool isBackward, bool isExclusive&gt; </td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="member-group"></a>
 StringSort Functions</h2></td></tr>
-<tr class="memitem:ga9efaeeadb705b5709cd2ff27bfc0bab3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cudpp__app.html#ga9efaeeadb705b5709cd2ff27bfc0bab3">runStringSort</a> (unsigned int *pkeys, unsigned int *pvals, unsigned int *stringVals, size_t numElements, size_t stringArrayLength, const <a class="el" href="class_c_u_d_p_p_string_sort_plan.html">CUDPPStringSortPlan</a> *plan)</td></tr>
-<tr class="memdesc:ga9efaeeadb705b5709cd2ff27bfc0bab3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Performs merge sor utilzing three stages. (1) Blocksort, (2) simple merge and (3) multi merge on a set of strings.  <a href="#ga9efaeeadb705b5709cd2ff27bfc0bab3">More...</a><br/></td></tr>
-<tr class="separator:ga9efaeeadb705b5709cd2ff27bfc0bab3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gae8f803b69e09bdb0a29176e32a0d1759"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="gae8f803b69e09bdb0a29176e32a0d1759"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>dotAdd</b> (unsigned int *d_address, unsigned int *numSpaces, unsigned int *packedAddress, size_t numElements, size_t stringArrayLength)</td></tr>
+<tr class="separator:gae8f803b69e09bdb0a29176e32a0d1759"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gadd07b8adcd5479bb49bd49e7d2ea07b6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="gadd07b8adcd5479bb49bd49e7d2ea07b6"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>calculateAlignedOffsets</b> (unsigned int *d_address, unsigned int *numSpaces, unsigned char *d_stringVals, unsigned char termC, size_t numElements, size_t stringArrayLength)</td></tr>
+<tr class="separator:gadd07b8adcd5479bb49bd49e7d2ea07b6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gabfacdceda39eb467ebd56d564e3442d8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="gabfacdceda39eb467ebd56d564e3442d8"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>packStrings</b> (unsigned int *packedStrings, unsigned char *d_stringVals, unsigned int *d_keys, unsigned int *packedAddress, unsigned int *address, size_t numElements, size_t stringArrayLength, unsigned char termC)</td></tr>
+<tr class="separator:gabfacdceda39eb467ebd56d564e3442d8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga33305fcb11eb38f4732e23f14177fbc7"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ga33305fcb11eb38f4732e23f14177fbc7"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>unpackStrings</b> (unsigned int *packedAddress, unsigned int *packedAddressRef, unsigned int *address, unsigned int *addressRef, size_t numElements)</td></tr>
+<tr class="separator:ga33305fcb11eb38f4732e23f14177fbc7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga810cdb458f43cab2fcd22a4e59da2354"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cudpp__app.html#ga810cdb458f43cab2fcd22a4e59da2354">runStringSort</a> (unsigned int *pkeys, unsigned int *pvals, unsigned int *stringVals, size_t numElements, size_t stringArrayLength, unsigned char termC, const <a class="el" href="class_c_u_d_p_p_string_sort_plan.html">CUDPPStringSortPlan</a> *plan)</td></tr>
+<tr class="memdesc:ga810cdb458f43cab2fcd22a4e59da2354"><td class="mdescLeft">&#160;</td><td class="mdescRight">Performs merge sor utilzing three stages. (1) Blocksort, (2) simple merge and (3) multi merge on a set of strings.  <a href="#ga810cdb458f43cab2fcd22a4e59da2354">More...</a><br/></td></tr>
+<tr class="separator:ga810cdb458f43cab2fcd22a4e59da2354"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gabe53de69a1cdb089b31247af9d0211a2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cudpp__app.html#gabe53de69a1cdb089b31247af9d0211a2">allocStringSortStorage</a> (<a class="el" href="class_c_u_d_p_p_string_sort_plan.html">CUDPPStringSortPlan</a> *plan)</td></tr>
 <tr class="memdesc:gabe53de69a1cdb089b31247af9d0211a2"><td class="mdescLeft">&#160;</td><td class="mdescRight">From the programmer-specified sort configuration, creates internal memory for performing the sort.  <a href="#gabe53de69a1cdb089b31247af9d0211a2">More...</a><br/></td></tr>
 <tr class="separator:gabe53de69a1cdb089b31247af9d0211a2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga9270888514859ed9d40a3fc310521cbd"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cudpp__app.html#ga9270888514859ed9d40a3fc310521cbd">freeStringSortStorage</a> (<a class="el" href="class_c_u_d_p_p_string_sort_plan.html">CUDPPStringSortPlan</a> *plan)</td></tr>
 <tr class="memdesc:ga9270888514859ed9d40a3fc310521cbd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Deallocates intermediate memory from allocStringSortStorage.  <a href="#ga9270888514859ed9d40a3fc310521cbd">More...</a><br/></td></tr>
 <tr class="separator:ga9270888514859ed9d40a3fc310521cbd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga607a4608ed36a84e4d35c9c75aa6297a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cudpp__app.html#ga607a4608ed36a84e4d35c9c75aa6297a">cudppStringSortDispatch</a> (void *keys, void *values, void *stringVals, size_t numElements, size_t stringArrayLength, const <a class="el" href="class_c_u_d_p_p_string_sort_plan.html">CUDPPStringSortPlan</a> *plan)</td></tr>
-<tr class="memdesc:ga607a4608ed36a84e4d35c9c75aa6297a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Dispatch function to perform a sort on an array with a specified configuration.  <a href="#ga607a4608ed36a84e4d35c9c75aa6297a">More...</a><br/></td></tr>
-<tr class="separator:ga607a4608ed36a84e4d35c9c75aa6297a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga25da6df4c589fcc60584ed619118984d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cudpp__app.html#ga25da6df4c589fcc60584ed619118984d">cudppStringSortDispatch</a> (unsigned int *keys, unsigned int *values, unsigned int *stringVals, size_t numElements, size_t stringArrayLength, unsigned char termC, const <a class="el" href="class_c_u_d_p_p_string_sort_plan.html">CUDPPStringSortPlan</a> *plan)</td></tr>
+<tr class="memdesc:ga25da6df4c589fcc60584ed619118984d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Dispatch function to perform a sort on an array with a specified configuration.  <a href="#ga25da6df4c589fcc60584ed619118984d">More...</a><br/></td></tr>
+<tr class="separator:ga25da6df4c589fcc60584ed619118984d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga67cf5220afab3f55dde96a0ee40ace3e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ga67cf5220afab3f55dde96a0ee40ace3e"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>BLOCKSORT_SIZE</b>&#160;&#160;&#160;1024</td></tr>
 <tr class="separator:ga67cf5220afab3f55dde96a0ee40ace3e"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -1118,7 +1130,7 @@ template&lt;class T &gt; </div>
 
 </div>
 </div>
-<a class="anchor" id="ga3e68297787efbb92efe2c1fb1cb6def9"></a>
+<a class="anchor" id="ga00202ecc11a1b3db90ef20cdfddf998a"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -1126,19 +1138,19 @@ template&lt;class T &gt; </div>
           <td class="memname">void cudppBwtDispatch </td>
           <td>(</td>
           <td class="paramtype">void *&#160;</td>
-          <td class="paramname"><em>d_bwtIn</em>, </td>
+          <td class="paramname"><em>d_in</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">void *&#160;</td>
-          <td class="paramname"><em>d_bwtOut</em>, </td>
+          <td class="paramname"><em>d_out</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">void *&#160;</td>
-          <td class="paramname"><em>d_bwtIndex</em>, </td>
+          <td class="paramname"><em>d_index</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -1174,7 +1186,7 @@ template&lt;class T &gt; </div>
 
 </div>
 </div>
-<a class="anchor" id="gacb94a70fa336d25ddef1ce3833b53258"></a>
+<a class="anchor" id="ga4beae76e9c73c3ea6a00c06de544795e"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -1182,13 +1194,13 @@ template&lt;class T &gt; </div>
           <td class="memname">void cudppMtfDispatch </td>
           <td>(</td>
           <td class="paramtype">void *&#160;</td>
-          <td class="paramname"><em>d_mtfIn</em>, </td>
+          <td class="paramname"><em>d_in</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">void *&#160;</td>
-          <td class="paramname"><em>d_mtfOut</em>, </td>
+          <td class="paramname"><em>d_out</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -1388,7 +1400,7 @@ template&lt;typename T &gt; </div>
 </div><div class="memdoc">
 
 <p>Dispatch function to perform parallel list ranking on a linked-list with the specified configuration. </p>
-<p>A wrapper on top of listRank which calls <a class="el" href="group__cudpp__app.html#ga01bedf77673d5b88ff3350b2da6517fa" title="Launch list ranking.">listRank()</a> for the data type specified in <em>config</em>. This is the app-level interface to list ranking used by <a class="el" href="group__public_interface.html#ga4c5c71be3d243cc0c849d058827eb0e4" title="Performs list ranking of linked list node values.">cudppListRank()</a>.</p>
+<p>A wrapper on top of listRank which calls <a class="el" href="group__cudpp__app.html#ga01bedf77673d5b88ff3350b2da6517fa" title="Launch list ranking.">listRank()</a> for the data type specified in <em>config</em>. This is the app-level interface to list ranking used by <a class="el" href="group__public_interface.html#ga66d4b12b41fb30088353a8091c51f85a" title="Performs list ranking of linked list node values.">cudppListRank()</a>.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[out]</td><td class="paramname">d_ranked_values</td><td>Ranked values array </td></tr>
@@ -1833,7 +1845,7 @@ template&lt;class T , bool isBackward, bool isExclusive, class Op &gt; </div>
 
 </div>
 </div>
-<a class="anchor" id="ga9efaeeadb705b5709cd2ff27bfc0bab3"></a>
+<a class="anchor" id="ga810cdb458f43cab2fcd22a4e59da2354"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -1870,6 +1882,12 @@ template&lt;class T , bool isBackward, bool isExclusive, class Op &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">unsigned char&#160;</td>
+          <td class="paramname"><em>termC</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype">const <a class="el" href="class_c_u_d_p_p_string_sort_plan.html">CUDPPStringSortPlan</a> *&#160;</td>
           <td class="paramname"><em>plan</em>&#160;</td>
         </tr>
@@ -1890,6 +1908,7 @@ template&lt;class T , bool isBackward, bool isExclusive, class Op &gt; </div>
     <tr><td class="paramdir">[in]</td><td class="paramname">numElements</td><td>Number of elements in the sort. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">stringArrayLength</td><td>The size of our string array in uints (4 chars per uint) </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">plan</td><td>Configuration information for mergesort. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">termC</td><td>Termination character for our strings </td></tr>
   </table>
   </dd>
 </dl>
@@ -1944,26 +1963,26 @@ template&lt;class T , bool isBackward, bool isExclusive, class Op &gt; </div>
 
 </div>
 </div>
-<a class="anchor" id="ga607a4608ed36a84e4d35c9c75aa6297a"></a>
+<a class="anchor" id="ga25da6df4c589fcc60584ed619118984d"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
           <td class="memname">void cudppStringSortDispatch </td>
           <td>(</td>
-          <td class="paramtype">void *&#160;</td>
+          <td class="paramtype">unsigned int *&#160;</td>
           <td class="paramname"><em>keys</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">void *&#160;</td>
+          <td class="paramtype">unsigned int *&#160;</td>
           <td class="paramname"><em>values</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">void *&#160;</td>
+          <td class="paramtype">unsigned int *&#160;</td>
           <td class="paramname"><em>stringVals</em>, </td>
         </tr>
         <tr>
@@ -1977,6 +1996,12 @@ template&lt;class T , bool isBackward, bool isExclusive, class Op &gt; </div>
           <td></td>
           <td class="paramtype">size_t&#160;</td>
           <td class="paramname"><em>stringArrayLength</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned char&#160;</td>
+          <td class="paramname"><em>termC</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -2001,6 +2026,7 @@ template&lt;class T , bool isBackward, bool isExclusive, class Op &gt; </div>
     <tr><td class="paramdir">[in]</td><td class="paramname">stringVals</td><td>Global string array </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">numElements</td><td>Number of elements in the sort. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">stringArrayLength</td><td>The size of our string array in uints (4 chars per uint) </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">termC</td><td>Termination character for our strings </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">plan</td><td>Configuration information for mergeSort. </td></tr>
   </table>
   </dd>
@@ -2163,7 +2189,7 @@ template&lt;typename T &gt; </div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Thu Jun 13 2013 22:19:20 for CUDPP by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sat Jul 20 2013 00:55:12 for CUDPP by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.3.1
 </small></address>

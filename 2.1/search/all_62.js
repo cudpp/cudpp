@@ -1,10 +1,10 @@
 var searchData=
 [
   ['bin_5fsearch_5fblock',['bin_search_block',['../group__cudpp__cta.html#ga2dba8b596208be6bd766d82792dcbc25',1,'mergesort_cta.cuh']]],
-  ['bin_5fsearch_5fblock_5fstring',['bin_search_block_string',['../group__cudpp__cta.html#ga8df1241734e7669f1677091d6f6c60a5',1,'stringsort_cta.cuh']]],
-  ['binsearch_5ffragment',['binSearch_fragment',['../group__cudpp__cta.html#ga04e491c8a23e4c1678578fa9e70114a2',1,'stringsort_cta.cuh']]],
+  ['bin_5fsearch_5fblock_5fstring',['bin_search_block_string',['../group__cudpp__cta.html#ga350f1695e0964f4e9c6f2e6ce744ebd3',1,'stringsort_cta.cuh']]],
+  ['binsearch_5ffragment',['binSearch_fragment',['../group__cudpp__cta.html#gae1bbafbcd2a98e2ceac6f3c0a7da3986',1,'stringsort_cta.cuh']]],
   ['blockwisesort',['blockWiseSort',['../group__cudpp__kernel.html#gad030dd603515ec232ad9089f0a51c850',1,'mergesort_kernel.cuh']]],
-  ['blockwisestringsort',['blockWiseStringSort',['../group__cudpp__kernel.html#gaf5295254971430f95fef1ff069f3cb1d',1,'blockWiseStringSort(T *A_keys, T *A_address, const T *stringVals, T *stringVals2, int blockSize, size_t numElements):&#160;compress_kernel.cuh'],['../group__cudpp__kernel.html#ga625c2ba9beb866df6b191a973b83b3f4',1,'blockWiseStringSort(T *A_keys, T *A_address, T *stringVals, int blockSize, int totalSize, unsigned int stringSize):&#160;stringsort_kernel.cuh']]],
+  ['blockwisestringsort',['blockWiseStringSort',['../group__cudpp__kernel.html#gaf5295254971430f95fef1ff069f3cb1d',1,'blockWiseStringSort(T *A_keys, T *A_address, const T *stringVals, T *stringVals2, int blockSize, size_t numElements):&#160;compress_kernel.cuh'],['../group__cudpp__kernel.html#ga0b3a522a516d07de956b9322fd705f2e',1,'blockWiseStringSort(T *A_keys, T *A_address, T *stringVals, int blockSize, int totalSize, unsigned int stringSize, unsigned char termC):&#160;stringsort_kernel.cuh']]],
   ['build',['Build',['../class_cuda_h_t_1_1_cuckoo_hashing_1_1_compacting_hash_table.html#a0ee633d321744f91d7ec0a93b614e64d',1,'CudaHT::CuckooHashing::CompactingHashTable::Build()'],['../class_cuda_h_t_1_1_cuckoo_hashing_1_1_multivalue_hash_table.html#a28b1df248a1417bd831b1b8b2eab5098',1,'CudaHT::CuckooHashing::MultivalueHashTable::Build()'],['../class_cuda_h_t_1_1_cuckoo_hashing_1_1_hash_table.html#a86141548de93a8d13a5bada16e870ac8',1,'CudaHT::CuckooHashing::HashTable::Build()']]],
   ['building_20cudpp',['Building CUDPP',['../building-cudpp.html',1,'']]],
   ['burrowswheelertransform',['burrowsWheelerTransform',['../group__cudpp__app.html#gadf315a304a78117955cad6d8c32a8fab',1,'compress_app.cu']]],
