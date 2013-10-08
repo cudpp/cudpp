@@ -486,6 +486,8 @@ CUDPPResult cudppStringSort(const CUDPPHandle planHandle,
  * 
  * @param[in] planHandle handle to CUDPPSortPlan 
  * @param[in] stringVals Original string input, no need for alignment or offsets. 
+ * @param[in] d_address Pointers (in order) to each strings starting location in the stringVals array
+ * @param[in] termC Termination character used to separate strings
  * @param[in] numElements number of strings
  * @param[in] stringArrayLength Length in uint of the size of all strings
  * @returns CUDPPResult indicating success or error condition 
