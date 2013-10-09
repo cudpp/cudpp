@@ -8,7 +8,8 @@ os.system("bib2bib -oc ref.txt cudpp.bib")
 
 # sort by reverse-date; don't generate keys; use cudpp.bst as bib style file
 # writes into cudpp_refs.html and cudpp_refs_bib.html
-os.system("bibtex2html -d -r -dl -nokeys -html-entities --no-footer -citefile ref.txt -s cudpp -nodoc -o cudpp_refs cudpp.bib")
+os.putenv("openout_any", "r")
+os.system("bibtex2html -d -r -dl -nokeys -html-entities --no-footer --no-keywords -citefile ref.txt -s cudpp -nodoc -o cudpp_refs cudpp.bib")
 html_file = open('cudpp_refs.html')
 html = html_file.read()
 html_file.close()

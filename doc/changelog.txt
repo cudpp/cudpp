@@ -7,9 +7,15 @@ Release 2.1
   Huffman encoding
 - Added cudppMoveToFrontTransform and cudppBurrowsWheelerTransform
 - Added cudppListRank parallel list ranking
+- Renamed cudppSort to cudppRadixSort
+- Added cudppMergeSort parallel merge sort
+- Added cudppStringSort parallel string sort
+- Moved source code to Github: http://cudpp.github.io
+- Moved documentation pages from cudpp.h to README.md
+- Added CUDPP_GENCODE_* CMake options to make CUDA target architecture compilation more flexible
 
 Release 2.0
-DATE HERE
+9 August 2011
 - New thread-safe public interface -- requires creating a CUDPP instance 
   with cudppCreate, and passing it to all functions
 - Added cudppReduce parallel reductions

@@ -21,357 +21,6 @@
  * entirely C (thus it is declared "extern C").
  */
 
-/**
- * \mainpage
- *
- * \section introduction Introduction
- * 
- * CUDPP is the CUDA Data Parallel Primitives Library. CUDPP is a
- * library of data-parallel algorithm primitives such as 
- * parallel-prefix-sum ("scan"), parallel sort and parallel reduction. 
- * Primitives such as these are important building blocks for a wide 
- * variety of data-parallel algorithms, including sorting, stream 
- * compaction, and building data structures such as trees and 
- * summed-area tables.
- *
- * \section overview Overview Presentation
- * 
- * A brief set of slides that describe the features, design principles,
- * applications and impact of CUDPP is available here:
- * <a href="http://cudpp.googlecode.com/svn/trunk/cudpp/doc/CUDPP_slides.pdf">CUDPP Presentation</a>.
- *
- * \section homepage Homepage
- * Homepage for CUDPP: http://code.google.com/p/cudpp
- * 
- * Announcements and discussion of CUDPP are hosted on the
- * <a href="http://groups.google.com/group/cudpp?hl=en">CUDPP Google Group</a>.
- * 
- * \section getting-started Getting Started with CUDPP
- *
- * You may want to start by browsing the \link publicInterface CUDPP Public 
- * Interface\endlink. For information on building CUDPP, see 
- * \ref building-cudpp "Building CUDPP".  See \ref hash_overview for an 
- * overview of CUDPP's hash table support. 
- *
- * The "apps" subdirectory included with CUDPP has a few source code samples 
- * that use CUDPP:
- * - \ref example_simpleCUDPP "simpleCUDPP", a simple example of using 
- * cudppScan()
- * - satGL, an example of using cudppMultiScan() to generate a summed-area 
- * table (SAT) of a scene rendered in real time.  The SAT is then used to simulate 
- * depth of field blur.
- * - cudpp_testrig, a comprehensive test application for all the functionality 
- * of CUDPP
- * - cudpp_hash_testrig, a comprehensive test application for CUDPP's hash table data structures
- *
- * We have also provided a code walkthrough of the 
- * \ref example_simpleCUDPP "simpleCUDPP" example.
- *
- * \section getting-help Getting Help and Reporting Problems
- *
- * To get help using CUDPP, please use the 
- * <a href="http://groups.google.com/group/cudpp?hl=en">CUDPP Google Group</a>.
- *
- * To report CUDPP bugs or request features, please file an issue directly using 
- * <a href="http://code.google.com/p/cudpp/issues/list">Google Code</a>.
- *
- * \section release-notes Release Notes
- *
- * For specific release details see the \ref changelog "Change Log".
- * 
- * \subsection known-issues Known Issues
- * 
- * For a complete list of issues, see the 
- * <a href="http://code.google.com/p/cudpp/issues/list">issues list</a> on 
- * the Google code site.
- * 
- * - cudppRand tests (in cudpp_testrig) fail on OS X 10.6.8 with CUDA 3.2 and 
- *   CUDA 4.0 on Quadro FX 4800 (and possibly other GT200 GPUs):  
- * - There is a known issue that the compile time for CUDPP is very long and 
- *   the compiled library file size is very large.  On some systems with < 4GB 
- *   of available memory (or virtual memory), the CUDA compiler can run out of 
- *   memory and compilation can fail.  We will be working on these issues for 
- *   future releases. 
- *
- * \subsection size-limits Algorithm Input Size Limitations
- * 
- * The following maximum size limitations currently apply.  In some 
- * cases this is the theory&mdash;the algorithms may not have been tested
- * to the maximum size.  Also, for things like 32-bit integer scans, 
- * precision often limits the useful maximum size.
- *
- * - CUDPP_SCAN               67,107,840 elements
- * - CUDPP_SEGMENTED_SCAN     67,107,840 elements
- * - CUDPP_COMPACT            67,107,840 elements
- * - CUDPP_COMPRESS           1,048,576 elements
- * - CUDPP_LISTRANK           NO LIMIT
- * - CUDPP_MTF                1,048,576 elements
- * - CUDPP_BWT                1,048,576 elements
- * - CUDPP_SORT               2,147,450,880 elements
- * - CUDPP_REDUCE             NO LIMIT
- * - CUDPP_RAND               33,554,432 elements
- * - CUDPP_SPMVMULT           67,107,840 non-zero elements
- * - CUDPP_HASH               See \ref hash_space_limitations
- * - CUDPP_TRIDIAGONAL        65535 systems, 1024 equations per system (Compute capability 2.x),
- *                                           512 equations per system (Compute capability < 2.0)
- * 
- * \section opSys Operating System Support and Requirements
- * 
- * This release (2.0) has been thoroughly tested on the following OSes.
- * - Windows 7 (64-bit) (CUDA 4.0)
- * - CentOS Linux (64-bit) (CUDA 4.0)
- * - Mac OS X 10.6.8 and 10.8 (Snow Leopard/Lion, 64-bit) (CUDA 4.0)
- *
- * We expect CUDPP to build and run correctly on other flavors of Linux and 
- * Windows, including 32-bit OSes, but only the above are actively tested at 
- * this time.
- *
- * \subsection Requirements 
- * 
- * CUDPP 2.0 requires at least CUDA 3.0, and has not been tested with any
- * CUDA version < 3.2.  CUDA 4.0 or higher is preferred.  If you require an 
- * earlier CUDA version, then you should use CUDPP release 1.1.1.
- *
- * \section cuda CUDA
- * CUDPP is implemented in
- * <a href="http://developer.nvidia.com/cuda">CUDA C/C++</a>. It requires the 
- * CUDA Toolkit. Please see the NVIDIA 
- * <a href="http://developer.nvidia.com/cuda">CUDA</a> homepage to download 
- * CUDA as well as the CUDA Programming Guide and CUDA SDK, which includes many 
- * CUDA code examples.  
- *
- * \section design-goals Design Goals
- * Design goals for CUDPP include:
- * 
- * - Performance. We aim to provide best-of-class performance for our
- *   primitives. We welcome suggestions and contributions that will improve 
- *   CUDPP performance. We also want to provide primitives that can be easily 
- *   benchmarked, and compared against other implementations on GPUs and other 
- *   processors.
- * - Modularity. We want our primitives to be easily included in other
- *   applications. To that end we have made the following design decisions:
- *   - CUDPP is provided as a library that can link against other applications. 
- *   - CUDPP calls run on the GPU on GPU data. Thus they can be used
- *     as standalone calls on the GPU (on GPU data initialized by the 
- *     calling application) and, more importantly, as GPU components in larger 
- *     CPU/GPU applications.
- *   - CUDPP is implemented as 4 layers:
- *     -# The \link publicInterface Public Interface\endlink is the external 
- *        library interface, which is the intended entry point for most 
- *        applications. The public interface calls into the 
- *        \link cudpp_app Application-Level API\endlink.
- *     -# The \link cudpp_app Application-Level API\endlink comprises functions
- *        callable from CPU code. These functions execute code jointly on the 
- *        CPU (host) and the GPU by calling into the 
- *        \link cudpp_kernel Kernel-Level API\endlink below them.
- *     -# The \link cudpp_kernel Kernel-Level API\endlink comprises functions
- *        that run entirely on the GPU across an entire grid of thread blocks.  
- *        These functions may call into the \link cudpp_cta CTA-Level 
- *        API\endlink below them.
- *     -# The \link cudpp_cta CTA-Level API\endlink comprises functions that 
- *        run entirely on the GPU within a single Cooperative Thread Array 
- *        (CTA, aka thread block). These are low-level functions that implement
- *        core data-parallel algorithms, typically by processing data within 
- *        shared (CUDA \c __shared__) memory.
- *
- * Programmers may use any of the lower three CUDPP layers in their
- * own programs by building the source directly into their
- * application. However, the typical usage of CUDPP is to link to the
- * library and invoke functions in the CUDPP \link publicInterface
- * Public Interface\endlink, as in the \ref example_simpleCUDPP
- * "simpleCUDPP", satGL, cudpp_testrig, and cudpp_hash_testrig application
- * examples included in the CUDPP distribution.
- *
- * \subsection uses Use Cases
- * We expect the normal use of CUDPP will be in one of two ways:
- * -# Linking the CUDPP library against another application. 
- * -# Running the "test" applications, cudpp_testrig and
- *   cudpp_hash_testrig, that exercise CUDPP functionality.
- *
- * \section references References
- * The following publications describe work incorporated in CUDPP.
- * 
- * - Mark Harris, Shubhabrata Sengupta, and John D. Owens. "Parallel Prefix Sum (Scan) with CUDA". In Hubert Nguyen, editor, <i>GPU Gems 3</i>, chapter 39, pages 851&ndash;876. Addison Wesley, August 2007. http://www.idav.ucdavis.edu/publications/print_pub?pub_id=916
- * - Shubhabrata Sengupta, Mark Harris, Yao Zhang, and John D. Owens. "Scan Primitives for GPU Computing". In <i>Graphics Hardware 2007</i>, pages 97&ndash;106, August 2007. http://www.idav.ucdavis.edu/publications/print_pub?pub_id=915
- * - Nadathur Satish, Mark Harris, and Michael Garland. "Designing Efficient Sorting Algorithms for Manycore GPUs". In <i>Proceedings of the 23rd IEEE International Parallel & Distributed Processing Symposium</i>, May 2009. http://mgarland.org/papers.html#gpusort
- * - Stanley Tzeng, Li-Yi Wei. "Parallel White Noise Generation on a GPU via Cryptographic Hash". In <i>Proceedings of the 2008 Symposium on Interactive 3D Graphics and Games</i>, pages 79&ndash;87, February 2008. http://research.microsoft.com/apps/pubs/default.aspx?id=70502
- * - Yao Zhang, Jonathan Cohen, and John D. Owens. Fast Tridiagonal Solvers on the GPU. In <i>Proceedings of the 15th ACM SIGPLAN Symposium on Principles and Practice of Parallel Programming (PPoPP 2010)</i>, pages 127&ndash;136, January 2010. http://www.cs.ucdavis.edu/publications/print_pub?pub_id=978
- * - Yao Zhang, Jonathan Cohen, Andrew A. Davidson, and John D. Owens. A Hybrid Method for Solving Tridiagonal Systems on the GPU. In Wen-mei W. Hwu, editor, <i>GPU Computing Gems</i>. Morgan Kaufmann. July 2011.
- * - Shubhabrata Sengupta, Mark Harris, Michael Garland, and John D. Owens. "Efficient Parallel Scan Algorithms for many-core GPUs". In Jakub Kurzak, David A. Bader, and Jack Dongarra, editors, <i>Scientific Computing with Multicore and Accelerators</i>, Chapman & Hall/CRC Computational Science, chapter 19, pages 413&ndash;442. Taylor & Francis, January 2011. http://www.idav.ucdavis.edu/publications/print_pub?pub_id=1041
- * - Dan A. Alcantara, Andrei Sharf, Fatemeh Abbasinejad, Shubhabrata Sengupta, Michael Mitzenmacher, John D. Owens, and Nina Amenta. Real-Time Parallel Hashing on the GPU. ACM Transactions on Graphics, 28(5):154:1–154:9, December 2009. http://www.idav.ucdavis.edu/publications/print_pub?pub_id=973
- * - Dan A. Alcantara, Vasily Volkov, Shubhabrata Sengupta, Michael Mitzenmacher, John D. Owens, and Nina Amenta. Building an Efficient Hash Table on the GPU. In Wen-mei W. Hwu, editor, GPU Computing Gems, volume 2, chapter 1. Morgan Kaufmann, August 2011. 
- * - Ritesh A. Patel, Yao Zhang, Jason Mak, Andrew Davidson, John D. Owens. "Parallel Lossless Data Compression on the GPU". In <i>Proceedings of Innovative Parallel Computing (InPar '12)</i>, May 2012. http://idav.ucdavis.edu/publications/print_pub?pub_id=1087
- *
- * Many researchers are using CUDPP in their work, and there are many
- * publications that have used it \ref cudpp_refs "(references)". If
- * your work uses CUDPP, please let us know by sending us a reference
- * (preferably in BibTeX format) to your work.
- * 
- * \section citing Citing CUDPP
- *
- * If you make use of CUDPP primitives in your work and want to cite
- * CUDPP (thanks!), we would prefer for you to cite the appropriate
- * papers above, since they form the core of CUDPP. To be more
- * specific, the GPU Gems paper (Harris et al.) describes
- * (unsegmented) scan, multi-scan for summed-area tables, and stream
- * compaction. The Sengupta et al. book chapter describes the current
- * scan and segmented scan algorithms used in the library, and the
- * Sengupta et al. Graphics Hardware paper describes an earlier
- * implementation of segmented scan, quicksort, and sparse
- * matrix-vector multiply. The IPDPS paper (Satish et al.) describes
- * the radix sort used in CUDPP (prior to 2.0 -- CUDPP 2.0 uses Thrust::sort), 
- * and the I3D paper (Tzeng and Wei) describes the random number generation 
- * algorithm. The two Alcantara papers describe the hash algorithms. The two 
- * Zhang papers describe the tridiagonal solvers.
- *
- * \section credits Credits
- * \subsection developers CUDPP Developers
- * - <a href="http://www.markmark.net">Mark Harris</a>, NVIDIA Corporation
- * - <a href="http://www.ece.ucdavis.edu/~jowens/">John D. Owens</a>, University of California, Davis
- * - <a href="http://graphics.cs.ucdavis.edu/~shubho/">Shubho Sengupta</a>, University of California, Davis
- * - <a href="http://wwwcsif.cs.ucdavis.edu/~tzeng/">Stanley Tzeng</a>,   University of California, Davis
- * - <a href="http://www.ece.ucdavis.edu/~yaozhang/">Yao Zhang</a>,       University of California, Davis
- * - <a href="http://www.ece.ucdavis.edu/~aaldavid/">Andrew Davidson</a>, University of California, Davis
- * - <a href="http://www.ece.ucdavis.edu/~ritesh88/">Ritesh Patel</a>, University of California, Davis
- * 
- * \subsection contributors Other CUDPP Contributors
- * - <a href="http://idav.ucdavis.edu/~dfalcant/research.php">Dan Alcantara</a>, University of California, Davis [hash tables]
- * - <a href="http://idav.ucdavis.edu/~anjul/">Anjul Patney</a>,  University of California, Davis [general help]
- * - <a href="http://www.eecs.berkeley.edu/~nrsatish/">Nadatur Satish</a>,  University of California, Berkeley [(old)radix sort]
- *
- * \subsection acknowledgments Acknowledgments
- *
- * Thanks to Jim Ahrens, Timo Aila, Nathan Bell, Ian Buck, Guy Blelloch, 
- * Jeff Bolz, Michael Garland, Jeff Inman, Eric Lengyel, Samuli Laine, 
- * David Luebke, Pat McCormick, Duane Merrill, and Richard Vuduc for their 
- * contributions during the development of this library. 
- * 
- * CUDPP Developers from UC Davis thank their funding agencies:
- * - National Science Foundation (grants CCF-0541448, IIS-0964357, and particularly OCI-1032859)
- * - Department of Energy Early Career Principal Investigator Award
- *   DE-FG02-04ER25609
- * - SciDAC Institute for Ultrascale Visualization (http://www.iusv.org/)
- * - Los Alamos National Laboratory
- * - Generous hardware donations from NVIDIA
- *
- * \section license-overview CUDPP Copyright and Software License
- * CUDPP is copyright The Regents of the University of California, Davis campus 
- * and NVIDIA Corporation.  The library, examples, and all source code are 
- * released under the BSD license, designed to encourage reuse of this software 
- * in other projects, both commercial and non-commercial.  For details, please 
- * see the \ref license page. 
- *
- * Non source-code content (such as documentation, web pages, etc.) from CUDPP
- * is distributed under a 
- * <a href="http://creativecommons.org/licenses/by-sa/3.0/">Creative Commons 
- * Attribution-ShareAlike 3.0 (CC BY-SA 3.0)</a> license.
- * 
- * Note that prior to release 1.1 of CUDPP, the license used was a modified
- * BSD license.  With release 1.1, this license was replaced with the pure BSD
- * license to facilitate the use of open source hosting of the code.
- *
- * CUDPP also includes the <a
- * href="http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/emt.html">Mersenne
- * twister code</a> of <a
- * href="http://www.math.sci.hiroshima-u.ac.jp/~m-mat/eindex.html">Makoto
- * Matsumoto</a>, also licensed under BSD. 
- *
- * CUDPP also calls functions in the 
- * <a href="http://thrust.googlecode.com">Thrust</a> template library, which
- * is included with CUDA 4.0 and licensed under the Apache 2.0 open source 
- * license.
- * 
- * CUDPP also includes a modified version of FindGLEW.cmake from
- * <a href="http://code.google.com/p/nvidia-texture-tools/">nvidia-texture-tools</a>,
- * licensed under the 
- * <a href="http://www.opensource.org/licenses/mit-license.php">MIT license.</a>
- */
-
-/**
- * @page license CUDPP License
- *
- * \section licenseBSD CUDPP License
- *
- * CUDPP is released under the <a
- * href="http://www.opensource.org/licenses/bsd-license.php">BSD
- * license</a>. 
- *
- * Non source-code content (such as documentation, web pages, etc.) from CUDPP
- * is distributed under a 
- * <a href="http://creativecommons.org/licenses/by-sa/3.0/">Creative Commons 
- * Attribution-ShareAlike 3.0 (CC BY-SA 3.0)</a> license.
- * 
- * This CUDPP distribution also includes the <a
- * href="http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/emt.html">Mersenne
- * twister code</a> of <a
- * href="http://www.math.sci.hiroshima-u.ac.jp/~m-mat/eindex.html">Makoto
- * Matsumoto</a>, also licensed under BSD, as the file
- * <em>mt19937ar.c</em>, and a modified version of FindGLEW.cmake from
- * <a
- * href="http://code.google.com/p/nvidia-texture-tools/">nvidia-texture-tools</a>,
- * licensed under the <a
- * href="http://www.opensource.org/licenses/mit-license.php">MIT
- * license.</a>
- *
- * CUDPP also calls functions in the 
- * <a href="http://thrust.googlecode.com">Thrust</a> template library, which
- * is included with CUDA 4.0 and licensed under the Apache 2.0 open source 
- * license.
- * 
-
- * 
- * @include license.txt
- *
- */
-
-/** 
- * @page changelog CUDPP Change Log
- *
- * @include changelog.txt
- */
-
-/** 
- * @page cudpp_refs Publications that use CUDPP
- *
- * @htmlinclude doc/bib/cudpp_refs.html
- */
-
-/** 
- * @page cudpp_refs_bib Bibliography for publications that use CUDPP
- *
- * @htmlinclude doc/bib/cudpp_refs_bib.html
- */
-
-/**
- * @page building-cudpp Building CUDPP
- *
- * CUDPP has currently been tested on Windows, Mac OS X and Linux.  
- * See \ref release-notes for release-specific platform support.
- *
- * \section build-thrust Thrust Dependency
- * Starting with release 2.0, CUDPP uses the
- * <a href="http://thrust.googlecode.com">Thrust library</a> for the 
- * implementation of cudppRadixSort().  Thrust is included with the CUDA
- * Toolkit version 4.0, so if you are using CUDA 4.0 or later, you need
- * to do nothing else.  If you are using an earlier version of CUDA,
- * however, you will need to download the Thrust source distribution and
- * install it in your CUDA/include path before building CUDPP
- *
- * \section build-win32 Building CUDPP using CMake
- *
- * CUDPP 2.0 uses CMake for cross-platform builds.  Follow the instructions
- * <a href="http://code.google.com/p/cudpp/wiki/BuildingCUDPPwithCMake">on
- * the CUDPP Wiki</a> to build CUDPP.
- * 
- * \section Warnings
- *
- * You may see warnings during compilation of the form "warning: Double is not
- * supported.  Demoting to float".  You can safely disregard these warnings - 
- * they are generated by the CUDA compiler when kernels that are specialized
- * for multiple data types are compiled for CUDA targets that do not support 
- * double precision floating point.   
- */
-
 #ifndef __CUDPP_H__
 #define __CUDPP_H__
 
@@ -594,10 +243,10 @@ CUDPPResult cudppMergeSort(const CUDPPHandle planHandle,
                       size_t            numElements);
 
 CUDPP_DLL
-CUDPPResult cudppStringSort(const CUDPPHandle planHandle,
-						   void              *d_keys,                                          
-						   void              *d_values, 
-						   void              *stringVals,		      
+CUDPPResult cudppStringSort(const CUDPPHandle planHandle,						   
+						   unsigned char              *d_stringVals,
+						   unsigned int      *d_address,
+						   unsigned char              termC,
 						   size_t            numElements,
 						   size_t            stringArrayLength);
 // Sparse matrix allocation
@@ -646,36 +295,36 @@ CUDPPResult cudppTridiagonal(CUDPPHandle planHandle,
 // lossless data compression algorithms
 CUDPP_DLL
 CUDPPResult cudppCompress(CUDPPHandle planHandle, 
-                          void *d_a, 
-                          void *d_x, 
-                          void *d_y, 
-                          void *d_z, 
-                          void *d_w,
-                          void *d_xx,
-                          void *d_yy,
+                          unsigned char *d_uncompressed,
+                          int *d_bwtIndex,
+                          unsigned int *d_histSize,
+                          unsigned int *d_hist,
+                          unsigned int *d_encodeOffset,
+                          unsigned int *d_compressedSize,
+                          unsigned int *d_compressed,
                           size_t numElements);
 
 // Burrows-Wheeler Transform
 CUDPP_DLL
 CUDPPResult cudppBurrowsWheelerTransform(CUDPPHandle planHandle,
-                                         void *d_a,
-                                         void *d_x,
-                                         void *d_y,
+                                         unsigned char *d_in,
+                                         unsigned char *d_out,
+                                         int *d_index,
                                          size_t numElements);
 
 // Move-to-Front Transform
 CUDPP_DLL
 CUDPPResult cudppMoveToFrontTransform(CUDPPHandle planHandle,
-                                      void *d_a,
-                                      void *d_x,
+                                      unsigned char *d_in,
+                                      unsigned char *d_out,
                                       size_t numElements);
 
 // List ranking
 CUDPP_DLL
 CUDPPResult cudppListRank(CUDPPHandle planHandle, 
-                          void *d_x,  
-                          void *d_a,
-                          void *d_b,
+                          void *d_ranked_values,  
+                          void *d_unranked_values,
+                          void *d_next_indices,
                           size_t head,
                           size_t numElements);
 

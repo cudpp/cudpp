@@ -28,9 +28,11 @@
 #include <cstdio>
 
 #include <cuda_runtime_api.h>
+#include <cuda.h>
 #include "cudpp.h"
 #include "cudpp_testrig_utils.h"
 #include "cudpp_testrig_options.h"
+#include "cuda_util.h"
 
 #define CUDPP_APP_COMMON_IMPL
 #include "stopwatch.h"
@@ -277,14 +279,20 @@ int main(int argc, const char** argv)
     commandLineArg(dev, argc, argv, "device");
     if (dev < 0) dev = 0;
     if (dev > deviceCount-1) dev = deviceCount - 1;
-    cudaSetDevice(dev);
+    CUDA_SAFE_CALL( cudaSetDevice(dev) );
 
-    if (!quiet && cudaGetDeviceProperties(&devProps, dev) == 0)
+    CUDA_SAFE_CALL( cudaGetDeviceProperties(&devProps, dev) );
+    if (!quiet)
     {
         printf("Using device %d:\n", dev);
         printf("%s; global mem: %dB; compute v%d.%d; clock: %d kHz\n",
                devProps.name, (int)devProps.totalGlobalMem, (int)devProps.major,
                (int)devProps.minor, (int)devProps.clockRate);
+        int runtimeVersion, driverVersion;
+        CUDA_SAFE_CALL(cudaRuntimeGetVersion(&runtimeVersion));
+        CUDA_SAFE_CALL(cudaDriverGetVersion(&driverVersion));
+        printf("Driver API: %d; driver version: %d; runtime version: %d\n",
+               CUDA_VERSION, driverVersion, runtimeVersion);
     }
 
     int computeVersion = devProps.major * 10 + devProps.minor;

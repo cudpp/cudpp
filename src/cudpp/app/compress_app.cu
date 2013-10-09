@@ -692,15 +692,15 @@ void cudppCompressDispatch(void *d_uncompressed,
  * @param[in]  plan        Pointer to CUDPPBwtPlan object containing
  *                         compress options and intermediate storage
  */
-void cudppBwtDispatch(void *d_bwtIn,
-                      void *d_bwtOut,
-                      void *d_bwtIndex,
+void cudppBwtDispatch(void *d_in,
+                      void *d_out,
+                      void *d_index,
                       size_t numElements,
                       const CUDPPBwtPlan *plan)
 {
     // Call to perform the Burrows-Wheeler transform
-    burrowsWheelerTransformWrapper((unsigned char*)d_bwtIn, (int*)d_bwtIndex,
-                                   (unsigned char*) d_bwtOut, numElements, 
+    burrowsWheelerTransformWrapper((unsigned char*)d_in, (int*)d_index,
+                                   (unsigned char*) d_out, numElements, 
                                    plan);
 }
 
@@ -714,14 +714,14 @@ void cudppBwtDispatch(void *d_bwtIn,
  * @param[in]  plan        Pointer to CUDPPMtfPlan object containing
  *                         compress options and intermediate storage
  */
-void cudppMtfDispatch(void *d_mtfIn,
-                      void *d_mtfOut,
+void cudppMtfDispatch(void *d_in,
+                      void *d_out,
                       size_t numElements,
                       const CUDPPMtfPlan *plan)
 {
     // Call to perform the Burrows-Wheeler transform
-    moveToFrontTransformWrapper((unsigned char*) d_mtfIn, 
-                                (unsigned char*) d_mtfOut, numElements, plan);
+    moveToFrontTransformWrapper((unsigned char*) d_in, 
+                                (unsigned char*) d_out, numElements, plan);
 }
 
 #ifdef __cplusplus

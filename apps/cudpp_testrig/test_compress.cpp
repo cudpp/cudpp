@@ -869,10 +869,10 @@ int compressTest(int argc, const char **argv, const CUDPPConfiguration &config,
 
     // Run the compression
     // run once to avoid timing startup overhead.
-    result = cudppCompress(plan, (void*)d_uncompressed, (void*)d_bwtIndex, 
-                           (void*)d_histSize, (void*)d_hist, 
-                           (void*)d_encodeOffset, (void*)d_compressedSize, 
-                           (void*)d_compressed, numElements);
+    result = cudppCompress(plan, d_uncompressed, d_bwtIndex, 
+                           d_histSize, d_hist, 
+                           d_encodeOffset, d_compressedSize, 
+                           d_compressed, numElements);
     
     if (result != CUDPP_SUCCESS)
     {
