@@ -222,8 +222,9 @@ CUDPP Developers
 Other CUDPP Contributors
 ------------------------
  
-- [Dan Alcantara](http://idav.ucdavis.edu/~dfalcant/research.php), University of California, Davis [hash tables]
 - [Anjul Patney](http://idav.ucdavis.edu/~anjul/), University of California, Davis [general help]
+- [Edmund Yan](http://csiflabs.cs.ucdavis.edu/~eyan/), University of California, Davis [Release Manager]
+- [Dan Alcantara](http://idav.ucdavis.edu/~dfalcant/research.php), University of California, Davis [hash tables]
 - [Nadatur Satish](http://pcl.intel-research.net/people/satish.htm), University of California, Berkeley [(old)radix sort]
 
 Acknowledgments
