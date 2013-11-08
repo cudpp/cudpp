@@ -46,7 +46,7 @@ CCFLAGS		+=	-c -g $(foreach includedir, $(INC_DIRS), -I $(includedir))
 LDFLAGS		+=	$(foreach librarydir, $(LIB_DIRS), -L $(librarydir))
 LDFLAGS		+=	$(foreach library, $(LIBS), -l$(library))
 
-$(CU_OBJS): EXTRA_FLAGS := -arch compute_35
+$(CU_OBJS): EXTRA_FLAGS := -arch compute_20
 
 .PHONY: all clean
 

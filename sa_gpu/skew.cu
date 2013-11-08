@@ -32,7 +32,7 @@ void ComputeSA(unsigned int* str, unsigned int* keys_sa, int str_length, CudaCon
     unsigned int *keys_sa_12 = new unsigned int[str_length+2];
     unsigned int *rank =new unsigned int[mod_1+mod_2];
     float timer=0;
-    
+  printf("================in SA===================\n");  
 
     //initialize substring tuple
     for ( int i = 0; i < mod_1; ++i )

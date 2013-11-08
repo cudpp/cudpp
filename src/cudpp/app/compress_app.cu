@@ -19,6 +19,15 @@
 
 #include "kernel/compress_kernel.cuh"
 
+#include "sa_util.h"
+#include "skew.cu"
+#include <include/moderngpu.cuh>
+#include <fstream>
+
+using namespace std;
+using namespace SA;
+using namespace mgpu;
+
 /**
  * @file
  * compress_app.cu
@@ -263,7 +272,9 @@ void burrowsWheelerTransform(unsigned char              *d_uncompressed,
     uint nBlocks = (fullBlocks) ? (tThreads/nThreads) : (tThreads/nThreads+1);
     dim3 grid_construct(nBlocks, 1, 1);
     dim3 threads_construct(nThreads, 1, 1);
-    int numThreads = 64;
+   
+    cout << "--------------------Before SA--------------------" <<endl;
+   /* int numThreads = 64;
     int secondBlocks;
     size_t count;
     size_t mult;
@@ -367,7 +378,40 @@ void burrowsWheelerTransform(unsigned char              *d_uncompressed,
         bwt_compute_final_kernel<<< grid_construct, threads_construct >>>
             (d_uncompressed, plan->m_d_values_dev, d_bwtIndex, d_bwtOut, numElements, tThreads);
         CUDA_SAFE_CALL(cudaThreadSynchronize());
-    }
+    }  */
+
+
+
+ContextPtr context = CreateCudaDevice(0);
+cout << "-------------start SA-------------------" <<endl;
+  
+  unsigned int *keys_sa = new unsigned int[numElements+1];
+  unsigned int *str_value= new unsigned int [numElements+3];
+  for (int i=0;i<numElements;i++) str_value[i]=(unsigned int) d_uncompressed[i];       
+  for(int i=numElements;i<numElements+3;i++) str_value[i]=0;
+
+  ComputeSA(str_value, keys_sa, numElements, *context);
+  //ofstream myfile;
+  //myfile.open("check.txt");
+  /*for (int i = 1; i < numElements+1; ++i)
+    {
+        for (int j = keys_sa[i]-1; j < numElements; ++j)
+        {
+            cout << d_uncompressed[j];
+        }
+        cout << " " << keys_sa[i] <<endl;
+    }*/
+  //myfile.close();
+cout << "------------------SA complete---------------------" <<endl;
+  for (int i=1; i<numElements+1; i++) plan->m_d_values[i-1]=keys_sa[i];
+  _SafeDeleteArray(keys_sa);
+  _SafeDeleteArray(str_value);
+
+
+
+   bwt_compute_final_kernel<<< grid_construct, threads_construct >>>
+            (d_uncompressed, plan->m_d_values, d_bwtIndex, d_bwtOut, numElements, tThreads);
+   CUDA_SAFE_CALL(cudaThreadSynchronize());
 
 }
 
