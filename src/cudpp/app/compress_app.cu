@@ -19,14 +19,14 @@
 
 #include "kernel/compress_kernel.cuh"
 
-#include "sa_util.h"
+#include "skew.h"
 #include "skew.cu"
-#include <include/moderngpu.cuh>
 #include <fstream>
+#include <iostream>
 
 using namespace std;
 using namespace SA;
-using namespace mgpu;
+
 
 /**
  * @file
@@ -273,8 +273,10 @@ void burrowsWheelerTransform(unsigned char              *d_uncompressed,
     dim3 grid_construct(nBlocks, 1, 1);
     dim3 threads_construct(nThreads, 1, 1);
    
-    cout << "--------------------Before SA--------------------" <<endl;
-   /* int numThreads = 64;
+   // cout << "--------------------Before SA--------------------" <<endl;
+/*GpuTimer Timer2;
+Timer2.Start();
+    int numThreads = 64;
     int secondBlocks;
     size_t count;
     size_t mult;
@@ -365,7 +367,16 @@ void burrowsWheelerTransform(unsigned char              *d_uncompressed,
         mult*=2;
         step++;
     }
-
+//unsigned int *result = (unsigned int*)malloc(numElements*sizeof(unsigned int));
+//unsigned char *str=(unsigned char*)malloc(numElements*sizeof(unsigned char));
+//CUDA_SAFE_CALL(cudaMemcpy(str, d_uncompressed, numElements*sizeof(unsigned char), cudaMemcpyDeviceToHost));
+//CUDA_SAFE_CALL(cudaMemcpy(result, plan->m_d_values, numElements*sizeof(unsigned int), cudaMemcpyDeviceToHost));
+//ofstream myfile;
+//myfile.open("checkresult.txt");
+//for (int i=0; i<10; i++)  myfile << result[i] <<endl;// for (int j = result[i]; j < numElements; ++j) myfile << str[j]; myfile <<endl;}
+//myfile.close();
+//free(str);
+//free(result);
     // Final stage -- compute BWT and BWT Index using sorted values
     if(count%2 == 0)
     {
@@ -378,40 +389,53 @@ void burrowsWheelerTransform(unsigned char              *d_uncompressed,
         bwt_compute_final_kernel<<< grid_construct, threads_construct >>>
             (d_uncompressed, plan->m_d_values_dev, d_bwtIndex, d_bwtOut, numElements, tThreads);
         CUDA_SAFE_CALL(cudaThreadSynchronize());
-    }  */
+    }  
 
+Timer2.Stop();
+cout << "total time is " << Timer2.ElapsedMillis() <<endl;
+*/
 
+GpuTimer Timer1;
 
-ContextPtr context = CreateCudaDevice(0);
-cout << "-------------start SA-------------------" <<endl;
-  
-  unsigned int *keys_sa = new unsigned int[numElements+1];
-  unsigned int *str_value= new unsigned int [numElements+3];
-  for (int i=0;i<numElements;i++) str_value[i]=(unsigned int) d_uncompressed[i];       
-  for(int i=numElements;i<numElements+3;i++) str_value[i]=0;
+ // unsigned int *keys_sa = (unsigned int*)malloc((numElements+1)*sizeof(unsigned int));
+  //unsigned int *result = (unsigned int*)malloc(numElements*sizeof(unsigned int));
+ // unsigned int *str_value= (unsigned int*)malloc((numElements+3)*sizeof(unsigned int));
+ // unsigned char *str=(unsigned char*)malloc(numElements*sizeof(unsigned char));
+ // CUDA_SAFE_CALL(cudaMemcpy(str, d_uncompressed, numElements*sizeof(unsigned char), cudaMemcpyDeviceToHost));
+ // for (int i=0;i<numElements;i++) str_value[i]=(unsigned int) str[i];   
+//ofstream myfile;
+//myfile.open("checkSA3result.txt");
+  //for (int i = 0; i < numElements; ++i)
+   // {
+   //     myfile << str[i] << "," << str_value[i] << " ";
+   // }
+   // myfile << endl;    
+ // for(int i=numElements;i<numElements+3;i++) str_value[i]=0;
+//cout << "-------------start SA-------------------" <<endl;
+Timer1.Start();
+  runComputeSA((unsigned char*)d_uncompressed, (unsigned int*)plan->m_d_values, numElements);
 
-  ComputeSA(str_value, keys_sa, numElements, *context);
-  //ofstream myfile;
-  //myfile.open("check.txt");
-  /*for (int i = 1; i < numElements+1; ++i)
-    {
-        for (int j = keys_sa[i]-1; j < numElements; ++j)
-        {
-            cout << d_uncompressed[j];
-        }
-        cout << " " << keys_sa[i] <<endl;
-    }*/
-  //myfile.close();
-cout << "------------------SA complete---------------------" <<endl;
-  for (int i=1; i<numElements+1; i++) plan->m_d_values[i-1]=keys_sa[i];
-  _SafeDeleteArray(keys_sa);
-  _SafeDeleteArray(str_value);
+//cout << "------------------SA complete---------------------" <<endl;
 
+ // CUDA_SAFE_CALL(cudaMemcpy( result, plan->m_d_values, numElements*sizeof(unsigned int), cudaMemcpyDeviceToHost));
+ 
+  //for (int i=1; i<numElements+1; i++) result[i-1]=keys_sa[i]-1;
+ // for (int i=0; i<10; i++)   myfile << result[i] <<endl;// for (int j = result[i]-1; j < numElements; ++j) myfile << str[j]; myfile <<endl;}
+ // myfile.close();
+//  CUDA_SAFE_CALL(cudaMemcpy(plan->m_d_values, result, numElements*sizeof(unsigned int), cudaMemcpyHostToDevice));
+//  free(keys_sa);
+//  free(str_value);
+//  free(str);
+  //free(result);
 
 
    bwt_compute_final_kernel<<< grid_construct, threads_construct >>>
             (d_uncompressed, plan->m_d_values, d_bwtIndex, d_bwtOut, numElements, tThreads);
+
    CUDA_SAFE_CALL(cudaThreadSynchronize());
+Timer1.Stop();
+cout << "total time is " << Timer1.ElapsedMillis() <<endl;
+//cout << "total time is " << Timer1.ElapsedMillis() <<endl;
 
 }
 

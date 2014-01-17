@@ -18,7 +18,9 @@ CPP_SRCS := mgpucontext.cpp  \
             format.cpp
 
 CU_SRCS	:= main.cu \
-           radix_sort.cu   \
+           radix_sort.cu \
+           skew.cu  
+    	  
            
 #CU_SRCS	:= testlaunchbox.cu
 
@@ -35,7 +37,6 @@ INC_DIRS 	:= 	"$(shell dirname $(NVCC))/../include" \
   	        "/home/yzh/mylib/b40c" \
 	        "../back40computing-read-only"
 
-
 # library directories
 LIB_DIRS	:=	"$(shell dirname $(NVCC))/../lib"
 
@@ -46,7 +47,7 @@ CCFLAGS		+=	-c -g $(foreach includedir, $(INC_DIRS), -I $(includedir))
 LDFLAGS		+=	$(foreach librarydir, $(LIB_DIRS), -L $(librarydir))
 LDFLAGS		+=	$(foreach library, $(LIBS), -l$(library))
 
-$(CU_OBJS): EXTRA_FLAGS := -arch compute_20
+$(CU_OBJS): EXTRA_FLAGS := -arch compute_35
 
 .PHONY: all clean
 

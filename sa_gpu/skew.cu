@@ -1,315 +1,210 @@
-#include "sa_util.h"
+#include "skew.h"
 #include "radix_sort.h"
 #include "merge.cuh"
+#include "skew_kernel.cuh"
 #include <include/moderngpu.cuh>
+#include <iostream>
 #include <fstream>
+#include <string>
+#define SA_BLOCK 128
+#define CudaCheckError()    __cudaCheckError( __FILE__, __LINE__ )
 
 using namespace std;
 using namespace SA;
 using namespace mgpu;
 
-bool UniqueRank(unsigned int*key, int size)
+inline void __cudaCheckError( const char *file, const int line )
 {
-    for ( int i = 0; i < size-1; ++i )
+
+    cudaError err = cudaGetLastError();
+    if ( cudaSuccess != err )
     {
-        if (key[i] == key[i+1])
-            return false;
+        fprintf( stderr, "cudaCheckError() failed at %s:%i : %s\n",
+                 file, line, cudaGetErrorString( err ) );
+        exit( -1 );
     }
-    return true;
+ 
+    // More careful checking. However, this will affect performance.
+    // Comment away if needed.
+    err = cudaDeviceSynchronize();
+    if( cudaSuccess != err )
+    {
+        fprintf( stderr, "cudaCheckError() with sync failed at %s:%i : %s\n",
+                 file, line, cudaGetErrorString( err ) );
+        exit( -1 );
+    }
+ 
+    return;
+}
+
+typedef unsigned int uint;
+
+void ComputeSA(uint* d_str, uint* d_keys_sa, int str_length, CudaContext& context, int stage);
+
+
+void runComputeSA(unsigned char* d_str, unsigned int* d_keys_sa, int str_length)
+{
+	ContextPtr context = CreateCudaDevice(0);
+        size_t nThreads = SA_BLOCK;
+        size_t tThreads = str_length+3;
+        bool fullBlocks = (tThreads%nThreads==0);
+        uint nBlocks = (fullBlocks) ? (tThreads/nThreads) : (tThreads/nThreads+1);
+        dim3 grid_construct(nBlocks,1,1);
+        dim3 threads_construct(nThreads,1,1);
+        uint* d_str_value;
+        uint* d_result;
+        CUDA_SAFE_CALL(cudaMalloc((void**)&d_str_value, tThreads * sizeof(uint)));
+        CUDA_SAFE_CALL(cudaMalloc((void**)&d_result, (str_length+1) * sizeof(uint)));
+        strConstruct<<< grid_construct, threads_construct >>>
+               (d_str, d_str_value, str_length);
+        CUDA_SAFE_CALL(cudaThreadSynchronize());
+	ComputeSA(d_str_value, d_result, str_length, *context, 0);
+        resultConstruct<<< grid_construct, threads_construct >>>
+               (d_result, d_keys_sa, str_length);
+        CUDA_SAFE_CALL(cudaThreadSynchronize());
+        CUDA_SAFE_CALL(cudaFree(d_str_value));
+        CUDA_SAFE_CALL(cudaFree(d_result));
 }
 
 
-void ComputeSA(unsigned int* str, unsigned int* keys_sa, int str_length, CudaContext& context)
+void ComputeSA(uint* d_str, uint* d_keys_sa, int str_length, CudaContext& context, int stage)
 {
     int mod_1 = (str_length+1)/3 + ((str_length+1)%3 > 0 ? 1:0);
     int mod_2 = (str_length+1)/3 + ((str_length+1)%3 > 1 ? 1:0);
     int mod_3 = (str_length+1)/3;
-//cout << "mod_1=" << mod_1 << ",mod_2=" << mod_2 << endl;
-    unsigned int *keys_srt_12 = new unsigned int[mod_1+mod_2];
-    unsigned int *keys_uint_12a = new unsigned int[mod_1+mod_2];
-    unsigned int *keys_uint_12b = new unsigned int[mod_1+mod_2];
-    unsigned int *keys_uint_12c = new unsigned int[mod_1+mod_2];
-    unsigned int *keys_sa_12 = new unsigned int[str_length+2];
-    unsigned int *rank =new unsigned int[mod_1+mod_2];
-    float timer=0;
-  printf("================in SA===================\n");  
+    int bound = mod_1+mod_2+mod_3;
+    bool *unique = new bool[1];
+    unique[0] = 0;
+    bool *d_unique;
+    size_t tThreads1 = mod_1+mod_2;
+    size_t tThreads2 = mod_3;
+    size_t nThreads = SA_BLOCK;
+    bool fullBlocks1 = (tThreads1%nThreads==0);
+    bool fullBlocks2 = (tThreads2%nThreads==0);
+    uint nBlocks1=(fullBlocks1) ? (tThreads1/nThreads) : (tThreads1/nThreads+1);
+    uint nBlocks2=(fullBlocks2) ? (tThreads2/nThreads) : (tThreads2/nThreads+1);
+    dim3 grid_construct1(nBlocks1,1,1);
+    dim3 grid_construct2(nBlocks2,1,1);
+    dim3 threads_construct(nThreads,1,1);
 
-    //initialize substring tuple
-    for ( int i = 0; i < mod_1; ++i )
-    {
-        keys_srt_12[i] = i*3+1;
-//cout << (unsigned int)str[i*3] << ',' <<  (unsigned int)str[i*3+1] << ',' <<  (unsigned int)str[3*i+2] << ',' <<  keys_srt_12[i] <<endl;
-        keys_uint_12c[i] = str[i*3+2];
+    uint* d_keys_srt_12;
+    uint* d_keys_sa_12;
+    uint* d_keys_srt_3;
+    uint* d_keys_uint_3;
+    Vector* d_aKeys;
+    Vector* d_bKeys;
+    Vector* d_cKeys;
+    int* d_aVals;
+    int* d_bVals;
+    uint* d_new_str;
 
-    }
-    for ( int i = mod_1; i < mod_1 + mod_2; ++i )
-    {
-        keys_srt_12[i] = (i-mod_1)*3+2;
-//cout << (unsigned int)str[(i-mod_1)*3+1] << ',' << (unsigned int)str[(i-mod_1)*3+2] << ',' << (unsigned int)str[(i-mod_1)*3+3] << ',' << keys_srt_12[i] << endl;
-         
-        keys_uint_12c[i] = str[(i-mod_1)*3+3];
-
-    }
-GpuTimer Timer1;
-//radix sort using constructed key
-    CStrRadixSortEngine sorter;
-Timer1.Start();
-    sorter.KeyValueSort(mod_1 + mod_2, keys_uint_12c, keys_srt_12);
-Timer1.Stop();
-timer += Timer1.ElapsedMillis();
-for (int i = 0; i < mod_1+mod_2; ++i)
-        {
-            //cout << (unsigned int)str[keys_srt_12[i]-1] << ',' <<  keys_uint_12c[i] << ' ' << keys_srt_12[i] << '|';
-            keys_uint_12b[i] = str[keys_srt_12[i]];
-
-         }
-    // printf("\n");
-_SafeDeleteArray(keys_uint_12c);
-GpuTimer Timer2;
-Timer2.Start();
-    sorter.KeyValueSort(mod_1 + mod_2, keys_uint_12b, keys_srt_12);
-Timer2.Stop();
-timer += Timer2.ElapsedMillis();
-for (int i = 0; i < mod_1+mod_2; ++i)
-        {
-           // cout << (unsigned int)str[keys_srt_12[i]-1] << ',' <<  keys_uint_12b[i] << ' ' << keys_srt_12[i] << '|';
-            keys_uint_12a[i] = str[keys_srt_12[i]-1];
-
-         }
-_SafeDeleteArray(keys_uint_12b);
-    // printf("\n");
-GpuTimer Timer3;
-Timer3.Start();
-    sorter.KeyValueSort(mod_1 + mod_2, keys_uint_12a, keys_srt_12);
-Timer3.Stop();
-timer += Timer3.ElapsedMillis();
-_SafeDeleteArray(keys_uint_12a);
-/*for (int i = 0; i < mod_1+mod_2; ++i)
-        {
-            cout << (unsigned int)str[keys_srt_12[i]-1] << ',' <<  keys_uint_12a[i] << ' ' << keys_srt_12[i] << '|';
-
-         }
-     printf("\n");*/
-cout << "--------------sorter12 completed-------------------------" <<endl;
-   
-
-   /* ofstream myfile1;
-    myfile1.open("checkSA12.txt");
- 
-    for (int i = 0; i < mod_1+mod_2; ++i)
-        {
-            myfile1 << (unsigned int)str[keys_srt_12[i]-1] << ',' <<  keys_uint_12[i] << ' ' << keys_srt_12[i] << '|';
-
-         }
-    myfile1.close();*/
-     //printf("\n");
-   
-    int j;
-    for(int i=0;i<mod_1+mod_2;i++)
-       {
-        
-            if (i==0) {j=1; rank[i]=j; /*cout << keys_srt_12[i] << "'s rank is " << j <<endl;*/}
-            else if( (str[keys_srt_12[i]-1]==str[keys_srt_12[i-1]-1]) && (str[keys_srt_12[i]]==str[keys_srt_12[i-1]]) && (str[keys_srt_12[i]+1]==str[keys_srt_12[i-1]+1]) ) { rank[i]=j;   /* cout << keys_srt_12[i] << "'s rank is " << j <<endl;*/ }
-            else {j++;  rank[i]=j;   /* cout << keys_srt_12[i] << "'s rank is " << j <<endl;*/}
-   //keys_srt_12[i]: sorted index       
-       }
     
-//for(int i=0;i <mod_1+mod_2; ++i) cout << rank[i] << "|" ; cout << endl;
-
-   if (!UniqueRank(rank,mod_1+mod_2))
-{  
-     
-  //unsigned char *keys_rank_12=new unsigned char[mod_1+mod_2+3];
-  unsigned int *keys_rank_12=new unsigned int[mod_1+mod_2+3];
-  
-    int j;
-    for(int i=0;i<mod_1+mod_2;i++)
-       {
-        
-            if (i==0) {j=1; keys_sa_12[keys_srt_12[i]-1]=j; /*cout << keys_srt_12[i] << "'s rank is " << j <<endl;*/}
-            else if(  (str[keys_srt_12[i]-1]==str[keys_srt_12[i-1]-1]) && (str[keys_srt_12[i]]==str[keys_srt_12[i-1]]) && (str[keys_srt_12[i]+1]==str[keys_srt_12[i-1]+1]) ) {keys_sa_12[keys_srt_12[i]-1]=j;    /* cout << keys_srt_12[i] << "'s rank is " << j <<endl;*/}
-            else {j++; keys_sa_12[keys_srt_12[i]-1]=j;   /* cout << keys_srt_12[i] << "'s rank is " << j <<endl;*/}
-   //keys_srt_12[i]: sorted index       
-       }
-
-    for(int i=0;i<mod_1;i++) keys_rank_12[i]=keys_sa_12[i*3];
-    for(int i=mod_1;i<mod_1+mod_2;i++) keys_rank_12[i]=keys_sa_12[(i-mod_1)*3+1];
-    keys_rank_12[mod_1+mod_2]=0;
-    keys_rank_12[mod_1+mod_2+1]=0;
-    ComputeSA(keys_rank_12,keys_srt_12,mod_1+mod_2-1,context);
-
-   for (int i=0;i<mod_1+mod_2;i++)
-   {
-     if(keys_srt_12[i]>mod_1) keys_srt_12[i]=3*(keys_srt_12[i]-mod_1-1)+2;
-     else keys_srt_12[i]=3*(keys_srt_12[i]-1)+1;
-   }
  
-        _SafeDeleteArray(keys_rank_12);
-       
-}
-
-    unsigned int *keys_uint_3a = new unsigned int[mod_3];
-    unsigned int *keys_uint_3b = new unsigned int[mod_3];
-    unsigned int *keys_srt_3 = new unsigned int[mod_3];
-
-    for ( int i = 0; i < mod_1+mod_2; ++i )
-    {
-        keys_sa_12[keys_srt_12[i]] = i;
-      
-    }
-    // cout <<endl;
-   //  keys_sa_12: sorted mod12 ranks
+   CUDA_SAFE_CALL(cudaMalloc((void**)&d_keys_srt_12, tThreads1 * sizeof(uint)));
    
-    for (int i = 0; i < mod_3; ++i)
-    {
+   sa12_keys_construct<<< grid_construct1, threads_construct >>>
+	     (d_str, d_keys_sa, d_keys_srt_12, mod_1, tThreads1);
+   CUDA_SAFE_CALL(cudaThreadSynchronize());
+   cout << "mod_1=" << mod_1 << "," << "mod_2=" << mod_2 <<endl;
+   CStrRadixSortEngine sorter;
+   sorter.KeyValueSort((mod_1+mod_2), d_keys_sa, d_keys_srt_12);
+   CUDA_SAFE_CALL(cudaThreadSynchronize());
+   cout<<"Stage "<< stage << endl;
+   sa12_keys_construct_0<<< grid_construct1, threads_construct >>>
+	   (d_str, d_keys_sa, d_keys_srt_12, tThreads1, str_length, stage);
+   CUDA_SAFE_CALL(cudaThreadSynchronize());
+   sorter.KeyValueSort((mod_1+mod_2), d_keys_sa, d_keys_srt_12);
+   sa12_keys_construct_1<<< grid_construct1, threads_construct >>>
+	   (d_str, d_keys_sa, d_keys_srt_12, tThreads1, str_length);
+   CUDA_SAFE_CALL(cudaThreadSynchronize());
+   sorter.KeyValueSort(tThreads1, d_keys_sa, d_keys_srt_12);
+//cout << "--------------sorter12 completed-------------------------" <<endl;
 
-        keys_srt_3[i] = i*3+3; 
-  // cout << (unsigned int)str[i*3+2] << ',' <<  (unsigned int)str[i*3+3] << ',' <<  (unsigned int)str[3*i+4] << ',' <<  keys_srt_3[i] <<endl;
-      
-        keys_uint_3b[i] = (mod_1+mod_2+mod_3-(i*3+3)>0) ? keys_sa_12[i*3+4] : 0;
+   CUDA_SAFE_CALL(cudaMalloc((void**)&d_unique, sizeof(bool)));
+   compute_rank_1<<< grid_construct1, threads_construct >>>
+	 (d_str, d_keys_srt_12, d_keys_sa, d_unique, tThreads1);
+   CUDA_SAFE_CALL(cudaThreadSynchronize());
 
-    }
-    //radix sort mod3=0
-GpuTimer Timer4;
-Timer4.Start();
-    sorter.KeyValueSort(mod_3, keys_uint_3b, keys_srt_3);
-Timer4.Stop();
-timer += Timer4.ElapsedMillis();
-for (int i = 0; i < mod_3; ++i)
+   CUDA_SAFE_CALL(cudaMemcpy(unique, d_unique,  sizeof(bool), cudaMemcpyDeviceToHost));
+   CUDA_SAFE_CALL(cudaFree(d_unique));
+if (unique[0]!=0) unique[0]=true;
+
+if(!unique[0])
 {
-//cout << (unsigned int)str[keys_srt_3[i]-1] << ',' << keys_uint_3b[i] << ' ' << keys_srt_3[i] << '|';
-    keys_uint_3a[i] = str[keys_srt_3[i]-1];
-}
-//printf("\n");
-GpuTimer Timer5;
-Timer5.Start();
-    sorter.KeyValueSort(mod_3, keys_uint_3a, keys_srt_3);
-Timer5.Stop();
-timer += Timer5.ElapsedMillis();
-/*for (int i = 0; i < mod_3; ++i)
-{
-cout << (unsigned int)str[keys_srt_3[i]-1] << ',' << keys_uint_3a[i] << ' ' << keys_srt_3[i] << '|';
-}
-printf("\n");*/
+   int total = Scan(d_keys_sa, (mod_1+mod_2), context);
+   CUDA_SAFE_CALL(cudaMalloc((void**)&d_keys_sa_12, (str_length+2) * sizeof(uint)));
+   compute_rank_2<<< grid_construct1, threads_construct >>>
+	  (d_keys_srt_12, d_keys_sa, d_keys_sa_12, tThreads1);
 
-  cout << "---------------sorter3 completed------------------------" <<endl;
-       
-    
-//cout << "mod_3=" << mod_3 << endl;
-  /*  ofstream myfile2;
-    myfile2.open("checkSA3.txt");
-for (int i = 0; i < mod_3; ++i)
-{
-myfile2 << (unsigned int)str[keys_srt_3[i]-1] << ',' << keys_uint_3[i] << ' ' << keys_srt_3[i] << '|';
-}
-   myfile2.close();*/
-//printf("\n");
+   CUDA_SAFE_CALL(cudaMalloc((void**)&d_new_str, (tThreads1+3) * sizeof(uint)));
 
+   new_str_construct<<< grid_construct1, threads_construct >>>
+	  (d_new_str, d_keys_srt_12, d_keys_sa_12, mod_1, tThreads1);
+   CUDA_SAFE_CALL(cudaThreadSynchronize());
+
+   CUDA_SAFE_CALL(cudaFree(d_keys_sa_12));
+
+////recursive////
+ComputeSA(d_new_str, d_keys_srt_12, tThreads1-1, context, stage+1);
+
+  CUDA_SAFE_CALL(cudaFree(d_new_str));
+  reconstruct<<< grid_construct1, threads_construct >>>
+	   (d_keys_srt_12, mod_1, tThreads1);
+  CUDA_SAFE_CALL(cudaThreadSynchronize());
+
+}
+
+//cout << "------unique ranked-------------------" <<endl;
+
+  CUDA_SAFE_CALL(cudaMalloc((void**)&d_keys_sa_12, (str_length+2) * sizeof(uint)));
+  SA12_result_store<<< grid_construct1, threads_construct >>>
+	  (d_keys_srt_12, d_keys_sa_12, tThreads1, str_length);
+  CUDA_SAFE_CALL(cudaThreadSynchronize());
+
+  CUDA_SAFE_CALL(cudaMalloc((void**)&d_keys_srt_3, tThreads2 * sizeof(uint)));
+  CUDA_SAFE_CALL(cudaMalloc((void**)&d_keys_uint_3, tThreads2 * sizeof(uint)));
+
+  SA3_keys_construct<<< grid_construct2, threads_construct >>>
+	  ( d_str, d_keys_uint_3, d_keys_srt_3,  d_keys_sa_12, bound, tThreads2);
+  CUDA_SAFE_CALL(cudaThreadSynchronize());
+
+  sorter.KeyValueSort(mod_3, d_keys_uint_3, d_keys_srt_3);
+
+  SA3_keys_construct_0<<< grid_construct2, threads_construct >>>
+	  ( d_str, d_keys_uint_3, d_keys_srt_3, tThreads2);
+  CUDA_SAFE_CALL(cudaThreadSynchronize());
+  sorter.KeyValueSort(mod_3, d_keys_uint_3, d_keys_srt_3);
+
+// cout << "---------------sorter3 completed------------------------" <<endl;
 //////////////////////////// merge sort//////////////////////////////////
-    Vector* aKeysHost = new Vector[mod_1+mod_2];
-    Vector* bKeysHost = new Vector[mod_3];
-    int* aValsHost=new int[mod_1+mod_2];
-    int* bValsHost=new int[mod_3];
-    Vector* cKeysHost=new Vector[mod_1+mod_2+mod_3];
-    int* cValsHost=new int[mod_1+mod_2+mod_3];
-    int aCount=mod_1+mod_2;
-    int bCount=mod_3;
-    int bound = aCount+bCount;
+    CUDA_SAFE_CALL(cudaMalloc((void**)&d_aKeys, (tThreads1) * sizeof(Vector)));
+    CUDA_SAFE_CALL(cudaMalloc((void**)&d_bKeys, (tThreads2) * sizeof(Vector)));
+    CUDA_SAFE_CALL(cudaMalloc((void**)&d_cKeys, (bound) * sizeof(Vector)));
+    CUDA_SAFE_CALL(cudaMalloc((void**)&d_aVals, (tThreads1) * sizeof(int)));
+    CUDA_SAFE_CALL(cudaMalloc((void**)&d_bVals, (tThreads2) * sizeof(int)));
 
-    for(int i=0; i< mod_1+mod_2; ++i)
-    {
-       
-       if(keys_srt_12[i]%3==1)  
-            {
-              aKeysHost[i].a = str[keys_srt_12[i]-1];
-              aKeysHost[i].b = (bound-keys_srt_12[i]>0) ? keys_sa_12[keys_srt_12[i]+1] : 0;
-              aKeysHost[i].c = 0;
-              aKeysHost[i].d = 1;
-            }
-       else  
-        
-            {
-              aKeysHost[i].a = str[keys_srt_12[i]-1];
-              aKeysHost[i].b = (bound-keys_srt_12[i]>0) ? str[keys_srt_12[i]] : 0;
-              aKeysHost[i].c = (bound-keys_srt_12[i]>1) ? keys_sa_12[keys_srt_12[i]+2] : 0;
-              aKeysHost[i].d = 0;
-            }
+  merge_akeys_construct<<< grid_construct1, threads_construct >>>
+	(d_str, d_keys_srt_12, d_keys_sa_12, d_aKeys, d_aVals, tThreads1, bound, str_length);
 
-     }
+  CUDA_SAFE_CALL(cudaThreadSynchronize());
 
+  merge_bkeys_construct<<< grid_construct2, threads_construct >>>
+	(d_str, d_keys_srt_3, d_keys_sa_12, d_bKeys, d_bVals, tThreads2, bound, str_length);
+  CUDA_SAFE_CALL(cudaThreadSynchronize());
 
-    for(int j=0; j< mod_3; ++j)
-    {
-     
-        bKeysHost[j].a = str[keys_srt_3[j]-1];
-        bKeysHost[j].b = (bound-keys_srt_3[j]>0) ? str[keys_srt_3[j]] : 0;
-        bKeysHost[j].c = (bound-keys_srt_3[j]>0) ? keys_sa_12[keys_srt_3[j]+1] : 0;
-        bKeysHost[j].d = (bound-keys_srt_3[j]>1) ? keys_sa_12[keys_srt_3[j]+2] : 0;
+  MergePairs(d_aKeys, d_aVals, tThreads1, d_bKeys, d_bVals, tThreads2, d_cKeys, d_keys_sa, context);
 
-    }
-    // aVals=keys_srt_12; bVals=keys_srt_3;
-    
-     for(int i=0;i<mod_1+mod_2;i++) aValsHost[i]=keys_srt_12[i];
-     for(int j=0;j<mod_3;j++) bValsHost[j]=keys_srt_3[j];//bValsHost[j+mod_3]=keys_srt_3[j];}
+CUDA_SAFE_CALL(cudaFree(d_keys_srt_12));
+CUDA_SAFE_CALL(cudaFree(d_keys_sa_12));
+CUDA_SAFE_CALL(cudaFree(d_keys_srt_3));
+CUDA_SAFE_CALL(cudaFree(d_keys_uint_3));
+CUDA_SAFE_CALL(cudaFree(d_aKeys));
+CUDA_SAFE_CALL(cudaFree(d_bKeys));
+CUDA_SAFE_CALL(cudaFree(d_cKeys));
+CUDA_SAFE_CALL(cudaFree(d_aVals));
 
-     MGPU_MEM(Vector) aKeys=context.Malloc((const Vector*) aKeysHost, (size_t) aCount);
-     MGPU_MEM(int) aVals=context.Malloc((const int*) aValsHost, (size_t) aCount);
-    // cout << "-------------a Keys and Vals mallocated -------------------------" <<endl;
-     MGPU_MEM(Vector) bKeys=context.Malloc((const Vector*) bKeysHost, (size_t) bCount);
-    // cout << "---------------bKeys mallocated -------------------------" <<endl;
-     MGPU_MEM(int) bVals=context.Malloc((const int*) bValsHost, (size_t) bCount);
-     //cout << "---------------bVals mallocated -------------------------" <<endl;    
-     MGPU_MEM(Vector) cKeys=context.Malloc<Vector>(mod_1+mod_2+mod_3);   
-     MGPU_MEM(int) cVals=context.Malloc<int>(mod_1+mod_2+mod_3);
-     
-     //cout << "------------------------merge-------------------------" <<endl;
-    // cout << "aCount=" << aCount << "," << "bCount=" << bCount <<endl;
-    // cout << "SA12 sorted positions" <<endl;
-    // for(int i=0;i<aCount;i++) cout << keys_srt_12[i] << " "; cout <<endl;
-    /* cout << "aKeys:" <<endl;
-     for(int i=0;i<aCount;i++) cout << aKeysHost[i].a << "," << aKeysHost[i].b << "," << aKeysHost[i].c << "," << aKeysHost[i].d << "|"; cout <<endl;
-     cout << "aVals:" <<endl;
-     for(int i=0;i<aCount;i++) cout << aValsHost[i] << " "; cout <<endl;
-     cout << "bKeys:" <<endl;
-     for(int j=0;j<bCount;j++) cout << bKeysHost[j].a << "," << bKeysHost[j].b << "," << bKeysHost[j].c << "," << bKeysHost[j].d << "|"; cout <<endl;
-     cout << "bVals:" <<endl;
-     for(int j=0;j<bCount;j++) cout << bValsHost[j] << " "; cout <<endl;*/
-     
-     
-     printf("aCount %d bCount %d cCount %d\n", aCount, bCount, mod_1+mod_2+mod_3);
-GpuTimer Timer6;
-Timer6.Start();
-     MergePairs(aKeys->get(), aVals->get(), aCount, bKeys->get(), bVals->get(), bCount, cKeys->get(), cVals->get(), context);
-Timer6.Stop();
-     timer += Timer6.ElapsedMillis();
-     cout << "Total time is " << timer <<endl;
-   // cout << "------merged----------" <<endl;
-      cKeys->ToHost(cKeysHost,(size_t)(mod_1+mod_2+mod_3));
-    // cout << "------------------cKeys to Host successfully ------------------" <<endl;
-      cVals->ToHost(cValsHost,(size_t)(mod_1+mod_2+mod_3));
-   // ofstream myfile;
-   // myfile.open("check.txt");
-   
-     //for(int i=0;i<mod_1+mod_2+mod_3;i++) {keys_sa[i] = cValsHost[i]; cout << "cVals=" << cValsHost[i] << ", " << "cKeys.x=" << cKeysHost[i].x << "  cKeys.y=" << cKeysHost[i].y <<endl; } cout << endl;
-     for(int i=0;i<mod_1+mod_2+mod_3;i++) keys_sa[i] = cValsHost[i]; //myfile << "cVals=" << cValsHost[i] << ", " << "cKeys.a=" << cKeysHost[i].a << "  cKeys.b=" << cKeysHost[i].b << " cKeys.c=" << cKeysHost[i].c << " cKeys.d=" << cKeysHost[i].d <<endl; }// cout << endl;
-//    myfile.close();
-
-
-
-    _SafeDeleteArray(rank);
-    _SafeDeleteArray(aKeysHost);
-    _SafeDeleteArray(aValsHost);
-    _SafeDeleteArray(bKeysHost);
-    _SafeDeleteArray(bValsHost);
-    _SafeDeleteArray(cKeysHost);
-    _SafeDeleteArray(cValsHost);
-    //_SafeDeleteArray(keys_uint_12a);
-    //_SafeDeleteArray(keys_uint_12b);
-    //_SafeDeleteArray(keys_uint_12c);
-    _SafeDeleteArray(keys_srt_12);
-    _SafeDeleteArray(keys_uint_3a);
-    _SafeDeleteArray(keys_uint_3b);    
-    _SafeDeleteArray(keys_srt_3);
-    _SafeDeleteArray(keys_sa_12);
+_SafeDeleteArray(unique);
 
 }
+
+
