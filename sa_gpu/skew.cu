@@ -179,7 +179,6 @@ ComputeSA(d_new_str, d_keys_srt_12, tThreads1-1, context, stage+1);
 //////////////////////////// merge sort//////////////////////////////////
     CUDA_SAFE_CALL(cudaMalloc((void**)&d_aKeys, (tThreads1) * sizeof(Vector)));
     CUDA_SAFE_CALL(cudaMalloc((void**)&d_bKeys, (tThreads2) * sizeof(Vector)));
-    CUDA_SAFE_CALL(cudaMalloc((void**)&d_cKeys, (bound) * sizeof(Vector)));
     CUDA_SAFE_CALL(cudaMalloc((void**)&d_aVals, (tThreads1) * sizeof(int)));
     CUDA_SAFE_CALL(cudaMalloc((void**)&d_bVals, (tThreads2) * sizeof(int)));
 
@@ -192,12 +191,12 @@ ComputeSA(d_new_str, d_keys_srt_12, tThreads1-1, context, stage+1);
 	(d_str, d_keys_srt_3, d_keys_sa_12, d_bKeys, d_bVals, tThreads2, bound, str_length);
   CUDA_SAFE_CALL(cudaThreadSynchronize());
 
+  CUDA_SAFE_CALL(cudaFree(d_keys_srt_12));
+  CUDA_SAFE_CALL(cudaFree(d_keys_sa_12));
+  CUDA_SAFE_CALL(cudaFree(d_keys_srt_3));
+  CUDA_SAFE_CALL(cudaMalloc((void**)&d_cKeys, (bound) * sizeof(Vector)));
   MergePairs(d_aKeys, d_aVals, tThreads1, d_bKeys, d_bVals, tThreads2, d_cKeys, d_keys_sa, context);
 
-CUDA_SAFE_CALL(cudaFree(d_keys_srt_12));
-CUDA_SAFE_CALL(cudaFree(d_keys_sa_12));
-CUDA_SAFE_CALL(cudaFree(d_keys_srt_3));
-CUDA_SAFE_CALL(cudaFree(d_keys_uint_3));
 CUDA_SAFE_CALL(cudaFree(d_aKeys));
 CUDA_SAFE_CALL(cudaFree(d_bKeys));
 CUDA_SAFE_CALL(cudaFree(d_cKeys));
