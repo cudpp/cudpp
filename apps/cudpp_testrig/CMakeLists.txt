@@ -3,6 +3,13 @@
 # Build script for project
 #
 ###############################################################################
+cmake_minimum_required(VERSION 2.8)
+
+find_package(CUDA REQUIRED)
+
+# Add include/lib paths for local cmake builds
+include_directories(${CMAKE_SOURCE_DIR}/../../include)
+link_directories(${CMAKE_SOURCE_DIR}/../../lib/)
 
 set(CCFILES
   cudpp_testrig.cpp
