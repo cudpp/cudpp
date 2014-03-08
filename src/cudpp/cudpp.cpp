@@ -437,7 +437,8 @@ CUDPPResult cudppMergeSort(const CUDPPHandle planHandle,
  * and values are the addresses where the strings reside in memory (stringVals)
  * 
  * Takes as input an array of strings (broken up as first four chars (key), 
- * addresses (values), and the strings themselves (stringVals))
+ * addresses (values), and the strings themselves (stringVals) aligned by 4 character
+ * and packed into a uint)
  *
  * 
  * @todo Determine if we need to provide an "out of place" sort interface.
@@ -445,15 +446,15 @@ CUDPPResult cudppMergeSort(const CUDPPHandle planHandle,
  * @param[in] planHandle handle to CUDPPSortPlan
  * @param[in,out] d_keys keys (first four chars of string to be sorted)
  * @param[in,out] d_values addresses where the strings reside
- * @param[in] stringVals Original string input, series of characters each terminated by a null
+ * @param[in] stringVals Packed String input, series of characters each terminated by a null
  * @param[in] numElements number of elements in d_keys and d_values
- * @param[in] stringArrayLength Length in uint of the size of all strings
+ * @param[in] stringArrayLength Length in uint of the size of stromgVals
  * @returns CUDPPResult indicating success or error condition 
  *
  * @see cudppPlan, CUDPPConfiguration, CUDPPAlgorithm
  */
 CUDPP_DLL
-CUDPPResult cudppStringSort(const CUDPPHandle planHandle,
+CUDPPResult cudppStringSortAligned(const CUDPPHandle planHandle,
                       unsigned int              *d_keys,
                       unsigned int              *d_values,                      
                       unsigned int              *stringVals,

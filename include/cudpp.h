@@ -249,6 +249,14 @@ CUDPPResult cudppStringSort(const CUDPPHandle planHandle,
 						   unsigned char              termC,
 						   size_t            numElements,
 						   size_t            stringArrayLength);
+
+CUDPP_DLL
+CUDPPResult cudppStringSortAligned(const CUDPPHandle planHandle,						   
+						   unsigned int     *d_keys,
+						   unsigned int      *d_values,
+						   unsigned int     * stringVals,
+						   size_t            numElements,
+						   size_t            stringArrayLength);
 // Sparse matrix allocation
 
 CUDPP_DLL
