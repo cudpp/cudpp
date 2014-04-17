@@ -8,7 +8,7 @@ cmake_minimum_required(VERSION 2.8)
 
 find_package(CUDA REQUIRED)
 
-option(CUDPP_BUILD_SHARED_LIBS	
+option(CUDPP_BUILD_SHARED_LIBS
   "On to build shared libraries, off for static libraries."
   OFF
   )
@@ -78,15 +78,15 @@ set (CUDPP_APP_DATA_DIR
   "${CMAKE_SOURCE_DIR}/apps/data/"
   )
 configure_file(
-  ${CMAKE_SOURCE_DIR}/apps/common/include/common_config.h.in
-  ${CMAKE_SOURCE_DIR}/apps/common/include/common_config.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/apps/common/include/common_config.h.in
+  ${CMAKE_CURRENT_SOURCE_DIR}/apps/common/include/common_config.h
   )
 
 # copy WIN32 DLLs
 if (WIN32)
 if (bits EQUAL 64)
 file(COPY bin/win32/glut32.dll bin/win64/glew64.dll DESTINATION bin/)
-elseif (bits EQUAL 32)  
+elseif (bits EQUAL 32)
 file(COPY bin/win32/glut32.dll bin/win32/glew32.dll DESTINATION bin/)
 endif (bits EQUAL 64)
 endif (WIN32)
@@ -113,14 +113,14 @@ export(
 
 set(cudpp_INCLUDE_DIRS_CONFIG ${cudpp_INCLUDE_DIRS})
 configure_file(
-  ${CMAKE_SOURCE_DIR}/cudpp-config.cmake.in
+  ${CMAKE_CURRENT_SOURCE_DIR}/cudpp-config.cmake.in
   ${LIBRARY_OUTPUT_PATH}/cudpp-config.cmake
   @ONLY
   )
 
 set(cudpp_INCLUDE_DIRS_CONFIG "\${_install_dir}/include")
 configure_file(
-  ${CMAKE_SOURCE_DIR}/cudpp-config.cmake.in
+  ${CMAKE_CURRENT_SOURCE_DIR}/cudpp-config.cmake.in
   ${LIBRARY_OUTPUT_PATH}/cudpp-config.cmake.install
   @ONLY
   )
@@ -130,7 +130,7 @@ install(FILES ${LIBRARY_OUTPUT_PATH}/cudpp-config.cmake.install
   )
 
 configure_file(
-  ${CMAKE_SOURCE_DIR}/cudpp-config-version.cmake.in
+  ${CMAKE_CURRENT_SOURCE_DIR}/cudpp-config-version.cmake.in
   ${LIBRARY_OUTPUT_PATH}/cudpp-config-version.cmake
   @ONLY
   )
