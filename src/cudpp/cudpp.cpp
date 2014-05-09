@@ -761,6 +761,7 @@ CUDPPResult cudppCompress(CUDPPHandle planHandle,
                           size_t numElements)
 {
     // first check: is this device >= 2.0? if not, return error
+
     int dev;
     cudaGetDevice(&dev);
 
@@ -823,7 +824,7 @@ CUDPPResult cudppBurrowsWheelerTransform(CUDPPHandle planHandle,
     // first check: is this device >= 2.0? if not, return error
     int dev;
     cudaGetDevice(&dev);
-
+printf("-----------in bwt-----------\n");
     cudaDeviceProp devProps;
     cudaGetDeviceProperties(&devProps, dev);
 
@@ -842,8 +843,8 @@ CUDPPResult cudppBurrowsWheelerTransform(CUDPPHandle planHandle,
             return CUDPP_ERROR_INVALID_PLAN;
         if (plan->m_config.datatype != CUDPP_UCHAR)
             return CUDPP_ERROR_ILLEGAL_CONFIGURATION;
-        if (numElements != 1048576)
-            return CUDPP_ERROR_ILLEGAL_CONFIGURATION;
+        //if (numElements != 1048576)
+        //    return CUDPP_ERROR_ILLEGAL_CONFIGURATION;
 
         cudppBwtDispatch(d_in, d_out, d_index, numElements, plan);
         return CUDPP_SUCCESS;

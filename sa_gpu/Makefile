@@ -6,24 +6,14 @@ LD			=	nvcc
 NVCC = "$(shell which nvcc)"
 
 EXE			:= 	bin/sa-gpu
-#CPP_SRCS	:= 	CUDASampler-host.cpp \
-                readfile.cpp    \
-                main.cpp        \
 
-#CU_SRCS     :=	CUDASampler.cu \
-                internalsort.cu\
-                aadmerge_kernel.cu
-
-CPP_SRCS := mgpucontext.cpp  \
-            format.cpp
+CPP_SRCS := mgpuutil.cpp
 
 CU_SRCS	:= main.cu \
+           mgpucontext.cu \
            radix_sort.cu \
            skew.cu  
     	  
-           
-#CU_SRCS	:= testlaunchbox.cu
-
 
 CPP_OBJS	:=	${CPP_SRCS:.cpp=.o}
 CU_OBJS	        :=	${CU_SRCS:.cu=.o}
@@ -32,13 +22,11 @@ OBJS			:=	$(CU_OBJS) $(CPP_OBJS)
 # include directories
 INC_DIRS 	:= 	"$(shell dirname $(NVCC))/../include" \
                 "$(shell dirname $(NVCC))/../samples/common/inc" \
-                "/home/laura/mylib/back40c" \
-                "/home/laura/mylib/moderngpu" \
-  	        "/home/yzh/mylib/b40c" \
-	        "../back40computing-read-only"
+                "../mylib/cub" \
+                "../mylib/moderngpu/include" 
 
 # library directories
-LIB_DIRS	:=	"$(shell dirname $(NVCC))/../lib"
+LIB_DIRS	:=	"$(shell dirname $(NVCC))/../lib64"
 
 # libraries
 LIBS		:=	cuda
@@ -54,8 +42,9 @@ $(CU_OBJS): EXTRA_FLAGS := -arch compute_35
 $(EXE): $(OBJS)
 	$(LD) $(OBJS) $(LDFLAGS) -o $(EXE) -O3
 
+#%.cpp.o : %.cpp
 .cpp.o:
-	$(CC) $(CCFLAGS) $<
+	$(CC) $(CCFLAGS) $< #-o $@
 
 %.o : %.cu
 	$(NVCC) $(CCFLAGS) $(EXTRA_FLAGS) -c $< -o $@

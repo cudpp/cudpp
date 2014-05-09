@@ -34,6 +34,7 @@
 #include <algorithm>
 
 #define BLOCK_THREADS 16
+typedef unsigned int uint;
 
 #if CUDART_VERSION >= 4000
 #define CUDA_DEVICE_SYNCHRONIZE( )   cudaDeviceSynchronize();
@@ -103,12 +104,6 @@ namespace SA
 #define _inout_
 #endif
 // vector type of keys
-/*struct Vector 
-{
-    unsigned long long x;
-    unsigned long long y;
-};*/
-
 struct Vector 
 {
     unsigned int a;

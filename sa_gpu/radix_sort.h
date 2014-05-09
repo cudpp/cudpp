@@ -8,10 +8,7 @@ namespace SA
 	    public:
 		CStrRadixSortEngine() {};
 		~CStrRadixSortEngine() {};
-		//void KeysOnlySort(unsigned int numElem, unsigned int* h_keys);
-         // void KeyValueSort(unsigned int numElem, unsigned int* d_keys, unsigned int* d_values);
-        void KeyValueSort(unsigned int numElem, unsigned int* h_keys, unsigned int* h_values);
-        //void KeyValueSort(unsigned int numElem, unsigned long long* h_keys, unsigned int* h_values);
+                void KeyValueSort(unsigned int numElem, unsigned int* d_keys, unsigned int* d_values);
 	};
 
 }
