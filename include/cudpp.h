@@ -334,7 +334,7 @@ CUDPP_DLL
 CUDPPResult cudppSuffixArray(CUDPPHandle planHandle,
                              unsigned int *d_str,
                              unsigned int *d_keys_sa,
-                             int str_length);
+                             size_t numElements);
 
 #ifdef __cplusplus
 }

@@ -824,7 +824,6 @@ CUDPPResult cudppBurrowsWheelerTransform(CUDPPHandle planHandle,
     // first check: is this device >= 2.0? if not, return error
     int dev;
     cudaGetDevice(&dev);
-printf("-----------in bwt-----------\n");
     cudaDeviceProp devProps;
     cudaGetDeviceProperties(&devProps, dev);
 
@@ -962,6 +961,41 @@ CUDPPResult cudppListRank(CUDPPHandle planHandle,
         return CUDPP_ERROR_INVALID_HANDLE;
 }
 
+CUDPP_DLL
+CUDPPResult cudppSuffixArray(CUDPPHandle planHandle,
+                             unsigned int *d_in,
+                             unsigned int *d_out,
+                             size_t numElements)
+{
+    // first check: is this device >= 2.0? if not, return error
+    int dev;
+    cudaGetDevice(&dev);
+    cudaDeviceProp devProps;
+    cudaGetDeviceProperties(&devProps, dev);
+
+    if((int)devProps.major < 2) {
+        // Only supported on devices with compute
+        // capability 2.0 or greater
+        return CUDPP_ERROR_ILLEGAL_CONFIGURATION;
+    }
+
+    CUDPPSkewPlan * plan = 
+         (CUDPPSkewPlan *) getPlanPtrFromHandle<CUDPPSkewPlan>(planHandle);
+
+    if(plan != NULL)
+    {
+        if (plan->m_config.algorithm != CUDPP_SA)
+            return CUDPP_ERROR_INVALID_PLAN;
+        if (plan->m_config.datatype != CUDPP_UINT)
+            return CUDPP_ERROR_ILLEGAL_CONFIGURATION;
+        
+        cudppSuffixArrayDispatch(d_in, d_out, numElements, plan);
+        return CUDPP_SUCCESS;
+    }
+    else
+        return CUDPP_ERROR_INVALID_HANDLE;
+   
+}
 /** @} */ // end Algorithm Interface
 /** @} */ // end of publicInterface group
 

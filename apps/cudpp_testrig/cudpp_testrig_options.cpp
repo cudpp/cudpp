@@ -50,6 +50,8 @@ void setOptions(int argc, const char **argv, testrigOptions &testOptions)
         testOptions.algorithm = "bwt";
     else if (checkCommandLineFlag(argc, argv, "compress"))
         testOptions.algorithm = "compress";
+    else if(checkCommandLineFlag(argc, argv, "suffix_array"))
+        testOptions.algorithm = "skew";
             
     testOptions.op = "sum";
     commandLineArg(testOptions.op, argc, argv, "op");
