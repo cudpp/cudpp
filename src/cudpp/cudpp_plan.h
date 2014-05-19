@@ -373,4 +373,32 @@ public:
     int *m_d_tmp3; //!< @internal temporary next indices array
 };
 
+struct Vector
+{
+    unsigned int a;
+    unsigned int b;
+    unsigned int c;
+    unsigned int d;  
+};
+
+/** @brief Plan class for suffix array
+*
+*/
+class CUDPPSkewPlan : public CUDPPPlan
+{
+public:
+    CUDPPSkewPlan(CUDPPManager *mgr, CUDPPConfiguration config, size_t str_length);
+    virtual ~CUDPPSkewPlan();
+   
+    // Intermediate buffers and variables during suffix array construction 
+    bool *m_unique;
+    unsigned int* m_d_keys_srt_12;
+    unsigned int* m_d_keys_srt_3;
+    Vector* m_d_aKeys;
+    Vector* m_d_bKeys;
+    Vector* m_d_cKeys;
+    unsigned int* m_d_new_str;
+    unsigned int* m_d_isa_12;	
+};
+
 #endif // __CUDPP_PLAN_H__
