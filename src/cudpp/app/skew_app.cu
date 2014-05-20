@@ -87,6 +87,12 @@ void KeyValueSort(unsigned int num_elements,
 
 }
 
+template<typename InputIt>
+void ScanInc(InputIt data_global, int count, mgpu::CudaContext& context) {
+        typedef typename std::iterator_traits<InputIt>::value_type T;
+        mgpu::Scan<mgpu::MgpuScanTypeInc>(data_global, count, (T)0, mgpu::plus<T>(), (T*)0,
+                (T*)0, data_global, context);
+}
 
 template<typename KeysIt1, typename KeysIt2, typename KeysIt3, typename ValsIt1,
         typename ValsIt2, typename ValsIt3>
@@ -179,7 +185,7 @@ void ComputeSA(unsigned int* d_str,
 if(!unique[0])
  {
    // Inclusive scan to compute the ranks of SA12 
-   mgpu::ScanInc(d_keys_sa, (mod_1+mod_2), context);
+   ScanInc(d_keys_sa, (mod_1+mod_2), context);
  
    // Construct new string with 2/3 str_length of original string
    // Place the ranks of SA1 before SA2 to construct the new str
