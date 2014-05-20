@@ -8,7 +8,7 @@ cmake_minimum_required(VERSION 2.8)
 
 find_package(CUDA REQUIRED)
 
-option(CUDPP_BUILD_SHARED_LIBS	
+option(CUDPP_BUILD_SHARED_LIBS
   "On to build shared libraries, off for static libraries."
   OFF
   )
@@ -42,7 +42,9 @@ set(CMAKE_MODULE_PATH
   )
 
 set(cudpp_INCLUDE_DIRS
-  ${CMAKE_SOURCE_DIR}/include 
+  ${CMAKE_SOURCE_DIR}/include
+  ${CMAKE_SOURCE_DIR}/ext/moderngpu/include/
+  ${CMAKE_SOURCE_DIR}/ext/cub/
   )
 include_directories(${cudpp_INCLUDE_DIRS})
 
@@ -85,7 +87,7 @@ configure_file(
 if (WIN32)
 if (bits EQUAL 64)
 file(COPY bin/win32/glut32.dll bin/win64/glew64.dll DESTINATION bin/)
-elseif (bits EQUAL 32)  
+elseif (bits EQUAL 32)
 file(COPY bin/win32/glut32.dll bin/win32/glew32.dll DESTINATION bin/)
 endif (bits EQUAL 64)
 endif (WIN32)
