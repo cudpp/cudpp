@@ -53,6 +53,7 @@
 #include "cudpp_stringsort.h"
 #include "cudpp_tridiagonal.h"
 #include "cudpp_compress.h"
+#include "cudpp_skew.h"
 #include "cudpp_listrank.h"
 #include <stdio.h>
 

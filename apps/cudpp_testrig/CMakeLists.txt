@@ -20,6 +20,7 @@ set(CCFILES
   test_tridiagonal.cpp
   test_compress.cpp
   test_listrank.cpp
+  test_skew.cpp
   )
 
 set(HFILES
