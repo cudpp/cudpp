@@ -1,4 +1,4 @@
-i// -------------------------------------------------------------
+// -------------------------------------------------------------
 // CUDPP -- CUDA Data Parallel Primitives library
 // -------------------------------------------------------------
 // $Revision: $
@@ -46,7 +46,7 @@ int suffixArrayTest(int argc, const char **argv, const CUDPPConfiguration &confi
         oneTest = true;
     }   
 
-    unsigned int test[] = {m,m,i,i,s,s,i,i,s,s,i,i,p,p,i,i};
+    unsigned int test[] = {'m','m','i','i','s','s','i','i','s','s','i','i','p','p','i','i'};
  
     int numTests = sizeof(test) / sizeof(test[0]);
     numElements = test[numTests-1]; // maximum test size

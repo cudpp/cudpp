@@ -395,7 +395,7 @@ int main(int argc, const char** argv)
         runCompress = false;
     }
     bool runSA = runAll || checkCommandLineFlag(argc, argv, "sa");
-    if(!suppors48KBInShared && runSA)
+    if(!supports48KBInShared && runSA)
     {
         fprintf(stderr, "Suffix Array is only supported on devices with "
                 "compute capability 2.0+\n");
@@ -493,7 +493,7 @@ int main(int argc, const char** argv)
         }
         if (runSA) {
             config.algorithm = CUDPP_SA;
-            retval += testAllDatatypes(argc, argv, config, supportsDoule, false);
+            retval += testAllDatatypes(argc, argv, config, supportsDouble, false);
         }
     }
 

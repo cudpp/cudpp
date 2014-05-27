@@ -23,47 +23,36 @@
 
 #define SA_BLOCK 128
 
-/*
-#define CudaCheckError()    __cudaCheckError( __FILE__, __LINE__ )
 
-inline void __cudaCheckError( const char *file, const int line )
-{
+template<typename KeysIt1, typename KeysIt2, typename KeysIt3, typename ValsIt1,
+        typename ValsIt2, typename ValsIt3>
+void Merge(KeysIt1 aKeys_global, ValsIt1 aVals_global, 
+        int aCount, KeysIt2 bKeys_global, ValsIt2 bVals_global, int bCount,
+        KeysIt3 keys_global, ValsIt3 vals_global, mgpu::CudaContext& context) {
 
-    cudaError err = cudaGetLastError();
-    if ( cudaSuccess != err )
-    {
-        fprintf( stderr, "cudaCheckError() failed at %s:%i : %s\n",
-                 file, line, cudaGetErrorString( err ) );
-        exit( -1 );
-    }
- // More careful checking. However, this will affect performance.
-    // Comment away if needed.
-    err = cudaDeviceSynchronize();
-    if( cudaSuccess != err )
-    {
-        fprintf( stderr, "cudaCheckError() with sync failed at %s:%i : %s\n",
-                 file, line, cudaGetErrorString( err ) );
-        exit( -1 );
-    }
- 
-    return;
+        typedef my_less<typename std::iterator_traits<KeysIt1>::value_type> Comp;
+        return mgpu::MergePairs(aKeys_global, aVals_global, aCount, bKeys_global, 
+                bVals_global, bCount, keys_global, vals_global, Comp(), context);
 }
-*/
 
-/*void ComputeSA(uint* d_str, uint* d_keys_sa, int str_length, mgpu::CudaContext& context, int stage);
 
-// Declare contextPtr and call ComputeSA main function
-void runComputeSA(uint* d_str, uint* d_keys_sa, int str_length)
+template<typename InputIt>
+void ScanInc(InputIt data_global, int count, mgpu::CudaContext& context) {
+        typedef typename std::iterator_traits<InputIt>::value_type T;
+        mgpu::Scan<mgpu::MgpuScanTypeInc>(data_global, count, (T)0, mgpu::plus<T>(), (T*)0,
+                (T*)0, data_global, context);
+}
+
+#ifdef __cplusplus
+extern "C"
 {
-	mgpu::ContextPtr context = mgpu::CreateCudaDevice(0);
-	ComputeSA(d_str,d_keys_sa, str_length, *context, 0);
- 
-}*/
+#endif
 
 void KeyValueSort(unsigned int num_elements, 
                   unsigned int* d_keys, 
                   unsigned int* d_values)
 {
+    using namespace cub;
     size_t temp_storage_bytes = 0;
     void *d_temp_storage = NULL;
     cub::DoubleBuffer<unsigned int> d_cub_keys;
@@ -88,24 +77,6 @@ void KeyValueSort(unsigned int num_elements,
 
 }
 
-template<typename InputIt>
-void ScanInc(InputIt data_global, int count, mgpu::CudaContext& context) {
-        typedef typename std::iterator_traits<InputIt>::value_type T;
-        mgpu::Scan<mgpu::MgpuScanTypeInc>(data_global, count, (T)0, mgpu::plus<T>(), (T*)0,
-                (T*)0, data_global, context);
-}
-
-template<typename KeysIt1, typename KeysIt2, typename KeysIt3, typename ValsIt1,
-        typename ValsIt2, typename ValsIt3>
-void Merge(KeysIt1 aKeys_global, ValsIt1 aVals_global, 
-        int aCount, KeysIt2 bKeys_global, ValsIt2 bVals_global, int bCount,
-        KeysIt3 keys_global, ValsIt3 vals_global, mgpu::CudaContext& context) {
-
-        typedef my_less<typename std::iterator_traits<KeysIt1>::value_type> Comp;
-        return mgpu::MergePairs(aKeys_global, aVals_global, aCount, bKeys_global, 
-                bVals_global, bCount, keys_global, vals_global, Comp(), context);
-}
-
 
 ////////////////////////////////////////////////////////////
 // d_str: input the original str
@@ -117,7 +88,7 @@ void ComputeSA(unsigned int* d_str,
                unsigned int* d_keys_sa, 
                size_t str_length, 
                mgpu::CudaContext& context, 
-               const CUDPPSkewPlan *plan,
+               CUDPPSkewPlan *plan,
                unsigned int offset,
                unsigned int stage)
 {
@@ -147,14 +118,14 @@ void ComputeSA(unsigned int* d_str,
    // extract the positions of i%3 != 0 to construct SA12
    // d_str: input,the original string 
    // d_keys_sa: output, extracted string value with SA1 before SA2
-   // d_keys_srt_12: output, store the positions of SA12 in original str
+   // m_d_keys_srt_12: output, store the positions of SA12 in original str
    ////////////////////////////////////////////////////////////////////
    sa12_keys_construct<<< grid_construct1, threads_construct >>>
 	     (d_str, d_keys_sa, plan->m_d_keys_srt_12, mod_1, tThreads1);
    cudaThreadSynchronize();  
    // LSB radix sort the triplets character by character
    // d_keys_sa store the value of the character from the triplets r->l
-   // d_keys_srt_12 store the sorted position of each char from each round
+   // m_d_keys_srt_12 store the sorted position of each char from each round
    // 3 round to sort the SA12 triplets
    /////////////////////////////////////////////////////////////////////
    KeyValueSort((mod_1+mod_2), d_keys_sa, plan->m_d_keys_srt_12);
@@ -173,9 +144,9 @@ void ComputeSA(unsigned int* d_str,
  
     // Compare each SA12 position's rank to its previous position
     // and  mark 1 if different and 0 for same
-    // Input: d_keys_srt_12, first round SA12 (may not fully sorted)
+    // Input: m_d_keys_srt_12, first round SA12 (may not fully sorted)
     // Output: d_keys_sa,1 if two position's ranks are the same
-    //         d_unique,1 if SA12 are fully sorted
+    //         m_d_unique,1 if SA12 are fully sorted
     ////////////////////////////////////////////////////////////////
     compute_rank<<< grid_construct1, threads_construct >>>
           (d_str, plan->m_d_keys_srt_12, d_keys_sa, plan->m_d_unique, tThreads1, str_length);
@@ -199,9 +170,9 @@ if(!unique[0])
    ComputeSA(plan->m_d_new_str, plan->m_d_keys_srt_12, tThreads1-1, context, plan, tThreads1, stage+1);
 
    // translate the sorted SA12 to original position and compute ISA12
-   // Input: d_keys_srt_12, fully sorted SA12 named by local position
-   // Output: d_isa_12, ISA12 to store the rank regard to local position
-   // d_keys_srt_12, SA12 with regard to global position
+   // Input: m_d_keys_srt_12, fully sorted SA12 named by local position
+   // Output: m_d_isa_12, ISA12 to store the rank regard to local position
+   // m_d_keys_srt_12, SA12 with regard to global position
    // d_keys_sa, flag to mark those with i mod 3 = 1 and i > 1
    ////////////////////////////////////////////////////////////////////
    reconstruct<<< grid_construct1, threads_construct >>>
@@ -212,8 +183,8 @@ if(!unique[0])
 
 // SA12 already fully sorted with results stored in d_keys_srt_12
 // in their original position, no need to reconstruct, construct ISA12 
-// Input: d_keys_`srt_12, fully sorted SA12 named by gloabl position
-// Output: d_isa_12, ISA12 to store the rank regard to local position
+// Input: m_d_keys_srt_12, fully sorted SA12 named by gloabl position
+// Output: m_d_isa_12, ISA12 to store the rank regard to local position
 //         d_keys_sa, flag to mark those with i mod 3 = 1
 //////////////////////////////////////////////////////////////////////
 else
@@ -227,10 +198,10 @@ else
 // Exclusive scan to compute the position of SA1
   mgpu::ScanExc(d_keys_sa, (mod_1+mod_2), context);
   // Construct SA3 keys and positions based on SA1's ranks  
-  // Input: d_keys_srt_12, sorted SA12
+  // Input: m_d_keys_srt_12, sorted SA12
   //        d_keys_sa, positions of sorted SA1
   //        tThreads1, mod_1+mod_2 tThreads2, mod_3
-  // Output:d_keys_srt_3, positions of i mod 3 = 3 in the same order of SA1
+  // Output:m_d_keys_srt_3, positions of i mod 3 = 3 in the same order of SA1
   //        d_keys_sa, ith character value according to d_keys_srt_3
   ////////////////////////////////////////////////////////////////////////
   sa3_srt_construct<<< grid_construct1, threads_construct >>>
@@ -247,9 +218,9 @@ else
   // With SA1 composed of 1st char's value, 2nd char's rank, 0 and 1 
   // With SA2 composed of 1st char's value, 2nd char's value, 
   //          3rd char's rank, 0
-  // Input: d_keys_srt_12 the order of aKeys
-  //        d_isa_12 storing the ranks in sorted SA12 order
-  // Output: d_aKeys, storing SA12 keys in Vectors
+  // Input: m_d_keys_srt_12 the order of aKeys
+  //        m_d_isa_12 storing the ranks in sorted SA12 order
+  // Output: m_d_aKeys, storing SA12 keys in Vectors
   //////////////////////////////////////////////////////////////////
   merge_akeys_construct<<< grid_construct1, threads_construct >>>
 	(d_str, plan->m_d_keys_srt_12, plan->m_d_isa_12, plan->m_d_aKeys, tThreads1, mod_1, bound, str_length);
@@ -258,16 +229,16 @@ else
   // Construct SA3 keys in terms of Vector
   // Composed of 1st char's value, 2nd char's value, 2nd char's rank
   // and 3rd char's rank
-  // Input: d_keys_srt_3 the order of bKeys
-  //        d_isa_12 storing the ranks of chars behind the first char
-  // Output:d_bKeys, storing SA3 keys in Vectors 
+  // Input: m_d_keys_srt_3 the order of bKeys
+  //        m_d_isa_12 storing the ranks of chars behind the first char
+  // Output:m_d_bKeys, storing SA3 keys in Vectors 
   ////////////////////////////////////////////////////////////////////
   merge_bkeys_construct<<< grid_construct2, threads_construct >>>
 	(d_str, plan->m_d_keys_srt_3, plan->m_d_isa_12, plan->m_d_bKeys, tThreads2, mod_1, bound, str_length);
   CUDA_SAFE_CALL(cudaThreadSynchronize());
 
   // Merge SA12 and SA3 based on aKeys and bKeys 
-  // Output: cKeys storing the merged aKeys and bKeys
+  // Output: m_d_cKeys storing the merged aKeys and bKeys
   //         d_keys_sa storing the merged SA12 and SA3 (positions)
   /////////////////////////////////////////////////////////////////
   Merge(plan->m_d_aKeys, plan->m_d_keys_srt_12, tThreads1, plan->m_d_bKeys, plan->m_d_keys_srt_3, tThreads2, plan->m_d_cKeys, d_keys_sa, context);
@@ -334,10 +305,12 @@ void freeSkewStorage(CUDPPSkewPlan *plan)
 void cudppSuffixArrayDispatch(void* d_str,
                               void* d_keys_sa,
                               size_t d_str_length,
-                              const CUDPPSkewPlan *plan)
+                              CUDPPSkewPlan *plan)
 {
     mgpu::ContextPtr context = mgpu::CreateCudaDevice(0);
     ComputeSA((unsigned int*)d_str, (unsigned int*)d_keys_sa, d_str_length, *context, plan, 0, 0);
 }
 
-
+#ifdef __cplusplus
+}
+#endif
