@@ -3,10 +3,10 @@
 // -------------------------------------------------------------
 // $Revision: 3572$
 // $Date: 2007-11-19 13:58:06 +0000 (Mon, 19 Nov 2007) $
-// ------------------------------------------------------------- 
+// -------------------------------------------------------------
 // This source code is distributed under the terms of license.txt
 // in the root directory of this source distribution.
-// ------------------------------------------------------------- 
+// -------------------------------------------------------------
 #ifndef __CUDPP_PLAN_H__
 #define __CUDPP_PLAN_H__
 
@@ -27,15 +27,15 @@ T* getPlanPtrFromHandle(CUDPPHandle handle)
 /** @brief Base class for CUDPP Plan data structures
   *
   * CUDPPPlan and its subclasses provide the internal (i.e. not visible to the
-  * library user) infrastructure for planning algorithm execution.  They 
+  * library user) infrastructure for planning algorithm execution.  They
   * own intermediate storage for CUDPP algorithms as well as, in some cases,
   * information about optimal execution configuration for the present hardware.
-  * 
+  *
   */
 class CUDPPPlan
 {
 public:
-    CUDPPPlan(CUDPPManager *mgr, CUDPPConfiguration config, 
+    CUDPPPlan(CUDPPManager *mgr, CUDPPConfiguration config,
               size_t numElements, size_t numRows, size_t rowPitch);
     virtual ~CUDPPPlan() {}
 
@@ -45,7 +45,7 @@ public:
     size_t             m_numRows;       //!< @internal Maximum number of input rows
     size_t             m_rowPitch;      //!< @internal Pitch of input rows in elements
     CUDPPManager      *m_planManager;  //!< @internal pointer to the manager of this plan
-   
+
     //! @internal Convert this pointer to an opaque handle
     //! @returns Handle to a CUDPP plan
     CUDPPHandle getHandle()
@@ -97,7 +97,7 @@ public:
 
     CUDPPScanPlan *m_scanPlan;         //!< @internal Compact performs a scan of type unsigned int using this plan
     unsigned int* m_d_outputIndices; //!< @internal Output address of compacted elements; this is the result of scan
-    
+
 };
 
 /** @brief Plan class for reduce algorithm
@@ -112,7 +112,7 @@ public:
     unsigned int m_threadsPerBlock;     //!< @internal number of threads to launch per block
     unsigned int m_maxBlocks;           //!< @internal maximum number of blocks to launch
     void         *m_blockSums;          //!< @internal Intermediate block sums array
-};  
+};
 
 /** @brief Plan class for mergesort algorithm
 *
@@ -160,7 +160,7 @@ public:
 	unsigned int *m_partitionSizeA, *m_partitionSizeB, *m_partitionStartA, *m_partitionStartB;
 
 
-	
+
 };
 
 /** @brief Plan class for radixsort algorithm
@@ -172,7 +172,7 @@ class CUDPPRadixSortPlan : public CUDPPPlan
 public:
     CUDPPRadixSortPlan(CUDPPManager *mgr, CUDPPConfiguration config, size_t numElements);
     virtual ~CUDPPRadixSortPlan();
-        
+
     bool           m_bKeysOnly;
     bool           m_bManualCoalesce;
     bool           m_bUsePersistentCTAs;
@@ -229,25 +229,25 @@ public:
 class CUDPPSparseMatrixVectorMultiplyPlan : public CUDPPPlan
 {
 public:
-    CUDPPSparseMatrixVectorMultiplyPlan(CUDPPManager *mgr, 
+    CUDPPSparseMatrixVectorMultiplyPlan(CUDPPManager *mgr,
                                         CUDPPConfiguration config, size_t numNZElts,
                                         const void         *A,
-                                        const unsigned int *rowindx, 
+                                        const unsigned int *rowindx,
                                         const unsigned int *indx, size_t numRows);
     virtual ~CUDPPSparseMatrixVectorMultiplyPlan();
 
     CUDPPSegmentedScanPlan *m_segmentedScanPlan; //!< @internal Performs a segmented scan of type T using this plan
     void             *m_d_prod;  //!< @internal Vector of products (of an element in A and its corresponding (thats is
-                                 //!            belongs to the same row) element in x; this is the input and output of 
+                                 //!            belongs to the same row) element in x; this is the input and output of
                                  //!            segmented scan
     unsigned int     *m_d_flags; //!< @internal Vector of flags where a flag is set if an element of A is the first element
                                  //!            of its row; this is the flags vector for segmented scan
     unsigned int     *m_d_rowFinalIndex; //!< @internal Vector of row end indices, which for each row specifies an index in A
-                                         //!            which is the last element of that row. Resides in GPU memory. 
+                                         //!            which is the last element of that row. Resides in GPU memory.
     unsigned int     *m_d_rowIndex; //!< @internal Vector of row end indices, which for each row specifies an index in A
-                                    //!            which is the first element of that row. Resides in GPU memory. 
-    unsigned int     *m_d_index;    //!<@internal Vector of column numbers one for each element in A 
-    void             *m_d_A;        //!<@internal The A matrix 
+                                    //!            which is the first element of that row. Resides in GPU memory.
+    unsigned int     *m_d_index;    //!<@internal Vector of column numbers one for each element in A
+    void             *m_d_A;        //!<@internal The A matrix
     unsigned int     *m_rowFinalIndex; //!< @internal Vector of row end indices, which for each row specifies an index in A
                                        //!            which is the last element of that row. Resides in CPU memory.
     size_t           m_numRows; //!< Number of rows
@@ -378,7 +378,7 @@ struct Vector
     unsigned int a;
     unsigned int b;
     unsigned int c;
-    unsigned int d;  
+    unsigned int d;
 };
 
 /** @brief Plan class for suffix array
@@ -389,16 +389,16 @@ class CUDPPSkewPlan : public CUDPPPlan
 public:
     CUDPPSkewPlan(CUDPPManager *mgr, CUDPPConfiguration config, size_t str_length);
     virtual ~CUDPPSkewPlan();
-   
-    // Intermediate buffers and variables during suffix array construction 
-    bool *m_unique;
+
+    // Intermediate buffers and variables during suffix array construction
+    bool *m_d_unique;
     unsigned int* m_d_keys_srt_12;
     unsigned int* m_d_keys_srt_3;
     Vector* m_d_aKeys;
     Vector* m_d_bKeys;
     Vector* m_d_cKeys;
     unsigned int* m_d_new_str;
-    unsigned int* m_d_isa_12;	
+    unsigned int* m_d_isa_12;
 };
 
 #endif // __CUDPP_PLAN_H__
