@@ -29,7 +29,7 @@ void freeSkewStorage(CUDPPSkewPlan* plan);
 extern "C"
 void cudppSuffixArrayDispatch(unsigned int* d_str, 
                               unsigned int* d_keys_sa, 
-                              int d_str_length,
+                              size_t d_str_length,
                               const CUDPPSkewPlan *plan);
 
 #endif // _CUDPP_SKEW_H_

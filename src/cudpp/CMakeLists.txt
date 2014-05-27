@@ -6,6 +6,8 @@
 
 include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}/../../include
+  ${CMAKE_CURRENT_SOURCE_DIR}/../../ext/moderngpu/include
+  ${CMAKE_CURRENT_SOURCE_DIR}/../../ext/cub
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${CMAKE_CURRENT_SOURCE_DIR}/app
   ${CMAKE_CURRENT_SOURCE_DIR}/kernel
@@ -16,6 +18,7 @@ set(CCFILES
   cudpp.cpp
   cudpp_plan.cpp
   cudpp_manager.cpp
+  ../../ext/moderngpu/src/mgpuutil.cpp
   )
 
 set (HFILES
@@ -27,6 +30,7 @@ set (HFILES
   cudpp_compact.h
   cudpp_compress.h
   cudpp_listrank.h
+  cudpp_skew.h
   cudpp_mergesort.h
   cudpp_radixsort.h
   cudpp_rand.h
@@ -49,6 +53,7 @@ set (CUHFILES
   kernel/compact_kernel.cuh
   kernel/compress_kernel.cuh
   kernel/listrank_kernel.cuh
+  kernel/skew_kernel.cuh
   kernel/mergesort_kernel.cuh
   kernel/radixsort_kernel.cuh
   kernel/rand_kernel.cuh
@@ -65,6 +70,7 @@ set(CUFILES
   app/compact_app.cu
   app/compress_app.cu
   app/listrank_app.cu
+  app/skew_app.cu
   app/mergesort_app.cu
   app/scan_app.cu
   app/segmented_scan_app.cu
@@ -73,6 +79,7 @@ set(CUFILES
   app/radixsort_app.cu
   app/rand_app.cu 
   app/tridiagonal_app.cu
+  ../../ext/moderngpu/src/mgpucontext.cu
   )
 
 set(HFILES_PUBLIC

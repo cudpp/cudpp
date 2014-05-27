@@ -148,8 +148,8 @@ public:
 	CUDPPScanPlan *m_scanPlan;
 	unsigned int m_numElements;
 	unsigned int *m_keys;
-    unsigned int *m_tempKeys;
-    unsigned int *m_tempAddress;
+        unsigned int *m_tempKeys;
+        unsigned int *m_tempAddress;
 	unsigned int *m_packedAddress;
 	unsigned int *m_packedAddressRef;
 	unsigned int *m_addressRef;
@@ -391,7 +391,7 @@ public:
     virtual ~CUDPPSkewPlan();
    
     // Intermediate buffers and variables during suffix array construction 
-    bool *m_unique;
+    bool *m_d_unique;
     unsigned int* m_d_keys_srt_12;
     unsigned int* m_d_keys_srt_3;
     Vector* m_d_aKeys;
