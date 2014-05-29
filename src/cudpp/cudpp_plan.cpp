@@ -20,7 +20,7 @@
 #include "cudpp_reduce.h"
 #include "cudpp_compress.h"
 #include "cudpp_listrank.h"
-#include "cudpp_skew.h"
+#include "cudpp_sa.h"
 #include "cuda_util.h"
 #include <cuda_runtime_api.h>
 
@@ -166,7 +166,7 @@ CUDPPResult cudppPlan(const CUDPPHandle  cudppHandle,
         }
     case CUDPP_SA:
         {
-            plan = new CUDPPSkewPlan(mgr, config, numElements);
+            plan = new CUDPPSaPlan(mgr, config, numElements);
         }
     default:
         return CUDPP_ERROR_ILLEGAL_CONFIGURATION; 
@@ -267,7 +267,7 @@ CUDPPResult cudppDestroyPlan(CUDPPHandle planHandle)
         }
     case CUDPP_SA:
         {
-            delete static_cast<CUDPPSkewPlan*>(plan);
+            delete static_cast<CUDPPSaPlan*>(plan);
             break;
         }
     default:
@@ -769,14 +769,14 @@ CUDPPListRankPlan::~CUDPPListRankPlan()
   * @param[in] config The configuration struct specifying options
   * @param[in] str_length the length of the string including $
   */
-CUDPPSkewPlan::CUDPPSkewPlan(CUDPPManager *mgr, CUDPPConfiguration config, size_t str_length)
+CUDPPSaPlan::CUDPPSaPlan(CUDPPManager *mgr, CUDPPConfiguration config, size_t str_length)
  : CUDPPPlan(mgr, config, str_length, 1, 0)
 {
-    allocSkewStorage(this);
+    allocSaStorage(this);
 }
 
 /** brief SA plan destructor*/
-CUDPPSkewPlan::~CUDPPSkewPlan()
+CUDPPSaPlan::~CUDPPSaPlan()
 {
-    freeSkewStorage(this);
+    freeSaStorage(this);
 }

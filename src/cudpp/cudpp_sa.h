@@ -10,26 +10,26 @@
 
 /**
 * @file
-* cudpp_skew.h
+* cudpp_sa.h
 *
 * @brief Suffix Array functionality header file - contains CUDPP interface (not public)
 */
 
-#ifndef _CUDPP_SKEW_H_
-#define _CUDPP_SKEW_H_
+#ifndef _CUDPP_SA_H_
+#define _CUDPP_SA_H_
 
-class CUDPPSkewPlan;
-
-extern "C" 
-void allocSkewStorage(CUDPPSkewPlan* plan);
+class CUDPPSaPlan;
 
 extern "C" 
-void freeSkewStorage(CUDPPSkewPlan* plan);
+void allocSaStorage(CUDPPSaPlan* plan);
+
+extern "C" 
+void freeSaStorage(CUDPPSaPlan* plan);
 
 extern "C"
-void cudppSuffixArrayDispatch(unsigned int* d_str, 
+void cudppSuffixArrayDispatch(unsigned char* d_str, 
                               unsigned int* d_keys_sa, 
                               size_t d_str_length,
-                              const CUDPPSkewPlan *plan);
+                              const CUDPPSaPlan *plan);
 
-#endif // _CUDPP_SKEW_H_
+#endif // _CUDPP_SA_H_

@@ -53,10 +53,11 @@
 #include "cudpp_stringsort.h"
 #include "cudpp_tridiagonal.h"
 #include "cudpp_compress.h"
-#include "cudpp_skew.h"
+#include "cudpp_sa.h"
 #include "cudpp_listrank.h"
 #include <stdio.h>
-
+#include <iostream>
+using namespace std;
 /**
  * @brief Performs a scan operation of numElements on its input in
  * GPU memory (d_in) and places the output in GPU memory
@@ -964,10 +965,10 @@ CUDPPResult cudppListRank(CUDPPHandle planHandle,
 
 CUDPP_DLL
 CUDPPResult cudppSuffixArray(CUDPPHandle planHandle,
-                             unsigned int *d_in,
+                             unsigned char *d_in,
                              unsigned int *d_out,
                              size_t numElements)
-{
+{ cout << "------------in cudppSuffixArray------------------" <<endl;
     // first check: is this device >= 2.0? if not, return error
     int dev;
     cudaGetDevice(&dev);
@@ -980,16 +981,17 @@ CUDPPResult cudppSuffixArray(CUDPPHandle planHandle,
         return CUDPP_ERROR_ILLEGAL_CONFIGURATION;
     }
 
-    CUDPPSkewPlan * plan = 
-         (CUDPPSkewPlan *) getPlanPtrFromHandle<CUDPPSkewPlan>(planHandle);
-
+    CUDPPSaPlan * plan = 
+         (CUDPPSaPlan *) getPlanPtrFromHandle<CUDPPSaPlan>(planHandle);
+    cout << plan->m_config.algorithm <<endl;
     if(plan != NULL)
     {
-        if (plan->m_config.algorithm != CUDPP_SA)
-            return CUDPP_ERROR_INVALID_PLAN;
-        if (plan->m_config.datatype != CUDPP_UINT)
-            return CUDPP_ERROR_ILLEGAL_CONFIGURATION;
+        if (plan->m_config.algorithm != CUDPP_SA){ cout << "algorithm!=SA" <<endl;
+            return CUDPP_ERROR_INVALID_PLAN;}
+        if (plan->m_config.datatype != CUDPP_UCHAR){  cout << "datatype != uchar" <<endl;
+            return CUDPP_ERROR_ILLEGAL_CONFIGURATION;}
         
+cout << "-----------------before dispatch---------------" <<endl;
         cudppSuffixArrayDispatch(d_in, d_out, numElements, plan);
         return CUDPP_SUCCESS;
     }

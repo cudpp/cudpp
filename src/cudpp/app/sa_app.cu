@@ -19,10 +19,10 @@
 
 #include "moderngpu.cuh"
 #include "cub/cub.cuh"
-#include "kernel/skew_kernel.cuh"
+#include "kernel/sa_kernel.cuh"
 
 #define SA_BLOCK 128
-
+using namespace std;
 
 template<typename KeysIt1, typename KeysIt2, typename KeysIt3, typename ValsIt1,
         typename ValsIt2, typename ValsIt3>
@@ -88,10 +88,10 @@ void ComputeSA(unsigned int* d_str,
                unsigned int* d_keys_sa, 
                size_t str_length, 
                mgpu::CudaContext& context, 
-               CUDPPSkewPlan *plan,
+               CUDPPSaPlan *plan,
                unsigned int offset,
                unsigned int stage)
-{
+{cout << "-----------in ComputeSA-----------------" <<endl;
     size_t mod_1 = (str_length+1)/3 + ((str_length+1)%3 > 0 ? 1:0);
     size_t mod_2 = (str_length+1)/3 + ((str_length+1)%3 > 1 ? 1:0);
     size_t mod_3 = (str_length+1)/3;
@@ -109,9 +109,9 @@ void ComputeSA(unsigned int* d_str,
     dim3 grid_construct1(nBlocks1,1,1);
     dim3 grid_construct2(nBlocks2,1,1);
     dim3 threads_construct(nThreads,1,1);
-    
-    *plan->m_d_keys_srt_12 = *plan->m_d_keys_srt_12+offset;
-    *plan->m_d_new_str = ((stage==0) ? *plan->m_d_new_str : *plan->m_d_new_str+offset+3); 
+    cout << "stage=" << stage << ",offset=" << offset <<endl;
+    plan->m_d_keys_srt_12 = plan->m_d_keys_srt_12+offset;
+    plan->m_d_new_str = ((stage==0) ? plan->m_d_new_str : plan->m_d_new_str+offset+3); 
 
     CUDA_SAFE_CALL(cudaMemcpy(plan->m_d_unique, unique, sizeof(bool), cudaMemcpyHostToDevice));
 
@@ -249,19 +249,20 @@ else
 /** @brief Allocate intermediate arrays used by suffix array.
  *
  *
- * @param [in,out] plan Pointer to CUDPPSkewPlan object
+ * @param [in,out] plan Pointer to CUDPPSaPlan object
  *                      containing options and number of elements,
  *                      which is used to compute storage
  *                      requirements, and within which intermediate
  *                      storage is allocated.
  */
 
-void allocSkewStorage(CUDPPSkewPlan *plan)
+void allocSaStorage(CUDPPSaPlan *plan)
 {
     size_t str_length = plan->m_numElements;
     size_t mod_1 = (str_length+1)/3 + ((str_length+1)%3 > 0 ? 1:0);
     size_t mod_2 = (str_length+1)/3 + ((str_length+1)%3 > 1 ? 1:0);
     size_t mod_3 = (str_length+1)/3;
+    CUDA_SAFE_CALL(cudaMalloc((void**) &(plan->d_str_value), (str_length+3)*sizeof(uint)));
     CUDA_SAFE_CALL(cudaMalloc((void**) &(plan->m_d_isa_12), (mod_1+mod_2) * sizeof(uint)));
     CUDA_SAFE_CALL(cudaMalloc((void**) &(plan->m_d_keys_srt_12), 2*str_length * sizeof(uint)));
     CUDA_SAFE_CALL(cudaMalloc((void**) &(plan->m_d_unique), sizeof(bool)));
@@ -270,17 +271,18 @@ void allocSkewStorage(CUDPPSkewPlan *plan)
     CUDA_SAFE_CALL(cudaMalloc((void**) &(plan->m_d_aKeys), (mod_1+mod_2) * sizeof(Vector)));
     CUDA_SAFE_CALL(cudaMalloc((void**) &(plan->m_d_bKeys), mod_3 * sizeof(Vector)));
     CUDA_SAFE_CALL(cudaMalloc((void**) &(plan->m_d_cKeys), (mod_1+mod_2+mod_3) * sizeof(Vector)));
-    CUDA_CHECK_ERROR("allocSkewStorage");
+    CUDA_CHECK_ERROR("allocSaStorage");
 }
 
 
-/** @brief Deallocate intermediate block arrays in a CUDPPSkewPlan object.
+/** @brief Deallocate intermediate block arrays in a CUDPPSaPlan object.
  *
  *
- * @param[in,out] plan Pointer to CUDPPSkewPlan object initialized by allocSkewStorage().
+ * @param[in,out] plan Pointer to CUDPPSaPlan object initialized by allocSaStorage().
  */
-void freeSkewStorage(CUDPPSkewPlan *plan)
+void freeSaStorage(CUDPPSaPlan *plan)
 {
+    CUDA_SAFE_CALL(cudaFree(plan->d_str_value));
     CUDA_SAFE_CALL(cudaFree(plan->m_d_isa_12));
     CUDA_SAFE_CALL(cudaFree(plan->m_d_keys_srt_12));
     CUDA_SAFE_CALL(cudaFree(plan->m_d_unique));
@@ -288,7 +290,7 @@ void freeSkewStorage(CUDPPSkewPlan *plan)
     CUDA_SAFE_CALL(cudaFree(plan->m_d_aKeys));
     CUDA_SAFE_CALL(cudaFree(plan->m_d_bKeys));
     CUDA_SAFE_CALL(cudaFree(plan->m_d_cKeys));
-    CUDA_CHECK_ERROR("freeSkewStorage");
+    CUDA_CHECK_ERROR("freeSaStorage");
 }
 
 
@@ -299,16 +301,33 @@ void freeSkewStorage(CUDPPSkewPlan *plan)
  * @param[in]  d_str input string with three $ 
  * @param[out] d_keys_sa lexicographically sorted suffix position array
  * @param[in]  str_length Number of elements in the string including $
- * @param[in]  plan     Pointer to CUDPPSkewPlan object containing
+ * @param[in]  plan     Pointer to CUDPPSaPlan object containing
  *                      suffix_array options and intermediate storage
  */
-void cudppSuffixArrayDispatch(void* d_str,
-                              void* d_keys_sa,
+void cudppSuffixArrayDispatch(unsigned char* d_str,
+                              unsigned int* d_keys_sa,
                               size_t d_str_length,
-                              CUDPPSkewPlan *plan)
+                              CUDPPSaPlan *plan)
 {
+cout << "---------------in cudppSuffixArrayDispatch-----------------------" <<endl;
     mgpu::ContextPtr context = mgpu::CreateCudaDevice(0);
-    ComputeSA((unsigned int*)d_str, (unsigned int*)d_keys_sa, d_str_length, *context, plan, 0, 0);
+    size_t nThreads = SA_BLOCK;
+    size_t tThreads = d_str_length+3;
+    bool fullBlocks = (tThreads%nThreads==0);
+    size_t nBlocks = (fullBlocks) ? (tThreads/nThreads) : (tThreads/nThreads+1);
+    dim3 grid_construct(nBlocks,1,1);
+    dim3 threads_construct(nThreads,1,1);
+    strConstruct<<< grid_construct, threads_construct >>>
+             ((unsigned char*)d_str, plan->d_str_value, d_str_length);
+    CUDA_SAFE_CALL(cudaThreadSynchronize());
+
+    ComputeSA((unsigned int*)plan->d_str_value, (unsigned int*)d_keys_sa, d_str_length, *context, plan, 0, 0);
+
+    d_keys_sa = d_keys_sa + 1;
+    resultConstruct<<< grid_construct, threads_construct >>>
+              ((unsigned int*)d_keys_sa, d_str_length);
+    CUDA_SAFE_CALL(cudaThreadSynchronize());
+    
 }
 
 #ifdef __cplusplus

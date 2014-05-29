@@ -10,7 +10,7 @@
 
 /**
  * @file
- * skew_kernel.cu
+ * sa_kernel.cuh
  * 
  * @brief CUDPP kernel-level compact routines
  */
@@ -20,8 +20,28 @@
 
 #define idx (threadIdx.x + (blockIdx.x * blockDim.x))
 typedef unsigned int uint;
+typedef unsigned char uchar;
 
+__global__ void
+strConstruct(uchar* d_str,
+             uint* d_str_value,
+             size_t str_length)
+{
+   const int STRIDE = gridDim.x * blockDim.x;
+   for(int i = (threadIdx.x + (blockIdx.x * blockDim.x)); i < str_length; i += STRIDE) 
+      d_str_value[i] = (uint) d_str[i];
+   if (idx > str_length-1 && idx < str_length + 3) d_str_value[idx] = 0;
+   
+}
 
+__global__ void 
+resultConstruct(uint* d_keys_sa,
+                size_t str_length)
+{
+   const int STRIDE = gridDim.x * blockDim.x;
+   for(int i = (threadIdx.x + (blockIdx.x * blockDim.x)); i < str_length; i += STRIDE) 
+      d_keys_sa[idx] = d_keys_sa[idx] - 1;
+}
 __global__ void 
 sa12_keys_construct(uint* d_str, 
                     uint* d_keys_uint_12, 

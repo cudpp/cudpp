@@ -30,7 +30,7 @@ set (HFILES
   cudpp_compact.h
   cudpp_compress.h
   cudpp_listrank.h
-  cudpp_skew.h
+  cudpp_sa.h
   cudpp_mergesort.h
   cudpp_radixsort.h
   cudpp_rand.h
@@ -53,7 +53,7 @@ set (CUHFILES
   kernel/compact_kernel.cuh
   kernel/compress_kernel.cuh
   kernel/listrank_kernel.cuh
-  kernel/skew_kernel.cuh
+  kernel/sa_kernel.cuh
   kernel/mergesort_kernel.cuh
   kernel/radixsort_kernel.cuh
   kernel/rand_kernel.cuh
@@ -70,7 +70,7 @@ set(CUFILES
   app/compact_app.cu
   app/compress_app.cu
   app/listrank_app.cu
-  app/skew_app.cu
+  app/sa_app.cu
   app/mergesort_app.cu
   app/scan_app.cu
   app/segmented_scan_app.cu

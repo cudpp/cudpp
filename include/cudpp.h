@@ -332,7 +332,7 @@ CUDPPResult cudppListRank(CUDPPHandle planHandle,
 // Suffix Array Construction(skew algorithm)
 CUDPP_DLL
 CUDPPResult cudppSuffixArray(CUDPPHandle planHandle,
-                             unsigned int *d_str,
+                             unsigned char *d_str,
                              unsigned int *d_keys_sa,
                              size_t numElements);
 

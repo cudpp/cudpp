@@ -126,11 +126,11 @@ public:
 
     mutable void *m_tempKeys;
     unsigned int *m_tempValues;
-	int *m_partitionBeginA;
-	int *m_partitionSizeA;
+    int *m_partitionBeginA;
+    int *m_partitionSizeA;
 
-	unsigned int m_numElements;
-	unsigned int m_subPartitions, m_swapPoint;
+    unsigned int m_numElements;
+    unsigned int m_subPartitions, m_swapPoint;
 };
 
 /** @brief Plan class for stringsort algorithm
@@ -384,14 +384,15 @@ struct Vector
 /** @brief Plan class for suffix array
 *
 */
-class CUDPPSkewPlan : public CUDPPPlan
+class CUDPPSaPlan : public CUDPPPlan
 {
 public:
-    CUDPPSkewPlan(CUDPPManager *mgr, CUDPPConfiguration config, size_t str_length);
-    virtual ~CUDPPSkewPlan();
+    CUDPPSaPlan(CUDPPManager *mgr, CUDPPConfiguration config, size_t str_length);
+    virtual ~CUDPPSaPlan();
    
     // Intermediate buffers and variables during suffix array construction 
     bool *m_d_unique;
+    unsigned int* d_str_value;
     unsigned int* m_d_keys_srt_12;
     unsigned int* m_d_keys_srt_3;
     Vector* m_d_aKeys;
