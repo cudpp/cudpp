@@ -12,7 +12,6 @@
 #include <stdlib.h>
 #include <algorithm>
 #include <string>
-#include <vector>
 #include "cudpp_testrig_utils.h"
 #define MAX_ALPHA 256
 
@@ -25,7 +24,6 @@
 //! @param config     Options for the scan
 ////////////////////////////////////////////////////////////////////////////////
 
-char *cc;
 typedef unsigned int uint;
 
 bool leq(int a1, int a2, int b1, int b2) // lexicographic order
@@ -105,27 +103,6 @@ void suffixArray(uint* T, uint* SA, int n, int K) {
     delete [] R; delete [] SA12; delete [] SA0; delete [] R0;
 }
 
-void read_genome(const char *filename, char *buffer, int num){
-    FILE *fh;
-    fh = fopen(filename, "r");
-    fread(buffer, 1, num, fh);
-    buffer[num] = '\0';
-    fclose(fh);
-}
-
-int to_i(char c)
-{
-    return (int)c - 97;
-}
-void print_suffix(char *cc, int i)
-{
-    int j=0;
-    for(j=i;j<strlen(cc);j++)
-        printf("%c",cc[j]);
-     printf(" %d ",i);
-    printf("\n");
-}
-
 
 ////////////////////////////////////////////////////////////////////////////////
 //! Compute reference data set for suffix-array
@@ -139,8 +116,9 @@ void
 computeSaGold(unsigned char* idata, unsigned int* reference, size_t len)
 {
     uint *inp = new uint[len+3];
-    for(int i=0; i<len; ++i) inp[i] = (unsigned int) idata[i];
+    for(int i=0; i<len; ++i) inp[i] = (unsigned int) idata[i] + 1;
     inp[len]=0; inp[len+1]=0; inp[len+2]=0;
+    for(int i=0; i<len+3; ++i) reference[i]=0;
     suffixArray(inp, reference, len, MAX_ALPHA);
     free(inp);
 }

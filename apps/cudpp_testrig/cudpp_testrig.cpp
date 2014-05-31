@@ -110,8 +110,8 @@ int testAllDatatypes(int argc,
 
     if(config.algorithm == CUDPP_SA)
     {
-        config.datatype = CUDPP_UINT;
-        retval += testStringSort(argc, argv, &config);
+        config.datatype = CUDPP_UCHAR;
+        retval += testSuffixArray(argc, argv, &config);
         return retval;
     }
 
@@ -491,6 +491,7 @@ int main(int argc, const char** argv)
             config.algorithm = CUDPP_LISTRANK;
             retval += testAllDatatypes(argc, argv, config, supportsDouble, false);
         }
+
         if (runSA) {
             config.algorithm = CUDPP_SA;
             retval += testAllDatatypes(argc, argv, config, supportsDouble, false);

@@ -31,6 +31,7 @@ set(HFILES
   tridiagonal_gold.h
   sparse.h
   listrank_gold.h
+  sa_gold.h
   )
 
 include_directories(../common/include)

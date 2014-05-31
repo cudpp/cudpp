@@ -167,6 +167,7 @@ CUDPPResult cudppPlan(const CUDPPHandle  cudppHandle,
     case CUDPP_SA:
         {
             plan = new CUDPPSaPlan(mgr, config, numElements);
+            break;
         }
     default:
         return CUDPP_ERROR_ILLEGAL_CONFIGURATION; 

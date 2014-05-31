@@ -968,7 +968,7 @@ CUDPPResult cudppSuffixArray(CUDPPHandle planHandle,
                              unsigned char *d_in,
                              unsigned int *d_out,
                              size_t numElements)
-{ cout << "------------in cudppSuffixArray------------------" <<endl;
+{
     // first check: is this device >= 2.0? if not, return error
     int dev;
     cudaGetDevice(&dev);
@@ -983,16 +983,16 @@ CUDPPResult cudppSuffixArray(CUDPPHandle planHandle,
 
     CUDPPSaPlan * plan = 
          (CUDPPSaPlan *) getPlanPtrFromHandle<CUDPPSaPlan>(planHandle);
-    cout << plan->m_config.algorithm <<endl;
     if(plan != NULL)
     {
-        if (plan->m_config.algorithm != CUDPP_SA){ cout << "algorithm!=SA" <<endl;
-            return CUDPP_ERROR_INVALID_PLAN;}
-        if (plan->m_config.datatype != CUDPP_UCHAR){  cout << "datatype != uchar" <<endl;
-            return CUDPP_ERROR_ILLEGAL_CONFIGURATION;}
+        if (plan->m_config.algorithm != CUDPP_SA)
+            return CUDPP_ERROR_INVALID_PLAN;
+        if (plan->m_config.datatype != CUDPP_UCHAR)
+            return CUDPP_ERROR_ILLEGAL_CONFIGURATION;
         
-cout << "-----------------before dispatch---------------" <<endl;
         cudppSuffixArrayDispatch(d_in, d_out, numElements, plan);
+d_out = d_out +1;
+        
         return CUDPP_SUCCESS;
     }
     else

@@ -91,7 +91,7 @@ void ComputeSA(unsigned int* d_str,
                CUDPPSaPlan *plan,
                unsigned int offset,
                unsigned int stage)
-{cout << "-----------in ComputeSA-----------------" <<endl;
+{    
     size_t mod_1 = (str_length+1)/3 + ((str_length+1)%3 > 0 ? 1:0);
     size_t mod_2 = (str_length+1)/3 + ((str_length+1)%3 > 1 ? 1:0);
     size_t mod_3 = (str_length+1)/3;
@@ -109,10 +109,8 @@ void ComputeSA(unsigned int* d_str,
     dim3 grid_construct1(nBlocks1,1,1);
     dim3 grid_construct2(nBlocks2,1,1);
     dim3 threads_construct(nThreads,1,1);
-    cout << "stage=" << stage << ",offset=" << offset <<endl;
+    
     plan->m_d_keys_srt_12 = plan->m_d_keys_srt_12+offset;
-    plan->m_d_new_str = ((stage==0) ? plan->m_d_new_str : plan->m_d_new_str+offset+3); 
-
     CUDA_SAFE_CALL(cudaMemcpy(plan->m_d_unique, unique, sizeof(bool), cudaMemcpyHostToDevice));
 
    // extract the positions of i%3 != 0 to construct SA12
@@ -153,10 +151,12 @@ void ComputeSA(unsigned int* d_str,
     CUDA_SAFE_CALL(cudaThreadSynchronize());
  
     CUDA_SAFE_CALL(cudaMemcpy(unique, plan->m_d_unique,  sizeof(bool), cudaMemcpyDeviceToHost));
+    
 // If not fully sorted  
 if(!unique[0])
  {
    // Inclusive scan to compute the ranks of SA12 
+   plan->m_d_new_str = ((stage==0) ? plan->m_d_new_str : plan->m_d_new_str+offset+3); 
    ScanInc(d_keys_sa, (mod_1+mod_2), context);
  
    // Construct new string with 2/3 str_length of original string
@@ -165,9 +165,10 @@ if(!unique[0])
    new_str_construct<<< grid_construct1, threads_construct >>>
            (plan->m_d_new_str, plan->m_d_keys_srt_12, d_keys_sa, mod_1, tThreads1);
    CUDA_SAFE_CALL(cudaThreadSynchronize());
- 
+
    ////recursive////
    ComputeSA(plan->m_d_new_str, plan->m_d_keys_srt_12, tThreads1-1, context, plan, tThreads1, stage+1);
+   plan->m_d_keys_srt_12 = plan->m_d_keys_srt_12 - tThreads1 ;
 
    // translate the sorted SA12 to original position and compute ISA12
    // Input: m_d_keys_srt_12, fully sorted SA12 named by local position
@@ -212,6 +213,8 @@ else
   CUDA_SAFE_CALL(cudaThreadSynchronize());
   // Only one radix sort based on the result of SA1 (induced sorting)
   KeyValueSort(mod_3, d_keys_sa, plan->m_d_keys_srt_3);
+
+
 //////////////////////////// merge sort//////////////////////////////////
 
   // Construct SA12 keys in terms of Vector
@@ -242,6 +245,7 @@ else
   //         d_keys_sa storing the merged SA12 and SA3 (positions)
   /////////////////////////////////////////////////////////////////
   Merge(plan->m_d_aKeys, plan->m_d_keys_srt_12, tThreads1, plan->m_d_bKeys, plan->m_d_keys_srt_3, tThreads2, plan->m_d_cKeys, d_keys_sa, context);
+
   _SafeDeleteArray(unique);
 
 }
@@ -304,12 +308,11 @@ void freeSaStorage(CUDPPSaPlan *plan)
  * @param[in]  plan     Pointer to CUDPPSaPlan object containing
  *                      suffix_array options and intermediate storage
  */
-void cudppSuffixArrayDispatch(unsigned char* d_str,
+void cudppSuffixArrayDispatch(void* d_str,
                               unsigned int* d_keys_sa,
                               size_t d_str_length,
                               CUDPPSaPlan *plan)
 {
-cout << "---------------in cudppSuffixArrayDispatch-----------------------" <<endl;
     mgpu::ContextPtr context = mgpu::CreateCudaDevice(0);
     size_t nThreads = SA_BLOCK;
     size_t tThreads = d_str_length+3;
@@ -320,14 +323,14 @@ cout << "---------------in cudppSuffixArrayDispatch-----------------------" <<en
     strConstruct<<< grid_construct, threads_construct >>>
              ((unsigned char*)d_str, plan->d_str_value, d_str_length);
     CUDA_SAFE_CALL(cudaThreadSynchronize());
-
+    
     ComputeSA((unsigned int*)plan->d_str_value, (unsigned int*)d_keys_sa, d_str_length, *context, plan, 0, 0);
 
     d_keys_sa = d_keys_sa + 1;
     resultConstruct<<< grid_construct, threads_construct >>>
-              ((unsigned int*)d_keys_sa, d_str_length);
+              (d_keys_sa, d_str_length);
     CUDA_SAFE_CALL(cudaThreadSynchronize());
-    
+
 }
 
 #ifdef __cplusplus

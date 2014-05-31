@@ -32,7 +32,6 @@
 using namespace cudpp_app;
 
 
-
 int suffixArrayTest(int argc, const char **argv, const CUDPPConfiguration &config,
                     const testrigOptions &testOptions)
 {
@@ -44,12 +43,12 @@ int suffixArrayTest(int argc, const char **argv, const CUDPPConfiguration &confi
 
     unsigned int test[] = {39, 128, 256, 512, 513, 1000, 1024, 1025, 32768, 
                            45537, 65536, 131072, 262144, 500001, 524288, 
-                           1048577, 1048576, 1048581, 2097152, 4194304};
+                           1048577, 1048576, 1048581, 2097152, 4194304, 8388608};
 
  
     int numTests = sizeof(test) / sizeof(test[0]);
     int numElements;
-    numElements = test[numTests-1]; // maximum test size
+    numElements = test[numTests-1] + numTests; // maximum test size
 
     bool oneTest = false;
 
@@ -86,7 +85,7 @@ int suffixArrayTest(int argc, const char **argv, const CUDPPConfiguration &confi
     
     // allocate host memory to store input data
     unsigned char* i_data = new unsigned char[numElements];
-    unsigned int* reference = new unsigned int[numElements];
+    unsigned int* reference = new unsigned int[numElements+3];
 
     // allocate device memory input and output arrays
     unsigned char* d_idata = (unsigned char *) NULL;
@@ -105,29 +104,37 @@ int suffixArrayTest(int argc, const char **argv, const CUDPPConfiguration &confi
          }
 
          // initialize the input data on the host
-         float range = (float)(sizeof(unsigned char)*8);
-         VectorSupport<unsigned char>::fillVector(i_data, test[k], range);
-
-         memset(reference, 0, sizeof(unsigned int) * test[k]);
-         computeSaGold(i_data, reference, test[k]);
-         
+    //     float range = (float)(sizeof(unsigned char)*8);
+    //     VectorSupport<unsigned char>::fillVector(i_data, test[k], range);
+         srand(95835);
+         for(int j=0; j<test[k]; ++j)
+             i_data[j] = (unsigned char)(rand()%128+1);
+  
          CUDA_SAFE_CALL(cudaMemcpy(d_idata, i_data, sizeof(unsigned char) * test[k], cudaMemcpyHostToDevice));
-         CUDA_SAFE_CALL(cudaMemset(d_odata, 0, sizeof(unsigned int) * test[k]));
+         CUDA_SAFE_CALL(cudaMemset(d_odata, 0, sizeof(unsigned int) * (test[k]+1)));
+         
+         // allocate host memory to store the output data
+         unsigned int* o_data = (unsigned int*) malloc(sizeof(unsigned int) * test[k]);
+         // for(int i=0; i<test[k]+3; i++) reference[i] = 0;
+         memset(reference, 0, sizeof(unsigned int) * (test[k]+3));
+         
+         computeSaGold(i_data, reference, test[k]);
 
          cudppSuffixArray(plan, d_idata, d_odata, test[k]);
+
          
          timer.reset();
          timer.start();
          for(int i=0; i<testOptions.numIterations; i++)
-         {
+         
              cudppSuffixArray(plan, d_idata, d_odata, test[k]);
-         }
+         
          CUDA_SAFE_CALL(cudaThreadSynchronize());
          timer.stop();
-
-         // allocate host memory to store the output data
-         unsigned int* o_data = (unsigned int*) malloc(sizeof(unsigned int) * test[k]);
+         
+         d_odata = d_odata+1;
          CUDA_SAFE_CALL(cudaMemcpy(o_data, d_odata, sizeof(unsigned int) * test[k], cudaMemcpyDeviceToHost));
+         
          bool result = compareArrays<unsigned int> (reference, o_data, test[k]);
 
          free(o_data);
@@ -136,7 +143,7 @@ int suffixArrayTest(int argc, const char **argv, const CUDPPConfiguration &confi
          if(!quiet)
          {
              printf("test %s\n", result ? "PASSED" : "FAILED");
-             printf("Average execution time: %f mx\n",
+             printf("Average execution time: %f ms\n",
                     timer.getTime() / testOptions.numIterations);
          }         
          else
@@ -151,6 +158,7 @@ int suffixArrayTest(int argc, const char **argv, const CUDPPConfiguration &confi
     }
 
     result = cudppDestroy(theCudpp);
+    if (result != CUDPP_SUCCESS)
     {
          if(!quiet)
             printf("Error shutting down CUDPP Library.\n");
