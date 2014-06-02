@@ -8,6 +8,7 @@
 // in the root directory of this source distribution.
 // --------------------------------------------------------------
 
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -22,32 +23,32 @@
 #include "kernel/sa_kernel.cuh"
 
 #define SA_BLOCK 128
+
+typedef my_less<typename std::iterator_traits<Vector*>::value_type> Comp;
+typedef typename std::iterator_traits<unsigned int*>::value_type T;
 using namespace std;
 
-template<typename KeysIt1, typename KeysIt2, typename KeysIt3, typename ValsIt1,
-        typename ValsIt2, typename ValsIt3>
-void Merge(KeysIt1 aKeys_global, ValsIt1 aVals_global, 
-        int aCount, KeysIt2 bKeys_global, ValsIt2 bVals_global, int bCount,
-        KeysIt3 keys_global, ValsIt3 vals_global, mgpu::CudaContext& context) {
+/**
+  * @file
+  * sa_app.cu
+  * 
+  * @brief CUDPP application-level suffix array routines
+  */
 
-        typedef my_less<typename std::iterator_traits<KeysIt1>::value_type> Comp;
-        return mgpu::MergePairs(aKeys_global, aVals_global, aCount, bKeys_global, 
-                bVals_global, bCount, keys_global, vals_global, Comp(), context);
-}
+/** \addtogroup cudpp_app 
+ * @{
+ */
 
+/** @name Suffix Array Functions
+ * @{
+ */
 
-template<typename InputIt>
-void ScanInc(InputIt data_global, int count, mgpu::CudaContext& context) {
-        typedef typename std::iterator_traits<InputIt>::value_type T;
-        mgpu::Scan<mgpu::MgpuScanTypeInc>(data_global, count, (T)0, mgpu::plus<T>(), (T*)0,
-                (T*)0, data_global, context);
-}
-
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-
+/** @brief Radix Sort kernel from NVlab cub library.
+ * 
+ * @param[in] num_elements      Number of elements to sort.
+ * @param[in] d_keys            Key values of the elements in the array to be sorted.
+ * @param[in, out] d_values     Positions of the elements in the array.
+ */
 void KeyValueSort(unsigned int num_elements, 
                   unsigned int* d_keys, 
                   unsigned int* d_values)
@@ -77,13 +78,28 @@ void KeyValueSort(unsigned int num_elements,
 
 }
 
+/** @brief Perform Suffix Array (SA) using skew algorithm
+ * 
+ *
+ * Performs recursive skew kernel on a given character string. 
+ * A suffix array is a sorted array of all suffixes of a string.
+ * Skew algorithm is a linear-time algorithm based on divde and conquer.
+ * The SA of a string can be used as an index to quickly locate every
+ * occurrence of a substring pattern within the string. Suffix sorting 
+ * algorithms can be used to compute the Burrows-Wheeler Transform(BWT).
+ * The BWT requires sorting of all cyclic permutations of a string, thus
+ * can be computed in linear time by using a suffix array of the string.
+ * 
+ *
+ * @param[out]     d_keys_sa:      An array to store the output of the SA.
+ * @param[in]      d_str           An unsigned int array of the input data stream to perform the SA on.
+ * @param[in]      str_length      Total number of input elements.
+ * @param[in,out]  plan            Pointer to the plan object used for this suffix array.
+ * @param[in,out]  offset          Offset to move head pointer to find the memory for each iteration.
+ * @param[in,out]  stage           Stage for each iteration.
+ * @param[in]      context         Context format required by mgpu functions.
+ */
 
-////////////////////////////////////////////////////////////
-// d_str: input the original str
-// d_keys_sa: output suffix array
-// str_length: original string length without $ sign
-// contex used by mgpu functions
-/////////////////////////////////////////////////////////////
 void ComputeSA(unsigned int* d_str,
                unsigned int* d_keys_sa, 
                size_t str_length, 
@@ -157,7 +173,10 @@ if(!unique[0])
  {
    // Inclusive scan to compute the ranks of SA12 
    plan->m_d_new_str = ((stage==0) ? plan->m_d_new_str : plan->m_d_new_str+offset+3); 
-   ScanInc(d_keys_sa, (mod_1+mod_2), context);
+        
+   mgpu::Scan<mgpu::MgpuScanTypeInc>(d_keys_sa, (mod_1+mod_2), (T)0, mgpu::plus<T>(), (T*)0,
+                (T*)0, d_keys_sa, context);
+   //ScanInc(d_keys_sa, (mod_1+mod_2), context);
  
    // Construct new string with 2/3 str_length of original string
    // Place the ranks of SA1 before SA2 to construct the new str
@@ -184,7 +203,7 @@ if(!unique[0])
 
 // SA12 already fully sorted with results stored in d_keys_srt_12
 // in their original position, no need to reconstruct, construct ISA12 
-// Input: m_d_keys_srt_12, fully sorted SA12 named by gloabl position
+// Input: m_d_keys_srt_12, fully sorted SA12 named by global position
 // Output: m_d_isa_12, ISA12 to store the rank regard to local position
 //         d_keys_sa, flag to mark those with i mod 3 = 1
 //////////////////////////////////////////////////////////////////////
@@ -214,9 +233,6 @@ else
   // Only one radix sort based on the result of SA1 (induced sorting)
   KeyValueSort(mod_3, d_keys_sa, plan->m_d_keys_srt_3);
 
-
-//////////////////////////// merge sort//////////////////////////////////
-
   // Construct SA12 keys in terms of Vector
   // With SA1 composed of 1st char's value, 2nd char's rank, 0 and 1 
   // With SA2 composed of 1st char's value, 2nd char's value, 
@@ -244,11 +260,18 @@ else
   // Output: m_d_cKeys storing the merged aKeys and bKeys
   //         d_keys_sa storing the merged SA12 and SA3 (positions)
   /////////////////////////////////////////////////////////////////
-  Merge(plan->m_d_aKeys, plan->m_d_keys_srt_12, tThreads1, plan->m_d_bKeys, plan->m_d_keys_srt_3, tThreads2, plan->m_d_cKeys, d_keys_sa, context);
+  mgpu::MergePairs(plan->m_d_aKeys, plan->m_d_keys_srt_12, tThreads1, plan->m_d_bKeys, 
+                plan->m_d_keys_srt_3, tThreads2, plan->m_d_cKeys, d_keys_sa, Comp(), context);
+  //Merge(plan->m_d_aKeys, plan->m_d_keys_srt_12, tThreads1, plan->m_d_bKeys, plan->m_d_keys_srt_3, tThreads2, plan->m_d_cKeys, d_keys_sa, context);
 
   _SafeDeleteArray(unique);
 
 }
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 
 /** @brief Allocate intermediate arrays used by suffix array.
  *
@@ -304,7 +327,7 @@ void freeSaStorage(CUDPPSaPlan *plan)
  * 
  * @param[in]  d_str input string with three $ 
  * @param[out] d_keys_sa lexicographically sorted suffix position array
- * @param[in]  str_length Number of elements in the string including $
+ * @param[in]  d_str_length Number of elements in the string including $
  * @param[in]  plan     Pointer to CUDPPSaPlan object containing
  *                      suffix_array options and intermediate storage
  */
@@ -336,3 +359,7 @@ void cudppSuffixArrayDispatch(void* d_str,
 #ifdef __cplusplus
 }
 #endif
+
+/** @} */ // end suffix array functions
+/** @} */ // end cudpp_app
+

@@ -15,15 +15,6 @@
 #include "cudpp_testrig_utils.h"
 #define MAX_ALPHA 256
 
-////////////////////////////////////////////////////////////////////////////////
-//! Compute reference data set for sum-scan
-//! Each element is the sum of the elements before it in the array.
-//! @param reference  reference data, computed but preallocated
-//! @param idata      const input data as provided to device
-//! @param len        number of elements in reference / idata
-//! @param config     Options for the scan
-////////////////////////////////////////////////////////////////////////////////
-
 typedef unsigned int uint;
 
 bool leq(int a1, int a2, int b1, int b2) // lexicographic order
@@ -122,3 +113,9 @@ computeSaGold(unsigned char* idata, unsigned int* reference, size_t len)
     suffixArray(inp, reference, len, MAX_ALPHA);
     free(inp);
 }
+
+// Leave this at the end of the file
+// Local Variables:
+// mode:c++
+// c-file-style: "NVIDIA"
+// End:

@@ -8,40 +8,82 @@
 // the root directory of this source distribution.
 // ------------------------------------------------------------- 
 
+#include <cudpp_globals.h>
+#include <stdio.h>
+#include "cudpp_util.h"
+#define idx (threadIdx.x + (blockIdx.x * blockDim.x))
+
 /**
  * @file
  * sa_kernel.cuh
  * 
- * @brief CUDPP kernel-level compact routines
+ * @brief CUDPP kernel-level suffix array routines
  */
-#include <cudpp_globals.h>
-#include <stdio.h>
-#include "cudpp_util.h"
 
-#define idx (threadIdx.x + (blockIdx.x * blockDim.x))
+/** \addtogroup cudpp_kernel
+ * @{
+ */
+
+/** @name Suffix Array Functions
+ * @{
+ */
+
 typedef unsigned int uint;
 typedef unsigned char uchar;
 
+/** @brief Construct the input array
+ *
+ * This is the first stage in the SA. This stage construct the
+ * input array composed of values of the input char array 
+ * followed by three 0s.
+ * 
+ *
+ * @param[in]   d_str         Input char array to perform the SA on.
+ * @param[out]  d_str_value   Output unsigned int array prepared for SA.
+ * @param[in]   str_length    The number of elements we are performing the SA on.
+ *
+ **/ 
 __global__ void
 strConstruct(uchar* d_str,
              uint* d_str_value,
              size_t str_length)
 {
    const int STRIDE = gridDim.x * blockDim.x;
-   for(int i = (threadIdx.x + (blockIdx.x * blockDim.x)); i < str_length; i += STRIDE) 
+   #pragma unroll
+   for(int i = idx; i < str_length; i += STRIDE) 
       d_str_value[i] = (uint) d_str[i] +1 ;
    if (idx > str_length-1 && idx < str_length + 3) d_str_value[idx] = 0;
    
 }
 
+/** @brief Reconstruct the output
+ *
+ * This is the final stage in the SA. This stage reconstruct the 
+ * output array by reducing each value by one.
+ *
+ *  @param[in,out] d_keys_sa   Final output of the suffix array which stores the 
+                               positions of sorted suffixes.
+ *  @param[in]     str_length  Size of the array.
+ *
+ **/
 __global__ void 
 resultConstruct(uint* d_keys_sa,
                 size_t str_length)
 {
    const int STRIDE = gridDim.x * blockDim.x;
-   for(int i = (threadIdx.x + (blockIdx.x * blockDim.x)); i < str_length; i += STRIDE) 
-      d_keys_sa[idx] = d_keys_sa[idx] - 1;
+   #pragma unroll
+   for(int i = idx; i < str_length; i += STRIDE) 
+      d_keys_sa[i] = d_keys_sa[i] - 1;
 }
+
+/** @brief Initialize the SA12 triplets
+ *  @param[in]   d_str           Initial array of character values.
+ *  @param[out]  d_keys_uint_12  The keys of righ-most char in SA12 triplets.
+ *  @param[out]  d_keys_srt_12   SA12 triplets positions.
+ *  @param[in]   mod_1           The number of elements whose positions mod3 = 1 (SA1)
+ *  @param[in]   tThreads        The number of elements whose positions mod3 = 1,2 (SA12)
+ *   
+ **/
 __global__ void 
 sa12_keys_construct(uint* d_str, 
                     uint* d_keys_uint_12, 
@@ -65,6 +107,13 @@ sa12_keys_construct(uint* d_str,
        
 }
 
+/** @brief Construct SA12 for the second radix sort
+ *  @param[in]     d_str            Initial array of character values.
+ *  @param[out]    d_keys_uint_12   The keys of second char in SA12 triplets.
+ *  @param[in]     d_keys_srt_12    SA12 triplets positions.
+ *  @param[in]     tThreads         The number of elements in SA12.
+ *
+ **/
 __global__ void
 sa12_keys_construct_0(uint* d_str,
 		    uint* d_keys_uint_12,
@@ -76,7 +125,13 @@ sa12_keys_construct_0(uint* d_str,
        
 }
 
-
+/** @brief Construct SA12 for the third radix sort
+ *  @param[in]     d_str            Initial array of character values.
+ *  @param[out]    d_keys_uint_12   The keys of third char in SA12 triplets.
+ *  @param[in]     d_keys_srt_12    SA12 triplets positions.
+ *  @param[in]     tThreads         The number of elements in SA12.
+ *
+ **/   
 __global__ void
 sa12_keys_construct_1(uint* d_str,
 		      uint* d_keys_uint_12,
@@ -89,11 +144,19 @@ sa12_keys_construct_1(uint* d_str,
         
 }
 
-
+/** @brief Turn on flags for sorted SA12 triplets
+ *  @param[in]    d_str             Initial array of character values.
+ *  @param[in]    d_keys_srt_12     SA12 triplets positions.
+ *  @param[out]   d_flag            Marking the sorted triplets.
+ *  @param[out]   result            0 if SA12 is not fully sorted.
+ *  @param[in]    tThreads          The number of elements in SA12.
+ *  @param[in]    str_length        The number of elements in original string.
+ *
+ **/     
 __global__ void
 compute_rank(uint* d_str, 
 	     uint* d_keys_srt_12, 
-  	     uint* d_flag, //d_keys_sa
+  	     uint* d_flag, 
 	     bool* result,
 	     size_t tThreads,
              int str_length)
@@ -111,28 +174,43 @@ compute_rank(uint* d_str,
 	}
 }
 
+/** @brief Construct new array for recursion
+ *  @param[out]    d_new_str         The new string to be sent to recursion.
+ *  @param[in]     d_keys_srt_12     SA12 triplets positions.
+ *  @param[in]     d_rank            Ranks of SA12 from compute_rank kernel.       
+ *  @param[in]     mod_1             The number of elements of SA1.
+ *  @param[in]     tThreads          The number of elements of SA12.
+ *
+ **/  
 __global__ void
 new_str_construct(uint* d_new_str,
 	 	  uint* d_keys_srt_12,
-		  uint* d_keys_sa,
+		  uint* d_rank,
 		  int mod_1,
 		  size_t tThreads)
 {
     if(idx<tThreads)
     {
         uint pos = d_keys_srt_12[idx];
-        uint rank = d_keys_sa[idx];
+        uint rank = d_rank[idx];
 	if(pos%3 == 1) d_new_str[(pos-1)/3] = rank;
         else d_new_str[mod_1+(pos-2)/3] = rank;
     }
     else if(idx == tThreads || idx == tThreads+1) d_new_str[idx]=0;
 }   
 
-
+/** @brief Translate SA12 from recursion
+ *  @param[in,out]  d_keys_srt_12   Sorted SA12.
+ *  @param[in]      d_isa_12        ISA12.
+ *  @param[in]      d_flag          Flags to mark SA1.
+ *  @param[in]      tThreads        The number of elements in SA12.
+ *  @param[in]      mod_1           The number of elements in SA1.
+ *
+ **/
 __global__ void
 reconstruct(uint* d_keys_srt_12,
 	    uint* d_isa_12,
-            uint* d_keys_sa,
+            uint* d_flag,
 	    int mod_1,
 	    size_t tThreads)
 {
@@ -145,23 +223,31 @@ reconstruct(uint* d_keys_srt_12,
             if(pos > mod_1) 
             {
               d_keys_srt_12[idx] = 3*(pos-mod_1-1)+2;
-              d_keys_sa[idx]=0;
+              d_flag[idx]=0;
             }
             else
             {
               d_keys_srt_12[idx] = 3*(pos-1)+1; 
-              if(pos>1) d_keys_sa[idx] =1;
-              else d_keys_sa[idx]=0;
+              if(pos>1) d_flag[idx] =1;
+              else d_flag[idx]=0;
             }
         }
     }
 
 }
 
+/** @brief Construct ISA12
+ *  @param[in]      d_keys_srt_12  Fully sorted SA12 in global position.
+ *  @param[out]     d_isa_12       ISA12 to store the ranks in local position.
+ *  @param[out]     d_flag         Flags to mark SA1.
+ *  @param[in]      mod_1          The number of elements in SA1.
+ *  @param[in]      tThreads       The number of elements in SA12.
+ *
+ **/
 __global__ void
 isa12_construct(uint* d_keys_srt_12,
               uint* d_isa_12,
-	      uint* d_keys_sa,
+	      uint* d_flag,
               int mod_1,
               size_t tThreads)
 {
@@ -171,10 +257,10 @@ isa12_construct(uint* d_keys_srt_12,
     pos = d_keys_srt_12[idx];
     if(pos%3==1) {
        pos = (pos-1)/3; 
-       if(d_keys_srt_12[idx]>3) d_keys_sa[idx]=1; 
-       else d_keys_sa[idx]=0;
+       if(d_keys_srt_12[idx]>3) d_flag[idx]=1; 
+       else d_flag[idx]=0;
        }
-    else if(pos%3==2){pos = mod_1+ (pos-2)/3; d_keys_sa[idx]=0;}
+    else if(pos%3==2){pos = mod_1+ (pos-2)/3; d_flag[idx]=0;}
   }
   __syncthreads();
 
@@ -184,6 +270,16 @@ isa12_construct(uint* d_keys_srt_12,
 
 }
 
+/** @brief Contruct SA3 triplets positions
+ *  @param[out]     d_keys_srt_3   SA3 generated from SA1.
+ *  @param[in]      d_str          Original input array.
+ *  @param[in]      d_keys_srt_12  Fully sorted SA12.
+ *  @param[in]      d_keys_sa      Positions of SA1.
+ *  @param[in]      tThreads1      The number of elements of SA12.
+ *  @param[in]      tThreads2      The number of elements of SA3.
+ *  @param[in]      str_length     The number of elements in original string.
+ *
+ **/
 __global__ void
 sa3_srt_construct(uint* d_keys_srt_3,
                    uint* d_str,
@@ -210,6 +306,14 @@ sa3_srt_construct(uint* d_keys_srt_3,
     }
 }
 
+/** @brief Construct SA3 triplets keys
+ *  @param[in]     d_keys_srt_3   SA3 triplets positions.
+ *  @param[out]    d_keys_sa      SA3 keys.
+ *  @param[in]     d_str          Original input string.
+ *  @param[in]     tThreads       The number of elements in SA12.
+ *  @param[in]     str_length     The number of elements in original string.
+ *
+ **/   
 __global__ void
 sa3_keys_construct(uint* d_keys_srt_3,
  	       uint* d_keys_sa,
@@ -224,6 +328,17 @@ sa3_keys_construct(uint* d_keys_srt_3,
     }
 }
 
+/** @brief Construct SA12 keys in terms of Vector
+ *  @param[in]    d_str          Original input data stream
+ *  @param[in]    d_keys_srt_12  The order of aKeys.
+ *  @param[in]    d_isa_12       The ranks in SA12 orders.
+ *  @param[out]   d_aKeys        SA12 keys in Vectors.
+ *  @param[in]    tThreads       The number elements in SA12 
+ *  @param[in]    mod_1          The number of elements in SA1.
+ *  @param[in]    bound          The number of elements in SA12 plus SA3.
+ *  @param[in]    str_length     The number of elements in original string.
+ *
+ **/
 __global__ void 
 merge_akeys_construct(uint* d_str,
 		      uint* d_keys_srt_12,
@@ -257,6 +372,18 @@ merge_akeys_construct(uint* d_str,
    }
 }
 
+/** @brief Construct SA3 keys in Vector
+ *
+ *  @param[in]     d_str         Original input data stream.
+ *  @param[in]     d_keys_srt_3  The order of bKeys
+ *  @param[in]     d_isa_12      ISA12.
+ *  @param[out]    d_bKeys       SA3 keys in Vectors.
+ *  @param[in]     tThreads      The number of total threads.
+ *  @param[in]     mod_1         The number of elements in SA1.
+ *  @param[in]     bound         The number of elements in SA12 and SA3.
+ *  @param[in]     str_length    The number of elements in original str.
+ *
+ **/
 __global__ void 
 merge_bkeys_construct(uint* d_str,
 		      uint* d_keys_srt_3,
@@ -278,4 +405,6 @@ merge_bkeys_construct(uint* d_str,
         }
 }
 
+/** @} */ // end suffix array functions
+/** @} */ // end cudpp_kernel
 

@@ -963,6 +963,30 @@ CUDPPResult cudppListRank(CUDPPHandle planHandle,
         return CUDPP_ERROR_INVALID_HANDLE;
 }
 
+/**
+ * @brief Performs the Suffix Array
+ *
+ * Performs a parallel suffix array using linear-time recursive skew algorithm.
+ * The SA leverages a suffix-sort algorithm based on divide and conquer.
+ *
+ * - The SA is GPU memory bounded, it needs about seven times size of input data.
+ * - Only unsigned char type is supported.
+ * - The BWT index (used during the reverse-BWT) is recorded as an int 
+ * in \a d_index.
+ *
+ * - The input char array is transformed into an unsigned int array storing the 
+ * key values followed by three 0s for the convinience of building triplets.
+ * - The output data is an unsigned int array storing the positions of the 
+ * lexicographically sorted suffixes not including the last {0,0,0} triplet.
+ *
+ * @param[in] planHandle Handle to plan for BWT
+ * @param[out] d_in  Input data
+ * @param[out] d_out Output data
+ * @param[in] numElements Number of elements
+ * @returns CUDPPResult indicating success or error condition
+ *
+ * @see cudppPlan, CUDPPConfiguration, CUDPPAlgorithm
+ */
 CUDPP_DLL
 CUDPPResult cudppSuffixArray(CUDPPHandle planHandle,
                              unsigned char *d_in,
