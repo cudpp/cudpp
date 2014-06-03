@@ -140,6 +140,7 @@ enum CUDPPAlgorithm
     CUDPP_LISTRANK,          //!< List ranking
     CUDPP_BWT,               //!< Burrows-Wheeler transform
     CUDPP_MTF,               //!< Move-to-Front transform
+    CUDPP_SA,                //!< Suffix Array algorithm
     CUDPP_ALGORITHM_INVALID, //!< Placeholder at end of enum
 };
 
@@ -335,6 +336,13 @@ CUDPPResult cudppListRank(CUDPPHandle planHandle,
                           void *d_next_indices,
                           size_t head,
                           size_t numElements);
+
+// Suffix Array Construction(skew algorithm)
+CUDPP_DLL
+CUDPPResult cudppSuffixArray(CUDPPHandle planHandle,
+                             unsigned char *d_str,
+                             unsigned int *d_keys_sa,
+                             size_t numElements);
 
 #ifdef __cplusplus
 }

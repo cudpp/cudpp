@@ -53,9 +53,11 @@
 #include "cudpp_stringsort.h"
 #include "cudpp_tridiagonal.h"
 #include "cudpp_compress.h"
+#include "cudpp_sa.h"
 #include "cudpp_listrank.h"
 #include <stdio.h>
-
+#include <iostream>
+using namespace std;
 /**
  * @brief Performs a scan operation of numElements on its input in
  * GPU memory (d_in) and places the output in GPU memory
@@ -762,6 +764,7 @@ CUDPPResult cudppCompress(CUDPPHandle planHandle,
                           size_t numElements)
 {
     // first check: is this device >= 2.0? if not, return error
+
     int dev;
     cudaGetDevice(&dev);
 
@@ -824,7 +827,6 @@ CUDPPResult cudppBurrowsWheelerTransform(CUDPPHandle planHandle,
     // first check: is this device >= 2.0? if not, return error
     int dev;
     cudaGetDevice(&dev);
-
     cudaDeviceProp devProps;
     cudaGetDeviceProperties(&devProps, dev);
 
@@ -843,8 +845,8 @@ CUDPPResult cudppBurrowsWheelerTransform(CUDPPHandle planHandle,
             return CUDPP_ERROR_INVALID_PLAN;
         if (plan->m_config.datatype != CUDPP_UCHAR)
             return CUDPP_ERROR_ILLEGAL_CONFIGURATION;
-        if (numElements != 1048576)
-            return CUDPP_ERROR_ILLEGAL_CONFIGURATION;
+        //if (numElements != 1048576)
+        //    return CUDPP_ERROR_ILLEGAL_CONFIGURATION;
 
         cudppBwtDispatch(d_in, d_out, d_index, numElements, plan);
         return CUDPP_SUCCESS;
@@ -962,6 +964,66 @@ CUDPPResult cudppListRank(CUDPPHandle planHandle,
         return CUDPP_ERROR_INVALID_HANDLE;
 }
 
+/**
+ * @brief Performs the Suffix Array
+ *
+ * Performs a parallel suffix array using linear-time recursive skew algorithm.
+ * The SA leverages a suffix-sort algorithm based on divide and conquer.
+ *
+ * - The SA is GPU memory bounded, it needs about seven times size of input data.
+ * - Only unsigned char type is supported.
+ * - The BWT index (used during the reverse-BWT) is recorded as an int 
+ * in \a d_index.
+ *
+ * - The input char array is transformed into an unsigned int array storing the 
+ * key values followed by three 0s for the convinience of building triplets.
+ * - The output data is an unsigned int array storing the positions of the 
+ * lexicographically sorted suffixes not including the last {0,0,0} triplet.
+ *
+ * @param[in] planHandle Handle to plan for BWT
+ * @param[out] d_in  Input data
+ * @param[out] d_out Output data
+ * @param[in] numElements Number of elements
+ * @returns CUDPPResult indicating success or error condition
+ *
+ * @see cudppPlan, CUDPPConfiguration, CUDPPAlgorithm
+ */
+CUDPP_DLL
+CUDPPResult cudppSuffixArray(CUDPPHandle planHandle,
+                             unsigned char *d_in,
+                             unsigned int *d_out,
+                             size_t numElements)
+{
+    // first check: is this device >= 2.0? if not, return error
+    int dev;
+    cudaGetDevice(&dev);
+    cudaDeviceProp devProps;
+    cudaGetDeviceProperties(&devProps, dev);
+
+    if((int)devProps.major < 2) {
+        // Only supported on devices with compute
+        // capability 2.0 or greater
+        return CUDPP_ERROR_ILLEGAL_CONFIGURATION;
+    }
+
+    CUDPPSaPlan * plan = 
+         (CUDPPSaPlan *) getPlanPtrFromHandle<CUDPPSaPlan>(planHandle);
+    if(plan != NULL)
+    {
+        if (plan->m_config.algorithm != CUDPP_SA)
+            return CUDPP_ERROR_INVALID_PLAN;
+        if (plan->m_config.datatype != CUDPP_UCHAR)
+            return CUDPP_ERROR_ILLEGAL_CONFIGURATION;
+        
+        cudppSuffixArrayDispatch(d_in, d_out, numElements, plan);
+d_out = d_out +1;
+        
+        return CUDPP_SUCCESS;
+    }
+    else
+        return CUDPP_ERROR_INVALID_HANDLE;
+   
+}
 /** @} */ // end Algorithm Interface
 /** @} */ // end of publicInterface group
 

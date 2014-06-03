@@ -126,11 +126,11 @@ public:
 
     mutable void *m_tempKeys;
     unsigned int *m_tempValues;
-	int *m_partitionBeginA;
-	int *m_partitionSizeA;
+    int *m_partitionBeginA;
+    int *m_partitionSizeA;
 
-	unsigned int m_numElements;
-	unsigned int m_subPartitions, m_swapPoint;
+    unsigned int m_numElements;
+    unsigned int m_subPartitions, m_swapPoint;
 };
 
 /** @brief Plan class for stringsort algorithm
@@ -148,8 +148,8 @@ public:
 	CUDPPScanPlan *m_scanPlan;
 	unsigned int m_numElements;
 	unsigned int *m_keys;
-    unsigned int *m_tempKeys;
-    unsigned int *m_tempAddress;
+        unsigned int *m_tempKeys;
+        unsigned int *m_tempAddress;
 	unsigned int *m_packedAddress;
 	unsigned int *m_packedAddressRef;
 	unsigned int *m_addressRef;
@@ -372,5 +372,35 @@ public:
     int *m_d_tmp2; //!< @internal temporary start indices array
     int *m_d_tmp3; //!< @internal temporary next indices array
 };
+
+struct Vector
+{
+    unsigned int a;
+    unsigned int b;
+    unsigned int c;
+    unsigned int d;  
+};
+
+/** @brief Plan class for suffix array
+*
+*/
+class CUDPPSaPlan : public CUDPPPlan
+{
+public:
+    CUDPPSaPlan(CUDPPManager *mgr, CUDPPConfiguration config, size_t str_length);
+    virtual ~CUDPPSaPlan();
+   
+    // Intermediate buffers and variables during suffix array construction 
+    bool *m_d_unique;
+    unsigned int* d_str_value;
+    unsigned int* m_d_keys_srt_12;
+    unsigned int* m_d_keys_srt_3;
+    Vector* m_d_aKeys;
+    Vector* m_d_bKeys;
+    Vector* m_d_cKeys;
+    unsigned int* m_d_new_str;
+    unsigned int* m_d_isa_12;	
+};
+
 
 #endif // __CUDPP_PLAN_H__

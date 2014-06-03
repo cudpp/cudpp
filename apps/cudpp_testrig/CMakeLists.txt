@@ -27,6 +27,7 @@ set(CCFILES
   test_tridiagonal.cpp
   test_compress.cpp
   test_listrank.cpp
+  test_sa.cpp
   )
 
 set(HFILES
@@ -37,6 +38,7 @@ set(HFILES
   tridiagonal_gold.h
   sparse.h
   listrank_gold.h
+  sa_gold.h
   )
 
 include_directories(../common/include)

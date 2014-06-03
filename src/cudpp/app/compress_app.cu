@@ -19,6 +19,15 @@
 
 #include "kernel/compress_kernel.cuh"
 
+//#include "skew.h"
+//#include "skew.cu"
+//#include <fstream>
+//#include <iostream>
+
+using namespace std;
+//using namespace SA;
+
+
 /**
  * @file
  * compress_app.cu
@@ -263,6 +272,10 @@ void burrowsWheelerTransform(unsigned char              *d_uncompressed,
     uint nBlocks = (fullBlocks) ? (tThreads/nThreads) : (tThreads/nThreads+1);
     dim3 grid_construct(nBlocks, 1, 1);
     dim3 threads_construct(nThreads, 1, 1);
+   
+    //cout << "--------------------Before SA--------------------" <<endl;
+//GpuTimer Timer2;
+//Timer2.Start();
     int numThreads = 64;
     int secondBlocks;
     size_t count;
@@ -354,7 +367,16 @@ void burrowsWheelerTransform(unsigned char              *d_uncompressed,
         mult*=2;
         step++;
     }
-
+//unsigned int *result = (unsigned int*)malloc(numElements*sizeof(unsigned int));
+//unsigned char *str=(unsigned char*)malloc(numElements*sizeof(unsigned char));
+//CUDA_SAFE_CALL(cudaMemcpy(str, d_uncompressed, numElements*sizeof(unsigned char), cudaMemcpyDeviceToHost));
+//CUDA_SAFE_CALL(cudaMemcpy(result, plan->m_d_values, numElements*sizeof(unsigned int), cudaMemcpyDeviceToHost));
+//ofstream myfile;
+//myfile.open("checkresult.txt");
+//for (int i=0; i<10; i++)  myfile << result[i] <<endl;// for (int j = result[i]; j < numElements; ++j) myfile << str[j]; myfile <<endl;}
+//myfile.close();
+//free(str);
+//free(result);
     // Final stage -- compute BWT and BWT Index using sorted values
     if(count%2 == 0)
     {
@@ -367,8 +389,24 @@ void burrowsWheelerTransform(unsigned char              *d_uncompressed,
         bwt_compute_final_kernel<<< grid_construct, threads_construct >>>
             (d_uncompressed, plan->m_d_values_dev, d_bwtIndex, d_bwtOut, numElements, tThreads);
         CUDA_SAFE_CALL(cudaThreadSynchronize());
-    }
+    }  
 
+//Timer2.Stop();
+//cout << "total time is " << Timer2.ElapsedMillis() <<endl;
+
+/*
+GpuTimer Timer1;
+cout << "numElements=" << numElements <<endl;
+
+Timer1.Start();
+  runComputeSA((unsigned char*)d_uncompressed, (unsigned int*)plan->m_d_values, numElements);
+
+   bwt_compute_final_kernel<<< grid_construct, threads_construct >>>
+            (d_uncompressed, plan->m_d_values, d_bwtIndex, d_bwtOut, numElements, tThreads);
+   CUDA_SAFE_CALL(cudaThreadSynchronize());
+Timer1.Stop();
+cout << "total time is " << Timer1.ElapsedMillis() <<endl;
+*/
 }
 
 /** @brief Wrapper for calling the Burrows-Wheeler Transform (BWT).

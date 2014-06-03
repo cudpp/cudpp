@@ -20,6 +20,7 @@
 #include "cudpp_reduce.h"
 #include "cudpp_compress.h"
 #include "cudpp_listrank.h"
+#include "cudpp_sa.h"
 #include "cuda_util.h"
 #include <cuda_runtime_api.h>
 
@@ -163,6 +164,11 @@ CUDPPResult cudppPlan(const CUDPPHandle  cudppHandle,
             plan = new CUDPPListRankPlan(mgr, config, numElements);
             break;
         }
+    case CUDPP_SA:
+        {
+            plan = new CUDPPSaPlan(mgr, config, numElements);
+            break;
+        }
     default:
         return CUDPP_ERROR_ILLEGAL_CONFIGURATION; 
         break;
@@ -258,6 +264,11 @@ CUDPPResult cudppDestroyPlan(CUDPPHandle planHandle)
     case CUDPP_LISTRANK:
         {
             delete static_cast<CUDPPListRankPlan*>(plan);
+            break;
+        }
+    case CUDPP_SA:
+        {
+            delete static_cast<CUDPPSaPlan*>(plan);
             break;
         }
     default:
@@ -751,4 +762,22 @@ CUDPPListRankPlan::CUDPPListRankPlan(CUDPPManager *mgr, CUDPPConfiguration confi
 CUDPPListRankPlan::~CUDPPListRankPlan()
 {
     freeListRankStorage(this);
+}
+
+/** @brief CUDPP Suffix Array Plan Constructor
+  *
+  * @param[in] mgr pointer to the CUDPPManager
+  * @param[in] config The configuration struct specifying options
+  * @param[in] str_length the length of the string including $
+  */
+CUDPPSaPlan::CUDPPSaPlan(CUDPPManager *mgr, CUDPPConfiguration config, size_t str_length)
+ : CUDPPPlan(mgr, config, str_length, 1, 0)
+{
+    allocSaStorage(this);
+}
+
+/** brief SA plan destructor*/
+CUDPPSaPlan::~CUDPPSaPlan()
+{
+    freeSaStorage(this);
 }

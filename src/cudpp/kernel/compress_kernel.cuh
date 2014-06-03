@@ -2118,6 +2118,69 @@ huffman_build_histogram_kernel(uint     *d_input, // Read in as words, instead o
 #endif
 }
 
+/* Compute 256-entry histogram of an array of char
+   d_input An array of chars
+   d_histograms A pointer where we store our global histograms
+   numElements The total number of elements to build the histogram
+*/
+
+__global__ void
+histo_kernel(uchar *d_input,
+             uint  *d_histograms,
+             uint  numElements)
+{
+#if (__CUDA_ARCH__ >= 200)
+    // Per-thread Histogram
+    __shared__ uchar threadHist[HUFF_THREADS_PER_BLOCK_HIST*256]; // Eash thread has 256 1-byte bins
+
+    uint* blockHist = &d_histograms[blockIdx.x*256];
+
+    // Global, local IDs
+    uint lid = threadIdx.x;
+
+    //Clear thread histograms
+    for(uint i=lid; i<HUFF_THREADS_PER_BLOCK_HIST*256; i+=blockDim.x) //64 threads per block
+    {
+	threadHist[i]=0;
+    }
+
+    //Clear block histogram
+    for(uint i=lid; i<256; i+= blockDim.x)
+    {
+	blockHist[i]=0;
+    }
+    __syncthreads();
+
+    // Update thread histograms + spill to shared if overflowing
+    for(uint i=0; i<HUFF_WORK_PER_THREAD_HIST;++i)
+    {
+	uchar word=d_input[lid+blockIdx.x*HUFF_THREADS_PER_BLOCK_HIST*256*HUFF_WORK_PER_THREAD_HIST+i*HUFF_THREADS_PER_BLOCK_HIST];
+	if(threadHist[lid*256+word]==255)
+        {
+	   atomicAdd(&blockHist[word], 255);
+           threadHist[lid*256+word]=0;
+	}
+	threadHist[lid*256+word]++;
+
+    }
+
+    __syncthreads();
+
+    // Merge thread histograms into a block histogram
+    for(uint i=0; i<(256/HUFF_THREADS_PER_BLOCK_HIST); ++i)
+    {
+	uint count = 0;
+	for(uint j=0; j<HUFF_THREADS_PER_BLOCK_HIST; ++j)
+	{
+	    count += threadHist[lid*(256/HUFF_THREADS_PER_BLOCK_HIST) + i + j*256];
+	}	
+	
+	blockHist[lid*(256/HUFF_THREADS_PER_BLOCK_HIST)+i] += count;
+    }
+#endif
+}
+
+
 /** @brief Build Huffman tree/codes
  * @param[in] d_input               An array of input elements to encode
  * @param[out] d_huffCodesPacked    An array of huffman bit codes packed together

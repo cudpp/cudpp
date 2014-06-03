@@ -35,6 +35,9 @@
 #define LAUNCH_BOUNDS_MINBLOCKS(x, y)
 #endif
 
+#ifndef _SafeDeleteArray
+#define _SafeDeleteArray(x) { if(x) { delete [](x); (x)=0; } }
+#endif
 
 /** @brief Determine if \a n is a power of two.
   * @param n Value to be checked to see if it is a power of two
@@ -313,6 +316,24 @@ template<>
 struct typeToVector<unsigned long long, 2>
 {
     typedef ulonglong2 Result;
+};
+
+/*struct Vector
+{
+    unsigned int a;
+    unsigned int b;
+    unsigned int c;
+    unsigned int d; 
+};
+*/
+template <typename T>
+struct my_less {
+  __device__ bool operator()(T x, T y)
+  {
+      if(y.d == 1) return ((y.a == x.a) ? (x.c < y.b) : (x.a < y.a));
+      else return ((y.a == x.a) ? ((y.b == x.b) ? (x.d<y.c) : (x.b<y.b)):(x.a<y.a));    
+  }
+
 };
 
 template <typename T>

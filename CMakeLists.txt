@@ -43,6 +43,8 @@ set(CMAKE_MODULE_PATH
 
 set(cudpp_INCLUDE_DIRS
   ${CMAKE_SOURCE_DIR}/include
+  ${CMAKE_SOURCE_DIR}/ext/moderngpu/include/
+  ${CMAKE_SOURCE_DIR}/ext/cub/ 
   )
 include_directories(${cudpp_INCLUDE_DIRS})
 
@@ -51,7 +53,6 @@ if (CMAKE_SIZEOF_VOID_P EQUAL 8)
 else ()
   set(bits 32)
 endif (CMAKE_SIZEOF_VOID_P EQUAL 8)
-
 string(TOUPPER "${CMAKE_CONFIGURATION_TYPES}" configs)
 foreach (config ${configs})
   set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_${config} "${EXECUTABLE_OUTPUT_PATH}")
