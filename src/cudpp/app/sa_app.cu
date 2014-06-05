@@ -31,11 +31,11 @@ using namespace std;
 /**
   * @file
   * sa_app.cu
-  * 
+  *
   * @brief CUDPP application-level suffix array routines
   */
 
-/** \addtogroup cudpp_app 
+/** \addtogroup cudpp_app
  * @{
  */
 
@@ -44,13 +44,13 @@ using namespace std;
  */
 
 /** @brief Radix Sort kernel from NVlab cub library.
- * 
+ *
  * @param[in] num_elements      Number of elements to sort.
  * @param[in] d_keys            Key values of the elements in the array to be sorted.
  * @param[in, out] d_values     Positions of the elements in the array.
  */
-void KeyValueSort(unsigned int num_elements, 
-                  unsigned int* d_keys, 
+void KeyValueSort(unsigned int num_elements,
+                  unsigned int* d_keys,
                   unsigned int* d_values)
 {
     using namespace cub;
@@ -61,16 +61,28 @@ void KeyValueSort(unsigned int num_elements,
     d_cub_keys.d_buffers[d_cub_keys.selector] = d_keys;
     d_cub_values.d_buffers[d_cub_values.selector] = d_values;
 
-    CUDA_SAFE_CALL(cudaMalloc((void**) &d_cub_keys.d_buffers[d_cub_keys.selector ^ 1], sizeof(uint) * num_elements));
-    CUDA_SAFE_CALL(cudaMalloc((void**) &d_cub_values.d_buffers[d_cub_values.selector ^ 1], sizeof(uint) * num_elements));
+    CUDA_SAFE_CALL(
+        cudaMalloc((void**) &d_cub_keys.d_buffers[d_cub_keys.selector ^ 1],
+                   sizeof(uint) * num_elements));
+    CUDA_SAFE_CALL(
+        cudaMalloc((void**) &d_cub_values.d_buffers[d_cub_values.selector ^ 1],
+                   sizeof(uint) * num_elements));
+
     // Initialize the d_temp_storage
-    cub::DeviceRadixSort::SortPairs(d_temp_storage, temp_storage_bytes, d_cub_keys, d_cub_values, num_elements);
+    cub::DeviceRadixSort::SortPairs(d_temp_storage, temp_storage_bytes,
+                                    d_cub_keys, d_cub_values, num_elements);
     CUDA_SAFE_CALL(cudaMalloc(&d_temp_storage, temp_storage_bytes));
+
     // Run
-    cub::DeviceRadixSort::SortPairs(d_temp_storage, temp_storage_bytes, d_cub_keys, d_cub_values, num_elements);
-                                 
-    CUDA_SAFE_CALL(cudaMemcpy(d_keys, d_cub_keys.d_buffers[d_cub_keys.selector], sizeof(uint) * num_elements, cudaMemcpyDeviceToDevice));
-    CUDA_SAFE_CALL(cudaMemcpy(d_values, d_cub_values.d_buffers[d_cub_values.selector], sizeof(uint) * num_elements, cudaMemcpyDeviceToDevice));
+    cub::DeviceRadixSort::SortPairs(d_temp_storage, temp_storage_bytes,
+                                    d_cub_keys, d_cub_values, num_elements);
+
+    CUDA_SAFE_CALL(
+        cudaMemcpy(d_keys, d_cub_keys.d_buffers[d_cub_keys.selector],
+                   sizeof(uint) * num_elements, cudaMemcpyDeviceToDevice));
+    CUDA_SAFE_CALL(
+        cudaMemcpy(d_values, d_cub_values.d_buffers[d_cub_values.selector],
+                   sizeof(uint) * num_elements, cudaMemcpyDeviceToDevice));
 
     // Cleanup "ping-pong" storage
     if (d_cub_values.d_buffers[1]) cudaFree(d_cub_values.d_buffers[1]);
@@ -79,35 +91,35 @@ void KeyValueSort(unsigned int num_elements,
 }
 
 /** @brief Perform Suffix Array (SA) using skew algorithm
- * 
  *
- * Performs recursive skew kernel on a given character string. 
+ *
+ * Performs recursive skew kernel on a given character string.
  * A suffix array is a sorted array of all suffixes of a string.
  * Skew algorithm is a linear-time algorithm based on divde and conquer.
  * The SA of a string can be used as an index to quickly locate every
- * occurrence of a substring pattern within the string. Suffix sorting 
+ * occurrence of a substring pattern within the string. Suffix sorting
  * algorithms can be used to compute the Burrows-Wheeler Transform(BWT).
  * The BWT requires sorting of all cyclic permutations of a string, thus
  * can be computed in linear time by using a suffix array of the string.
- * 
  *
- * @param[out]     d_keys_sa:      An array to store the output of the SA.
+ *
  * @param[in]      d_str           An unsigned int array of the input data stream to perform the SA on.
+ * @param[out]     d_keys_sa:      An array to store the output of the SA.
  * @param[in]      str_length      Total number of input elements.
+ * @param[in]      context         Context format required by mgpu functions.
  * @param[in,out]  plan            Pointer to the plan object used for this suffix array.
  * @param[in,out]  offset          Offset to move head pointer to find the memory for each iteration.
  * @param[in,out]  stage           Stage for each iteration.
- * @param[in]      context         Context format required by mgpu functions.
  */
 
 void ComputeSA(unsigned int* d_str,
-               unsigned int* d_keys_sa, 
-               size_t str_length, 
-               mgpu::CudaContext& context, 
+               unsigned int* d_keys_sa,
+               size_t str_length,
+               mgpu::CudaContext& context,
                CUDPPSaPlan *plan,
                unsigned int offset,
                unsigned int stage)
-{    
+{
     size_t mod_1 = (str_length+1)/3 + ((str_length+1)%3 > 0 ? 1:0);
     size_t mod_2 = (str_length+1)/3 + ((str_length+1)%3 > 1 ? 1:0);
     size_t mod_3 = (str_length+1)/3;
@@ -120,42 +132,45 @@ void ComputeSA(unsigned int* d_str,
     size_t nThreads = SA_BLOCK;
     bool fullBlocks1 = (tThreads1%nThreads==0);
     bool fullBlocks2 = (tThreads2%nThreads==0);
-    size_t nBlocks1=(fullBlocks1) ? (tThreads1/nThreads) : (tThreads1/nThreads+1);
-    size_t nBlocks2=(fullBlocks2) ? (tThreads2/nThreads) : (tThreads2/nThreads+1);
+    size_t nBlocks1 = (fullBlocks1) ? (tThreads1/nThreads) :
+                                      (tThreads1/nThreads+1);
+    size_t nBlocks2 = (fullBlocks2) ? (tThreads2/nThreads) :
+                                      (tThreads2/nThreads+1);
     dim3 grid_construct1(nBlocks1,1,1);
     dim3 grid_construct2(nBlocks2,1,1);
     dim3 threads_construct(nThreads,1,1);
-    
+
     plan->m_d_keys_srt_12 = plan->m_d_keys_srt_12+offset;
-    CUDA_SAFE_CALL(cudaMemcpy(plan->m_d_unique, unique, sizeof(bool), cudaMemcpyHostToDevice));
+    CUDA_SAFE_CALL(cudaMemcpy(plan->m_d_unique, unique, sizeof(bool),
+                              cudaMemcpyHostToDevice));
 
    // extract the positions of i%3 != 0 to construct SA12
-   // d_str: input,the original string 
+   // d_str: input,the original string
    // d_keys_sa: output, extracted string value with SA1 before SA2
    // m_d_keys_srt_12: output, store the positions of SA12 in original str
    ////////////////////////////////////////////////////////////////////
    sa12_keys_construct<<< grid_construct1, threads_construct >>>
-	     (d_str, d_keys_sa, plan->m_d_keys_srt_12, mod_1, tThreads1);
-   cudaThreadSynchronize();  
+         (d_str, d_keys_sa, plan->m_d_keys_srt_12, mod_1, tThreads1);
+   cudaThreadSynchronize();
    // LSB radix sort the triplets character by character
    // d_keys_sa store the value of the character from the triplets r->l
    // m_d_keys_srt_12 store the sorted position of each char from each round
    // 3 round to sort the SA12 triplets
    /////////////////////////////////////////////////////////////////////
    KeyValueSort((mod_1+mod_2), d_keys_sa, plan->m_d_keys_srt_12);
- 
+
    sa12_keys_construct_0<<< grid_construct1, threads_construct >>>
-	   (d_str, d_keys_sa, plan->m_d_keys_srt_12, tThreads1);
+       (d_str, d_keys_sa, plan->m_d_keys_srt_12, tThreads1);
    cudaThreadSynchronize();
 
    KeyValueSort((mod_1+mod_2), d_keys_sa, plan->m_d_keys_srt_12);
 
    sa12_keys_construct_1<<< grid_construct1, threads_construct >>>
-	   (d_str, d_keys_sa, plan->m_d_keys_srt_12, tThreads1);
+       (d_str, d_keys_sa, plan->m_d_keys_srt_12, tThreads1);
    CUDA_SAFE_CALL(cudaThreadSynchronize());
 
    KeyValueSort(tThreads1, d_keys_sa, plan->m_d_keys_srt_12);
- 
+
     // Compare each SA12 position's rank to its previous position
     // and  mark 1 if different and 0 for same
     // Input: m_d_keys_srt_12, first round SA12 (may not fully sorted)
@@ -163,61 +178,68 @@ void ComputeSA(unsigned int* d_str,
     //         m_d_unique,1 if SA12 are fully sorted
     ////////////////////////////////////////////////////////////////
     compute_rank<<< grid_construct1, threads_construct >>>
-          (d_str, plan->m_d_keys_srt_12, d_keys_sa, plan->m_d_unique, tThreads1, str_length);
+          (d_str, plan->m_d_keys_srt_12, d_keys_sa, plan->m_d_unique, tThreads1,
+          str_length);
     CUDA_SAFE_CALL(cudaThreadSynchronize());
- 
-    CUDA_SAFE_CALL(cudaMemcpy(unique, plan->m_d_unique,  sizeof(bool), cudaMemcpyDeviceToHost));
-    
-// If not fully sorted  
-if(!unique[0])
- {
-   // Inclusive scan to compute the ranks of SA12 
-   plan->m_d_new_str = ((stage==0) ? plan->m_d_new_str : plan->m_d_new_str+offset+3); 
-        
-   mgpu::Scan<mgpu::MgpuScanTypeInc>(d_keys_sa, (mod_1+mod_2), (T)0, mgpu::plus<T>(), (T*)0,
+
+    CUDA_SAFE_CALL(cudaMemcpy(unique, plan->m_d_unique,  sizeof(bool),
+                              cudaMemcpyDeviceToHost));
+
+    // If not fully sorted
+    if(!unique[0])
+    {
+        // Inclusive scan to compute the ranks of SA12
+        plan->m_d_new_str = ((stage==0) ? plan->m_d_new_str :
+                                          plan->m_d_new_str+offset+3);
+
+        mgpu::Scan<mgpu::MgpuScanTypeInc>(
+                d_keys_sa, (mod_1+mod_2), (T)0, mgpu::plus<T>(), (T*)0,
                 (T*)0, d_keys_sa, context);
-   //ScanInc(d_keys_sa, (mod_1+mod_2), context);
- 
-   // Construct new string with 2/3 str_length of original string
-   // Place the ranks of SA1 before SA2 to construct the new str
-   ///////////////////////////////////////////////////////////////
-   new_str_construct<<< grid_construct1, threads_construct >>>
-           (plan->m_d_new_str, plan->m_d_keys_srt_12, d_keys_sa, mod_1, tThreads1);
-   CUDA_SAFE_CALL(cudaThreadSynchronize());
 
-   ////recursive////
-   ComputeSA(plan->m_d_new_str, plan->m_d_keys_srt_12, tThreads1-1, context, plan, tThreads1, stage+1);
-   plan->m_d_keys_srt_12 = plan->m_d_keys_srt_12 - tThreads1 ;
+        // Construct new string with 2/3 str_length of original string
+        // Place the ranks of SA1 before SA2 to construct the new str
+        ///////////////////////////////////////////////////////////////
+        new_str_construct<<< grid_construct1, threads_construct >>>
+               (plan->m_d_new_str, plan->m_d_keys_srt_12, d_keys_sa, mod_1,
+                tThreads1);
+        CUDA_SAFE_CALL(cudaThreadSynchronize());
 
-   // translate the sorted SA12 to original position and compute ISA12
-   // Input: m_d_keys_srt_12, fully sorted SA12 named by local position
-   // Output: m_d_isa_12, ISA12 to store the rank regard to local position
-   // m_d_keys_srt_12, SA12 with regard to global position
-   // d_keys_sa, flag to mark those with i mod 3 = 1 and i > 1
-   ////////////////////////////////////////////////////////////////////
-   reconstruct<<< grid_construct1, threads_construct >>>
-  	   (plan->m_d_keys_srt_12, plan->m_d_isa_12, d_keys_sa, mod_1, tThreads1);
-   CUDA_SAFE_CALL(cudaThreadSynchronize());
+        // recurse
+        ComputeSA(plan->m_d_new_str, plan->m_d_keys_srt_12, tThreads1-1,
+                  context, plan, tThreads1, stage+1);
+        plan->m_d_keys_srt_12 = plan->m_d_keys_srt_12 - tThreads1 ;
 
- }
+        // translate the sorted SA12 to original position and compute ISA12
+        // Input: m_d_keys_srt_12, fully sorted SA12 named by local position
+        // Output: m_d_isa_12, ISA12 to store the rank regard to local position
+        // m_d_keys_srt_12, SA12 with regard to global position
+        // d_keys_sa, flag to mark those with i mod 3 = 1 and i > 1
+        ////////////////////////////////////////////////////////////////////
+        reconstruct<<< grid_construct1, threads_construct >>>
+               (plan->m_d_keys_srt_12, plan->m_d_isa_12, d_keys_sa, mod_1,
+                tThreads1);
+        CUDA_SAFE_CALL(cudaThreadSynchronize());
+
+     }
 
 // SA12 already fully sorted with results stored in d_keys_srt_12
-// in their original position, no need to reconstruct, construct ISA12 
+// in their original position, no need to reconstruct, construct ISA12
 // Input: m_d_keys_srt_12, fully sorted SA12 named by global position
 // Output: m_d_isa_12, ISA12 to store the rank regard to local position
 //         d_keys_sa, flag to mark those with i mod 3 = 1
 //////////////////////////////////////////////////////////////////////
 else
 {
-   isa12_construct<<< grid_construct1, threads_construct >>>  
-             (plan->m_d_keys_srt_12, plan->m_d_isa_12, d_keys_sa, mod_1, tThreads1);
-  
+   isa12_construct<<< grid_construct1, threads_construct >>>
+             (plan->m_d_keys_srt_12, plan->m_d_isa_12, d_keys_sa, mod_1,
+              tThreads1);
+
    CUDA_SAFE_CALL(cudaThreadSynchronize());
 }
 
 // Exclusive scan to compute the position of SA1
   mgpu::ScanExc(d_keys_sa, (mod_1+mod_2), context);
-  // Construct SA3 keys and positions based on SA1's ranks  
+  // Construct SA3 keys and positions based on SA1's ranks
   // Input: m_d_keys_srt_12, sorted SA12
   //        d_keys_sa, positions of sorted SA1
   //        tThreads1, mod_1+mod_2 tThreads2, mod_3
@@ -225,7 +247,8 @@ else
   //        d_keys_sa, ith character value according to d_keys_srt_3
   ////////////////////////////////////////////////////////////////////////
   sa3_srt_construct<<< grid_construct1, threads_construct >>>
-	  (plan->m_d_keys_srt_3, d_str, plan->m_d_keys_srt_12, d_keys_sa, tThreads1, tThreads2, str_length);
+      (plan->m_d_keys_srt_3, d_str, plan->m_d_keys_srt_12, d_keys_sa, tThreads1,
+       tThreads2, str_length);
   CUDA_SAFE_CALL(cudaThreadSynchronize());
   sa3_keys_construct<<<grid_construct2, threads_construct>>>
           (plan->m_d_keys_srt_3, d_keys_sa, d_str, tThreads2, str_length);
@@ -234,15 +257,16 @@ else
   KeyValueSort(mod_3, d_keys_sa, plan->m_d_keys_srt_3);
 
   // Construct SA12 keys in terms of Vector
-  // With SA1 composed of 1st char's value, 2nd char's rank, 0 and 1 
-  // With SA2 composed of 1st char's value, 2nd char's value, 
+  // With SA1 composed of 1st char's value, 2nd char's rank, 0 and 1
+  // With SA2 composed of 1st char's value, 2nd char's value,
   //          3rd char's rank, 0
   // Input: m_d_keys_srt_12 the order of aKeys
   //        m_d_isa_12 storing the ranks in sorted SA12 order
   // Output: m_d_aKeys, storing SA12 keys in Vectors
   //////////////////////////////////////////////////////////////////
   merge_akeys_construct<<< grid_construct1, threads_construct >>>
-	(d_str, plan->m_d_keys_srt_12, plan->m_d_isa_12, plan->m_d_aKeys, tThreads1, mod_1, bound, str_length);
+    (d_str, plan->m_d_keys_srt_12, plan->m_d_isa_12, plan->m_d_aKeys, tThreads1,
+     mod_1, bound, str_length);
   CUDA_SAFE_CALL(cudaThreadSynchronize());
 
   // Construct SA3 keys in terms of Vector
@@ -250,19 +274,20 @@ else
   // and 3rd char's rank
   // Input: m_d_keys_srt_3 the order of bKeys
   //        m_d_isa_12 storing the ranks of chars behind the first char
-  // Output:m_d_bKeys, storing SA3 keys in Vectors 
+  // Output:m_d_bKeys, storing SA3 keys in Vectors
   ////////////////////////////////////////////////////////////////////
   merge_bkeys_construct<<< grid_construct2, threads_construct >>>
-	(d_str, plan->m_d_keys_srt_3, plan->m_d_isa_12, plan->m_d_bKeys, tThreads2, mod_1, bound, str_length);
+    (d_str, plan->m_d_keys_srt_3, plan->m_d_isa_12, plan->m_d_bKeys, tThreads2,
+     mod_1, bound, str_length);
   CUDA_SAFE_CALL(cudaThreadSynchronize());
 
-  // Merge SA12 and SA3 based on aKeys and bKeys 
+  // Merge SA12 and SA3 based on aKeys and bKeys
   // Output: m_d_cKeys storing the merged aKeys and bKeys
   //         d_keys_sa storing the merged SA12 and SA3 (positions)
   /////////////////////////////////////////////////////////////////
-  mgpu::MergePairs(plan->m_d_aKeys, plan->m_d_keys_srt_12, tThreads1, plan->m_d_bKeys, 
-                plan->m_d_keys_srt_3, tThreads2, plan->m_d_cKeys, d_keys_sa, Comp(), context);
-  //Merge(plan->m_d_aKeys, plan->m_d_keys_srt_12, tThreads1, plan->m_d_bKeys, plan->m_d_keys_srt_3, tThreads2, plan->m_d_cKeys, d_keys_sa, context);
+  mgpu::MergePairs(plan->m_d_aKeys, plan->m_d_keys_srt_12, tThreads1,
+                   plan->m_d_bKeys, plan->m_d_keys_srt_3, tThreads2,
+                   plan->m_d_cKeys, d_keys_sa, Comp(), context);
 
   _SafeDeleteArray(unique);
 
@@ -324,8 +349,8 @@ void freeSaStorage(CUDPPSaPlan *plan)
 /** @brief Dispatch function to perform parallel suffix array on a
  *         string with the specified configuration.
  *
- * 
- * @param[in]  d_str input string with three $ 
+ *
+ * @param[in]  d_str input string with three $
  * @param[out] d_keys_sa lexicographically sorted suffix position array
  * @param[in]  d_str_length Number of elements in the string including $
  * @param[in]  plan     Pointer to CUDPPSaPlan object containing
@@ -346,8 +371,9 @@ void cudppSuffixArrayDispatch(void* d_str,
     strConstruct<<< grid_construct, threads_construct >>>
              ((unsigned char*)d_str, plan->d_str_value, d_str_length);
     CUDA_SAFE_CALL(cudaThreadSynchronize());
-    
-    ComputeSA((unsigned int*)plan->d_str_value, (unsigned int*)d_keys_sa, d_str_length, *context, plan, 0, 0);
+
+    ComputeSA((unsigned int*)plan->d_str_value, (unsigned int*)d_keys_sa,
+              d_str_length, *context, plan, 0, 0);
 
     d_keys_sa = d_keys_sa + 1;
     resultConstruct<<< grid_construct, threads_construct >>>
