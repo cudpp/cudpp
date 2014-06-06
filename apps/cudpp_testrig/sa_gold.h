@@ -3,10 +3,10 @@
 // -------------------------------------------------------------
 // $Revision$
 // $Date$
-// ------------------------------------------------------------- 
+// -------------------------------------------------------------
 // This source code is distributed under the terms of license.txt
 // in the root directory of this source distribution.
-// ------------------------------------------------------------- 
+// -------------------------------------------------------------
 #include <cudpp.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -43,6 +43,7 @@ void suffixArray(uint* T, uint* SA, int n, int K) {
     uint* SA12 = new uint[n02 + 3]; SA12[n02]=SA12[n02+1]=SA12[n02+2]=0;
     uint* R0 = new uint[n0];
     uint* SA0 = new uint[n0];
+
     //******* Step 0: Construct sample ********
     // generate positions of mod 1 and mod 2 suffixes
     // the "+(n0-n1)" adds a dummy mod 1 suffix if n%3 == 1
@@ -68,10 +69,12 @@ void suffixArray(uint* T, uint* SA, int n, int K) {
         for (int i = 0; i < n02; i++) R[SA12[i]] = i + 1;
     } else // generate the suffix array of R directly
         for (int i = 0; i < n02; i++) SA12[R[i] - 1] = i;
+
     //******* Step 2: Sort nonsample suffixes ********
     // stably sort the mod 0 suffixes from SA12 by their first character
     for (int i=0, j=0; i < n02; i++) if (SA12[i] < n0) R0[j++] = 3*SA12[i];
     radixPass(R0, SA0, T, n0, K);
+
     //******* Step 3: Merge ********
     // merge sorted SA0 suffixes and sorted SA12 suffixes
     for (int p=0, t=n0-n1, k=0; k < n; k++) {
@@ -98,12 +101,11 @@ void suffixArray(uint* T, uint* SA, int n, int K) {
 ////////////////////////////////////////////////////////////////////////////////
 //! Compute reference data set for suffix-array
 //! Each element is a position of a suffix.
-//! @param config     Options for the scan
-//! @param reference  reference data, computed but preallocated
 //! @param idata      const input data as provided to device
+//! @param reference  reference data, computed but preallocated
 //! @param len        number of elements in reference / idata
 ////////////////////////////////////////////////////////////////////////////////
-void 
+void
 computeSaGold(unsigned char* idata, unsigned int* reference, size_t len)
 {
     uint *inp = new uint[len+3];

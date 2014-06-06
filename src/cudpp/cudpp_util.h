@@ -3,10 +3,10 @@
 // -------------------------------------------------------------
 // $Revision: 5636 $
 // $Date: 2009-07-02 13:39:38 +1000 (Thu, 02 Jul 2009) $
-// ------------------------------------------------------------- 
+// -------------------------------------------------------------
 // This source code is distributed under the terms of license.txt in
 // the root directory of this source distribution.
-// ------------------------------------------------------------- 
+// -------------------------------------------------------------
 
 /**
  * @file
@@ -43,7 +43,7 @@
   * @param n Value to be checked to see if it is a power of two
   * @returns True if \a n is a power of two, false otherwise
   */
-inline bool 
+inline bool
 isPowerOfTwo(int n)
 {
     return ((n&(n-1))==0) ;
@@ -67,8 +67,8 @@ isMultiple(int n, int f)
   * @param x Input value
   * @returns The smallest power f two larger than \a x
   */
-inline unsigned int 
-ceilPow2( unsigned int x ) 
+inline unsigned int
+ceilPow2( unsigned int x )
 {
     --x;
     x |= x >> 1;
@@ -83,7 +83,7 @@ ceilPow2( unsigned int x )
   * @param x Input value
   * @returns The largest power of two smaller than or equal to \a x.
   */
-inline unsigned int 
+inline unsigned int
 floorPow2(unsigned int x)
 {
     return ceilPow2(x) >> 1;
@@ -95,10 +95,10 @@ floorPow2(unsigned int x)
   * @param x Input value
   * @returns The log base 2 of \a x.
   */
-inline unsigned int 
-logBase2Pow2(unsigned int x) 
+inline unsigned int
+logBase2Pow2(unsigned int x)
 {
-    static const unsigned int b[] = {0xAAAAAAAA, 0xCCCCCCCC, 0xF0F0F0F0, 
+    static const unsigned int b[] = {0xAAAAAAAA, 0xCCCCCCCC, 0xF0F0F0F0,
                                      0xFF00FF00, 0xFFFF0000};
     unsigned int r = (x & b[0]) != 0;
     for (unsigned int i = 4; i > 0; i--) { r |= ((x & b[i]) != 0) << i; }
@@ -108,17 +108,17 @@ logBase2Pow2(unsigned int x)
 
 /** @brief Returns the maximum value for type \a T.
  * @returns Maximum value for type \a T.
- * 
+ *
  * Implemented using template specialization on \a T.
  */
-template <class T> 
+template <class T>
 __host__ __device__ inline T getMax() { return 0; }
 /** @brief Returns the minimum value for type \a T.
  * @returns Minimum value for type \a T.
- * 
+ *
  * Implemented using template specialization on \a T.
  */
-template <class T> 
+template <class T>
 __host__ __device__ inline T getMin() { return 0; }
 // type specializations for the above
 // getMax
@@ -140,22 +140,22 @@ template <> __host__ __device__ inline unsigned char getMin() { return (unsigned
 template <> __host__ __device__ inline long long getMin() { return LLONG_MIN; }
 template <> __host__ __device__ inline unsigned long long getMin() { return 0; }
 
-/** @brief Returns the maximum of three values. 
-  * @param a First value. 
-  * @param b Second value. 
-  * @param c Third value. 
+/** @brief Returns the maximum of three values.
+  * @param a First value.
+  * @param b Second value.
+  * @param c Third value.
   * @returns The maximum of \a a, \a b and \a c.
   */
 template<class T>
 inline int max3(T a, T b, T c)
-{       
+{
     return (a > b) ? ((a > c)? a : c) : ((b > c) ? b : c);
 }
 
 /** @brief Utility template struct for generating small vector types from scalar types
   *
-  * Given a base scalar type (\c int, \c float, etc.) and a vector length (1 through 4) as 
-  * template parameters, this struct defines a vector type (\c float3, \c int4, etc.) of the 
+  * Given a base scalar type (\c int, \c float, etc.) and a vector length (1 through 4) as
+  * template parameters, this struct defines a vector type (\c float3, \c int4, etc.) of the
   * specified length and base type.  For example:
   * \code
   * template <class T>
@@ -167,8 +167,8 @@ inline int max3(T a, T b, T c)
   * \endcode
   *
   * This functionality is implemented using template specialization.  Currently specializations
-  * for int, float, and unsigned int vectors of lengths 2-4 are defined.  Note that this results 
-  * in types being generated at compile time -- there is no runtime cost.  typeToVector is used by 
+  * for int, float, and unsigned int vectors of lengths 2-4 are defined.  Note that this results
+  * in types being generated at compile time -- there is no runtime cost.  typeToVector is used by
   * the optimized scan \c __device__ functions in scan_cta.cu.
   */
 template <typename T, int N>
@@ -317,17 +317,6 @@ struct typeToVector<unsigned long long, 2>
 {
     typedef ulonglong2 Result;
 };
-/*
-template <typename T>
-struct my_less {
-  __device__ bool operator()(T x, T y)
-  {
-      if(y.d == 1) return ((y.a == x.a) ? (x.c < y.b) : (x.a < y.a));
-      else return ((y.a == x.a) ? ((y.b == x.b) ? (x.d<y.c) : (x.b<y.b)):(x.a<y.a));    
-  }
-
-};
-*/
 template <typename T>
 class OperatorAdd
 {

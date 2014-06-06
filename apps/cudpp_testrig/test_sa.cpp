@@ -32,7 +32,8 @@
 using namespace cudpp_app;
 
 
-int suffixArrayTest(int argc, const char **argv, const CUDPPConfiguration &config,
+int suffixArrayTest(int argc, const char **argv,
+                    const CUDPPConfiguration &config,
                     const testrigOptions &testOptions)
 {
     int retval = 0;
@@ -41,11 +42,12 @@ int suffixArrayTest(int argc, const char **argv, const CUDPPConfiguration &confi
 
     bool quiet = checkCommandLineFlag(argc, (const char**) argv, "quiet");
 
-    unsigned int test[] = {39, 128, 256, 512, 513, 1000, 1024, 1025, 32768, 
-                           45537, 65536, 131072, 262144, 500001, 524288, 
-                           1048577, 1048576, 1048581, 2097152, 4194304, 8388608};
+    unsigned int test[] = {39, 128, 256, 512, 513, 1000, 1024, 1025, 32768,
+                           45537, 65536, 131072, 262144, 500001, 524288,
+                           1048577, 1048576, 1048581, 2097152, 4194304,
+                           8388608};
 
- 
+
     int numTests = sizeof(test) / sizeof(test[0]);
     int numElements;
     numElements = test[numTests-1] + numTests; // maximum test size
@@ -53,36 +55,36 @@ int suffixArrayTest(int argc, const char **argv, const CUDPPConfiguration &confi
     bool oneTest = false;
 
     if (commandLineArg(numElements, argc, (const char**) argv, "n"))
-    {   
+    {
         oneTest = true;
         numTests = 1;
         test[0] = numElements;
-    }   
+    }
 
     // Initialize CUDPP
     CUDPPHandle plan;
     CUDPPResult result = CUDPP_SUCCESS;
     CUDPPHandle theCudpp;
     result = cudppCreate(&theCudpp);
-    
+
     if (result != CUDPP_SUCCESS)
-    { 
-        if (!quiet)   
+    {
+        if (!quiet)
            fprintf(stderr, "Error initializing CUDPP Library\n");
         retval = (oneTest) ? 1 : numTests;
         return retval;
-    }    
+    }
 
     result = cudppPlan(theCudpp, &plan, config, numElements, 1, 0);
 
     if(result != CUDPP_SUCCESS)
-    {    
+    {
         if (!quiet)
            fprintf(stderr, "Error in plan creation\n");
         retval = (oneTest) ? 1 : numTests;
         return retval;
-    }    
-    
+    }
+
     // allocate host memory to store input data
     unsigned char* i_data = new unsigned char[numElements];
     unsigned int* reference = new unsigned int[numElements+3];
@@ -91,63 +93,67 @@ int suffixArrayTest(int argc, const char **argv, const CUDPPConfiguration &confi
     unsigned char* d_idata = (unsigned char *) NULL;
     unsigned int* d_odata = (unsigned int *) NULL;
 
-    CUDA_SAFE_CALL(cudaMalloc((void**) &d_idata, numElements*sizeof(unsigned char)));
-    CUDA_SAFE_CALL(cudaMalloc((void**) &d_odata, (numElements+1)*sizeof(unsigned int)));    
+    CUDA_SAFE_CALL(cudaMalloc((void**) &d_idata,
+                              numElements*sizeof(unsigned char)));
+    CUDA_SAFE_CALL(cudaMalloc((void**) &d_odata,
+                              (numElements+1)*sizeof(unsigned int)));
 
     for(int k=0; k<numTests; k++)
     {
-         if(!quiet)
-         {
-             printf("Running a Suffix Array test of %u %s nodes\n",
+        if(!quiet)
+        {
+            printf("Running a Suffix Array test of %u %s nodes\n",
                     test[k], datatypeToString(config.datatype));
-             fflush(stdout);
-         }
+            fflush(stdout);
+        }
 
-         // initialize the input data on the host
-    //     float range = (float)(sizeof(unsigned char)*8);
-    //     VectorSupport<unsigned char>::fillVector(i_data, test[k], range);
-         srand(95835);
-         for(int j=0; j<test[k]; ++j)
-             i_data[j] = (unsigned char)(rand()%128+1);
-  
-         CUDA_SAFE_CALL(cudaMemcpy(d_idata, i_data, sizeof(unsigned char) * test[k], cudaMemcpyHostToDevice));
-         CUDA_SAFE_CALL(cudaMemset(d_odata, 0, sizeof(unsigned int) * (test[k]+1)));
-         
-         // allocate host memory to store the output data
-         unsigned int* o_data = (unsigned int*) malloc(sizeof(unsigned int) * test[k]);
-         // for(int i=0; i<test[k]+3; i++) reference[i] = 0;
-         memset(reference, 0, sizeof(unsigned int) * (test[k]+3));
-         
-         computeSaGold(i_data, reference, test[k]);
+        // initialize the input data on the host
+        srand(95835);
+        for(int j=0; j<test[k]; ++j)
+            i_data[j] = (unsigned char)(rand()%128+1);
 
-         cudppSuffixArray(plan, d_idata, d_odata, test[k]);
+        CUDA_SAFE_CALL(cudaMemcpy(d_idata, i_data,
+                                  sizeof(unsigned char) * test[k],
+                                  cudaMemcpyHostToDevice));
+        CUDA_SAFE_CALL(cudaMemset(d_odata, 0,
+                                  sizeof(unsigned int) * (test[k]+1)));
 
-         
-         timer.reset();
-         timer.start();
-         for(int i=0; i<testOptions.numIterations; i++)
-         
-             cudppSuffixArray(plan, d_idata, d_odata, test[k]);
-         
-         CUDA_SAFE_CALL(cudaThreadSynchronize());
-         timer.stop();
-         
-         d_odata = d_odata+1;
-         CUDA_SAFE_CALL(cudaMemcpy(o_data, d_odata, sizeof(unsigned int) * test[k], cudaMemcpyDeviceToHost));
-         
-         bool result = compareArrays<unsigned int> (reference, o_data, test[k]);
+        // allocate host memory to store the output data
+        unsigned int* o_data =
+                (unsigned int*) malloc(sizeof(unsigned int) * test[k]);
+        memset(reference, 0, sizeof(unsigned int) * (test[k]+3));
 
-         free(o_data);
+        computeSaGold(i_data, reference, test[k]);
 
-         retval += result ? 0 : 1;
-         if(!quiet)
-         {
-             printf("test %s\n", result ? "PASSED" : "FAILED");
-             printf("Average execution time: %f ms\n",
-                    timer.getTime() / testOptions.numIterations);
-         }         
-         else
-             printf("\t%10d\t%0.4f\n", test[k], timer.getTime() / testOptions.numIterations);
+        cudppSuffixArray(plan, d_idata, d_odata, test[k]);
+
+        timer.reset();
+        timer.start();
+        for(int i=0; i<testOptions.numIterations; i++)
+            cudppSuffixArray(plan, d_idata, d_odata, test[k]);
+
+        CUDA_SAFE_CALL(cudaThreadSynchronize());
+        timer.stop();
+
+        d_odata = d_odata+1;
+        CUDA_SAFE_CALL(cudaMemcpy(o_data, d_odata,
+                                  sizeof(unsigned int) * test[k],
+                                  cudaMemcpyDeviceToHost));
+
+        bool result = compareArrays<unsigned int> (reference, o_data, test[k]);
+
+        free(o_data);
+
+        retval += result ? 0 : 1;
+        if(!quiet)
+        {
+            printf("test %s\n", result ? "PASSED" : "FAILED");
+            printf("Average execution time: %f ms\n",
+                   timer.getTime() / testOptions.numIterations);
+        }
+        else
+            printf("\t%10d\t%0.4f\n", test[k],
+                   timer.getTime() / testOptions.numIterations);
     }
 
     result = cudppDestroyPlan(plan);
@@ -181,16 +187,16 @@ int testSuffixArray(int argc, const char **argv,
 
     CUDPPConfiguration config;
     config.algorithm = CUDPP_SA;
-    config.options = 0; 
+    config.options = 0;
 
     if (configPtr != NULL)
-    {    
+    {
         config = *configPtr;
-    }    
-    else 
-    {    
+    }
+    else
+    {
         config.datatype = CUDPP_UCHAR;
-    }    
+    }
 
     return suffixArrayTest(argc, argv, config, testOptions);
 }
@@ -201,5 +207,5 @@ int testSuffixArray(int argc, const char **argv,
 // mode:c++
 // c-file-style: "NVIDIA"
 // End:
-     
+
 
