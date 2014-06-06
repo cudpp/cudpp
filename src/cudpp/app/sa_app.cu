@@ -24,9 +24,18 @@
 
 #define SA_BLOCK 128
 
+template <typename T>
+struct my_less {
+  __device__ bool operator()(T x, T y)
+  {
+      if(y.d == 1) return ((y.a == x.a) ? (x.c < y.b) : (x.a < y.a));
+      else return ((y.a == x.a) ? ((y.b == x.b) ? (x.d<y.c) : (x.b<y.b)):(x.a<y.a));    
+  }
+
+};
+
 typedef my_less<typename std::iterator_traits<Vector*>::value_type> Comp;
 typedef typename std::iterator_traits<unsigned int*>::value_type T;
-using namespace std;
 
 /**
   * @file
@@ -349,7 +358,7 @@ void cudppSuffixArrayDispatch(void* d_str,
     
     ComputeSA((unsigned int*)plan->d_str_value, (unsigned int*)d_keys_sa, d_str_length, *context, plan, 0, 0);
 
-    d_keys_sa = d_keys_sa + 1;
+    //d_keys_sa = d_keys_sa + 1;
     resultConstruct<<< grid_construct, threads_construct >>>
               (d_keys_sa, d_str_length);
     CUDA_SAFE_CALL(cudaThreadSynchronize());

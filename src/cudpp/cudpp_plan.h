@@ -274,6 +274,39 @@ public:
     CUDPPTridiagonalPlan(CUDPPManager *mgr, CUDPPConfiguration config);
 };
 
+// Vector struct for merging SA12 and SA3
+struct Vector
+{
+    unsigned int a;
+    unsigned int b;
+    unsigned int c;
+    unsigned int d;  
+};
+
+/** @brief Plan class for suffix array
+*
+*/
+class CUDPPSaPlan : public CUDPPPlan
+{
+public:
+    CUDPPSaPlan(CUDPPManager *mgr, CUDPPConfiguration config, size_t str_length);
+    virtual ~CUDPPSaPlan();
+   
+    // Intermediate buffers and variables during suffix array construction 
+    bool *m_d_unique;                    //!< @internal the flag to mark if SA12 is fully sorted
+    unsigned int* d_str_value;           //!< @internal the input unsigned int array
+    unsigned int* m_d_keys_srt_12;       //!< @internal SA12
+    unsigned int* m_d_keys_srt_3;        //!< @internal SA3
+
+    Vector* m_d_aKeys;                   //!< @internal SA12 keys for final merge
+    Vector* m_d_bKeys;                   //!< @internal SA3 keys for final merge
+    Vector* m_d_cKeys;                   //!< @internal merging result
+
+    unsigned int* m_d_new_str;           //!< @internal new string for recursion
+    unsigned int* m_d_isa_12;	         //!< @internal ISA12
+};
+
+
 /** @brief Plan class for compressor
 *
 */
@@ -288,6 +321,7 @@ public:
     unsigned int *m_d_keys;
     unsigned int *m_d_values;
     unsigned char *m_d_bwtOut;
+    CUDPPSaPlan *m_saPlan;         //!< @internal Suffix Array performs sorting permutations of the string using this plan
 
     unsigned int *m_d_bwtInRef;
     unsigned int *m_d_bwtInRef2;
@@ -331,6 +365,7 @@ public:
     // BWT
     unsigned int *m_d_keys;
     unsigned int *m_d_values;
+    CUDPPSaPlan *m_saPlan;         //!< @internal Suffix Array performs sorting permutations of the string using this plan
 
     unsigned int *m_d_bwtInRef;
     unsigned int *m_d_bwtInRef2;
@@ -373,34 +408,6 @@ public:
     int *m_d_tmp3; //!< @internal temporary next indices array
 };
 
-struct Vector
-{
-    unsigned int a;
-    unsigned int b;
-    unsigned int c;
-    unsigned int d;  
-};
-
-/** @brief Plan class for suffix array
-*
-*/
-class CUDPPSaPlan : public CUDPPPlan
-{
-public:
-    CUDPPSaPlan(CUDPPManager *mgr, CUDPPConfiguration config, size_t str_length);
-    virtual ~CUDPPSaPlan();
-   
-    // Intermediate buffers and variables during suffix array construction 
-    bool *m_d_unique;
-    unsigned int* d_str_value;
-    unsigned int* m_d_keys_srt_12;
-    unsigned int* m_d_keys_srt_3;
-    Vector* m_d_aKeys;
-    Vector* m_d_bKeys;
-    Vector* m_d_cKeys;
-    unsigned int* m_d_new_str;
-    unsigned int* m_d_isa_12;	
-};
 
 
 #endif // __CUDPP_PLAN_H__

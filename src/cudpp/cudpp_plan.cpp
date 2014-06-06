@@ -701,12 +701,14 @@ CUDPPTridiagonalPlan::CUDPPTridiagonalPlan(CUDPPManager *mgr, CUDPPConfiguration
 CUDPPCompressPlan::CUDPPCompressPlan(CUDPPManager *mgr, CUDPPConfiguration config, size_t numElements) 
  : CUDPPPlan(mgr, config, numElements, 1, 0)
 {
+    m_saPlan = new CUDPPSaPlan(mgr, config, numElements);
     allocCompressStorage(this);
 }
 
 /** @brief Compress plan destructor */
 CUDPPCompressPlan::~CUDPPCompressPlan()
 {
+    delete m_saPlan;
     freeCompressStorage(this);
 }
 
@@ -719,12 +721,14 @@ CUDPPCompressPlan::~CUDPPCompressPlan()
 CUDPPBwtPlan::CUDPPBwtPlan(CUDPPManager *mgr, CUDPPConfiguration config, size_t numElements) 
  : CUDPPPlan(mgr, config, numElements, 1, 0)
 {
+    m_saPlan = new CUDPPSaPlan(mgr, config, numElements);
     allocBwtStorage(this);
 }
 
 /** @brief BWT plan destructor */
 CUDPPBwtPlan::~CUDPPBwtPlan()
 {
+    delete m_saPlan;
     freeBwtStorage(this);
 }
 

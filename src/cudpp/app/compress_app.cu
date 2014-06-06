@@ -10,22 +10,18 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <fstream>
 
 #include "cuda_util.h"
 #include "cudpp_globals.h"
 #include "cudpp.h"
 #include "cudpp_util.h"
 #include "cudpp_plan.h"
+#include "cudpp_sa.h"
 
 #include "kernel/compress_kernel.cuh"
 
-//#include "skew.h"
-//#include "skew.cu"
-//#include <fstream>
-//#include <iostream>
-
 using namespace std;
-//using namespace SA;
 
 
 /**
@@ -273,9 +269,6 @@ void burrowsWheelerTransform(unsigned char              *d_uncompressed,
     dim3 grid_construct(nBlocks, 1, 1);
     dim3 threads_construct(nThreads, 1, 1);
    
-    //cout << "--------------------Before SA--------------------" <<endl;
-//GpuTimer Timer2;
-//Timer2.Start();
     int numThreads = 64;
     int secondBlocks;
     size_t count;
@@ -373,7 +366,9 @@ void burrowsWheelerTransform(unsigned char              *d_uncompressed,
 //CUDA_SAFE_CALL(cudaMemcpy(result, plan->m_d_values, numElements*sizeof(unsigned int), cudaMemcpyDeviceToHost));
 //ofstream myfile;
 //myfile.open("checkresult.txt");
-//for (int i=0; i<10; i++)  myfile << result[i] <<endl;// for (int j = result[i]; j < numElements; ++j) myfile << str[j]; myfile <<endl;}
+//for(int i=0; i<10; i++) myfile << result[i] <<endl;
+//for(int i = 0; i<numElements; i++) if(result[i]==867860) printf("%d\n", i);
+//for (int i=544737; i<544748; i++)  {myfile << result[i] <<endl; for (int j = result[i]; j < result[i]+10; ++j) myfile << (unsigned int)str[j] << " "; myfile <<endl;}
 //myfile.close();
 //free(str);
 //free(result);
@@ -391,22 +386,31 @@ void burrowsWheelerTransform(unsigned char              *d_uncompressed,
         CUDA_SAFE_CALL(cudaThreadSynchronize());
     }  
 
+/*
 //Timer2.Stop();
 //cout << "total time is " << Timer2.ElapsedMillis() <<endl;
+  uint* d_result;
+  CUDA_SAFE_CALL(cudaMalloc((void**)&d_result, sizeof(unsigned int)*(numElements+1)));
+  cudppSuffixArrayDispatch((unsigned char*)d_uncompressed, (unsigned int*)d_result, numElements, plan->m_saPlan);
+  d_result += 1;
+  CUDA_SAFE_CALL(cudaMemcpy(plan->m_d_values, d_result, numElements*sizeof(uint), cudaMemcpyDeviceToDevice));
+//  cudaFree(d_result);
 
-/*
-GpuTimer Timer1;
-cout << "numElements=" << numElements <<endl;
-
-Timer1.Start();
-  runComputeSA((unsigned char*)d_uncompressed, (unsigned int*)plan->m_d_values, numElements);
+//unsigned int *result = (unsigned int*)malloc(numElements*sizeof(unsigned int));
+//CUDA_SAFE_CALL(cudaMemcpy(result, plan->m_d_values, numElements*sizeof(unsigned int), cudaMemcpyDeviceToHost));
+//unsigned char *str=(unsigned char*)malloc(numElements*sizeof(unsigned char));
+//CUDA_SAFE_CALL(cudaMemcpy(str, d_uncompressed, numElements*sizeof(unsigned char), cudaMemcpyDeviceToHost));
+//ofstream myfile;
+//myfile.open("checkresult_sa.txt");
+//printf("%d\n", result[415085]);
+//for(int i=0;i<10;i++) myfile << result[i] << endl;
+//for (int i=544737; i<544748; i++) { myfile << result[i] <<endl; for (int j = result[i]; j < result[i]+10; ++j) myfile << (unsigned int)str[j] << " "; myfile <<endl;}
+//myfile.close();
+//free(result);
 
    bwt_compute_final_kernel<<< grid_construct, threads_construct >>>
             (d_uncompressed, plan->m_d_values, d_bwtIndex, d_bwtOut, numElements, tThreads);
-   CUDA_SAFE_CALL(cudaThreadSynchronize());
-Timer1.Stop();
-cout << "total time is " << Timer1.ElapsedMillis() <<endl;
-*/
+   CUDA_SAFE_CALL(cudaThreadSynchronize());*/
 }
 
 /** @brief Wrapper for calling the Burrows-Wheeler Transform (BWT).
@@ -723,9 +727,9 @@ void cudppCompressDispatch(void *d_uncompressed,
 /** @brief Dispatch function to perform the Burrows-Wheeler transform
  *
  * 
- * @param[in]  d_bwtIn     Input data
- * @param[out] d_bwtOut    Transformed data
- * @param[out] d_bwtIndex  BWT Index
+ * @param[in]  d_in        Input data
+ * @param[out] d_out       Transformed data
+ * @param[out] d_Index     BWT Index
  * @param[in]  numElements Number of elements to compress
  * @param[in]  plan        Pointer to CUDPPBwtPlan object containing
  *                         compress options and intermediate storage
@@ -746,8 +750,8 @@ void cudppBwtDispatch(void *d_in,
 /** @brief Dispatch function to perform the Move-to-Front transform
  *
  * 
- * @param[in]  d_mtfIn     Input data
- * @param[out] d_mtfOut    Transformed data
+ * @param[in]  d_in        Input data
+ * @param[out] d_out       Transformed data
  * @param[in]  numElements Number of elements to compress
  * @param[in]  plan        Pointer to CUDPPMtfPlan object containing
  *                         compress options and intermediate storage

@@ -317,15 +317,7 @@ struct typeToVector<unsigned long long, 2>
 {
     typedef ulonglong2 Result;
 };
-
-/*struct Vector
-{
-    unsigned int a;
-    unsigned int b;
-    unsigned int c;
-    unsigned int d; 
-};
-*/
+/*
 template <typename T>
 struct my_less {
   __device__ bool operator()(T x, T y)
@@ -335,7 +327,7 @@ struct my_less {
   }
 
 };
-
+*/
 template <typename T>
 class OperatorAdd
 {

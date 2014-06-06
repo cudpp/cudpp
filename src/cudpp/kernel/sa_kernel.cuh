@@ -51,7 +51,7 @@ strConstruct(uchar* d_str,
    const int STRIDE = gridDim.x * blockDim.x;
    #pragma unroll
    for(int i = idx; i < str_length; i += STRIDE) 
-      d_str_value[i] = (uint) d_str[i] +1 ;
+      d_str_value[i] = (uint) d_str[i] ;
    if (idx > str_length-1 && idx < str_length + 3) d_str_value[idx] = 0;
    
 }

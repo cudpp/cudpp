@@ -10,7 +10,7 @@
 
 /**
  * @file
- * test_skew.cpp
+ * test_sa.cpp
  *
  * @brief Host testrig routines to exercise cudpp's suffix array functionality.
  */

@@ -735,7 +735,7 @@ int bwtTest(int argc, const char **argv, const CUDPPConfiguration &config,
     for(int i=0; i<numElements; i++)
     {
         if(o_data[i] != reference[i])
-        {
+        {   printf("index %d: o_data=%u, reference=%u\n", i, o_data[i], reference[i]);
             error = true;
             retval = 1;
             break;
