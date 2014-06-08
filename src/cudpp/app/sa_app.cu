@@ -384,7 +384,7 @@ void cudppSuffixArrayDispatch(void* d_str,
     ComputeSA((unsigned int*)plan->d_str_value, (unsigned int*)d_keys_sa,
               d_str_length, *context, plan, 0, 0);
 
-    //d_keys_sa = d_keys_sa + 1;
+    d_keys_sa = d_keys_sa + 1;
     resultConstruct<<< grid_construct, threads_construct >>>
               (d_keys_sa, d_str_length);
     CUDA_SAFE_CALL(cudaThreadSynchronize());

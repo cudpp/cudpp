@@ -15,6 +15,7 @@ set(CCFILES
   cudpp_testrig.cpp
   cudpp_testrig_options.cpp
   rand_gold.cpp
+  sa_gold.cpp
   spmvmult_gold.cpp
   test_compact.cpp
   test_mergesort.cpp
@@ -38,7 +39,6 @@ set(HFILES
   tridiagonal_gold.h
   sparse.h
   listrank_gold.h
-  sa_gold.h
   )
 
 include_directories(../common/include)

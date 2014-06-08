@@ -90,6 +90,7 @@ CUDPP_COMPRESS       | 1,048,576 elements
 CUDPP_LISTRANK       | NO LIMIT
 CUDPP_MTF            | 1,048,576 elements
 CUDPP_BWT            | 1,048,576 elements
+CUDPP_SA             | NO LIMIT          
 CUDPP_STRINGSORT     | 2,147,450,880 elements
 CUDPP_MERGESORT      | 2,147,450,880 elements
 CUDPP_REDUCE         | NO LIMIT
@@ -218,7 +219,8 @@ CUDPP Developers
 - [Yao Zhang](http://www.alcf.anl.gov/~yaozhang/), University of California, Davis
 - [Andrew Davidson](http://www.ece.ucdavis.edu/~aaldavid/), University of California, Davis
 - [Ritesh Patel](http://www.ece.ucdavis.edu/~ritesh88/), University of California, Davis
- 
+- [Leyuan Wang](http://www.ece.ucdavis.edu/~laurawly/), University of California, Davis 
+
 Other CUDPP Contributors
 ------------------------
  

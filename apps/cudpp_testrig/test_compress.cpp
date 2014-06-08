@@ -21,6 +21,7 @@
 #include <time.h>
 
 #include "cudpp.h"
+#include "sparse.h"
 #include "cudpp_testrig_options.h"
 #include "cudpp_testrig_utils.h"
 #include "cuda_util.h"
@@ -106,123 +107,17 @@ int ComparePresorted(const void *s1, const void *s2)
     return 0;
 }
 
-void computeBwtGold(unsigned char *block_out, int &s0Idx, 
-                    unsigned int numElements)
+void computeBwtGold(unsigned char *i_data, unsigned char *reference, int &ref_index, unsigned int numElements)
 {
-    unsigned int i, k;
-    int j;
-    unsigned int *rotationIdx = new unsigned int[numElements];
-    unsigned int *v = new unsigned int[numElements];
-    unsigned int *counters = new unsigned int[256];
-    unsigned int *offsetTable = new unsigned int[256];
-    blockSize = numElements;
-
-    /*******************************************************************
-     * Sort the rotated strings in the block.  A radix sort is performed
-     * on the first two characters of all the rotated strings (2nd
-     * character then 1st).  All rotated strings with matching initial
-     * characters are then quicksorted. - Q4..Q7
-     *******************************************************************/
-
-    /*** radix sort on second character in rotation ***/
-
-    /* count number of characters for radix sort */
-    memset(counters, 0, 256 * sizeof(int));
-    for (i = 0; i < blockSize; i++)
-    {
-        counters[block[i]]++;
+    unsigned int* sa = new unsigned int[numElements];
+    computeSaGold(i_data, sa, numElements);
+    for(int i=0; i<numElements; i++) 
+    {   
+        unsigned int val=sa[i];
+        if(val==0) ref_index = i;
+        reference[i] = (val==0) ? i_data[numElements-1] : i_data[val-1];
     }
-
-    offsetTable[0] = 0;
-
-    for(i = 1; i < 256; i++)
-    {
-        /* determine number of values before those sorted under i */
-        offsetTable[i] = offsetTable[i - 1] + counters[i - 1];
-    }
-
-    /* sort on 2nd character */
-    for (i = 0; i < blockSize - 1; i++)
-    {
-        j = block[i + 1];
-        v[offsetTable[j]] = i;
-        offsetTable[j] = offsetTable[j] + 1;
-    }
-
-    /* handle wrap around for string starting at end of block */
-    j = block[0];
-    v[offsetTable[j]] = i;
-    offsetTable[0] = 0;
-
-    /*** radix sort on first character in rotation ***/
-
-    for(i = 1; i < 256; i++)
-    {
-        /* determine number of values before those sorted under i */
-        offsetTable[i] = offsetTable[i - 1] + counters[i - 1];
-    }
-
-    for (i = 0; i < blockSize; i++)
-    {
-        j = v[i];
-        j = block[j];
-        rotationIdx[offsetTable[j]] = v[i];
-        offsetTable[j] = offsetTable[j] + 1;
-    }
-
-    /*******************************************************************
-     * now rotationIdx contains the sort order of all strings sorted
-     * by their first 2 characters.  Use qsort to sort the strings
-     * that have their first two characters matching.
-     *******************************************************************/
-    for (i = 0, k = 0; (i <= UCHAR_MAX) && (k < (blockSize - 1)); i++)
-    {
-        for (j = 0; (j <= UCHAR_MAX) && (k < (blockSize - 1)); j++)
-        {
-            unsigned int first = k;
-
-            /* count strings starting with ij */
-            while ((i == block[rotationIdx[k]]) &&
-                   (j == block[Wrap(rotationIdx[k] + 1,  blockSize)]))
-            {
-                k++;
-
-                if (k == blockSize)
-                {
-                    /* we've searched the whole block */
-                    break;
-                }
-            }
-
-            if (k - first > 1)
-            {
-                /* there are at least 2 strings staring with ij, sort them */
-                qsort(&rotationIdx[first], k - first, sizeof(int),
-                      ComparePresorted);
-            }
-        }
-    }
-
-    /* find last characters of rotations (L) - C2 */
-    s0Idx = 0;
-    for (i = 0; i < blockSize; i++)
-    {
-        if (rotationIdx[i] != 0)
-        {
-            block_out[i] = block[rotationIdx[i] - 1];
-        }
-        else
-        {
-            /* unrotated string 1st character is end of string */
-            s0Idx = i;
-            block_out[i] = block[blockSize - 1];
-        }
-    }
-
-    delete [] rotationIdx;
-    delete [] v;
-    delete [] counters;
-    delete [] offsetTable;
+    delete [] sa;     
 }
 
 void computeMtfGold( unsigned char* out, const unsigned char* idata, 
@@ -708,8 +603,8 @@ int bwtTest(int argc, const char **argv, const CUDPPConfiguration &config,
     }
 
     block = i_data;
-    computeBwtGold( reference, ref_index, numElements);
-
+    //computeBwtGold( reference, ref_index, numElements); 
+    computeBwtGold(i_data,reference, ref_index, numElements);
     // Run the BWT
     // run once to avoid timing startup overhead.
     result = cudppBurrowsWheelerTransform(plan, d_idata, d_odata, d_oindex, 
@@ -735,7 +630,7 @@ int bwtTest(int argc, const char **argv, const CUDPPConfiguration &config,
     for(int i=0; i<numElements; i++)
     {
         if(o_data[i] != reference[i])
-        {   printf("index %d: o_data=%u, reference=%u\n", i, o_data[i], reference[i]);
+        {   
             error = true;
             retval = 1;
             break;
@@ -745,7 +640,7 @@ int bwtTest(int argc, const char **argv, const CUDPPConfiguration &config,
         error = true;
         retval = 1;
     }
-
+    
     printf("test %s\n", (error) ? "FAILED" : "PASSED");
 
     result = cudppDestroyPlan(plan);

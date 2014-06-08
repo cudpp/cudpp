@@ -268,149 +268,17 @@ void burrowsWheelerTransform(unsigned char              *d_uncompressed,
     uint nBlocks = (fullBlocks) ? (tThreads/nThreads) : (tThreads/nThreads+1);
     dim3 grid_construct(nBlocks, 1, 1);
     dim3 threads_construct(nThreads, 1, 1);
-   
-    int numThreads = 64;
-    int secondBlocks;
-    size_t count;
-    size_t mult;
-    size_t numBlocks;
-    int initSubPartitions;
-    int subPartitions;
-    int step;
+  
+    uint* d_result;
+    CUDA_SAFE_CALL(cudaMalloc((void**)&d_result, sizeof(unsigned int)*(numElements+1)));
+    cudppSuffixArrayDispatch((unsigned char*)d_uncompressed, (unsigned int*)d_result, numElements, plan->m_saPlan);
+    d_result += 1;
+    CUDA_SAFE_CALL(cudaMemcpy(plan->m_d_values, d_result, numElements*sizeof(uint), cudaMemcpyDeviceToDevice));
+    cudaFree(d_result);
 
-    // Massage input to create sorting key-value pairs
-    bwt_keys_construct_kernel<<< grid_construct, threads_construct >>>
-        ((uchar4*)d_uncompressed, plan->m_d_bwtInRef,
-         plan->m_d_keys, plan->m_d_values, plan->m_d_bwtInRef2, tThreads);
-    CUDA_SAFE_CALL(cudaThreadSynchronize());
-
-    // First satge -- block sort
-    nBlocks = numElements/BWT_BLOCKSORT_SIZE;
-    dim3 grid_blocksort(nBlocks, 1, 1);
-    dim3 threads_blocksort(BWT_CTA_BLOCK, 1, 1);
-
-    blockWiseStringSort<unsigned int, 8><<<grid_blocksort, threads_blocksort>>>
-        (plan->m_d_keys, plan->m_d_values, (const unsigned int*)plan->m_d_bwtInRef, plan->m_d_bwtInRef2, BWT_BLOCKSORT_SIZE, numElements);
-    CUDA_SAFE_CALL(cudaThreadSynchronize());
-
-    // Start merging blocks
-    // Second stage -- merge sorted blocks using simple merge
-    count = 0;
-    mult = 1;
-    numBlocks = nBlocks;
-
-    while(count < 6)
-    {
-        if(count%2 == 0)
-        {
-            simpleStringMerge<unsigned int, 2><<<numBlocks, BWT_CTASIZE_simple, sizeof(unsigned int)*(2*BWT_INTERSECT_B_BLOCK_SIZE_simple+2)>>>
-                (plan->m_d_keys, plan->m_d_keys_dev, plan->m_d_values, plan->m_d_values_dev,
-                 plan->m_d_bwtInRef, BWT_BLOCKSORT_SIZE*mult, numBlocks*BWT_BLOCKSORT_SIZE, plan->m_d_bwtInRef2, numElements);
-            CUDA_SAFE_CALL(cudaThreadSynchronize());
-
-        }
-        else
-        {
-            simpleStringMerge<unsigned int, 2><<<numBlocks, BWT_CTASIZE_simple, sizeof(unsigned int)*(2*BWT_INTERSECT_B_BLOCK_SIZE_simple+2)>>>
-                (plan->m_d_keys_dev, plan->m_d_keys, plan->m_d_values_dev, plan->m_d_values,
-                 plan->m_d_bwtInRef, BWT_BLOCKSORT_SIZE*mult, numBlocks*BWT_BLOCKSORT_SIZE, plan->m_d_bwtInRef2, numElements);
-            CUDA_SAFE_CALL(cudaThreadSynchronize());
-        }
-
-        mult*=2;
-        count++;
-        numBlocks /= 2;
-    }
-
-    // Third stage -- merge remaining blocks using multi-merge
-    initSubPartitions = 2;
-    subPartitions = initSubPartitions;
-    secondBlocks = (2*numBlocks*initSubPartitions+numThreads-1)/numThreads;
-    step = 1;
-
-    while (numBlocks > 1)
-    {
-        if(count%2 == 1)
-        {
-            findMultiPartitions<unsigned int><<<secondBlocks, numThreads>>>
-                (plan->m_d_keys_dev, subPartitions, numBlocks, BWT_BLOCKSORT_SIZE*mult,
-                 plan->m_d_partitionBeginA, plan->m_d_partitionSizeA, plan->m_d_partitionBeginB, plan->m_d_partitionSizeB, BWT_SIZE);
-            CUDA_SAFE_CALL(cudaThreadSynchronize());
-
-            stringMergeMulti<unsigned int, 2><<<numBlocks*subPartitions, BWT_CTASIZE_multi, (2*BWT_INTERSECT_B_BLOCK_SIZE_multi+5)*sizeof(unsigned int)>>>
-                (plan->m_d_keys_dev, plan->m_d_keys, plan->m_d_values_dev, plan->m_d_values, plan->m_d_bwtInRef2, subPartitions, numBlocks,
-                 plan->m_d_partitionBeginA, plan->m_d_partitionSizeA, plan->m_d_partitionBeginB, plan->m_d_partitionSizeB, BWT_BLOCKSORT_SIZE*mult, numElements);
-            CUDA_SAFE_CALL(cudaThreadSynchronize());
-        }
-        else
-        {
-            findMultiPartitions<unsigned int><<<secondBlocks, numThreads>>>
-                (plan->m_d_keys, subPartitions, numBlocks, BWT_BLOCKSORT_SIZE*mult,
-                 plan->m_d_partitionBeginA, plan->m_d_partitionSizeA, plan->m_d_partitionBeginB, plan->m_d_partitionSizeB, BWT_SIZE);
-            CUDA_SAFE_CALL(cudaThreadSynchronize());
-
-            stringMergeMulti<unsigned int, 2><<<numBlocks*subPartitions, BWT_CTASIZE_multi, (2*BWT_INTERSECT_B_BLOCK_SIZE_multi+5)*sizeof(unsigned int)>>>
-                (plan->m_d_keys, plan->m_d_keys_dev, plan->m_d_values, plan->m_d_values_dev, plan->m_d_bwtInRef2, subPartitions, numBlocks,
-                 plan->m_d_partitionBeginA, plan->m_d_partitionSizeA, plan->m_d_partitionBeginB, plan->m_d_partitionSizeB, BWT_BLOCKSORT_SIZE*mult, numElements);
-            CUDA_SAFE_CALL(cudaThreadSynchronize());
-        }
-        numBlocks/=2;
-        subPartitions*=2;
-        count++;
-        mult*=2;
-        step++;
-    }
-//unsigned int *result = (unsigned int*)malloc(numElements*sizeof(unsigned int));
-//unsigned char *str=(unsigned char*)malloc(numElements*sizeof(unsigned char));
-//CUDA_SAFE_CALL(cudaMemcpy(str, d_uncompressed, numElements*sizeof(unsigned char), cudaMemcpyDeviceToHost));
-//CUDA_SAFE_CALL(cudaMemcpy(result, plan->m_d_values, numElements*sizeof(unsigned int), cudaMemcpyDeviceToHost));
-//ofstream myfile;
-//myfile.open("checkresult.txt");
-//for(int i=0; i<10; i++) myfile << result[i] <<endl;
-//for(int i = 0; i<numElements; i++) if(result[i]==867860) printf("%d\n", i);
-//for (int i=544737; i<544748; i++)  {myfile << result[i] <<endl; for (int j = result[i]; j < result[i]+10; ++j) myfile << (unsigned int)str[j] << " "; myfile <<endl;}
-//myfile.close();
-//free(str);
-//free(result);
-    // Final stage -- compute BWT and BWT Index using sorted values
-    if(count%2 == 0)
-    {
-        bwt_compute_final_kernel<<< grid_construct, threads_construct >>>
+    bwt_compute_final_kernel<<< grid_construct, threads_construct >>>
             (d_uncompressed, plan->m_d_values, d_bwtIndex, d_bwtOut, numElements, tThreads);
-        CUDA_SAFE_CALL(cudaThreadSynchronize());
-    }
-    else
-    {
-        bwt_compute_final_kernel<<< grid_construct, threads_construct >>>
-            (d_uncompressed, plan->m_d_values_dev, d_bwtIndex, d_bwtOut, numElements, tThreads);
-        CUDA_SAFE_CALL(cudaThreadSynchronize());
-    }  
-
-/*
-//Timer2.Stop();
-//cout << "total time is " << Timer2.ElapsedMillis() <<endl;
-  uint* d_result;
-  CUDA_SAFE_CALL(cudaMalloc((void**)&d_result, sizeof(unsigned int)*(numElements+1)));
-  cudppSuffixArrayDispatch((unsigned char*)d_uncompressed, (unsigned int*)d_result, numElements, plan->m_saPlan);
-  d_result += 1;
-  CUDA_SAFE_CALL(cudaMemcpy(plan->m_d_values, d_result, numElements*sizeof(uint), cudaMemcpyDeviceToDevice));
-//  cudaFree(d_result);
-
-//unsigned int *result = (unsigned int*)malloc(numElements*sizeof(unsigned int));
-//CUDA_SAFE_CALL(cudaMemcpy(result, plan->m_d_values, numElements*sizeof(unsigned int), cudaMemcpyDeviceToHost));
-//unsigned char *str=(unsigned char*)malloc(numElements*sizeof(unsigned char));
-//CUDA_SAFE_CALL(cudaMemcpy(str, d_uncompressed, numElements*sizeof(unsigned char), cudaMemcpyDeviceToHost));
-//ofstream myfile;
-//myfile.open("checkresult_sa.txt");
-//printf("%d\n", result[415085]);
-//for(int i=0;i<10;i++) myfile << result[i] << endl;
-//for (int i=544737; i<544748; i++) { myfile << result[i] <<endl; for (int j = result[i]; j < result[i]+10; ++j) myfile << (unsigned int)str[j] << " "; myfile <<endl;}
-//myfile.close();
-//free(result);
-
-   bwt_compute_final_kernel<<< grid_construct, threads_construct >>>
-            (d_uncompressed, plan->m_d_values, d_bwtIndex, d_bwtOut, numElements, tThreads);
-   CUDA_SAFE_CALL(cudaThreadSynchronize());*/
+    CUDA_SAFE_CALL(cudaThreadSynchronize());
 }
 
 /** @brief Wrapper for calling the Burrows-Wheeler Transform (BWT).
@@ -729,7 +597,7 @@ void cudppCompressDispatch(void *d_uncompressed,
  * 
  * @param[in]  d_in        Input data
  * @param[out] d_out       Transformed data
- * @param[out] d_Index     BWT Index
+ * @param[out] d_index     BWT Index
  * @param[in]  numElements Number of elements to compress
  * @param[in]  plan        Pointer to CUDPPBwtPlan object containing
  *                         compress options and intermediate storage

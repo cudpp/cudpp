@@ -28,7 +28,7 @@
 #include "commandline.h"
 #include "comparearrays.h"
 
-#include "sa_gold.h"
+#include "sparse.h"
 using namespace cudpp_app;
 
 
@@ -139,7 +139,6 @@ int suffixArrayTest(int argc, const char **argv,
         CUDA_SAFE_CALL(cudaMemcpy(o_data, d_odata,
                                   sizeof(unsigned int) * test[k],
                                   cudaMemcpyDeviceToHost));
-
         bool result = compareArrays<unsigned int> (reference, o_data, test[k]);
 
         free(o_data);
