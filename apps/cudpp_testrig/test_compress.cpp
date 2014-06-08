@@ -465,6 +465,9 @@ int mtfTest(int argc, const char **argv, const CUDPPConfiguration &config,
         // initialize the input data on the host
         float range = (float)(sizeof(unsigned char)*8);
         VectorSupport<unsigned char>::fillVector(i_data, test[k], range);
+    //     srand(95835);
+    //     for(int j=0; j<test[k]; ++j)
+    //	             i_data[j] = (unsigned char)(rand()%128+1);
 
         memset(reference, 0, sizeof(unsigned char) * test[k]);
         computeMtfGold( reference, i_data, test[k]);
@@ -573,7 +576,7 @@ int bwtTest(int argc, const char **argv, const CUDPPConfiguration &config,
     srand(95835);
     for(int j = 0; j < numElements; j++)
     {
-        i_data[j] = (unsigned char)(rand()%245+1);
+        i_data[j] = (unsigned char)(rand()%128+1);
     }
     
     unsigned char* reference = new unsigned char[numElements];
@@ -708,7 +711,7 @@ int compressTest(int argc, const char **argv, const CUDPPConfiguration &config,
     srand(95835);
     for(int j = 0; j < numElements; j++)
     {
-        i_data[j] = (unsigned char)(rand()%15+1);
+        i_data[j] = (unsigned char)(rand()%245+1);
     }
 
     // host ptrs
@@ -761,7 +764,6 @@ int compressTest(int argc, const char **argv, const CUDPPConfiguration &config,
                                sizeof(unsigned int) ));
     CUDA_SAFE_CALL(cudaMemset( (void*)d_compressed,  0,
                                (1536+1)*256*sizeof(unsigned int) ));
-
     // Run the compression
     // run once to avoid timing startup overhead.
     result = cudppCompress(plan, d_uncompressed, d_bwtIndex, 

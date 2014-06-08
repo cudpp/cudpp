@@ -728,7 +728,7 @@ CUDPPBwtPlan::CUDPPBwtPlan(CUDPPManager *mgr, CUDPPConfiguration config, size_t 
 /** @brief BWT plan destructor */
 CUDPPBwtPlan::~CUDPPBwtPlan()
 {
-    delete m_saPlan;
+    //delete m_saPlan;
     freeBwtStorage(this);
 }
 

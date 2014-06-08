@@ -785,8 +785,8 @@ CUDPPResult cudppCompress(CUDPPHandle planHandle,
             return CUDPP_ERROR_INVALID_PLAN;
         if (plan->m_config.datatype != CUDPP_UCHAR)
             return CUDPP_ERROR_ILLEGAL_CONFIGURATION;
-        if (numElements != 1048576)
-            return CUDPP_ERROR_ILLEGAL_CONFIGURATION;
+        //if (numElements != 1048576)
+        //    return CUDPP_ERROR_ILLEGAL_CONFIGURATION;
 
         cudppCompressDispatch(d_uncompressed, d_bwtIndex, d_histSize, d_hist, d_encodeOffset,
             d_compressedSize, d_compressed, numElements, plan);
