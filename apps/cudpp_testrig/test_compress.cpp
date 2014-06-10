@@ -463,11 +463,11 @@ int mtfTest(int argc, const char **argv, const CUDPPConfiguration &config,
         }
 
         // initialize the input data on the host
-        float range = (float)(sizeof(unsigned char)*8);
-        VectorSupport<unsigned char>::fillVector(i_data, test[k], range);
-    //     srand(95835);
-    //     for(int j=0; j<test[k]; ++j)
-    //	             i_data[j] = (unsigned char)(rand()%128+1);
+//        float range = (float)(sizeof(unsigned char)*8);
+//        VectorSupport<unsigned char>::fillVector(i_data, test[k], range);
+         srand(95835);
+         for(int j=0; j<test[k]; ++j)
+    	             i_data[j] = (unsigned char)(rand()%128+1);
 
         memset(reference, 0, sizeof(unsigned char) * test[k]);
         computeMtfGold( reference, i_data, test[k]);
@@ -491,7 +491,15 @@ int mtfTest(int argc, const char **argv, const CUDPPConfiguration &config,
         unsigned char* o_data = (unsigned char*) malloc( sizeof(unsigned char) * test[k]);
         CUDA_SAFE_CALL(cudaMemcpy( o_data, d_odata, sizeof(unsigned char) * test[k],
             cudaMemcpyDeviceToHost));
+if(test[k]==39){
+for(int i=0; i<39;i++) 
+  printf("%u  ", (unsigned int)i_data[i]); printf("\n");
+for(int i=0; i<39;i++) 
+  printf("%u  ", (unsigned int)o_data[i]); printf("\n");
+for(int i=0; i<39;i++) 
+  printf("%u  ", (unsigned int)reference[i]); printf("\n");
 
+}
         bool result = compareArrays<unsigned char>( reference, o_data, test[k]);
 
         free(o_data);

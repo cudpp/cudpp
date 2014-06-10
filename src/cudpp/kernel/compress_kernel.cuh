@@ -1718,7 +1718,7 @@ mtf_GLdownsweep_kernel(uchar    *d_lists,
 
 /** @brief Compute final MTF lists and final MTF output
  * @param[in]     d_mtfIn      A char array of the input data stream to perform the MTF on.
- * @param[in]     d_mtfOut     A char array of the output with the transformed MTF string.
+ * @param[out]     d_mtfOut     A char array of the output with the transformed MTF string.
  * @param[in,out] d_lists      A pointer to the start of MTF lists.
  * @param[in]     d_list_sizes An array storing the size of each MTF list.
  * @param[in]     nLists       Total number of MTF lists.
@@ -1732,6 +1732,7 @@ mtf_localscan_lists_kernel(const uchar * d_mtfIn,
                            ushort      * d_list_sizes,
                            uint          nLists,
                            uint          offset,
+			   uint          tThreads,
                            uint          numElements)
 {
 #if (__CUDA_ARCH__ >= 200)
@@ -1795,6 +1796,8 @@ mtf_localscan_lists_kernel(const uchar * d_mtfIn,
         
         for(int i = (int)lid; i < tid_list_size; i += blockDim.x)
         {
+
+	    if((tid+blockIdx.x*blockDim.x-1)*256+i < tThreads)
             mtfVal = d_lists[(tid+blockIdx.x*blockDim.x-1)*256+i];
             
             if(i < MTF_LIST_SIZE) {
@@ -1847,9 +1850,8 @@ mtf_localscan_lists_kernel(const uchar * d_mtfIn,
             // We only append the characters that are not
             // present in our the list we are appending to
             for(int i=0; i<(int)add_size; i++) {
-
                 mtfVal = (i<MTF_LIST_SIZE) ?
-                    sLists[add_data_index+i] : d_lists[256*(add_threadId+blockIdx.x*blockDim.x-1)+i];
+                    sLists[add_data_index+i] : ((256*(add_threadId+blockIdx.x*blockDim.x-1)+i < tThreads)? d_lists[256*(add_threadId+blockIdx.x*blockDim.x-1)+i] : 0);
 
                 C_ID = mtfVal/32;
                 C_bit = mtfVal%32;
@@ -1861,8 +1863,8 @@ mtf_localscan_lists_kernel(const uchar * d_mtfIn,
                     C[C_ID] |= bit_to_set;
                     if(list_size < MTF_LIST_SIZE) {
                         sMyList[list_size] = mtfVal;      // Append to current MTF list if value is not present in the list
-                    } else
-                        d_lists[256*(idx-1)+list_size] = mtfVal;
+                    } else if(256*(idx-1)+list_size < tThreads) 
+                        d_lists[256*(idx-1)+list_size] = mtfVal; 
                     list_size++;
                 }
             }
@@ -1898,7 +1900,7 @@ mtf_localscan_lists_kernel(const uchar * d_mtfIn,
             for(int i=0; i<add_size; i++) {
 
                 mtfVal = (i<MTF_LIST_SIZE) ?
-                    sLists[add_data_index+i] : d_lists[256*(add_threadId+blockIdx.x*blockDim.x-1)+i];
+                    sLists[add_data_index+i] : ( (256*(add_threadId+blockIdx.x*blockDim.x-1)+i) < tThreads ? d_lists[256*(add_threadId+blockIdx.x*blockDim.x-1)+i] : 0);
                 
                 C_ID = mtfVal/32;
                 C_bit = mtfVal%32;
@@ -1909,7 +1911,7 @@ mtf_localscan_lists_kernel(const uchar * d_mtfIn,
                 {
                     if(list_size < MTF_LIST_SIZE) {
                         sMyList[list_size] = mtfVal;      // Append to current MTF list if value is not present in the list
-                    } else
+                    } else if (256*(idx-1)+list_size < tThreads)
                         d_lists[256*(idx-1)+list_size] = mtfVal;
                     list_size++;
                     C[C_ID] |= bit_to_set;
@@ -1931,10 +1933,11 @@ mtf_localscan_lists_kernel(const uchar * d_mtfIn,
     {
         // Coalesced reads
         int index = blockIdx.x*MTF_PER_THREAD*MTF_THREADS_BLOCK + lid+MTF_THREADS_BLOCK*i;
+
+	if(lid+MTF_THREADS_BLOCK*i < MTF_THREADS_BLOCK*MTF_PER_THREAD)
         s_mtfIn[lid+MTF_THREADS_BLOCK*i] = (index<numElements) ? d_mtfIn[index] : 0;
     }
     __syncthreads();
-
     //========================================================================
     //                      Final MTF
     // Done computing each MTF list. Now, compute final MTF values
@@ -1968,7 +1971,7 @@ mtf_localscan_lists_kernel(const uchar * d_mtfIn,
                     if(j < MTF_LIST_SIZE) {
                         tmp2 = sMyList[j];
                         sMyList[j] = tmp1;
-                    } else {
+                    } else if(256*(idx-1)+j < tThreads){
                         tmp2 = d_lists[256*(idx-1)+j];
                         d_lists[256*(idx-1)+j] = tmp1;
                     }
@@ -1987,9 +1990,12 @@ mtf_localscan_lists_kernel(const uchar * d_mtfIn,
                 for(int j=(int)list_size; j>0; j--)
                 {
                     if(j > MTF_LIST_SIZE) {
+		        if(256*(idx-1)+j < tThreads) {       
                         d_lists[256*(idx-1)+j] = d_lists[256*(idx-1)+j-1];
                         if(d_lists[256*(idx-1)+j] > mtfVal) greater_cnt++;
+			}
                     } else if(j == MTF_LIST_SIZE) {
+		        if(256*(idx-1)+j < tThreads)        
                         d_lists[256*(idx-1)+j] = sMyList[j-1]; // Shifting elements
                         if(sMyList[j-1] > mtfVal) greater_cnt++;
                     } else if(j < MTF_LIST_SIZE) {

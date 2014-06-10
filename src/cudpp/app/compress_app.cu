@@ -232,7 +232,7 @@ void moveToFrontTransform(unsigned char             *d_mtfIn,
     dim3 threads_loc(nThreads, 1, 1);
 
     mtf_localscan_lists_kernel<<< grid_loc, threads_loc>>>
-        (d_mtfIn, d_mtfOut, plan->m_d_lists, plan->m_d_list_sizes, nLists, offset, numElements);
+        (d_mtfIn, d_mtfOut, plan->m_d_lists, plan->m_d_list_sizes, nLists, offset, tThreads, numElements);
     CUDA_SAFE_CALL(cudaThreadSynchronize());
 
 }
@@ -416,7 +416,7 @@ void allocMtfStorage(CUDPPMtfPlan *plan)
     tmp |= tmp >> 16;
     tmp++;
     plan->npad = tmp;
-
+   
     // MTF
     CUDA_SAFE_CALL(cudaMalloc( (void**) &(plan->m_d_lists), (tmp/MTF_PER_THREAD)*256*sizeof(unsigned char)));
     CUDA_SAFE_CALL(cudaMalloc( (void**) &(plan->m_d_list_sizes), (tmp/MTF_PER_THREAD)*sizeof(unsigned short)));
