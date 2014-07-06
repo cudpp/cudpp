@@ -8,6 +8,11 @@ cmake_minimum_required(VERSION 2.8)
 
 find_package(CUDA REQUIRED)
 
+if(APPLE)
+	# Fix CUDA+Clang compatibility
+	SET(CUDA_NVCC_FLAGS -ccbin;/usr/bin/clang)
+endif()
+
 option(CUDPP_BUILD_SHARED_LIBS
   "On to build shared libraries, off for static libraries."
   OFF
