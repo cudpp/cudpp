@@ -378,7 +378,6 @@ void computeCompressGold(unsigned char* reference,
     // Decode final BWT
     cudaMemcpy( h_values, d_values, numElements*sizeof(unsigned int), 
                 cudaMemcpyDeviceToHost);
-
     for(unsigned int i=0; i<numElements; i++) {
         h_bwtIndex = h_values[h_bwtIndex];
         reference[i] = mtfOut[h_bwtIndex];
@@ -404,7 +403,7 @@ int mtfTest(int argc, const char **argv, const CUDPPConfiguration &config,
 
     bool quiet = checkCommandLineFlag(argc, (const char**)argv, "quiet");   
 
-    unsigned int test[] = {39, 128, 256, 512, 1000, 1024, 1025, 32768, 45537, 65536, 131072,
+    unsigned int test[] = {37, 128, 256, 512, 1000, 1024, 1025, 32768, 45537, 65536, 131072,
         262144, 500001, 524288, 1048577, 1048576, 1048581};
     int numTests = sizeof(test) / sizeof(test[0]);
     int numElements = test[numTests-1]; // maximum test size
@@ -471,7 +470,6 @@ int mtfTest(int argc, const char **argv, const CUDPPConfiguration &config,
 
         memset(reference, 0, sizeof(unsigned char) * test[k]);
         computeMtfGold( reference, i_data, test[k]);
-
         CUDA_SAFE_CALL( cudaMemcpy(d_idata, i_data, sizeof(unsigned char) * test[k], cudaMemcpyHostToDevice) );
         CUDA_SAFE_CALL( cudaMemset(d_odata, 0, sizeof(unsigned char) * test[k]) );
 
@@ -491,15 +489,6 @@ int mtfTest(int argc, const char **argv, const CUDPPConfiguration &config,
         unsigned char* o_data = (unsigned char*) malloc( sizeof(unsigned char) * test[k]);
         CUDA_SAFE_CALL(cudaMemcpy( o_data, d_odata, sizeof(unsigned char) * test[k],
             cudaMemcpyDeviceToHost));
-if(test[k]==39){
-for(int i=0; i<39;i++) 
-  printf("%u  ", (unsigned int)i_data[i]); printf("\n");
-for(int i=0; i<39;i++) 
-  printf("%u  ", (unsigned int)o_data[i]); printf("\n");
-for(int i=0; i<39;i++) 
-  printf("%u  ", (unsigned int)reference[i]); printf("\n");
-
-}
         bool result = compareArrays<unsigned char>( reference, o_data, test[k]);
 
         free(o_data);
@@ -810,13 +799,16 @@ int compressTest(int argc, const char **argv, const CUDPPConfiguration &config,
     for(int i=0; i<numElements; i++)
     {
         if(i_data[i] != reference[i])
-        {
+        { printf("i_data[%d]=%d, reference[%d]=%d\n", i, i_data[i], i, reference[i]);
             error = true;
             retval = 1;
             break;
         }
     }
-
+    printf("rereference:\n");
+    for(int i=493; i<523; i++) printf("%d ", reference[i]); printf("\n");
+    printf("i_data:\n");
+    for(int i=493; i<523; i++) printf("%d ", i_data[i]); printf("\n");
     printf("test %s\n", (error) ? "FAILED" : "PASSED");
 
     result = cudppDestroyPlan(plan);

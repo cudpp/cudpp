@@ -1732,7 +1732,6 @@ mtf_localscan_lists_kernel(const uchar * d_mtfIn,
                            ushort      * d_list_sizes,
                            uint          nLists,
                            uint          offset,
-			   uint          tThreads,
                            uint          numElements)
 {
 #if (__CUDA_ARCH__ >= 200)
@@ -1787,7 +1786,6 @@ mtf_localscan_lists_kernel(const uchar * d_mtfIn,
         uint sd_tid = 0;
         int* C = &tmpPreviouslySeen[tid*8];
         ushort tid_list_size = d_list_sizes[tid+blockIdx.x*blockDim.x-1];
-
         if(lid == tid)
         {
             list_size = tid_list_size;
@@ -1796,10 +1794,7 @@ mtf_localscan_lists_kernel(const uchar * d_mtfIn,
         
         for(int i = (int)lid; i < tid_list_size; i += blockDim.x)
         {
-
-	    if((tid+blockIdx.x*blockDim.x-1)*256+i < tThreads)
             mtfVal = d_lists[(tid+blockIdx.x*blockDim.x-1)*256+i];
-            
             if(i < MTF_LIST_SIZE) {
                 sd_tid++;
                 sLists[tid*MTF_LIST_SIZE+i] = mtfVal;
@@ -1851,20 +1846,19 @@ mtf_localscan_lists_kernel(const uchar * d_mtfIn,
             // present in our the list we are appending to
             for(int i=0; i<(int)add_size; i++) {
                 mtfVal = (i<MTF_LIST_SIZE) ?
-                    sLists[add_data_index+i] : ((256*(add_threadId+blockIdx.x*blockDim.x-1)+i < tThreads)? d_lists[256*(add_threadId+blockIdx.x*blockDim.x-1)+i] : 0);
+                    sLists[add_data_index+i] : d_lists[256*(add_threadId+blockIdx.x*blockDim.x-1)+i];
 
                 C_ID = mtfVal/32;
                 C_bit = mtfVal%32;
 
                 int bit_to_set = 1 << (31-C_bit);
-
                 if(!((C[C_ID]<<C_bit) & 0x80000000))
-                {
+                { 
                     C[C_ID] |= bit_to_set;
                     if(list_size < MTF_LIST_SIZE) {
                         sMyList[list_size] = mtfVal;      // Append to current MTF list if value is not present in the list
-                    } else if(256*(idx-1)+list_size < tThreads) 
-                        d_lists[256*(idx-1)+list_size] = mtfVal; 
+                     } else if(idx>0)
+                        d_lists[256*(idx-1)+list_size] = mtfVal;
                     list_size++;
                 }
             }
@@ -1896,11 +1890,10 @@ mtf_localscan_lists_kernel(const uchar * d_mtfIn,
             int add_threadId = lid-l_offset;                // The ID of the list we are appending to current list
             ushort add_size = s_sizes[add_threadId];        // The size of the list we are appending to current list
             int add_data_index = add_threadId*MTF_LIST_SIZE;    // The location of the list we are appending to current list
-
             for(int i=0; i<add_size; i++) {
 
                 mtfVal = (i<MTF_LIST_SIZE) ?
-                    sLists[add_data_index+i] : ( (256*(add_threadId+blockIdx.x*blockDim.x-1)+i) < tThreads ? d_lists[256*(add_threadId+blockIdx.x*blockDim.x-1)+i] : 0);
+                    sLists[add_data_index+i] : d_lists[256*(add_threadId+blockIdx.x*blockDim.x-1)+i];
                 
                 C_ID = mtfVal/32;
                 C_bit = mtfVal%32;
@@ -1911,7 +1904,7 @@ mtf_localscan_lists_kernel(const uchar * d_mtfIn,
                 {
                     if(list_size < MTF_LIST_SIZE) {
                         sMyList[list_size] = mtfVal;      // Append to current MTF list if value is not present in the list
-                    } else if (256*(idx-1)+list_size < tThreads)
+                    } else if (idx>0)
                         d_lists[256*(idx-1)+list_size] = mtfVal;
                     list_size++;
                     C[C_ID] |= bit_to_set;
@@ -1927,6 +1920,7 @@ mtf_localscan_lists_kernel(const uchar * d_mtfIn,
         l_offset = l_offset/2;
         __syncthreads();
     }
+
 
     // Read in d_mtfIn to s_mtfIn
     for(int i = 0; i < MTF_PER_THREAD; i++)
@@ -1951,7 +1945,7 @@ mtf_localscan_lists_kernel(const uchar * d_mtfIn,
             uchar mtfOut = 0;
             bool found = false;
 
-            // Read next MTF inpute
+            // Read next MTF input
             mtfVal = s_mtfIn[lid*MTF_PER_THREAD + i];
             C_ID = mtfVal/32;
             C_bit = mtfVal%32;
@@ -1959,22 +1953,22 @@ mtf_localscan_lists_kernel(const uchar * d_mtfIn,
             int bit_to_set = 1 << (31-C_bit);
             if( !((C[C_ID]<<C_bit) & 0x80000000) ) C[C_ID] |= bit_to_set;
             else found = true;
-
+	    if(mtfVal==37){
+}
             if(found)
-            {
+            { 
                 // Element already exists in list, Moving to front
                 uint tmp1 = mtfVal;
                 uint tmp2;
-
                 for(int j=0; j<(int)list_size; j++)
                 {
                     if(j < MTF_LIST_SIZE) {
                         tmp2 = sMyList[j];
-                        sMyList[j] = tmp1;
-                    } else if(256*(idx-1)+j < tThreads){
-                        tmp2 = d_lists[256*(idx-1)+j];
-                        d_lists[256*(idx-1)+j] = tmp1;
-                    }
+                        sMyList[j] = tmp1; 
+		    }else if(idx>0){
+                           tmp2 = d_lists[256*(idx-1)+j];
+                           d_lists[256*(idx-1)+j] = tmp1; 
+		    }
 
                     tmp1 = tmp2;
                     if(tmp1 == mtfVal) {
@@ -1982,21 +1976,23 @@ mtf_localscan_lists_kernel(const uchar * d_mtfIn,
                         break;
                     }
                 }
+
             }
             else
-            {
+	    {
                 // Adding new element to front of the list, shift all other elements
                 uchar greater_cnt = 0;
                 for(int j=(int)list_size; j>0; j--)
                 {
                     if(j > MTF_LIST_SIZE) {
-		        if(256*(idx-1)+j < tThreads) {       
+		        if(idx>0){   
                         d_lists[256*(idx-1)+j] = d_lists[256*(idx-1)+j-1];
                         if(d_lists[256*(idx-1)+j] > mtfVal) greater_cnt++;
 			}
                     } else if(j == MTF_LIST_SIZE) {
-		        if(256*(idx-1)+j < tThreads)        
+		        if(idx>0) 
                         d_lists[256*(idx-1)+j] = sMyList[j-1]; // Shifting elements
+
                         if(sMyList[j-1] > mtfVal) greater_cnt++;
                     } else if(j < MTF_LIST_SIZE) {
                         sMyList[j] = sMyList[j-1]; // shifting elements
