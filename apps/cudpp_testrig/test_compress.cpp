@@ -38,7 +38,7 @@
 #define BLOCK_CHARS (THREADS_PER_BLOCK*WORK_PER_THREAD)
 
 typedef struct my_huffman_node_t
-{
+
     int value;          /* character(s) represented by this entry */
     unsigned int count;      /* number of occurrences of value (probability) */
 
@@ -313,7 +313,6 @@ void computeCompressGold(unsigned char* reference,
                 // write out character
                 reference[i*BLOCK_CHARS+n_found_chars] = 
                     (unsigned char)h_huffmanArray[currentNode].value;
-
                 n_found_chars++;
 
                 // back to top of tree
@@ -361,6 +360,7 @@ void computeCompressGold(unsigned char* reference,
         h_values[i] = i;
     }
 
+
     CUDA_SAFE_CALL( cudaMalloc( (void **) &d_keys, 
                                 numElements*sizeof(unsigned char)));
     CUDA_SAFE_CALL( cudaMalloc( (void **) &d_values, 
@@ -372,17 +372,19 @@ void computeCompressGold(unsigned char* reference,
                                numElements*sizeof(unsigned int), 
                                cudaMemcpyHostToDevice) );
 
+
     // sort
     cudppRadixSort(plan, (void*)d_keys, (void*)d_values, numElements);
 
     // Decode final BWT
     cudaMemcpy( h_values, d_values, numElements*sizeof(unsigned int), 
                 cudaMemcpyDeviceToHost);
+    
+
     for(unsigned int i=0; i<numElements; i++) {
         h_bwtIndex = h_values[h_bwtIndex];
         reference[i] = mtfOut[h_bwtIndex];
     }
-
     // Free
     delete [] h_huffmanArray;
     delete [] mtfOut;
@@ -414,7 +416,7 @@ int mtfTest(int argc, const char **argv, const CUDPPConfiguration &config,
         oneTest = true;
         numTests = 1;
         test[0] = numElements;
-    }
+    } 
 
     CUDPPResult result = CUDPP_SUCCESS;
     CUDPPHandle theCudpp;
@@ -533,7 +535,6 @@ int bwtTest(int argc, const char **argv, const CUDPPConfiguration &config,
 {
     int retval = 0;
     int numElements = 1048576; // test size
-
     bool quiet = checkCommandLineFlag(argc, argv, "quiet");
     int numTests = 1;
     bool oneTest = true;
@@ -565,7 +566,6 @@ int bwtTest(int argc, const char **argv, const CUDPPConfiguration &config,
     
     // allocate host memory to store the input data
     unsigned char* i_data = new unsigned char[numElements];
-
     // initialize the input data on the host
     float range = (float)(sizeof(unsigned char)*8);
         
@@ -575,7 +575,7 @@ int bwtTest(int argc, const char **argv, const CUDPPConfiguration &config,
     {
         i_data[j] = (unsigned char)(rand()%128+1);
     }
-    
+  
     unsigned char* reference = new unsigned char[numElements];
     int ref_index;
 
@@ -603,7 +603,6 @@ int bwtTest(int argc, const char **argv, const CUDPPConfiguration &config,
     }
 
     block = i_data;
-    //computeBwtGold( reference, ref_index, numElements); 
     computeBwtGold(i_data,reference, ref_index, numElements);
     // Run the BWT
     // run once to avoid timing startup overhead.
@@ -628,7 +627,7 @@ int bwtTest(int argc, const char **argv, const CUDPPConfiguration &config,
     // check results
     bool error = false;
     for(int i=0; i<numElements; i++)
-    {
+    { 
         if(o_data[i] != reference[i])
         {   
             error = true;
@@ -706,7 +705,7 @@ int compressTest(int argc, const char **argv, const CUDPPConfiguration &config,
 
     // initialize the input data on the host
     srand(95835);
-    for(int j = 0; j < numElements; j++)
+    for(int j = 0; j < numElements-1; j++)
     {
         i_data[j] = (unsigned char)(rand()%245+1);
     }
@@ -796,20 +795,18 @@ int compressTest(int argc, const char **argv, const CUDPPConfiguration &config,
 
     // check results
     bool error = false;
+
     for(int i=0; i<numElements; i++)
     {
         if(i_data[i] != reference[i])
-        { printf("i_data[%d]=%d, reference[%d]=%d\n", i, i_data[i], i, reference[i]);
-            error = true;
+        { 
+	    error = true;
             retval = 1;
             break;
         }
     }
-    printf("rereference:\n");
-    for(int i=493; i<523; i++) printf("%d ", reference[i]); printf("\n");
-    printf("i_data:\n");
-    for(int i=493; i<523; i++) printf("%d ", i_data[i]); printf("\n");
     printf("test %s\n", (error) ? "FAILED" : "PASSED");
+
 
     result = cudppDestroyPlan(plan);
 

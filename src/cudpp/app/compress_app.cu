@@ -268,7 +268,6 @@ void burrowsWheelerTransform(unsigned char              *d_uncompressed,
     uint nBlocks = (fullBlocks) ? (tThreads/nThreads) : (tThreads/nThreads+1);
     dim3 grid_construct(nBlocks, 1, 1);
     dim3 threads_construct(nThreads, 1, 1);
-  
     uint* d_result;
     CUDA_SAFE_CALL(cudaMalloc((void**)&d_result, sizeof(unsigned int)*(numElements+1)));
     cudppSuffixArrayDispatch((unsigned char*)d_uncompressed, (unsigned int*)d_result, numElements, plan->m_saPlan);
@@ -276,11 +275,10 @@ void burrowsWheelerTransform(unsigned char              *d_uncompressed,
     CUDA_SAFE_CALL(cudaMemcpy(plan->m_d_values, d_result, numElements*sizeof(uint), cudaMemcpyDeviceToDevice));
     d_result -= 1;
     cudaFree(d_result);
-
+    
     bwt_compute_final_kernel<<< grid_construct, threads_construct >>>
             (d_uncompressed, plan->m_d_values, d_bwtIndex, d_bwtOut, numElements, tThreads);
     CUDA_SAFE_CALL(cudaThreadSynchronize());
-
 }
 
 /** @brief Wrapper for calling the Burrows-Wheeler Transform (BWT).
