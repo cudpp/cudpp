@@ -1,5 +1,15 @@
 CUDPP Change Log
 
+Release 2.2
+20 July 2014
+- Added cudppSuffixArray parallel skew algorithm for computing suffix array
+- Replaced the cudppStringSort in burrowsWheelerTransform in cudppCompress 
+  with cudppSuffixArray to achieve better performance
+- Fixed bugs in cudppMoveToFrontTransform where originally only inputs with
+  value smaller than 15 work
+- Changed test files for cudppCompression and cudppMoveToFrontTransform to 
+  target on the new bwt method
+
 Release 2.1
 9 October 2013
 - Added cudppCompress lossless data compression algorithms which implement

@@ -102,18 +102,18 @@ CUDPP_TRIDIAGONAL    | 65535 systems, 1024 equations per system (Compute capabil
 Operating System Support and Requirements
 ========================================= 
  
-This release (2.1) has been thoroughly tested on the following OSes.  For more information, visit our [test results page](https://github.com/cudpp/cudpp/wiki/RegressionStatus2.1).
+This release (2.2) has been thoroughly tested on the following OSes.  For more information, visit our [test results page](https://github.com/cudpp/cudpp/wiki/RegressionStatus2.2).
 
 - Windows 7 (64-bit) (CUDA 5.0)
 - Ubuntu Linux (64-bit) (CUDA 5.0, CUDA 5.5)
 - Mac OS X 10.8.3 (Snow Leopard/Lion, 64-bit) (CUDA 5.0, CUDA 5.5)
 
-We expect CUDPP to build and run correctly on other flavors of Linux and Windows, but only the above are actively tested at this time.  Version 2.1 does not currently support 32-bit operating systems.
+We expect CUDPP to build and run correctly on other flavors of Linux and Windows, but only the above are actively tested at this time.  Version 2.2 does not currently support 32-bit operating systems.
 
 Requirements 
 ------------
 
-CUDPP 2.1 has not been tested with any CUDA version < 5.0.  
+CUDPP 2.2 has not been tested with any CUDA version < 5.0.  
 
 CUDA
 ====

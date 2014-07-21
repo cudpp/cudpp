@@ -38,7 +38,7 @@
 #define BLOCK_CHARS (THREADS_PER_BLOCK*WORK_PER_THREAD)
 
 typedef struct my_huffman_node_t
-
+{
     int value;          /* character(s) represented by this entry */
     unsigned int count;      /* number of occurrences of value (probability) */
 

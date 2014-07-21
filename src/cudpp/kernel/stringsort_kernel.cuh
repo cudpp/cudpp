@@ -57,7 +57,6 @@ void dotAddInclusive(unsigned int* numSpaces, unsigned int* d_address, unsigned 
  * @param[out] numSpaces Number of spaces required for each string
  * @param[in] d_address Input addresses of each string
  * @param[in] d_stringVals String array
- * @param[in] address Input addresses of unpacked strings  
  * @param[in] termC Termination character for the strings
  * @param[in] numElements Number of strings
  * @param[in] stringSize Number of characters in the string array
@@ -97,7 +96,7 @@ void alignedOffsets(unsigned int* numSpaces, unsigned int* d_address,
  * be aligned
  * @param[out] packedStrings Resulting packed strings. 
  * @param[in] d_stringVals Unpacked string array which we will pack
- * @param[out] packedAddresses Resulting addresses for each string to the packedStrings array
+ * @param[out] packedAddress Resulting addresses for each string to the packedStrings array
  * @param[in] address Input addresses of unpacked strings 
  * @param[in] numElements Number of strings
  * @param[in] stringArrayLength Number of characters in the string array
@@ -238,6 +237,7 @@ void simpleCopy(T* A_keys_dev, unsigned int* A_vals_dev, T* A_keys_out_dev, unsi
  * @param[in] blockSize size of each block
  * @param[in] totalSize The total size of the array we are sorting
  * @param[in] stringSize The size of our string array (stringVals)
+ * @param[in] termC Termination character for the strings
  **/
 template<class T, int depth>
 __global__
@@ -517,6 +517,7 @@ void blockWiseStringSort(T *A_keys, T* A_address, T* stringVals, int blockSize, 
  * @param[in] size Global size of our array
  * @param[in] step Number of merges done so far
  * @param[in] stringSize global string length
+ * @param[in] termC Termination character for the strings
  **/
 template<class T, int depth>
 __global__
@@ -853,6 +854,7 @@ void simpleStringMerge(T *A_keys, T *A_keys_out, T *A_values, T* A_values_out, T
  * @param[in] partitionBeginA, partitionSizesA Partition starting points and sizes for each new subpartition in our original set in A
  * @param[in] partitionBeginB, partitionSizesB Partition starting points and sizes for each new subpartition in our original set in B
  * @param[in] size, stringSize Number of elements in our set, and size of our global string array
+ * @param[in] termC Termination character for the strings
  **/
 template<class T>
 __global__
@@ -1079,6 +1081,7 @@ void findMultiPartitions(T *A_keys, T* A_address, T* stringValues, int splitsPP,
  * @param[in] step Number of merge cycles done
  * @param[in] size Number of total strings being sorted
  * @param[in] stringSize Length of string array
+ * @param[in] termC Termination character for the strings
  **/
 
 

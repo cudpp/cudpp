@@ -41,12 +41,10 @@ int suffixArrayTest(int argc, const char **argv,
     cudpp_app::StopWatch timer;
 
     bool quiet = checkCommandLineFlag(argc, (const char**) argv, "quiet");
-
     unsigned int test[] = {39, 128, 256, 512, 513, 1000, 1024, 1025, 32768,
                            45537, 65536, 131072, 262144, 500001, 524288,
                            1048577, 1048576, 1048581, 2097152, 4194304,
                            8388608};
-
 
     int numTests = sizeof(test) / sizeof(test[0]);
     int numElements;
@@ -67,6 +65,7 @@ int suffixArrayTest(int argc, const char **argv,
     CUDPPHandle theCudpp;
     result = cudppCreate(&theCudpp);
 
+printf("after creating cudpp plan\n");
     if (result != CUDPP_SUCCESS)
     {
         if (!quiet)
@@ -76,7 +75,7 @@ int suffixArrayTest(int argc, const char **argv,
     }
 
     result = cudppPlan(theCudpp, &plan, config, numElements, 1, 0);
-
+printf("after cudppPlan\n");
     if(result != CUDPP_SUCCESS)
     {
         if (!quiet)
@@ -97,7 +96,7 @@ int suffixArrayTest(int argc, const char **argv,
                               numElements*sizeof(unsigned char)));
     CUDA_SAFE_CALL(cudaMalloc((void**) &d_odata,
                               (numElements+1)*sizeof(unsigned int)));
-
+printf("after allocate mem\n");
     for(int k=0; k<numTests; k++)
     {
         if(!quiet)
