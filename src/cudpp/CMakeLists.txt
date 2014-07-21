@@ -82,17 +82,12 @@ set(HFILES_PUBLIC
 source_group("CUDA Source Files" FILES ${CUFILES})
 source_group("CUDA Header Files" FILES ${CUHFILES})
 
-set(GENCODE_SM10 -gencode=arch=compute_10,code=sm_10 -gencode=arch=compute_10,code=compute_10)
 set(GENCODE_SM13 -gencode=arch=compute_13,code=sm_13 -gencode=arch=compute_13,code=compute_13)
 set(GENCODE_SM20 -gencode=arch=compute_20,code=sm_20 -gencode=arch=compute_20,code=compute_20)
 set(GENCODE_SM30 -gencode=arch=compute_30,code=sm_30 -gencode=arch=compute_30,code=compute_30)
 set(GENCODE_SM35 -gencode=arch=compute_35,code=sm_35 -gencode=arch=compute_35,code=compute_35)
 
-set(GENCODE -gencode=arch=compute_10,code=compute_10) # at least generate PTX
-
-option(CUDPP_GENCODE_SM10
-       "ON to generate code for Compute Capability 1.0 devices (e.g. Tesla C870)"
-       ON)
+#set(GENCODE -gencode=arch=compute_10,code=compute_10) # at least generate PTX
 
 option(CUDPP_GENCODE_SM13
        "ON to generate code for Compute Capability 1.3 devices (e.g. Tesla C1060)"
