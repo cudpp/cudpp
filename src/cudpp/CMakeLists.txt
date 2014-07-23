@@ -41,11 +41,11 @@ set (HFILES
 set (CUHFILES
   cta/compress_cta.cuh
   cta/mergesort_cta.cuh
-  cta/radixsort_cta.cuh  
+  cta/radixsort_cta.cuh
   cta/rand_cta.cuh
   cta/scan_cta.cuh
   cta/segmented_scan_cta.cuh
-  cta/stringsort_cta.cuh  
+  cta/stringsort_cta.cuh
   kernel/compact_kernel.cuh
   kernel/compress_kernel.cuh
   kernel/listrank_kernel.cuh
@@ -71,7 +71,7 @@ set(CUFILES
   app/spmvmult_app.cu
   app/stringsort_app.cu
   app/radixsort_app.cu
-  app/rand_app.cu 
+  app/rand_app.cu
   app/tridiagonal_app.cu
   )
 
@@ -82,12 +82,18 @@ set(HFILES_PUBLIC
 source_group("CUDA Source Files" FILES ${CUFILES})
 source_group("CUDA Header Files" FILES ${CUHFILES})
 
+set(GENCODE_SM12 -gencode=arch=compute_12,code=sm_12 -gencode=arch=compute_12,code=compute_12)
 set(GENCODE_SM13 -gencode=arch=compute_13,code=sm_13 -gencode=arch=compute_13,code=compute_13)
 set(GENCODE_SM20 -gencode=arch=compute_20,code=sm_20 -gencode=arch=compute_20,code=compute_20)
 set(GENCODE_SM30 -gencode=arch=compute_30,code=sm_30 -gencode=arch=compute_30,code=compute_30)
 set(GENCODE_SM35 -gencode=arch=compute_35,code=sm_35 -gencode=arch=compute_35,code=compute_35)
+set(GENCODE_SM50 -gencode=arch=compute_50,code=sm_50 -gencode=arch=compute_50,code=compute_50)
 
 #set(GENCODE -gencode=arch=compute_10,code=compute_10) # at least generate PTX
+
+option(CUDPP_GENCODE_SM12
+       "ON to generate code for Compute Capability 1.2 devices (e.g. GeForce GT 330M)"
+       OFF)
 
 option(CUDPP_GENCODE_SM13
        "ON to generate code for Compute Capability 1.3 devices (e.g. Tesla C1060)"
@@ -105,9 +111,13 @@ option(CUDPP_GENCODE_SM35
        "ON to generate code for Compute Capability 3.5 devices (e.g. Tesla K20)"
        OFF)
 
-if (CUDPP_GENCODE_SM10)
-  set(GENCODE ${GENCODE} ${GENCODE_SM10})
-endif(CUDPP_GENCODE_SM10)
+option(CUDPP_GENCODE_SM50
+       "ON to generate code for Compute Capability 5.0 devices (e.g. GeForce GTX 750)"
+       OFF)
+
+if (CUDPP_GENCODE_SM12)
+  set(GENCODE ${GENCODE} ${GENCODE_SM12})
+endif(CUDPP_GENCODE_SM12)
 
 if (CUDPP_GENCODE_SM13)
   set(GENCODE ${GENCODE} ${GENCODE_SM13})
@@ -125,19 +135,23 @@ if (CUDPP_GENCODE_SM35)
   set(GENCODE ${GENCODE} ${GENCODE_SM35})
 endif(CUDPP_GENCODE_SM35)
 
+if (CUDPP_GENCODE_SM50)
+  set(GENCODE ${GENCODE} ${GENCODE_SM50})
+endif(CUDPP_GENCODE_SM50)
+
 if (CUDA_VERBOSE_PTXAS)
   set(VERBOSE_PTXAS --ptxas-options=-v)
 endif (CUDA_VERBOSE_PTXAS)
 
-cuda_add_library(cudpp ${LIB_TYPE} 
-  ${CCFILES} 
+cuda_add_library(cudpp ${LIB_TYPE}
+  ${CCFILES}
   ${HFILES}
   ${CUHFILES}
   ${HFILES_PUBLIC}
-  ${CUFILES} 
+  ${CUFILES}
   OPTIONS ${GENCODE} ${VERBOSE_PTXAS}
   )
-  
+
 install(FILES ${HFILES_PUBLIC}
   DESTINATION include
   )
