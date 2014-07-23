@@ -49,8 +49,6 @@ typedef struct my_huffman_node_t
 } my_huffman_node_t;
 
 using namespace cudpp_app;
-unsigned int blockSize;
-unsigned char *block;
 
 #define Wrap(value, limit) (((value) < (limit)) ? (value) : ((value) - (limit)))
 
@@ -78,38 +76,9 @@ int FindMinimumCountTest(my_huffman_node_t* ht, int elements)
     return currentIndex;
 }
 
-int ComparePresorted(const void *s1, const void *s2)
-{
-    int offset1, offset2;
-    int i;
-    int result;
-
-    offset1 = *((int *)s1);
-    offset2 = *((int *)s2);
-
-    /***********************************************************************
-     * Compare 1 character at a time until there's difference or the end of
-     * the block is reached.  Since we're only sorting strings that already
-     * match at the first two characters, start with the third character.
-     ***********************************************************************/
-    for(i = 2; i < (int)blockSize; i++)
-    {
-        result = (int)block[Wrap((offset1 + i), (int)blockSize)] -
-            (int)block[Wrap((offset2 + i), (int)blockSize)];
-
-        if (result != 0)
-        {
-            return result;
-        }
-    }
-
-    /* strings are identical */
-    return 0;
-}
-
 void computeBwtGold(unsigned char *i_data, unsigned char *reference, int &ref_index, unsigned int numElements)
 {
-    unsigned int* sa = new unsigned int[numElements];
+    unsigned int* sa = new unsigned int[numElements+3];
     computeSaGold(i_data, sa, numElements);
     for(int i=0; i<numElements; i++) 
     {   
@@ -405,7 +374,7 @@ int mtfTest(int argc, const char **argv, const CUDPPConfiguration &config,
 
     bool quiet = checkCommandLineFlag(argc, (const char**)argv, "quiet");   
 
-    unsigned int test[] = {37, 128, 256, 512, 1000, 1024, 1025, 32768, 45537, 65536, 131072,
+    unsigned int test[] = {39, 128, 256, 512, 1000, 1024, 1025, 32768, 45537, 65536, 131072,
         262144, 500001, 524288, 1048577, 1048576, 1048581};
     int numTests = sizeof(test) / sizeof(test[0]);
     int numElements = test[numTests-1]; // maximum test size
@@ -464,15 +433,16 @@ int mtfTest(int argc, const char **argv, const CUDPPConfiguration &config,
         }
 
         // initialize the input data on the host
-//        float range = (float)(sizeof(unsigned char)*8);
-//        VectorSupport<unsigned char>::fillVector(i_data, test[k], range);
-         srand(95835);
-         for(int j=0; j<test[k]; ++j)
-    	             i_data[j] = (unsigned char)(rand()%128+1);
+        float range = (float)(sizeof(unsigned char)*8);
+        VectorSupport<unsigned char>::fillVector(i_data, test[k], range);
+    //     srand(95835);
+    //     for(int j=0; j<test[k]; ++j)
+   // 	             i_data[j] = (unsigned char)(rand()%128+1);
 
         memset(reference, 0, sizeof(unsigned char) * test[k]);
         computeMtfGold( reference, i_data, test[k]);
-        CUDA_SAFE_CALL( cudaMemcpy(d_idata, i_data, sizeof(unsigned char) * test[k], cudaMemcpyHostToDevice) );
+        
+	CUDA_SAFE_CALL( cudaMemcpy(d_idata, i_data, sizeof(unsigned char) * test[k], cudaMemcpyHostToDevice) );
         CUDA_SAFE_CALL( cudaMemset(d_odata, 0, sizeof(unsigned char) * test[k]) );
 
         // run once to avoid timing startup overhead.
@@ -491,7 +461,8 @@ int mtfTest(int argc, const char **argv, const CUDPPConfiguration &config,
         unsigned char* o_data = (unsigned char*) malloc( sizeof(unsigned char) * test[k]);
         CUDA_SAFE_CALL(cudaMemcpy( o_data, d_odata, sizeof(unsigned char) * test[k],
             cudaMemcpyDeviceToHost));
-        bool result = compareArrays<unsigned char>( reference, o_data, test[k]);
+        
+	bool result = compareArrays<unsigned char>( reference, o_data, test[k]);
 
         free(o_data);
 
@@ -566,6 +537,7 @@ int bwtTest(int argc, const char **argv, const CUDPPConfiguration &config,
     
     // allocate host memory to store the input data
     unsigned char* i_data = new unsigned char[numElements];
+
     // initialize the input data on the host
     float range = (float)(sizeof(unsigned char)*8);
         
@@ -602,8 +574,8 @@ int bwtTest(int argc, const char **argv, const CUDPPConfiguration &config,
         fflush(stdout);
     }
 
-    block = i_data;
     computeBwtGold(i_data,reference, ref_index, numElements);
+    
     // Run the BWT
     // run once to avoid timing startup overhead.
     result = cudppBurrowsWheelerTransform(plan, d_idata, d_odata, d_oindex, 
@@ -664,6 +636,7 @@ int bwtTest(int argc, const char **argv, const CUDPPConfiguration &config,
     cudaFree(d_odata);
     cudaFree(d_idata);
     cudaFree(d_oindex);
+    
     return retval;
 }
 
@@ -707,8 +680,9 @@ int compressTest(int argc, const char **argv, const CUDPPConfiguration &config,
     srand(95835);
     for(int j = 0; j < numElements-1; j++)
     {
-        i_data[j] = (unsigned char)(rand()%245+1);
+        i_data[j] = (unsigned char)(rand()%128+1);
     }
+    i_data[numElements-1]=0;
 
     // host ptrs
     int h_bwtIndex;

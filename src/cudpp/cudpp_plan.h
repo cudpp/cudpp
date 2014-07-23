@@ -318,19 +318,9 @@ public:
     virtual ~CUDPPCompressPlan();
 
     // BWT
-    unsigned int *m_d_keys;
     unsigned int *m_d_values;
     unsigned char *m_d_bwtOut;
     CUDPPSaPlan *m_saPlan;         //!< @internal Suffix Array performs sorting permutations of the string using this plan
-
-    unsigned int *m_d_bwtInRef;
-    unsigned int *m_d_bwtInRef2;
-    unsigned int *m_d_keys_dev;
-    unsigned int *m_d_values_dev;
-    int *m_d_partitionBeginA;
-    int *m_d_partitionSizeA;
-    int *m_d_partitionBeginB;
-    int *m_d_partitionSizeB;
 
     // MTF
     unsigned char *m_d_mtfIn;
@@ -344,11 +334,7 @@ public:
     unsigned int *m_d_huffCodeLocations;  // keep track of where each huffman code starts
     unsigned char *m_d_huffCodeLengths;   // lengths of each huffman codes (in bits)
     unsigned int *m_d_histograms;         // histogram used to build huffman tree
-    //unsigned int *m_d_encodedData;        // encoded data only
-    //unsigned int *m_d_totalEncodedSize;   // total words we need to read
     unsigned int *m_d_nCodesPacked;       // Size of all Huffman codes packed together (in bytes)
-    //unsigned int *m_d_histogram;          // Final histogram
-    //unsigned int *m_d_encodeOffset;
     encoded *m_d_encoded;
 
 };
@@ -363,19 +349,8 @@ public:
     virtual ~CUDPPBwtPlan();
 
     // BWT
-    unsigned int *m_d_keys;
     unsigned int *m_d_values;
     CUDPPSaPlan *m_saPlan;         //!< @internal Suffix Array performs sorting permutations of the string using this plan
-
-    unsigned int *m_d_bwtInRef;
-    unsigned int *m_d_bwtInRef2;
-    unsigned int *m_d_keys_dev;
-    unsigned int *m_d_values_dev;
-    int *m_d_partitionBeginA;
-    int *m_d_partitionSizeA;
-    int *m_d_partitionBeginB;
-    int *m_d_partitionSizeB;
-
 };
 
 /** @brief Plan class for MTF

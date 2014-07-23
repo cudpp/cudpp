@@ -110,12 +110,12 @@ void suffixArray(uint* T, uint* SA, int n, int K) {
 void
 computeSaGold(unsigned char* idata, unsigned int* reference, size_t len)
 {
-    uint *inp = new uint[len+3];
+    unsigned int *inp = new unsigned int[len+3];
     for(int i=0; i<len; ++i) inp[i] = (unsigned int) idata[i] + 1;
     inp[len]=0; inp[len+1]=0; inp[len+2]=0;
     for(int i=0; i<len+3; ++i) reference[i]=0;
     suffixArray(inp, reference, len, MAX_ALPHA);
-    free(inp);
+    delete [] inp;
 }
 
 

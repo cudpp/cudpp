@@ -381,11 +381,16 @@ int stringSortTest(CUDPPHandle theCudpp, CUDPPConfiguration config, size_t *test
 
     cudaFree(d_address);
     cudaFree(d_stringVals);
-	
+    cudaFree(d_alignedKeys);
+    cudaFree(d_packedStringVals);
 
+    free(h_valSend);
+    free(h_valAligned);
+    free(h_alignedKeys);
     free(h_valuesSorted);
+    free(unique_qualifier_length);
     free(stringVals);
-    
+    free(packedStringVals); 
 
     return retval;
 }

@@ -65,7 +65,6 @@ int suffixArrayTest(int argc, const char **argv,
     CUDPPHandle theCudpp;
     result = cudppCreate(&theCudpp);
 
-printf("after creating cudpp plan\n");
     if (result != CUDPP_SUCCESS)
     {
         if (!quiet)
@@ -75,7 +74,7 @@ printf("after creating cudpp plan\n");
     }
 
     result = cudppPlan(theCudpp, &plan, config, numElements, 1, 0);
-printf("after cudppPlan\n");
+
     if(result != CUDPP_SUCCESS)
     {
         if (!quiet)
@@ -96,7 +95,6 @@ printf("after cudppPlan\n");
                               numElements*sizeof(unsigned char)));
     CUDA_SAFE_CALL(cudaMalloc((void**) &d_odata,
                               (numElements+1)*sizeof(unsigned int)));
-printf("after allocate mem\n");
     for(int k=0; k<numTests; k++)
     {
         if(!quiet)

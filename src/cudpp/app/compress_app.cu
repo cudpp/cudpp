@@ -70,10 +70,6 @@ void huffmanEncoding(unsigned int               *d_hist,
                      const CUDPPCompressPlan    *plan)
 {
     unsigned char* d_input  = plan->m_d_mtfOut;
-    //d_hist                  = plan->m_d_histogram;
-    //d_encodeOffset          = plan->m_d_encodeOffset;
-    //d_compressedSize        = plan->m_d_totalEncodedSize;
-    //d_compressed            = plan->m_d_encodedData;
 
     // Set work dimensions
     size_t nCodesPacked = 0;
@@ -381,18 +377,8 @@ void allocBwtStorage(CUDPPBwtPlan *plan)
     size_t numElts = plan->m_numElements;
     
     // BWT
-    CUDA_SAFE_CALL(cudaMalloc((void**) &(plan->m_d_keys), numElts*sizeof(unsigned int) ));
     CUDA_SAFE_CALL(cudaMalloc((void**) &(plan->m_d_values), numElts*sizeof(unsigned int) ));
     
-    CUDA_SAFE_CALL(cudaMalloc((void**) &(plan->m_d_bwtInRef), numElts*sizeof(unsigned int) ));
-    CUDA_SAFE_CALL(cudaMalloc((void**) &(plan->m_d_bwtInRef2), numElts*sizeof(unsigned int) ));
-    CUDA_SAFE_CALL(cudaMalloc((void**) &(plan->m_d_keys_dev), numElts*sizeof(unsigned int) ));
-    CUDA_SAFE_CALL(cudaMalloc((void**) &(plan->m_d_values_dev), numElts*sizeof(unsigned int) ));
-    
-    CUDA_SAFE_CALL(cudaMalloc((void**)&(plan->m_d_partitionBeginA), 1024*sizeof(int)) );
-    CUDA_SAFE_CALL(cudaMalloc((void**)&(plan->m_d_partitionSizeA), 1024*sizeof(int)) );
-    CUDA_SAFE_CALL(cudaMalloc((void**)&(plan->m_d_partitionBeginB), 1024*sizeof(int)) );
-    CUDA_SAFE_CALL(cudaMalloc((void**)&(plan->m_d_partitionSizeB), 1024*sizeof(int)) );
 }
     
 /** @brief Allocate intermediate arrays used by MTF.
@@ -437,19 +423,8 @@ void allocCompressStorage(CUDPPCompressPlan *plan)
     plan->npad = numElts;
     
     // BWT
-    CUDA_SAFE_CALL(cudaMalloc((void**) &(plan->m_d_keys), numElts*sizeof(unsigned int) ));
     CUDA_SAFE_CALL(cudaMalloc((void**) &(plan->m_d_values), numElts*sizeof(unsigned int) ));
     CUDA_SAFE_CALL(cudaMalloc( (void**) &(plan->m_d_bwtOut), numElts*sizeof(unsigned char) ));
-    
-    CUDA_SAFE_CALL(cudaMalloc((void**) &(plan->m_d_bwtInRef), numElts*sizeof(unsigned int) ));
-    CUDA_SAFE_CALL(cudaMalloc((void**) &(plan->m_d_bwtInRef2), numElts*sizeof(unsigned int) ));
-    CUDA_SAFE_CALL(cudaMalloc((void**) &(plan->m_d_keys_dev), numElts*sizeof(unsigned int) ));
-    CUDA_SAFE_CALL(cudaMalloc((void**) &(plan->m_d_values_dev), numElts*sizeof(unsigned int) ));
-    
-    CUDA_SAFE_CALL(cudaMalloc((void**)&(plan->m_d_partitionBeginA), 1024*sizeof(int)) );
-    CUDA_SAFE_CALL(cudaMalloc((void**)&(plan->m_d_partitionSizeA), 1024*sizeof(int)) );
-    CUDA_SAFE_CALL(cudaMalloc((void**)&(plan->m_d_partitionBeginB), 1024*sizeof(int)) );
-    CUDA_SAFE_CALL(cudaMalloc((void**)&(plan->m_d_partitionSizeB), 1024*sizeof(int)) );
     
     // MTF
     CUDA_SAFE_CALL(cudaMalloc( (void**) &(plan->m_d_lists), (numElts/MTF_PER_THREAD)*256*sizeof(unsigned char)));
@@ -468,12 +443,8 @@ void allocCompressStorage(CUDPPCompressPlan *plan)
     CUDA_SAFE_CALL(cudaMalloc( (void**) &(plan->m_d_huffCodeLocations), HUFF_NUM_CHARS*sizeof(size_t) ));
     CUDA_SAFE_CALL(cudaMalloc( (void**) &(plan->m_d_huffCodeLengths), HUFF_NUM_CHARS*sizeof(unsigned char) ));
     CUDA_SAFE_CALL(cudaMalloc( (void**) &(plan->m_d_histograms), histBlocks*256*sizeof(size_t) ));
-    //CUDA_SAFE_CALL(cudaMalloc( (void**) &(plan->m_d_histogram), 256*sizeof(size_t) ));
-    //CUDA_SAFE_CALL(cudaMalloc( (void**) &(plan->m_d_totalEncodedSize), sizeof(size_t)));
-    //CUDA_SAFE_CALL(cudaMalloc( (void**) &(plan->m_d_encodedData), sizeof(size_t)*(HUFF_CODE_BYTES+1)*nBlocks));
     CUDA_SAFE_CALL(cudaMalloc( (void**) &(plan->m_d_nCodesPacked), sizeof(size_t)));
     CUDA_SAFE_CALL(cudaMalloc( (void**) &(plan->m_d_encoded), sizeof(encoded)*nBlocks));
-    //CUDA_SAFE_CALL(cudaMalloc( (void**) &(plan->m_d_encodeOffset), sizeof(size_t)*nBlocks));
     
     CUDA_CHECK_ERROR("allocCompressStorage");
 }
@@ -486,20 +457,9 @@ void allocCompressStorage(CUDPPCompressPlan *plan)
 void freeCompressStorage(CUDPPCompressPlan *plan)
 {
     // BWT
-    CUDA_SAFE_CALL( cudaFree(plan->m_d_keys));
     CUDA_SAFE_CALL( cudaFree(plan->m_d_values));
     CUDA_SAFE_CALL( cudaFree(plan->m_d_bwtOut));
     
-    CUDA_SAFE_CALL( cudaFree(plan->m_d_bwtInRef));
-    CUDA_SAFE_CALL( cudaFree(plan->m_d_bwtInRef2));
-    CUDA_SAFE_CALL( cudaFree(plan->m_d_keys_dev));
-    CUDA_SAFE_CALL( cudaFree(plan->m_d_values_dev));
-    
-    CUDA_SAFE_CALL( cudaFree(plan->m_d_partitionBeginA));
-    CUDA_SAFE_CALL( cudaFree(plan->m_d_partitionSizeA));
-    CUDA_SAFE_CALL( cudaFree(plan->m_d_partitionBeginB));
-    CUDA_SAFE_CALL( cudaFree(plan->m_d_partitionSizeB));
-
     // MTF
     CUDA_SAFE_CALL( cudaFree(plan->m_d_lists));
     CUDA_SAFE_CALL( cudaFree(plan->m_d_list_sizes));
@@ -507,15 +467,11 @@ void freeCompressStorage(CUDPPCompressPlan *plan)
 
     // Huffman
     CUDA_SAFE_CALL(cudaFree(plan->m_d_histograms));
-    //CUDA_SAFE_CALL(cudaFree(plan->m_d_histogram));
     CUDA_SAFE_CALL(cudaFree(plan->m_d_huffCodeLengths));
     CUDA_SAFE_CALL(cudaFree(plan->m_d_huffCodesPacked));
     CUDA_SAFE_CALL(cudaFree(plan->m_d_huffCodeLocations));
-    //CUDA_SAFE_CALL(cudaFree(plan->m_d_totalEncodedSize));
-    //CUDA_SAFE_CALL(cudaFree(plan->m_d_encodedData));
     CUDA_SAFE_CALL(cudaFree(plan->m_d_nCodesPacked));
     CUDA_SAFE_CALL(cudaFree(plan->m_d_encoded));
-    //CUDA_SAFE_CALL(cudaFree(plan->m_d_encodeOffset));
 
     CUDA_CHECK_ERROR("freeCompressStorage");
 }
@@ -528,18 +484,8 @@ void freeCompressStorage(CUDPPCompressPlan *plan)
 void freeBwtStorage(CUDPPBwtPlan *plan)
 {
     // BWT
-    CUDA_SAFE_CALL( cudaFree(plan->m_d_keys));
     CUDA_SAFE_CALL( cudaFree(plan->m_d_values));
 
-    CUDA_SAFE_CALL( cudaFree(plan->m_d_bwtInRef));
-    CUDA_SAFE_CALL( cudaFree(plan->m_d_bwtInRef2));
-    CUDA_SAFE_CALL( cudaFree(plan->m_d_keys_dev));
-    CUDA_SAFE_CALL( cudaFree(plan->m_d_values_dev));
-
-    CUDA_SAFE_CALL( cudaFree(plan->m_d_partitionBeginA));
-    CUDA_SAFE_CALL( cudaFree(plan->m_d_partitionSizeA));
-    CUDA_SAFE_CALL( cudaFree(plan->m_d_partitionBeginB));
-    CUDA_SAFE_CALL( cudaFree(plan->m_d_partitionSizeB));
 }
 
 /** @brief Deallocate intermediate block arrays in a CUDPPMtfPlan object.
