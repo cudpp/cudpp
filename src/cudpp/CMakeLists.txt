@@ -143,6 +143,23 @@ if (CUDA_VERBOSE_PTXAS)
   set(VERBOSE_PTXAS --ptxas-options=-v)
 endif (CUDA_VERBOSE_PTXAS)
 
+if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+  exec_program(uname ARGS -v  OUTPUT_VARIABLE DARWIN_VERSION)
+  string(REGEX MATCH "[0-9]+" DARWIN_VERSION ${DARWIN_VERSION})
+  # message(STATUS "Detected Darwin kernel version: ${DARWIN_VERSION}")
+  if ((DARWIN_VERSION GREATER 13) OR (DARWIN_VERSION EQUAL 13))
+    set(APPLE_MAVERICKS_OR_LATER 1 INTERNAL)
+    if(CUDA_VERSION_MAJOR EQUAL 6 AND CUDA_VERSION_MINOR LESS 5)
+      set(CUDA_6_0 1)
+    endif(CUDA_VERSION_MAJOR EQUAL 6 AND CUDA_VERSION_MINOR LESS 5)
+    if(CUDA_VERSION_MAJOR LESS 6 OR CUDA_6_0)
+        SET(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} -ccbin;/usr/bin/clang)
+    endif(CUDA_VERSION_MAJOR LESS 6 OR CUDA_6_0)
+  endif ((DARWIN_VERSION GREATER 13) OR (DARWIN_VERSION EQUAL 13))
+  # CUDA before 6.5 requires Clang to be explicitly passed
+  # https://github.com/cudpp/cudpp/wiki/BuildingCUDPPWithMavericks
+endif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+
 cuda_add_library(cudpp ${LIB_TYPE}
   ${CCFILES}
   ${HFILES}
