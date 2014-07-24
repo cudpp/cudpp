@@ -680,7 +680,7 @@ int compressTest(int argc, const char **argv, const CUDPPConfiguration &config,
     srand(95835);
     for(int j = 0; j < numElements-1; j++)
     {
-        i_data[j] = (unsigned char)(rand()%128+1);
+        i_data[j] = (unsigned char)(rand()%255+1);
     }
     i_data[numElements-1]=0;
 

@@ -102,14 +102,14 @@ int stringSortTest(CUDPPHandle theCudpp, CUDPPConfiguration config, size_t *test
                   unsigned int numTests, size_t numElements,
                   testrigOptions testOptions, bool quiet)
 {
-    int retval = 0;
-    srand(44);
+        int retval = 0;
+        srand(44);
 
-    unsigned int  *h_valuesSorted, *h_valSend, *d_address, *h_valAligned;
-    unsigned int *string_length;
+        unsigned int  *h_valuesSorted, *h_valSend, *d_address, *h_valAligned;
+        unsigned int *string_length;
 	unsigned char *d_stringVals;
 	unsigned int *d_packedStringVals;
-    unsigned char *stringVals;
+        unsigned char *stringVals;
 	unsigned int *packedStringVals;
 	unsigned int *h_alignedKeys;
 	unsigned int *d_alignedKeys;;
@@ -120,38 +120,38 @@ int stringSortTest(CUDPPHandle theCudpp, CUDPPConfiguration config, size_t *test
 	unsigned int maxStringLength = 14;
   
 
-    unsigned int stringSize = 0;
+        unsigned int stringSize = 0;
 	unsigned int packedStringSize = 0;
 	h_valSend = (unsigned int*)malloc(numElements*sizeof(unsigned int));
 	h_valAligned = (unsigned int*)malloc(numElements*sizeof(unsigned int));
 	h_alignedKeys = (unsigned int*)malloc(numElements*sizeof(unsigned int));
 	h_valuesSorted = (unsigned int*)malloc(numElements*sizeof(unsigned int));
-    string_length = (unsigned int*)malloc(numElements*sizeof(unsigned int));
+        string_length = (unsigned int*)malloc(numElements*sizeof(unsigned int));
 	unsigned int* unique_qualifier_length = (unsigned int*) malloc(numElements*sizeof(unsigned int));
     for(unsigned int i=0; i < numElements; ++i)                     
     {				
-		int append = i+1;
-		unique_qualifier_length[i] = 0;
-		while(append > 0)
-		{
-			append /=255;
-			unique_qualifier_length[i]++;
-		}
+	int append = i+1;
+	unique_qualifier_length[i] = 0;
+	while(append > 0)
+	{
+		append /=255;
+		unique_qualifier_length[i]++;
+	}
 
         string_length[i] = 3 + (rand()%maxStringLength) + unique_qualifier_length[i];    
 		h_valSend[i] = i == 0 ? 0 : string_length[i-1];
-	    stringSize += string_length[i];		
+        stringSize += string_length[i];		
 		packedStringSize += ((string_length[i]+3)>>2);
     }
-    stringVals = (unsigned char*) malloc(sizeof(unsigned char)*stringSize);
+        stringVals = (unsigned char*) malloc(sizeof(unsigned char)*stringSize);
 	packedStringVals = (unsigned int*) malloc(sizeof(unsigned int)*(packedStringSize));
-    unsigned int index = 0;
+        unsigned int index = 0;
 	unsigned int aIndex = 0;
 	//printf("%lu elements and %d characters\n", numElements, stringSize);
 	unsigned int temp = 0;
 	unsigned char c;	
-    for(unsigned int i = 0; i < numElements; ++i)
-    {
+        for(unsigned int i = 0; i < numElements; ++i)
+        {
 		unsigned int packedVal = 0;
 		unsigned int count = 0;
 		h_valAligned[i] = aIndex;
@@ -198,11 +198,11 @@ int stringSortTest(CUDPPHandle theCudpp, CUDPPConfiguration config, size_t *test
 	    if( i > 0 )					
 		    h_valSend[i] += h_valSend[i-1];					
 			    	    
-    }
+         }
     
 
-	for(int i = 0; i < numElements; i++)	
-	{
+  	 for(int i = 0; i < numElements; i++)	
+	 {
 		int address = h_valAligned[i];
 		h_alignedKeys[i] = packedStringVals[address];
 	}

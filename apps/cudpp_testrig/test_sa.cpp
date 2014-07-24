@@ -48,6 +48,19 @@ int suffixArrayTest(int argc, const char **argv,
 
     int numTests = sizeof(test) / sizeof(test[0]);
     int numElements;
+    size_t freeMem, totalMem;
+    CUDA_SAFE_CALL(cudaMemGetInfo(&freeMem, &totalMem));
+    unsigned int memNeeded = test[numTests-1] * sizeof(unsigned char);
+    while (memNeeded > 0.02 * freeMem) {
+         numTests -= 1;    
+	 memNeeded = test[numTests-1] * sizeof(unsigned char);
+         if(numTests == 0) {
+	       fprintf(stderr,
+                       "suffixArrayTest: Error, not enough memory to run test\n");
+               break;
+	 }
+    }   
+
     numElements = test[numTests-1] + numTests; // maximum test size
 
     bool oneTest = false;
@@ -65,6 +78,7 @@ int suffixArrayTest(int argc, const char **argv,
     CUDPPHandle theCudpp;
     result = cudppCreate(&theCudpp);
 
+
     if (result != CUDPP_SUCCESS)
     {
         if (!quiet)
@@ -73,6 +87,7 @@ int suffixArrayTest(int argc, const char **argv,
         return retval;
     }
 
+printf("numElements=%d\n", numElements);
     result = cudppPlan(theCudpp, &plan, config, numElements, 1, 0);
 
     if(result != CUDPP_SUCCESS)
@@ -90,7 +105,6 @@ int suffixArrayTest(int argc, const char **argv,
     // allocate device memory input and output arrays
     unsigned char* d_idata = (unsigned char *) NULL;
     unsigned int* d_odata = (unsigned int *) NULL;
-
     CUDA_SAFE_CALL(cudaMalloc((void**) &d_idata,
                               numElements*sizeof(unsigned char)));
     CUDA_SAFE_CALL(cudaMalloc((void**) &d_odata,
