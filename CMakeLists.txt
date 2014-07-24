@@ -44,7 +44,7 @@ set(CMAKE_MODULE_PATH
 set(cudpp_INCLUDE_DIRS
   ${CMAKE_SOURCE_DIR}/include
   ${CMAKE_SOURCE_DIR}/ext/moderngpu/include/
-  ${CMAKE_SOURCE_DIR}/ext/cub/ 
+  ${CMAKE_SOURCE_DIR}/ext/cub/
   )
 include_directories(${cudpp_INCLUDE_DIRS})
 
@@ -94,6 +94,19 @@ endif (WIN32)
 
 # copy data files
 file(COPY apps/data DESTINATION apps)
+
+if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+  exec_program(uname ARGS -v  OUTPUT_VARIABLE DARWIN_VERSION)
+  string(REGEX MATCH "[0-9]+" DARWIN_VERSION ${DARWIN_VERSION})
+  # message(STATUS "Detected Darwin kernel version: ${DARWIN_VERSION}")
+  if ((DARWIN_VERSION GREATER 13) OR (DARWIN_VERSION EQUAL 13))
+    set(APPLE_MAVERICKS_OR_LATER 1 INTERNAL)
+    set(CMAKE_CXX_FLAGS -stdlib=libstdc++)
+    set(CMAKE_C_FLAGS -stdlib=libstdc++)
+  endif ((DARWIN_VERSION GREATER 13) OR (DARWIN_VERSION EQUAL 13))
+  # current CUDA on Mavericks uses libstdc++, not libc++
+  # https://github.com/cudpp/cudpp/wiki/BuildingCUDPPWithMavericks
+endif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 
 add_subdirectory(src/cudpp)
 add_subdirectory(src/cudpp_hash)
