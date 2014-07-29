@@ -270,7 +270,7 @@ void burrowsWheelerTransform(unsigned char              *d_uncompressed,
     d_result += 1;
     CUDA_SAFE_CALL(cudaMemcpy(plan->m_d_values, d_result, numElements*sizeof(uint), cudaMemcpyDeviceToDevice));
     d_result -= 1;
-    cudaFree(d_result);
+    CUDA_SAFE_CALL(cudaFree(d_result));
     
     bwt_compute_final_kernel<<< grid_construct, threads_construct >>>
             (d_uncompressed, plan->m_d_values, d_bwtIndex, d_bwtOut, numElements, tThreads);
@@ -531,7 +531,6 @@ void cudppCompressDispatch(void *d_uncompressed,
 
     // Call to perform the move-to-front transform
     moveToFrontTransformWrapper(numElements, plan);
-
     // Call to perform the Huffman encoding
     huffmanEncoding((unsigned int*)d_hist, (unsigned int*)d_encodeOffset,
                     (unsigned int*)d_compressedSize, (unsigned int*)d_compressed, numElements, plan);

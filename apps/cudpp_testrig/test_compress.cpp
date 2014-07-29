@@ -234,7 +234,6 @@ void computeCompressGold(unsigned char* reference,
             nNodes++;
         }
     }
-
     huffman_build_tree_cpu(h_huffmanArray, nNodes, head);
 
     for(int i=0; i<256; i++)
@@ -297,13 +296,11 @@ void computeCompressGold(unsigned char* reference,
     for(unsigned int i=0; i<256; i++) {
         mtfList[i] = (unsigned char)i;
     }
-
     for (unsigned int i = 0; i < numElements; i++)
     {
         // decode the character
         unsigned char tmp = reference[i];
         mtfOut[i] = mtfList[tmp];
-
         // now move the current character to the front of the list
         for (unsigned char j = tmp; j > 0; j--)
         {
@@ -433,11 +430,11 @@ int mtfTest(int argc, const char **argv, const CUDPPConfiguration &config,
         }
 
         // initialize the input data on the host
-        float range = (float)(sizeof(unsigned char)*8);
-        VectorSupport<unsigned char>::fillVector(i_data, test[k], range);
-    //     srand(95835);
-    //     for(int j=0; j<test[k]; ++j)
-   // 	             i_data[j] = (unsigned char)(rand()%128+1);
+      //  float range = (float)(sizeof(unsigned char)*8);
+      //  VectorSupport<unsigned char>::fillVector(i_data, test[k], range);
+         srand(95835);
+         for(int j=0; j<test[k]; ++j)
+    	             i_data[j] = (unsigned char)(rand()%255+1);
 
         memset(reference, 0, sizeof(unsigned char) * test[k]);
         computeMtfGold( reference, i_data, test[k]);
@@ -545,7 +542,7 @@ int bwtTest(int argc, const char **argv, const CUDPPConfiguration &config,
     srand(95835);
     for(int j = 0; j < numElements; j++)
     {
-        i_data[j] = (unsigned char)(rand()%128+1);
+        i_data[j] = (unsigned char)(rand()%255+1);
     }
   
     unsigned char* reference = new unsigned char[numElements];
@@ -682,19 +679,18 @@ int compressTest(int argc, const char **argv, const CUDPPConfiguration &config,
     {
         i_data[j] = (unsigned char)(rand()%255+1);
     }
-    i_data[numElements-1]=0;
-
+    i_data[numElements-1]=(unsigned char)0;
     // host ptrs
     int h_bwtIndex;
     unsigned int* h_hist = new unsigned int[256];
     unsigned int* h_encodeOffset = new unsigned int[256];
     size_t        h_compressedSize = 0;
-    unsigned int* h_compressed = new unsigned int[numElements/4];
+   // unsigned int* h_compressed = new unsigned int[numElements/4];
     unsigned char* reference = new unsigned char[numElements];
 
     // allocate device memory input and output arrays
     unsigned char  *d_uncompressed;         // user provides
-    int            *d_bwtIndex;             // sizeof(uint)
+    int            *d_bwtIndex;             // sizeof(int)
     unsigned int   *d_histSize;             // ignored
     unsigned int   *d_hist;                 // 256*sizeof(uint)
     unsigned int   *d_encodeOffset;         // 256*sizeof(uint)
@@ -758,6 +754,9 @@ int compressTest(int argc, const char **argv, const CUDPPConfiguration &config,
         CUDA_SAFE_CALL(cudaMemcpy(&h_compressedSize, d_compressedSize, 
                                   sizeof(unsigned int), 
                                   cudaMemcpyDeviceToHost));
+
+        unsigned int* h_compressed = new unsigned int[h_compressedSize];
+
         CUDA_SAFE_CALL(cudaMemcpy(h_compressed, d_compressed, 
                                   h_compressedSize*sizeof(unsigned int), 
                                   cudaMemcpyDeviceToHost));
@@ -765,6 +764,8 @@ int compressTest(int argc, const char **argv, const CUDPPConfiguration &config,
         // Decompress on the CPU
         computeCompressGold( reference, h_bwtIndex, h_hist, h_encodeOffset, 
                              h_compressedSize, h_compressed, numElements);
+  
+        delete [] h_compressed;
     }
 
     // check results
@@ -773,7 +774,7 @@ int compressTest(int argc, const char **argv, const CUDPPConfiguration &config,
     for(int i=0; i<numElements; i++)
     {
         if(i_data[i] != reference[i])
-        { 
+        {
 	    error = true;
             retval = 1;
             break;
@@ -801,7 +802,7 @@ int compressTest(int argc, const char **argv, const CUDPPConfiguration &config,
     delete [] reference;
     delete [] h_hist;
     delete [] h_encodeOffset;
-    delete [] h_compressed;
+  //  delete [] h_compressed;
     delete [] i_data;
     CUDA_SAFE_CALL(cudaFree(d_hist));
     CUDA_SAFE_CALL(cudaFree(d_encodeOffset));
