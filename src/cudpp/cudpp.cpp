@@ -985,15 +985,18 @@ CUDPPResult cudppListRank(CUDPPHandle planHandle,
  *
  * @see cudppPlan, CUDPPConfiguration, CUDPPAlgorithm
  */
+ 
 CUDPP_DLL
 CUDPPResult cudppSuffixArray(CUDPPHandle planHandle,
                              unsigned char *d_in,
                              unsigned int *d_out,
                              size_t numElements)
-{
+{  
+
     // first check: is this device >= 2.0? if not, return error
     int dev;
     cudaGetDevice(&dev);
+
     cudaDeviceProp devProps;
     cudaGetDeviceProperties(&devProps, dev);
 
@@ -1012,8 +1015,12 @@ CUDPPResult cudppSuffixArray(CUDPPHandle planHandle,
         if (plan->m_config.datatype != CUDPP_UCHAR)
             return CUDPP_ERROR_ILLEGAL_CONFIGURATION;
 
-        cudppSuffixArrayDispatch(d_in, d_out, numElements, plan);
-
+        CUDPPResult result = CUDPP_SUCCESS;
+        result = cudppSuffixArrayDispatch(d_in, d_out, numElements, plan);
+        if(result != CUDPP_SUCCESS){
+	   printf("To run SA your device is at least compute version 2.0\n");
+	   return CUDPP_ERROR_ILLEGAL_CONFIGURATION;
+	}
         return CUDPP_SUCCESS;
     }
     else

@@ -51,13 +51,13 @@ int suffixArrayTest(int argc, const char **argv,
     size_t freeMem, totalMem;
     CUDA_SAFE_CALL(cudaMemGetInfo(&freeMem, &totalMem));
     unsigned int memNeeded = test[numTests-1] * sizeof(unsigned char);
-    while (memNeeded > 0.02 * freeMem) {
+    while (memNeeded > 0.015 * freeMem) {
          numTests -= 1;    
 	 memNeeded = test[numTests-1] * sizeof(unsigned char);
          if(numTests == 0) {
 	       fprintf(stderr,
                        "suffixArrayTest: Error, not enough memory to run test\n");
-               break;
+               return retval;
 	 }
     }   
 
@@ -87,7 +87,6 @@ int suffixArrayTest(int argc, const char **argv,
         return retval;
     }
 
-printf("numElements=%d\n", numElements);
     result = cudppPlan(theCudpp, &plan, config, numElements, 1, 0);
 
     if(result != CUDPP_SUCCESS)
@@ -136,8 +135,17 @@ printf("numElements=%d\n", numElements);
 
         computeSaGold(i_data, reference, test[k]);
 
-        cudppSuffixArray(plan, d_idata, d_odata, test[k]);
+        // Run the SA
+	// run once to avoid timing startup overhead.
+        result = cudppSuffixArray(plan, d_idata, d_odata, test[k]);
 
+        if (result != CUDPP_SUCCESS)
+	{
+	     if(!quiet)
+	        printf("Error in cudppSuffixArray call in testSa (make sure your device is at"
+		"least compute version 2.0)\n");
+	     retval = numTests;
+	} else {
         timer.reset();
         timer.start();
         for(int i=0; i<testOptions.numIterations; i++)
@@ -145,7 +153,7 @@ printf("numElements=%d\n", numElements);
 
         CUDA_SAFE_CALL(cudaThreadSynchronize());
         timer.stop();
-
+        }
         d_odata = d_odata+1;
         CUDA_SAFE_CALL(cudaMemcpy(o_data, d_odata,
                                   sizeof(unsigned int) * test[k],

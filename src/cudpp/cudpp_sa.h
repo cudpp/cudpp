@@ -27,7 +27,8 @@ extern "C"
 void freeSaStorage(CUDPPSaPlan* plan);
 
 extern "C"
-void cudppSuffixArrayDispatch(unsigned char* d_str, 
+CUDPP_DLL
+CUDPPResult cudppSuffixArrayDispatch(unsigned char* d_str, 
                               unsigned int* d_keys_sa, 
                               size_t d_str_length,
                               const CUDPPSaPlan *plan);

@@ -373,7 +373,6 @@ int main(int argc, const char** argv)
     bool runTridiagonal = runAll ||  checkCommandLineFlag(argc, argv, "tridiagonal");
     bool runMtf = runAll || checkCommandLineFlag(argc, argv, "mtf");
     bool runListRank = runAll || checkCommandLineFlag(argc, argv, "listrank");
-
     if (!supports48KBInShared && runMtf)
     {
         fprintf(stderr, "MTF is only supported on devices with "

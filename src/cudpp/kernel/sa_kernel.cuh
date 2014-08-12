@@ -48,12 +48,14 @@ strConstruct(uchar* d_str,
              uint* d_str_value,
              size_t str_length)
 {
+#if (__CUDA_ARCH__ >= 200)
    const int STRIDE = gridDim.x * blockDim.x;
    #pragma unroll
    for(int i = IDX; i < str_length; i += STRIDE)
       d_str_value[i] = (uint) d_str[i] +1 ;
-   if (IDX > str_length-1 && IDX < str_length + 3) d_str_value[IDX] = 0;
 
+   if (IDX > str_length-1 && IDX < str_length + 3) d_str_value[IDX] = 0;
+#endif
 }
 
 /** @brief Reconstruct the output
@@ -70,10 +72,12 @@ __global__ void
 resultConstruct(uint* d_keys_sa,
                 size_t str_length)
 {
+#if (__CUDA_ARCH__ >= 200)
    const int STRIDE = gridDim.x * blockDim.x;
    #pragma unroll
    for(int i = IDX; i < str_length; i += STRIDE)
       d_keys_sa[i] = d_keys_sa[i] - 1;
+#endif
 }
 
 /** @brief Initialize the SA12 triplets
@@ -91,6 +95,7 @@ sa12_keys_construct(uint* d_str,
                     int mod_1,
                     size_t tThreads)
 {
+#if (__CUDA_ARCH__ >= 200)
     if(IDX < mod_1)
     {
       d_keys_srt_12[IDX] = IDX*3+1;
@@ -103,6 +108,7 @@ sa12_keys_construct(uint* d_str,
       d_keys_uint_12[IDX] = d_str[(IDX-mod_1)*3+3];
     }
 
+#endif
 }
 
 /** @brief Construct SA12 for the second radix sort
@@ -118,9 +124,11 @@ sa12_keys_construct_0(uint* d_str,
                       uint* d_keys_srt_12,
                       size_t tThreads)
 {
+#if (__CUDA_ARCH__ >= 200)
     if (IDX < tThreads)
         d_keys_uint_12[IDX] = d_str[d_keys_srt_12[IDX]];
 
+#endif
 }
 
 /** @brief Construct SA12 for the third radix sort
@@ -136,9 +144,11 @@ sa12_keys_construct_1(uint* d_str,
                       uint* d_keys_srt_12,
                       size_t tThreads)
 {
+#if (__CUDA_ARCH__ >= 200)
     if (IDX < tThreads)
         d_keys_uint_12[IDX] = d_str[d_keys_srt_12[IDX]-1];
 
+#endif
 }
 
 /** @brief Turn on flags for sorted SA12 triplets
@@ -158,6 +168,7 @@ compute_rank(uint* d_str,
              size_t tThreads,
              int str_length)
 {
+#if (__CUDA_ARCH__ >= 200)
     if(IDX==0) d_flag[IDX]=1;
     else if(IDX < tThreads)
     {
@@ -172,6 +183,7 @@ compute_rank(uint* d_str,
             }
         }
     }
+#endif
 }
 
 /** @brief Construct new array for recursion
@@ -189,6 +201,7 @@ new_str_construct(uint* d_new_str,
                   int mod_1,
                   size_t tThreads)
 {
+#if (__CUDA_ARCH__ >= 200)
     if(IDX<tThreads)
     {
         uint pos = d_keys_srt_12[IDX];
@@ -197,6 +210,7 @@ new_str_construct(uint* d_new_str,
         else d_new_str[mod_1+(pos-2)/3] = rank;
     }
     else if(IDX == tThreads || IDX == tThreads+1) d_new_str[IDX]=0;
+#endif
 }
 
 /** @brief Translate SA12 from recursion
@@ -214,6 +228,7 @@ reconstruct(uint* d_keys_srt_12,
             int mod_1,
             size_t tThreads)
 {
+#if (__CUDA_ARCH__ >= 200)
     if(IDX<tThreads)
     {
         uint pos=d_keys_srt_12[IDX];
@@ -234,6 +249,7 @@ reconstruct(uint* d_keys_srt_12,
         }
     }
 
+#endif
 }
 
 /** @brief Construct ISA12
@@ -251,6 +267,7 @@ isa12_construct(uint* d_keys_srt_12,
                 int mod_1,
                 size_t tThreads)
 {
+#if (__CUDA_ARCH__ >= 200)
   uint pos;
   if(IDX<tThreads)
   {
@@ -271,6 +288,7 @@ isa12_construct(uint* d_keys_srt_12,
     d_isa_12[pos] = IDX+1;
 
 
+#endif
 }
 
 /** @brief Contruct SA3 triplets positions
@@ -292,6 +310,7 @@ sa3_srt_construct(uint* d_keys_srt_3,
                   size_t tThreads2,
                   int str_length)
 {
+#if (__CUDA_ARCH__ >= 200)
     if(IDX<tThreads1)
     {
         uint pos=d_keys_sa[IDX];
@@ -308,6 +327,7 @@ sa3_srt_construct(uint* d_keys_srt_3,
                d_keys_srt_3[pos]=d_keys_srt_12[IDX]-1;
         }
     }
+#endif
 }
 
 /** @brief Construct SA3 triplets keys
@@ -325,11 +345,13 @@ sa3_keys_construct(uint* d_keys_srt_3,
                    size_t tThreads,
                    int str_length)
 {
+#if (__CUDA_ARCH__ >= 200)
     if(IDX<tThreads)
     {
        if(d_keys_srt_3[IDX] < str_length+4)
           d_keys_sa[IDX] = d_str[d_keys_srt_3[IDX]-1];
     }
+#endif
 }
 
 /** @brief Construct SA12 keys in terms of Vector
@@ -353,6 +375,7 @@ merge_akeys_construct(uint* d_str,
                       int bound,
                       int str_length)
 {
+#if (__CUDA_ARCH__ >= 200)
     if(IDX < tThreads)
     {
         int i = d_keys_srt_12[IDX];
@@ -374,6 +397,7 @@ merge_akeys_construct(uint* d_str,
             }
         }
     }
+#endif
 }
 
 /** @brief Construct SA3 keys in Vector
@@ -398,6 +422,7 @@ merge_bkeys_construct(uint* d_str,
                       int bound,
                       int str_length)
 {
+#if (__CUDA_ARCH__ >= 200)
     if(IDX<tThreads){
         int i = d_keys_srt_3[IDX];
         if(i < str_length+3){
@@ -407,6 +432,7 @@ merge_bkeys_construct(uint* d_str,
             d_bKeys[IDX].d = (bound-i>1) ? d_isa_12[i/3+mod_1] : 0;
         }
     }
+#endif
 }
 
 /** @} */ // end suffix array functions

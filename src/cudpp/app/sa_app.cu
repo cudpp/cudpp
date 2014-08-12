@@ -62,6 +62,7 @@ void KeyValueSort(unsigned int num_elements,
                   unsigned int* d_keys,
                   unsigned int* d_values)
 {
+#if __CUDA_ARCH__ >= 200
     using namespace cub;
     size_t temp_storage_bytes = 0;
     void *d_temp_storage = NULL;
@@ -97,6 +98,7 @@ void KeyValueSort(unsigned int num_elements,
     if (d_cub_values.d_buffers[1]) cudaFree(d_cub_values.d_buffers[1]);
     if (d_cub_keys.d_buffers[1]) cudaFree(d_cub_keys.d_buffers[1]);
 
+#endif
 }
 
 /** @brief Perform Suffix Array (SA) using skew algorithm
@@ -129,6 +131,7 @@ void ComputeSA(unsigned int* d_str,
                unsigned int offset,
                unsigned int stage)
 {
+#if __CUDA_ARCH__ >= 200
     size_t mod_1 = (str_length+1)/3 + ((str_length+1)%3 > 0 ? 1:0);
     size_t mod_2 = (str_length+1)/3 + ((str_length+1)%3 > 1 ? 1:0);
     size_t mod_3 = (str_length+1)/3;
@@ -300,6 +303,7 @@ else
 
   _SafeDeleteArray(unique);
 
+#endif
 }
 
 #ifdef __cplusplus
@@ -354,7 +358,6 @@ void freeSaStorage(CUDPPSaPlan *plan)
     CUDA_CHECK_ERROR("freeSaStorage");
 }
 
-
 /** @brief Dispatch function to perform parallel suffix array on a
  *         string with the specified configuration.
  *
@@ -365,11 +368,13 @@ void freeSaStorage(CUDPPSaPlan *plan)
  * @param[in]  plan     Pointer to CUDPPSaPlan object containing
  *                      suffix_array options and intermediate storage
  */
-void cudppSuffixArrayDispatch(void* d_str,
+CUDPP_DLL
+CUDPPResult cudppSuffixArrayDispatch(void* d_str,
                               unsigned int* d_keys_sa,
                               size_t d_str_length,
                               CUDPPSaPlan *plan)
 {
+#if __CUDA_ARCH__ >= 200
     mgpu::ContextPtr context = mgpu::CreateCudaDevice(0);
     size_t nThreads = SA_BLOCK;
     size_t tThreads = d_str_length+3;
@@ -388,8 +393,12 @@ void cudppSuffixArrayDispatch(void* d_str,
     resultConstruct<<< grid_construct, threads_construct >>>
               (d_keys_sa, d_str_length);
     CUDA_SAFE_CALL(cudaThreadSynchronize());
-
+    return CUDPP_SUCCESS;
+#else
+    return CUDPP_ERROR_ILLEGAL_CONFIGURATION;
+#endif
 }
+
 
 #ifdef __cplusplus
 }

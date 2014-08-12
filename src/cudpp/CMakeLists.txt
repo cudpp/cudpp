@@ -18,7 +18,7 @@ set(CCFILES
   cudpp.cpp
   cudpp_plan.cpp
   cudpp_manager.cpp
-  ../../ext/moderngpu/src/mgpuutil.cpp
+  ${CMAKE_SOURCE_DIR}/ext/moderngpu/src/mgpuutil.cpp
   )
 
 set (HFILES
