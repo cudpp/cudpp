@@ -43,6 +43,7 @@ typedef unsigned char uchar;
  * @param[in]   str_length    The number of elements we are performing the SA on.
  *
  **/
+
 __global__ void
 strConstruct(uchar* d_str,
              uint* d_str_value,

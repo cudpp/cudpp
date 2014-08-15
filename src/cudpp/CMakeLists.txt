@@ -79,11 +79,11 @@ set(CUFILES
   app/radixsort_app.cu
   app/rand_app.cu
   app/tridiagonal_app.cu
-  ../../ext/moderngpu/src/mgpucontext.cu
+  ${CMAKE_SOURCE_DIR}/ext/moderngpu/src/mgpucontext.cu
   )
 
 set(HFILES_PUBLIC
-  ../../include/cudpp.h
+  ${CMAKE_SOURCE_DIR}/include/cudpp.h
   )
 
 source_group("CUDA Source Files" FILES ${CUFILES})

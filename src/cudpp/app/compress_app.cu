@@ -266,14 +266,8 @@ void burrowsWheelerTransform(unsigned char              *d_uncompressed,
     dim3 threads_construct(nThreads, 1, 1);
     uint* d_result;
     CUDA_SAFE_CALL(cudaMalloc((void**)&d_result, sizeof(unsigned int)*(numElements+1)));
-    CUDPPResult result = CUDPP_SUCCESS;
-    result = cudppSuffixArrayDispatch((unsigned char*)d_uncompressed, (unsigned int*)d_result, numElements, plan->m_saPlan);
-    if(result != CUDPP_SUCCESS){
-       printf("To run BWT or Compress your device is at least compute version 2.0\n");
-       return;
-    }    
 
-    //cudppSuffixArrayDispatch((unsigned char*)d_uncompressed, (unsigned int*)d_result, numElements, plan->m_saPlan);
+    cudppSuffixArrayDispatch((unsigned char*)d_uncompressed, (unsigned int*)d_result, numElements, plan->m_saPlan);
     d_result += 1;
     CUDA_SAFE_CALL(cudaMemcpy(plan->m_d_values, d_result, numElements*sizeof(uint), cudaMemcpyDeviceToDevice));
     d_result -= 1;

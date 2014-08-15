@@ -143,7 +143,7 @@ int suffixArrayTest(int argc, const char **argv,
 	{
 	     if(!quiet)
 	        printf("Error in cudppSuffixArray call in testSa (make sure your device is at"
-		"least compute version 2.0)\n");
+		" least compute version 2.0)\n");
 	     retval = numTests;
 	} else {
         timer.reset();

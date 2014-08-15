@@ -1015,17 +1015,12 @@ CUDPPResult cudppSuffixArray(CUDPPHandle planHandle,
         if (plan->m_config.datatype != CUDPP_UCHAR)
             return CUDPP_ERROR_ILLEGAL_CONFIGURATION;
 
-        CUDPPResult result = CUDPP_SUCCESS;
-        result = cudppSuffixArrayDispatch(d_in, d_out, numElements, plan);
-        if(result != CUDPP_SUCCESS){
-	   printf("To run SA your device is at least compute version 2.0\n");
-	   return CUDPP_ERROR_ILLEGAL_CONFIGURATION;
-	}
+        cudppSuffixArrayDispatch(d_in, d_out, numElements, plan);
         return CUDPP_SUCCESS;
     }
     else
         return CUDPP_ERROR_INVALID_HANDLE;
-
+    
 }
 /** @} */ // end Algorithm Interface
 /** @} */ // end of publicInterface group

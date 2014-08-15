@@ -62,7 +62,6 @@ void KeyValueSort(unsigned int num_elements,
                   unsigned int* d_keys,
                   unsigned int* d_values)
 {
-#if __CUDA_ARCH__ >= 200
     using namespace cub;
     size_t temp_storage_bytes = 0;
     void *d_temp_storage = NULL;
@@ -97,8 +96,6 @@ void KeyValueSort(unsigned int num_elements,
     // Cleanup "ping-pong" storage
     if (d_cub_values.d_buffers[1]) cudaFree(d_cub_values.d_buffers[1]);
     if (d_cub_keys.d_buffers[1]) cudaFree(d_cub_keys.d_buffers[1]);
-
-#endif
 }
 
 /** @brief Perform Suffix Array (SA) using skew algorithm
@@ -131,7 +128,6 @@ void ComputeSA(unsigned int* d_str,
                unsigned int offset,
                unsigned int stage)
 {
-#if __CUDA_ARCH__ >= 200
     size_t mod_1 = (str_length+1)/3 + ((str_length+1)%3 > 0 ? 1:0);
     size_t mod_2 = (str_length+1)/3 + ((str_length+1)%3 > 1 ? 1:0);
     size_t mod_3 = (str_length+1)/3;
@@ -156,6 +152,8 @@ void ComputeSA(unsigned int* d_str,
     CUDA_SAFE_CALL(cudaMemcpy(plan->m_d_unique, unique, sizeof(bool),
                               cudaMemcpyHostToDevice));
 
+
+    
    // extract the positions of i%3 != 0 to construct SA12
    // d_str: input,the original string
    // d_keys_sa: output, extracted string value with SA1 before SA2
@@ -164,6 +162,7 @@ void ComputeSA(unsigned int* d_str,
    sa12_keys_construct<<< grid_construct1, threads_construct >>>
          (d_str, d_keys_sa, plan->m_d_keys_srt_12, mod_1, tThreads1);
    cudaThreadSynchronize();
+   
    // LSB radix sort the triplets character by character
    // d_keys_sa store the value of the character from the triplets r->l
    // m_d_keys_srt_12 store the sorted position of each char from each round
@@ -292,19 +291,21 @@ else
     (d_str, plan->m_d_keys_srt_3, plan->m_d_isa_12, plan->m_d_bKeys, tThreads2,
      mod_1, bound, str_length);
   CUDA_SAFE_CALL(cudaThreadSynchronize());
+#if (__CUDA_ARCH__ >= 200) || (CUB_PTX_VERSION == 0)
 
   // Merge SA12 and SA3 based on aKeys and bKeys
   // Output: m_d_cKeys storing the merged aKeys and bKeys
   //         d_keys_sa storing the merged SA12 and SA3 (positions)
   /////////////////////////////////////////////////////////////////
+
   mgpu::MergePairs(plan->m_d_aKeys, plan->m_d_keys_srt_12, tThreads1,
                    plan->m_d_bKeys, plan->m_d_keys_srt_3, tThreads2,
                    plan->m_d_cKeys, d_keys_sa, Comp(), context);
 
   _SafeDeleteArray(unique);
-
 #endif
 }
+
 
 #ifdef __cplusplus
 extern "C"
@@ -368,13 +369,13 @@ void freeSaStorage(CUDPPSaPlan *plan)
  * @param[in]  plan     Pointer to CUDPPSaPlan object containing
  *                      suffix_array options and intermediate storage
  */
-CUDPP_DLL
-CUDPPResult cudppSuffixArrayDispatch(void* d_str,
+
+
+void cudppSuffixArrayDispatch(void* d_str,
                               unsigned int* d_keys_sa,
                               size_t d_str_length,
                               CUDPPSaPlan *plan)
 {
-#if __CUDA_ARCH__ >= 200
     mgpu::ContextPtr context = mgpu::CreateCudaDevice(0);
     size_t nThreads = SA_BLOCK;
     size_t tThreads = d_str_length+3;
@@ -383,7 +384,7 @@ CUDPPResult cudppSuffixArrayDispatch(void* d_str,
     dim3 grid_construct(nBlocks,1,1);
     dim3 threads_construct(nThreads,1,1);
     strConstruct<<< grid_construct, threads_construct >>>
-             ((unsigned char*)d_str, plan->d_str_value, d_str_length);
+             ((unsigned char*)d_str, plan->d_str_value,  d_str_length);
     CUDA_SAFE_CALL(cudaThreadSynchronize());
 
     ComputeSA((unsigned int*)plan->d_str_value, (unsigned int*)d_keys_sa,
@@ -393,12 +394,7 @@ CUDPPResult cudppSuffixArrayDispatch(void* d_str,
     resultConstruct<<< grid_construct, threads_construct >>>
               (d_keys_sa, d_str_length);
     CUDA_SAFE_CALL(cudaThreadSynchronize());
-    return CUDPP_SUCCESS;
-#else
-    return CUDPP_ERROR_ILLEGAL_CONFIGURATION;
-#endif
 }
-
 
 #ifdef __cplusplus
 }
