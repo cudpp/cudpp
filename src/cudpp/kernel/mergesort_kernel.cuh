@@ -260,7 +260,10 @@ void simpleMerge_lower(T *A_keys, unsigned int* A_values, T *A_keys_out, unsigne
 	T MAX_VAL = getMax<T>();
 	T MIN_VAL = getMin<T>();
 	unsigned int UMAX_VAL = getMax<unsigned int>();
-    __shared__ T BKeys[INTERSECT_B_BLOCK_SIZE_simple+2];	
+    //__shared__ T BKeys[INTERSECT_B_BLOCK_SIZE_simple+2];	
+	extern __shared__ char shared[];
+   
+    T* BKeys =  (T*) shared;
     T* BMax = (T*) &BKeys[INTERSECT_B_BLOCK_SIZE_simple];			
     T localMaxB, localMaxA, localMinB;					
     
@@ -447,7 +450,10 @@ void simpleMerge_higher(T *A_keys, unsigned int* A_values, T* A_keys_out, unsign
     
     int index, bIndex = 0, aIndex = 0;	
 
-    __shared__ T BKeys[INTERSECT_B_BLOCK_SIZE_simple+3];			
+	extern __shared__ char shared[];
+   
+    T* BKeys =  (T*) shared;
+    //__shared__ T BKeys[INTERSECT_B_BLOCK_SIZE_simple+3];			
     T* BMax = (T*) &BKeys[INTERSECT_B_BLOCK_SIZE_simple];	
 
     bool breakout = false;
@@ -792,8 +798,10 @@ void mergeMulti_lower(T *A_keys_out, unsigned int* A_vals_out, T *A_keys, unsign
     T nextMaxB, nextMaxA, localMinB, localMaxB, cmpValue;			
     int index, bIndex = 0; int aIndex = 0;	
     int localAIndex = aIndex+depth*tid;
-
-    __shared__ T BKeys[INTERSECT_B_BLOCK_SIZE_multi+3];		
+	extern __shared__ char shared[];
+   
+    T* BKeys =  (T*) shared;
+    //__shared__ T BKeys[INTERSECT_B_BLOCK_SIZE_multi+3];		
     T* BMax = (T*) &BKeys[INTERSECT_B_BLOCK_SIZE_multi];	
     
     bool breakout = false;	
@@ -1019,7 +1027,9 @@ void mergeMulti_higher(T *A_keys_out, unsigned int* A_vals_out, T *A_keys, unsig
     
     T myKey[depth];
     unsigned int myVal[depth];
-    __shared__ T BKeys[INTERSECT_B_BLOCK_SIZE_multi+3];
+	extern __shared__ char shared[];   
+    T* BKeys =  (T*) shared;
+    //__shared__ T BKeys[INTERSECT_B_BLOCK_SIZE_multi+3];
     T* BMax = (T*) &BKeys[INTERSECT_B_BLOCK_SIZE_multi];	
         
     bool breakout = false;

@@ -247,7 +247,9 @@ void blockWiseStringSort(T *A_keys, T* A_address, T* stringVals, int blockSize, 
     //load into registers
     T Aval[depth]; T saveValue[depth];
         
-    __shared__ T scratchPad[2*BLOCKSORT_SIZE];
+    //__shared__ T scratchPad[2*BLOCKSORT_SIZE];
+	extern __shared__ char shared[];   
+	T* scratchPad = (T*) shared;
     T* addressPad = (T*) &scratchPad[BLOCKSORT_SIZE];
                 
 
@@ -558,7 +560,8 @@ void simpleStringMerge(T *A_keys, T *A_keys_out, T *A_values, T* A_values_out, T
 
         
     //Shared Memory pool
-    __shared__ T BValues[INTERSECT_B_BLOCK_SIZE_simple*2+4]; //(T*) shared; 
+    //__shared__ T BValues[INTERSECT_B_BLOCK_SIZE_simple*2+4]; //(T*) shared; 
+	extern __shared__ T BValues[];
     T* BKeys = (T*) &BValues[INTERSECT_B_BLOCK_SIZE_simple];        
     T* BMax = (T*) &BValues[2*INTERSECT_B_BLOCK_SIZE_simple];               
     T* lastIndex = (T*) &BMax[3];
@@ -1127,7 +1130,8 @@ void stringMergeMulti(T *A_keys, T*A_keys_out, T* A_values, T *A_values_out, T* 
     int mid, index; 
     int bIndex = 0; int aIndex = 0; 
 
-    __shared__ T      BValues[2*INTERSECT_B_BLOCK_SIZE_multi+3];    
+    //__shared__ T      BValues[2*INTERSECT_B_BLOCK_SIZE_multi+3];    
+	extern __shared__ T BValues[];
     T * BKeys =      &BValues[INTERSECT_B_BLOCK_SIZE_multi];
     T * BMax =       &BValues[2*INTERSECT_B_BLOCK_SIZE_multi];
     T * lastIndex = &BValues[2*INTERSECT_B_BLOCK_SIZE_multi+3];
