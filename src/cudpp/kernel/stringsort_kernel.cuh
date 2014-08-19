@@ -248,8 +248,8 @@ void blockWiseStringSort(T *A_keys, T* A_address, T* stringVals, int blockSize, 
     T Aval[depth]; T saveValue[depth];
         
     //__shared__ T scratchPad[2*BLOCKSORT_SIZE];
-	extern __shared__ char shared[];   
-	T* scratchPad = (T*) shared;
+	extern __shared__ T BWSshared[];   
+	T* scratchPad = (T*) BWSshared;
     T* addressPad = (T*) &scratchPad[BLOCKSORT_SIZE];
                 
 
