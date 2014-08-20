@@ -467,6 +467,23 @@ int testStringSort(int argc, const char **argv,
 
     int numTests = sizeof(test)/sizeof(test[0]);
 
+    // small GPUs are susceptible to running out of memory,
+    // restrict the tests to only those where we have enough
+    size_t freeMem, totalMem;
+    CUDA_SAFE_CALL(cudaMemGetInfo(&freeMem, &totalMem));
+    printf("freeMem: %d, totalMem: %d\n", int(freeMem), int(totalMem));
+    while (freeMem < 90 * test[numTests - 1]) // 90B/item appears to be enough
+    {
+        numTests--;
+        if (numTests <= 0)
+        {
+            // something has gone very wrong
+            printf("Not enough free memory to run any stringsort tests.\n");
+            return -1;
+        }
+    }
+
+
     size_t numElements = test[numTests - 1];
 
 
