@@ -3,22 +3,27 @@
 // -------------------------------------------------------------
 // $Revision$
 // $Date$
-// ------------------------------------------------------------- 
+// -------------------------------------------------------------
 // This source code is distributed under the terms of license.txt
 // in the root directory of this source distribution.
-// ------------------------------------------------------------- 
+// -------------------------------------------------------------
+#include <cuda_runtime_api.h>   // for cudaDeviceProp
 #include "cudpp_testrig_options.h"
 
 #define CUDPP_APP_COMMON_IMPL
 #include "commandline.h"
 
+extern cudaDeviceProp devProps;
+
 using namespace cudpp_app;
 
 /**
- * Sets "global" options in testOptions given command line 
+ * Sets "global" options in testOptions given command line
  *  -debug: sets bool <var>debug</var>. Usage is application-dependent.
  *  -op=OP: sets char * <var>op</var> to OP
  *  -iterations=#: sets int <var>numIterations</var> to #
+ *  -largeGPU: this GPU is a large GPU and must run all tests (default)
+ *  -smallGPU: this GPU is a small GPU and cannot run mem-/time-intensive tests
  *  -dir=<path>: sets the search path for cudppRand test inputs
  */
 void setOptions(int argc, const char **argv, testrigOptions &testOptions)
@@ -52,18 +57,38 @@ void setOptions(int argc, const char **argv, testrigOptions &testOptions)
         testOptions.algorithm = "compress";
     else if(checkCommandLineFlag(argc, argv, "sa"))
         testOptions.algorithm = "sa";
-            
+
     testOptions.op = "sum";
     commandLineArg(testOptions.op, argc, argv, "op");
-    
+
     testOptions.numIterations = numTestIterations;
     commandLineArg(testOptions.numIterations, argc, argv, "iterations");
-    
+
+    testOptions.largeGPU = true;
+
+    if (checkCommandLineFlag(argc, argv, "smallGPU"))
+    {
+        testOptions.largeGPU = false;
+    }
+    else if (checkCommandLineFlag(argc, argv, "largeGPU"))
+    {
+        testOptions.largeGPU = true;
+    }
+    else
+    {
+        /* here's where we decide if it's a largeGPU or smallGPU */
+        /* currently: small means has a timeout and <= 2 SMs */
+        testOptions.largeGPU =
+            !devProps.kernelExecTimeoutEnabled ||
+            (devProps.multiProcessorCount > 2);
+    }
+    testOptions.smallGPU = !testOptions.largeGPU;
+
     testOptions.dir = "";
     commandLineArg(testOptions.dir, argc, argv, "dir");
 }
 
-bool hasOptions(int argc, const char**argv) 
+bool hasOptions(int argc, const char**argv)
 {
     std::string temp;
     if (commandLineArg(temp, argc, argv, "op") ||

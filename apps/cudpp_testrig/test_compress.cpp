@@ -376,6 +376,10 @@ int mtfTest(int argc, const char **argv, const CUDPPConfiguration &config,
                            65536, 131072, 262144, 500001, 524288, 1048577,
                            1048576, 1048581};
     int numTests = sizeof(test) / sizeof(test[0]);
+    if (testOptions.smallGPU)
+    {
+        numTests -= 3;          // leave out last 3 tests, they may time out
+    }
     int numElements = test[numTests-1]; // maximum test size
 
     bool oneTest = false;

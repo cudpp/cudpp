@@ -144,7 +144,8 @@ int testAllDatatypes(int argc,
                 else
                     retval += testMergeSort(argc, argv, &config);
                 break;
-
+            default:            // ignore datatype
+                break;
             }
         }
     }
@@ -259,20 +260,22 @@ int testAllOptionsAndDatatypes(int argc,
 /**
  * main in cudpp_testrig is a dispatch routine to exercise cudpp functionality.
  *
- * - --all calls every regression routine.
- *   - The scan regression calls forward and backward sum and max scans.
- * - --scan calls one scan regression routine (by default, forward sum-scan)
- *   - Use --backward and/or --op=max to change default
- * - --multiscan calls the multiscan regression routine
- * - --compact calls the compact regression routine
- * - --sort calls the sort regression routine
- * - --mergesort calls the merge sort regression routine
- * - --stringsort calls the string sort regression routine
- * - --spmvmult calls the sparse matrix-vector routine
- * - --sa calls the suffix array regression rountine
- * - --reduce calls the reduce regression routine
- * - --n=# sets the size of the dataset
- * - --iterations=# sets the number of iterations to run
+ * - -all calls every regression routine.
+ *    - The scan regression calls forward and backward sum and max scans.
+ * - -scan calls one scan regression routine (by default, forward sum-scan)
+ *    - Use -backward and/or -op=max to change default
+ * - -multiscan calls the multiscan regression routine
+ * - -compact calls the compact regression routine
+ * - -sort calls the sort regression routine
+ * - -mergesort calls the merge sort regression routine
+ * - -stringsort calls the string sort regression routine
+ * - -spmvmult calls the sparse matrix-vector routine
+ * - -sa calls the suffix array regression rountine
+ * - -reduce calls the reduce regression routine
+ * - -n=# sets the size of the dataset
+ * - -largeGPU considers the GPU a "large" GPU and runs all tests (default)
+ * - -smallGPU considers the GPU a "small" GPU and leaves out large tests
+ * - -iterations=# sets the number of iterations to run
  */
 int main(int argc, const char** argv)
 {
