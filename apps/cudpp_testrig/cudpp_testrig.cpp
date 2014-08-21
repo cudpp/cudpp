@@ -273,8 +273,8 @@ int testAllOptionsAndDatatypes(int argc,
  * - -sa calls the suffix array regression rountine
  * - -reduce calls the reduce regression routine
  * - -n=# sets the size of the dataset
- * - -largeGPU considers the GPU a "large" GPU and runs all tests (default)
- * - -smallGPU considers the GPU a "small" GPU and leaves out large tests
+ * - -skiplongtests should be set if GPU may trigger a watchdog timer on long
+ *    tests
  * - -iterations=# sets the number of iterations to run
  */
 int main(int argc, const char** argv)

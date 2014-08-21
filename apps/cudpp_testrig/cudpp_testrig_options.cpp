@@ -22,8 +22,8 @@ using namespace cudpp_app;
  *  -debug: sets bool <var>debug</var>. Usage is application-dependent.
  *  -op=OP: sets char * <var>op</var> to OP
  *  -iterations=#: sets int <var>numIterations</var> to #
- *  -largeGPU: this GPU is a large GPU and must run all tests (default)
- *  -smallGPU: this GPU is a small GPU and cannot run mem-/time-intensive tests
+ *  -skiplongtests: set to skip long tests that might otherwise trigger a
+ *   watchdog timer
  *  -dir=<path>: sets the search path for cudppRand test inputs
  */
 void setOptions(int argc, const char **argv, testrigOptions &testOptions)
@@ -64,25 +64,11 @@ void setOptions(int argc, const char **argv, testrigOptions &testOptions)
     testOptions.numIterations = numTestIterations;
     commandLineArg(testOptions.numIterations, argc, argv, "iterations");
 
-    testOptions.largeGPU = true;
-
-    if (checkCommandLineFlag(argc, argv, "smallGPU"))
-    {
-        testOptions.largeGPU = false;
-    }
-    else if (checkCommandLineFlag(argc, argv, "largeGPU"))
-    {
-        testOptions.largeGPU = true;
-    }
-    else
-    {
-        /* here's where we decide if it's a largeGPU or smallGPU */
-        /* currently: small means has a timeout and <= 2 SMs */
-        testOptions.largeGPU =
-            !devProps.kernelExecTimeoutEnabled ||
-            (devProps.multiProcessorCount > 2);
-    }
-    testOptions.smallGPU = !testOptions.largeGPU;
+    /* currently: skiplongtests if GPU has a timeout and <= 2 SMs */
+    testOptions.skiplongtests =
+        checkCommandLineFlag(argc, argv, "skiplongtests") ||
+        (devProps.kernelExecTimeoutEnabled &&
+         (devProps.multiProcessorCount <= 2));
 
     testOptions.dir = "";
     commandLineArg(testOptions.dir, argc, argv, "dir");

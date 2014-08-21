@@ -48,8 +48,7 @@ struct testrigOptions
     std::string datatype;    //!< String containing data type.
     std::string dir;         //!< String containing the path of the random number regression test files
     int numIterations;       //!< Number of iterations to run.
-    bool largeGPU;           //!< Set if GPU is considered large enough to run all tests (due to memory or watchdog constraints)
-    bool smallGPU;           //!< Set if GPU is considered too small to run all tests (due to memory or watchdog constraints)
+    bool skiplongtests;      //!< Set if GPU may trigger a watchdog timer on long tests
     bool debug;              //!< Application-dependent bool, set if --debug
 };
 
