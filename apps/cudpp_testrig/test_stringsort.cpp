@@ -428,6 +428,7 @@ int stringSortTest(CUDPPHandle theCudpp, CUDPPConfiguration config,
     free(unique_qualifier_length);
     free(stringVals);
     free(packedStringVals);
+    free(string_length);;
 
     return retval;
 }

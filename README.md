@@ -88,7 +88,7 @@ CUDPP_SEGMENTED_SCAN | 67,107,840 elements
 CUDPP_COMPACT        | 67,107,840 elements
 CUDPP_COMPRESS       | 1,048,576 elements
 CUDPP_LISTRANK       | NO LIMIT
-CUDPP_MTF            | 1,048,576 elements
+CUDPP_MTF            | NO LIMIT          
 CUDPP_BWT            | 1,048,576 elements
 CUDPP_SA             | 0.015 GPU memory   
 CUDPP_STRINGSORT     | 2,147,450,880 elements

@@ -1,14 +1,17 @@
 CUDPP Change Log
 
 Release 2.2
-20 July 2014
+24 Aug 2014
 - Added cudppSuffixArray parallel skew algorithm for computing suffix array
 - Replaced the cudppStringSort in burrowsWheelerTransform in cudppCompress 
   with cudppSuffixArray to achieve better performance
 - Fixed bugs in cudppMoveToFrontTransform where originally only inputs with
   value smaller than 15 work
+- Fixed bugs to support cudppCompress to compress text containing all possible unsigned char values with the range of [1...255]
 - Changed test files for cudppCompression and cudppMoveToFrontTransform to 
   target on the new bwt method
+- Added -skip largetests for MTF tests in order to avoid the launch timed out error
+- Fixed bugs to make string sort compatible for compute capability less than 2.0
 
 Release 2.1
 9 October 2013
