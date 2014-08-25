@@ -12,6 +12,7 @@ Release 2.2
   target the new BWT method
 - Added -skiplargetests for MTF tests in order to avoid launch-timed-out errors
 - Fixed bugs to make string sort compatible for compute capability less than 2.0
+- Makefile fixes for OS X with clang compilation
 
 Release 2.1
 9 October 2013
