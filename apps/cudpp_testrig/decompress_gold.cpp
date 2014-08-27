@@ -22,6 +22,9 @@
  */
 
 #include <iostream>
+#include <string>
+
+using namespace std;
 
 /*
  *  Custom data objects
@@ -71,10 +74,10 @@ int computeDecompressGold()
  *
  *
  *  @param[in]  i_data        Pointer to input data array
- *  @param[in]  num_elements  Length of input data array
+ *  @param[in]  num_elements  Number of elements in the input array
  *  @param[out] o_data        Pointer to output data array
  */
-int computeBWT(char* i_data, char* o_data, int num_elements)
+int computeBWT(char* i_data, char* o_data, unsigned long num_elements)
 {
     /*  Steps:
      *     - Allocate memory for all rotations
@@ -83,6 +86,28 @@ int computeBWT(char* i_data, char* o_data, int num_elements)
      *     - Take last character from each rotation (in order) and add to
      *       output array in order
      */
+
+    char* r = new char[num_elements];  // Allocate a temporary array to store one rotation of the input array
+    string* rotations = new string[num_elements];  // Allocate an array of strings to store all input array rotations
+
+    for (int i=0; i<num_elements; i++) {
+        for (int j=0; j<num_elements; j++) {
+            r[j] = i_data[(i+j) % num_rotations];  /* Builds a rotation by iterating through the input array,
+                                                    * looping back around to the beginning when reaching the end of the input array
+                                                    */
+        }
+
+        string rot(r, num_elements);  // Convert the newly calcuated rotation from a char array into a string
+        rotations[i] = rot;  // Store the string rotation for later use
+    }
+
+    sort(rotations, rotations + num_elements);  // Sort all the rotations in lexigraphical order
+
+    for (int i=0; i<num_elements; i++) {
+        o_data[i] = rotations[i].back();  // Take the last character from each rotation and add it to the output array (in order)
+    }
+
+    return 0;
 }
 
 /** @brief Run a Move-To-Front (MTF) Transform for computeDecompressGold()
