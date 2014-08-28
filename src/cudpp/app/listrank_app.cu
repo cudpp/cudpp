@@ -3,10 +3,10 @@
 // -------------------------------------------------------------
 // $Revision$
 // $Date$
-// ------------------------------------------------------------- 
-// This source code is distributed under the terms of license.txt 
+// -------------------------------------------------------------
+// This source code is distributed under the terms of license.txt
 // in the root directory of this source distribution.
-// ------------------------------------------------------------- 
+// -------------------------------------------------------------
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,11 +22,11 @@
 /**
  * @file
  * listrank_app.cu
- * 
+ *
  * @brief CUDPP application-level listrank routines
  */
 
-/** \addtogroup cudpp_app 
+/** \addtogroup cudpp_app
  * @{
  */
 
@@ -35,7 +35,7 @@
  */
 
 /** @brief Launch list ranking
- * 
+ *
  * Given two inputs arrays, \a d_unranked_values and \a d_next_indices,
  * listRank() outputs a ranked version of the unranked values by traversing
  * the next indices. The head index is \a head. Called by ::cudppListRankDispatch().
@@ -105,19 +105,17 @@ void listRank(T                         *d_ranked_values,
         {
             list_rank_kernel_soa_2<T><<< grid_construct2, threads_construct2 >>>
                 (d_ranked_values, d_unranked_values, plan->m_d_tmp1, plan->m_d_tmp2, head, numElements);
-            CUDA_SAFE_CALL(cudaThreadSynchronize());
         }
         else
         {
             list_rank_kernel_soa_2<T><<< grid_construct2, threads_construct2 >>>
                 (d_ranked_values, d_unranked_values, d_tmp, plan->m_d_tmp2, head, numElements);
-            CUDA_SAFE_CALL(cudaThreadSynchronize());
         }
     }
 }
 
 #ifdef __cplusplus
-extern "C" 
+extern "C"
 {
 #endif
 
@@ -160,7 +158,7 @@ void freeListRankStorage(CUDPPListRankPlan *plan)
  * A wrapper on top of listRank which calls listRank() for the data type
  * specified in \a config. This is the app-level interface to list ranking
  * used by cudppListRank().
- * 
+ *
  * @param[out] d_ranked_values Ranked values array
  * @param[in]  d_unranked_values Unranked values array
  * @param[in]  d_next_indices Next indices array

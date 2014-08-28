@@ -3,10 +3,10 @@
 // -------------------------------------------------------------
 // $Revision$
 // $Date$
-// ------------------------------------------------------------- 
-// This source code is distributed under the terms of license.txt 
+// -------------------------------------------------------------
+// This source code is distributed under the terms of license.txt
 // in the root directory of this source distribution.
-// ------------------------------------------------------------- 
+// -------------------------------------------------------------
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -27,11 +27,11 @@ using namespace std;
 /**
  * @file
  * compress_app.cu
- * 
+ *
  * @brief CUDPP application-level compress routines
  */
 
-/** \addtogroup cudpp_app 
+/** \addtogroup cudpp_app
  * @{
  */
 
@@ -40,7 +40,7 @@ using namespace std;
  */
 
 /** @brief Perform Huffman encoding
- * 
+ *
  *
  * Performs Huffman encoding on the input data stream. The input data
  * stream is the output data stream from the previous stage (MTF) in our
@@ -92,7 +92,6 @@ void huffmanEncoding(unsigned int               *d_hist,
     //---------------------------------------
     huffman_build_histogram_kernel<<< grid_hist, threads_hist>>>
         ((unsigned int*)d_input, plan->m_d_histograms, numElements);
-    CUDA_SAFE_CALL(cudaThreadSynchronize());
 
     //----------------------------------------------------
     //  2) Compute final Histogram + Build Huffman codes
@@ -100,7 +99,6 @@ void huffmanEncoding(unsigned int               *d_hist,
     huffman_build_tree_kernel<<< grid_tree, threads_tree>>>
         (d_input, plan->m_d_huffCodesPacked, plan->m_d_huffCodeLocations, plan->m_d_huffCodeLengths, plan->m_d_histograms,
          d_hist, plan->m_d_nCodesPacked, d_compressedSize, histBlocks, numElements);
-    CUDA_SAFE_CALL(cudaThreadSynchronize());
 
     //----------------------------------------------
     //  3) Main Huffman encoding step (encode data)
@@ -109,7 +107,6 @@ void huffmanEncoding(unsigned int               *d_hist,
     huffman_kernel_en<<< grid_huff, threads_huff, nCodesPacked*sizeof(unsigned char)>>>
         ((uchar4*)d_input, plan->m_d_huffCodesPacked, plan->m_d_huffCodeLocations, plan->m_d_huffCodeLengths,
          plan->m_d_encoded, nCodesPacked, tThreads);
-    CUDA_SAFE_CALL(cudaThreadSynchronize());
 
     //--------------------------------------------------
     //  4) Pack together encoded data to determine how
@@ -117,12 +114,11 @@ void huffmanEncoding(unsigned int               *d_hist,
     //--------------------------------------------------
     huffman_datapack_kernel<<<grid_huff, threads_huff>>>
         (plan->m_d_encoded, d_compressed, d_compressedSize, d_encodeOffset);
-    CUDA_SAFE_CALL(cudaThreadSynchronize());
 }
 
 
 /** @brief Perform the Move-to-Front Transform (MTF)
- * 
+ *
  * Performs a Move-to-Front (MTF) transform on the input data stream.
  * The MTF transform is the second stage in our compress pipeline. The
  * MTF manipulates the input data stream to improve the performance of
@@ -148,7 +144,7 @@ void moveToFrontTransform(unsigned char             *d_mtfIn,
     npad |= npad >> 16;
     npad++;
 
-    unsigned int nThreads = MTF_THREADS_BLOCK; 
+    unsigned int nThreads = MTF_THREADS_BLOCK;
     unsigned int nLists = npad/MTF_PER_THREAD;
     unsigned int tThreads = npad/MTF_PER_THREAD;
     unsigned int offset = 2;
@@ -167,9 +163,7 @@ void moveToFrontTransform(unsigned char             *d_mtfIn,
     // Kernel call
     mtf_reduction_kernel<<< grid, threads>>>
         (d_mtfIn, plan->m_d_lists, plan->m_d_list_sizes, nLists, offset, numElements);
-    CUDA_SAFE_CALL(cudaThreadSynchronize());
-
-    if(nBlocks > 1) 
+    if(nBlocks > 1)
     {
         //----------------------
         //  MTF Global Reduce
@@ -189,7 +183,6 @@ void moveToFrontTransform(unsigned char             *d_mtfIn,
         {
             mtf_GLreduction_kernel<<< grid_GLred, threads_GLred>>>
                 (plan->m_d_lists, plan->m_d_list_sizes, offset, tThreads, nLists);
-            CUDA_SAFE_CALL(cudaThreadSynchronize());
             offset *= 2*nThreads;
         }
 
@@ -210,8 +203,6 @@ void moveToFrontTransform(unsigned char             *d_mtfIn,
 
             mtf_GLdownsweep_kernel<<< grid_GLsweep, threads_GLsweep>>>
                 (plan->m_d_lists, plan->m_d_list_sizes, offset, lastLevel, nLists, tThreads);
-            CUDA_SAFE_CALL(cudaThreadSynchronize());
-
             offset = lastLevel/2;
         }
     }
@@ -229,12 +220,10 @@ void moveToFrontTransform(unsigned char             *d_mtfIn,
 
     mtf_localscan_lists_kernel<<< grid_loc, threads_loc>>>
         (d_mtfIn, d_mtfOut, plan->m_d_lists, plan->m_d_list_sizes, nLists, offset, numElements);
-    CUDA_SAFE_CALL(cudaThreadSynchronize());
-
 }
 
 /** @brief Perform the Burrows-Wheeler Transform (BWT)
- * 
+ *
  * Performs the Burrows-Wheeler Transform (BWT) on a given
  * character string. The BWT is an algorithm which is commonly used
  * in compression applications, mainly bzip2. The BWT orders the
@@ -272,10 +261,9 @@ void burrowsWheelerTransform(unsigned char              *d_uncompressed,
     CUDA_SAFE_CALL(cudaMemcpy(plan->m_d_values, d_result, numElements*sizeof(uint), cudaMemcpyDeviceToDevice));
     d_result -= 1;
     CUDA_SAFE_CALL(cudaFree(d_result));
-    
+
     bwt_compute_final_kernel<<< grid_construct, threads_construct >>>
             (d_uncompressed, plan->m_d_values, d_bwtIndex, d_bwtOut, numElements, tThreads);
-    CUDA_SAFE_CALL(cudaThreadSynchronize());
 }
 
 /** @brief Wrapper for calling the Burrows-Wheeler Transform (BWT).
@@ -362,26 +350,26 @@ void moveToFrontTransformWrapper(unsigned char *d_in,
 }
 
 #ifdef __cplusplus
-extern "C" 
+extern "C"
 {
 #endif
 
 /** @brief Allocate intermediate arrays used by BWT.
  *
  *
- * @param [in,out] plan Pointer to CUDPPBwtPlan object containing options and number 
+ * @param [in,out] plan Pointer to CUDPPBwtPlan object containing options and number
  *                      of elements, which is used to compute storage requirements, and
  *                      within which intermediate storage is allocated.
  */
 void allocBwtStorage(CUDPPBwtPlan *plan)
 {
     size_t numElts = plan->m_numElements;
-    
+
     // BWT
     CUDA_SAFE_CALL(cudaMalloc((void**) &(plan->m_d_values), numElts*sizeof(unsigned int) ));
-    
+
 }
-    
+
 /** @brief Allocate intermediate arrays used by MTF.
  *
  *
@@ -401,14 +389,14 @@ void allocMtfStorage(CUDPPMtfPlan *plan)
     tmp |= tmp >> 16;
     tmp++;
     plan->npad = tmp;
-   
+
     // MTF
     CUDA_SAFE_CALL(cudaMalloc( (void**) &(plan->m_d_lists), (tmp/MTF_PER_THREAD)*256*sizeof(unsigned char)));
     CUDA_SAFE_CALL(cudaMalloc( (void**) &(plan->m_d_list_sizes), (tmp/MTF_PER_THREAD)*sizeof(unsigned short)));
     CUDA_SAFE_CALL(cudaMemset(plan->m_d_lists, 0, (tmp/MTF_PER_THREAD)*256*sizeof(unsigned char)));
     CUDA_SAFE_CALL(cudaMemset(plan->m_d_list_sizes, 0, (tmp/MTF_PER_THREAD)*sizeof(unsigned short)));
 }
-    
+
 /** @brief Allocate intermediate arrays used by compression.
  *
  *
@@ -422,16 +410,16 @@ void allocCompressStorage(CUDPPCompressPlan *plan)
 {
     size_t numElts = plan->m_numElements;
     plan->npad = numElts;
-    
+
     // BWT
     CUDA_SAFE_CALL(cudaMalloc((void**) &(plan->m_d_values), numElts*sizeof(unsigned int) ));
     CUDA_SAFE_CALL(cudaMalloc( (void**) &(plan->m_d_bwtOut), numElts*sizeof(unsigned char) ));
-    
+
     // MTF
     CUDA_SAFE_CALL(cudaMalloc( (void**) &(plan->m_d_lists), (numElts/MTF_PER_THREAD)*256*sizeof(unsigned char)));
     CUDA_SAFE_CALL(cudaMalloc( (void**) &(plan->m_d_list_sizes), (numElts/MTF_PER_THREAD)*sizeof(unsigned short)));
     CUDA_SAFE_CALL(cudaMalloc( (void**) &(plan->m_d_mtfOut), numElts*sizeof(unsigned char) ));
-    
+
     // Huffman
     size_t numBitsAlloc = HUFF_NUM_CHARS*(HUFF_NUM_CHARS+1)/2;
     size_t numCharsAlloc = (numBitsAlloc%8 == 0) ? numBitsAlloc/8 : numBitsAlloc/8 + 1;
@@ -439,17 +427,17 @@ void allocCompressStorage(CUDPPCompressPlan *plan)
         numElts/(HUFF_WORK_PER_THREAD_HIST*HUFF_THREADS_PER_BLOCK_HIST) : numElts%(HUFF_WORK_PER_THREAD_HIST*HUFF_THREADS_PER_BLOCK_HIST)+1;
     size_t tThreads = ((numElts%HUFF_WORK_PER_THREAD) == 0) ? numElts/HUFF_WORK_PER_THREAD : numElts/HUFF_WORK_PER_THREAD+1;
     size_t nBlocks = ( (tThreads%HUFF_THREADS_PER_BLOCK) == 0) ? tThreads/HUFF_THREADS_PER_BLOCK : tThreads/HUFF_THREADS_PER_BLOCK+1;
-    
+
     CUDA_SAFE_CALL(cudaMalloc( (void**) &(plan->m_d_huffCodesPacked), numCharsAlloc*sizeof(unsigned char) ));
     CUDA_SAFE_CALL(cudaMalloc( (void**) &(plan->m_d_huffCodeLocations), HUFF_NUM_CHARS*sizeof(size_t) ));
     CUDA_SAFE_CALL(cudaMalloc( (void**) &(plan->m_d_huffCodeLengths), HUFF_NUM_CHARS*sizeof(unsigned char) ));
     CUDA_SAFE_CALL(cudaMalloc( (void**) &(plan->m_d_histograms), histBlocks*256*sizeof(size_t) ));
     CUDA_SAFE_CALL(cudaMalloc( (void**) &(plan->m_d_nCodesPacked), sizeof(size_t)));
     CUDA_SAFE_CALL(cudaMalloc( (void**) &(plan->m_d_encoded), sizeof(encoded)*nBlocks));
-    
+
     CUDA_CHECK_ERROR("allocCompressStorage");
 }
-    
+
 /** @brief Deallocate intermediate block arrays in a CUDPPCompressPlan object.
  *
  *
@@ -460,7 +448,7 @@ void freeCompressStorage(CUDPPCompressPlan *plan)
     // BWT
     CUDA_SAFE_CALL( cudaFree(plan->m_d_values));
     CUDA_SAFE_CALL( cudaFree(plan->m_d_bwtOut));
-    
+
     // MTF
     CUDA_SAFE_CALL( cudaFree(plan->m_d_lists));
     CUDA_SAFE_CALL( cudaFree(plan->m_d_list_sizes));
@@ -490,7 +478,7 @@ void freeBwtStorage(CUDPPBwtPlan *plan)
 }
 
 /** @brief Deallocate intermediate block arrays in a CUDPPMtfPlan object.
- * 
+ *
  *
  * @param[in,out] plan Pointer to CUDPPMtfPlan object initialized by allocMtfStorage().
  */
@@ -504,7 +492,7 @@ void freeMtfStorage(CUDPPMtfPlan *plan)
 /** @brief Dispatch function to perform parallel compression on an
  *         array with the specified configuration.
  *
- * 
+ *
  * @param[in]  d_uncompressed Uncompressed data
  * @param[out] d_bwtIndex BWT Index
  * @param[out] d_histSize Histogram size
@@ -540,7 +528,7 @@ void cudppCompressDispatch(void *d_uncompressed,
 
 /** @brief Dispatch function to perform the Burrows-Wheeler transform
  *
- * 
+ *
  * @param[in]  d_in        Input data
  * @param[out] d_out       Transformed data
  * @param[out] d_index     BWT Index
@@ -556,14 +544,14 @@ void cudppBwtDispatch(void *d_in,
 {
     // Call to perform the Burrows-Wheeler transform
     burrowsWheelerTransformWrapper((unsigned char*)d_in, (int*)d_index,
-                                   (unsigned char*) d_out, numElements, 
+                                   (unsigned char*) d_out, numElements,
                                    plan);
 }
 
 
 /** @brief Dispatch function to perform the Move-to-Front transform
  *
- * 
+ *
  * @param[in]  d_in        Input data
  * @param[out] d_out       Transformed data
  * @param[in]  numElements Number of elements to compress
@@ -576,7 +564,7 @@ void cudppMtfDispatch(void *d_in,
                       const CUDPPMtfPlan *plan)
 {
     // Call to perform the Burrows-Wheeler transform
-    moveToFrontTransformWrapper((unsigned char*) d_in, 
+    moveToFrontTransformWrapper((unsigned char*) d_in,
                                 (unsigned char*) d_out, numElements, plan);
 }
 
