@@ -3,10 +3,10 @@
 // -------------------------------------------------------------
 // $Revision: $
 // $Date: $
-// ------------------------------------------------------------- 
+// -------------------------------------------------------------
 // This source code is distributed under the terms of license.txt in
 // the root directory of this source distribution.
-// ------------------------------------------------------------- 
+// -------------------------------------------------------------
 
 /*! @file hash_testrig.cu
  *  @brief This file demonstrates how to use all three hash tables in
@@ -40,22 +40,22 @@ int CheckResults_basic(const unsigned            kInputSize,
 {
     int errors = 0;
     for (unsigned i = 0; i < kInputSize; ++i)
-    {       
-        // @TODO is this right? 
+    {
+        // @TODO is this right?
         unsigned actual_value = CUDPP_HASH_KEY_NOT_FOUND;
-        std::map<unsigned, unsigned>::const_iterator it = 
+        std::map<unsigned, unsigned>::const_iterator it =
             pairs.find(query_keys[i]);
         if (it != pairs.end())
-        {       
+        {
             actual_value = it->second;
         }
-        
+
         if (actual_value != query_vals[i])
         {
             errors++;
 #ifdef _DEBUG
             printf("\t\t\tError for key %10u: Actual value is "
-                   "%10u, but hash returned %10u.\n", 
+                   "%10u, but hash returned %10u.\n",
                    query_keys[i], actual_value, query_vals[i]);
 #endif
         }
@@ -73,7 +73,7 @@ int CheckResults_compacting(const unsigned            kInputSize,
     std::map<unsigned, unsigned> key_to_id_map;
     std::vector<unsigned> ids;
     ids.reserve(kInputSize);
-    
+
     for (unsigned j = 0; j < kInputSize; ++j)
     {
         // Confirm that all valid queries get a valid ID back, and
@@ -83,7 +83,7 @@ int CheckResults_compacting(const unsigned            kInputSize,
             if (query_vals[j] >= kInputSize)
             {
 #ifdef _DEBUG
-                fprintf(stderr, 
+                fprintf(stderr,
                         "\t\t\t\t!!! Valid query returned bad ID: %10u %10u\n",
                         query_keys[j], query_vals[j]);
 #endif
@@ -95,7 +95,7 @@ int CheckResults_compacting(const unsigned            kInputSize,
             if (query_vals[j] < kInputSize)
             {
 #ifdef _DEBUG
-                fprintf(stderr, 
+                fprintf(stderr,
                         "\t\t\t\t!!! Invalid query returned good ID: "
                         "%10u %10u\n", query_keys[j], query_vals[j]);
 #endif
@@ -173,7 +173,7 @@ int CheckResults_compacting(const unsigned            kInputSize,
             fprintf(stderr,
                     "\t\t\t\t!!! Translation mismatch: %u has ID %u, but ID "
                     "is mapped to %u\n",
-                    current_key, expected_value, 
+                    current_key, expected_value,
                     id_to_key_map[expected_value]);
             errors++;
         }
@@ -182,7 +182,7 @@ int CheckResults_compacting(const unsigned            kInputSize,
 }
 
 int CheckResults_multivalue(const unsigned            kInputSize,
-                            const std::map<unsigned, std::vector<unsigned> > 
+                            const std::map<unsigned, std::vector<unsigned> >
                             &pairs,
                             const unsigned           *sorted_values,
                             const unsigned           *query_keys,
@@ -190,7 +190,7 @@ int CheckResults_multivalue(const unsigned            kInputSize,
 {
     int errors = 0;
     for (unsigned i = 0; i < kInputSize; ++i) {
-        std::map<unsigned, std::vector<unsigned> >::const_iterator itr = 
+        std::map<unsigned, std::vector<unsigned> >::const_iterator itr =
             pairs.find(query_keys[i]);
         if (itr != pairs.end()) {
             // The query key was part of the input. Confirm that
@@ -239,8 +239,8 @@ int CheckResults_multivalue(const unsigned            kInputSize,
 }
 
 /*
- * @brief Tests hash table implementations. 
- * 
+ * @brief Tests hash table implementations.
+ *
  * <b>Simple hash table sample</b>
  *
  * This program builds a basic hash table using N random key-value
@@ -249,15 +249,15 @@ int CheckResults_multivalue(const unsigned            kInputSize,
  * not in the hash table. Multiple copies of the hash table are built
  * for each trial, where each hash table has a different number of
  * slots.
- * 
+ *
  * After the construction of each hash table, it is queried multiple
  * times with a different set of keys. Each query key set is composed
  * of a portion of the original input keys (which can be found in the
  * hash table), and keys that were not part of the original input
  * (which cause the queries to fail).
- * 
- * <b>Compacting hash table example</b> 
- * 
+ *
+ * <b>Compacting hash table example</b>
+ *
  * This builds a compacting hash table, using N random keys. Multiple
  * copies of a key in the input are all given the same unique ID by
  * the hash table. In addition to the trials performed by the simple
@@ -292,7 +292,7 @@ int testHashTable(CUDPPHandle theCudpp,
 {
     int total_errors = 0;
     for (unsigned iteration = 0; iteration < kMaxIterations; ++iteration)
-    {       
+    {
         switch(htt)
         {
         case CUDPP_BASIC_HASH_TABLE:
@@ -308,7 +308,7 @@ int testHashTable(CUDPPHandle theCudpp,
             printf("INVALID hash table: ");
             break;
         }
-        
+
         printf("Iteration %u\n", iteration);
 
         unsigned int multiplicity_max = 1; // loops only once by default
@@ -346,7 +346,7 @@ int testHashTable(CUDPPHandle theCudpp,
             case CUDPP_BASIC_HASH_TABLE:
             case CUDPP_MULTIVALUE_HASH_TABLE:
                 for (unsigned i = 0; i < kInputSize; ++i)
-                {       
+                {
                     input_vals[i] = genrand_int32();
                 }
                 if (htt == CUDPP_BASIC_HASH_TABLE)
@@ -356,7 +356,7 @@ int testHashTable(CUDPPHandle theCudpp,
                 // otherwise fall through (MULTIVALUE)
             case CUDPP_COMPACTING_HASH_TABLE:
                 GenerateMultiples(kInputSize, chance_of_repeating, number_pool);
-                GenerateMultiples(kInputSize, chance_of_repeating, 
+                GenerateMultiples(kInputSize, chance_of_repeating,
                                   number_pool + kInputSize);
                 Shuffle(kInputSize, number_pool);
                 Shuffle(kInputSize, number_pool + kInputSize);
@@ -394,7 +394,7 @@ int testHashTable(CUDPPHandle theCudpp,
                 for (unsigned i = 0; i < kInputSize; ++i) {
                     pairs_multivalue[input_keys[i]].push_back(input_vals[i]);
                 }
-                for (std::map<unsigned, std::vector<unsigned> >::iterator itr = 
+                for (std::map<unsigned, std::vector<unsigned> >::iterator itr =
                          pairs_multivalue.begin();
                      itr != pairs_multivalue.end();
                      itr++)
@@ -409,7 +409,7 @@ int testHashTable(CUDPPHandle theCudpp,
             }
 
 
-            const float kSpaceUsagesToTest[] = {1.05f, 1.15f, 1.25f, 1.5f, 
+            const float kSpaceUsagesToTest[] = {1.05f, 1.15f, 1.25f, 1.5f,
                                                 2.0f};
             const unsigned kNumSpaceUsagesToTest = 5;
 
@@ -424,15 +424,15 @@ int testHashTable(CUDPPHandle theCudpp,
                 float space_usage = kSpaceUsagesToTest[i];
                 printf("\tSpace usage: %f\n", space_usage);
 
-                CUDA_SAFE_CALL(cudaMemcpy(d_test_keys, input_keys, 
-                                          sizeof(unsigned) * kInputSize, 
+                CUDA_SAFE_CALL(cudaMemcpy(d_test_keys, input_keys,
+                                          sizeof(unsigned) * kInputSize,
                                           cudaMemcpyHostToDevice));
                 switch(htt)
                 {
                 case CUDPP_BASIC_HASH_TABLE:
                 case CUDPP_MULTIVALUE_HASH_TABLE:
                     CUDA_SAFE_CALL(cudaMemcpy(d_test_vals, input_vals,
-                                              sizeof(unsigned) * kInputSize, 
+                                              sizeof(unsigned) * kInputSize,
                                               cudaMemcpyHostToDevice));
                     break;
                 case CUDPP_COMPACTING_HASH_TABLE:
@@ -459,19 +459,19 @@ int testHashTable(CUDPPHandle theCudpp,
                             "testHashTable (make sure your device is at"
                             "least compute version 2.0\n");
                 }
-            
+
                 cudpp_app::StopWatch timer;
                 timer.reset();
                 timer.start();
-            
-                result = cudppHashInsert(hash_table_handle, d_test_keys, 
+
+                result = cudppHashInsert(hash_table_handle, d_test_keys,
                                          d_test_vals, kInputSize);
                 cudaThreadSynchronize();
                 timer.stop();
                 if (result != CUDPP_SUCCESS)
                 {
                     fprintf(stderr, "Error in cudppHashInsert call in"
-                            "testHashTable\n");                    
+                            "testHashTable\n");
                 }
                 printf("\tHash table build: %f ms\n", timer.getTime());
                 /// -----------------------------------------------------------
@@ -480,7 +480,7 @@ int testHashTable(CUDPPHandle theCudpp,
                 if (htt == CUDPP_MULTIVALUE_HASH_TABLE)
                 {
                     unsigned int values_size;
-                    if (cudppMultivalueHashGetValuesSize(hash_table_handle, 
+                    if (cudppMultivalueHashGetValuesSize(hash_table_handle,
                                                          &values_size) !=
                         CUDPP_SUCCESS)
                     {
@@ -489,7 +489,7 @@ int testHashTable(CUDPPHandle theCudpp,
                     }
                     sorted_values = new unsigned[values_size];
                     unsigned int * d_all_values = NULL;
-                    if (cudppMultivalueHashGetAllValues(hash_table_handle, 
+                    if (cudppMultivalueHashGetAllValues(hash_table_handle,
                                                         &d_all_values) !=
                         CUDPP_SUCCESS)
                     {
@@ -511,16 +511,16 @@ int testHashTable(CUDPPHandle theCudpp,
                     float failure_rate = failure / (float) failure_trials;
                     GenerateQueries(kInputSize, failure_rate, number_pool,
                                     query_keys);
-                    CUDA_SAFE_CALL(cudaMemcpy(d_test_keys, query_keys, 
-                                              sizeof(unsigned) * kInputSize, 
+                    CUDA_SAFE_CALL(cudaMemcpy(d_test_keys, query_keys,
+                                              sizeof(unsigned) * kInputSize,
                                               cudaMemcpyHostToDevice));
-                    CUDA_SAFE_CALL(cudaMemset(d_test_vals, 0, 
+                    CUDA_SAFE_CALL(cudaMemset(d_test_vals, 0,
                                               sizeof(unsigned) * kInputSize));
-  
+
                     /// --------------------------------------- Query the table.
                     timer.reset();
                     timer.start();
-                    /// hash_table.Retrieve(kInputSize, d_test_keys, 
+                    /// hash_table.Retrieve(kInputSize, d_test_keys,
                     //                      d_test_vals);
 
                     unsigned int errors = 0;
@@ -528,14 +528,14 @@ int testHashTable(CUDPPHandle theCudpp,
                     {
                     case CUDPP_BASIC_HASH_TABLE:
                     case CUDPP_COMPACTING_HASH_TABLE:
-                        result = cudppHashRetrieve(hash_table_handle, 
-                                                   d_test_keys, d_test_vals, 
+                        result = cudppHashRetrieve(hash_table_handle,
+                                                   d_test_keys, d_test_vals,
                                                    kInputSize);
-                        break;                                          
+                        break;
                     case CUDPP_MULTIVALUE_HASH_TABLE:
-                        result = cudppHashRetrieve(hash_table_handle, 
-                                                   d_test_keys, 
-                                                   d_test_vals_multivalue, 
+                        result = cudppHashRetrieve(hash_table_handle,
+                                                   d_test_keys,
+                                                   d_test_vals_multivalue,
                                                    kInputSize);
                         break;
                     default:
@@ -543,52 +543,52 @@ int testHashTable(CUDPPHandle theCudpp,
                         fprintf(stderr, "Bad CUDPPHashTableType (htt) in "
                                 "testHashTable\n");
                         break;
-                    }                 
+                    }
                     cudaThreadSynchronize();
                     timer.stop();
                     if (result != CUDPP_SUCCESS)
                     {
                         fprintf(stderr, "Error in cudppHashRetrieve call in"
-                                "testHashTable\n");                    
+                                "testHashTable\n");
                     }
                     printf("\tHash table retrieve with %3u%% chance of "
-                           "failed queries: %f ms\n", failure * failure_trials, 
+                           "failed queries: %f ms\n", failure * failure_trials,
                            timer.getTime());
                     /// --------------------------------------------------------
-  
+
                     // Check the results.
                     switch(htt)
                     {
                     case CUDPP_BASIC_HASH_TABLE:
-                        CUDA_SAFE_CALL(cudaMemcpy(query_vals, d_test_vals, 
-                                                  sizeof(unsigned) * kInputSize,
-                                                  cudaMemcpyDeviceToHost));
-                        errors += 
-                            CheckResults_basic(kInputSize, 
-                                               pairs_basic, 
-                                               query_keys, 
-                                               query_vals);
-                        break;
-                    case CUDPP_COMPACTING_HASH_TABLE:
-                        CUDA_SAFE_CALL(cudaMemcpy(query_vals, d_test_vals, 
+                        CUDA_SAFE_CALL(cudaMemcpy(query_vals, d_test_vals,
                                                   sizeof(unsigned) * kInputSize,
                                                   cudaMemcpyDeviceToHost));
                         errors +=
-                            CheckResults_compacting(kInputSize, 
-                                                    pairs_compacting, 
-                                                    query_keys, 
+                            CheckResults_basic(kInputSize,
+                                               pairs_basic,
+                                               query_keys,
+                                               query_vals);
+                        break;
+                    case CUDPP_COMPACTING_HASH_TABLE:
+                        CUDA_SAFE_CALL(cudaMemcpy(query_vals, d_test_vals,
+                                                  sizeof(unsigned) * kInputSize,
+                                                  cudaMemcpyDeviceToHost));
+                        errors +=
+                            CheckResults_compacting(kInputSize,
+                                                    pairs_compacting,
+                                                    query_keys,
                                                     query_vals);
                         break;
                     case CUDPP_MULTIVALUE_HASH_TABLE:
                         CUDA_SAFE_CALL(cudaMemcpy(query_vals_multivalue,
-                                                  d_test_vals_multivalue, 
-                                                  sizeof(uint2) * kInputSize, 
+                                                  d_test_vals_multivalue,
+                                                  sizeof(uint2) * kInputSize,
                                                   cudaMemcpyDeviceToHost));
-                        errors += 
+                        errors +=
                             CheckResults_multivalue(kInputSize,
-                                                    pairs_multivalue, 
+                                                    pairs_multivalue,
                                                     sorted_values,
-                                                    query_keys, 
+                                                    query_keys,
                                                     query_vals_multivalue);
                         break;
                     default:
@@ -608,14 +608,14 @@ int testHashTable(CUDPPHandle theCudpp,
                     }
                     total_errors += errors;
                 }
-  
+
                 delete [] sorted_values;
                 /// -------------------------------------------- Free the table.
                 result = cudppDestroyHashTable(theCudpp, hash_table_handle);
                 if (result != CUDPP_SUCCESS)
                 {
                     fprintf(stderr, "Error in cudppDestroyHashTable call in"
-                            "testHashTable\n");                    
+                            "testHashTable\n");
                 }
 
                 /// hash_table.Release();
@@ -640,15 +640,15 @@ int testHashTable(CUDPPHandle theCudpp,
  * - -skip=# runs only every #th test (default 7)
  * - -skiphighx=<true,false> skips the tests with high multiplicity
  *      (since they take a *long* time to test) (default true)
- */ 
+ */
 int main(int argc, const char **argv)
-{       
-    bool quiet = checkCommandLineFlag(argc, argv, "quiet"); 
+{
+    bool quiet = checkCommandLineFlag(argc, argv, "quiet");
 
     int deviceCount;
     cudaGetDeviceCount(&deviceCount);
     if (deviceCount == 0)
-    {       
+    {
         fprintf(stderr, "Error (main): no devices supporting CUDA.\n");
         exit(EXIT_FAILURE);
     }
@@ -663,7 +663,7 @@ int main(int argc, const char **argv)
     {
         printf("Using device %d:\n", dev);
         printf("%s; global mem: %uB; compute v%d.%d; clock: %d kHz\n",
-               prop.name, prop.totalGlobalMem, (int)prop.major, 
+               prop.name, (unsigned int)prop.totalGlobalMem, (int)prop.major,
                (int)prop.minor, (int)prop.clockRate);
     }
 
@@ -682,9 +682,9 @@ int main(int argc, const char **argv)
 
     bool runAll = checkCommandLineFlag(argc, argv, "all");
     bool runBasicHash = runAll || checkCommandLineFlag(argc, argv, "basic");
-    bool runCompactingHash = 
+    bool runCompactingHash =
         runAll || checkCommandLineFlag(argc, argv, "compacting");
-    bool runMultivalueHash = 
+    bool runMultivalueHash =
         runAll || checkCommandLineFlag(argc, argv, "multivalue");
 
     unsigned kInputSize = 1000000;
@@ -706,7 +706,7 @@ int main(int argc, const char **argv)
      */
     const unsigned pool_size = kInputSize * 2;
     unsigned *number_pool = new unsigned[pool_size];
-  
+
     // Set aside memory for input keys and values.
     unsigned *input_keys = new unsigned[kInputSize];
     unsigned *input_vals = new unsigned[kInputSize];
@@ -717,11 +717,11 @@ int main(int argc, const char **argv)
     // Allocate the GPU memory.
     unsigned *d_test_keys = NULL, *d_test_vals = NULL;
     uint2 *d_test_vals_multivalue = NULL;
-    CUDA_SAFE_CALL(cudaMalloc((void**) &d_test_keys, 
+    CUDA_SAFE_CALL(cudaMalloc((void**) &d_test_keys,
                               sizeof(unsigned) * kInputSize));
-    CUDA_SAFE_CALL(cudaMalloc((void**) &d_test_vals, 
+    CUDA_SAFE_CALL(cudaMalloc((void**) &d_test_vals,
                               sizeof(unsigned) * kInputSize));
-    CUDA_SAFE_CALL(cudaMalloc((void**) &d_test_vals_multivalue, 
+    CUDA_SAFE_CALL(cudaMalloc((void**) &d_test_vals_multivalue,
                               sizeof(uint2) * kInputSize));
 
     CUDPPHandle theCudpp;
@@ -733,7 +733,7 @@ int main(int argc, const char **argv)
         retval = 1;
         return retval;
     }
-    
+
     int total_errors = 0;
     unsigned int testNumber = 0;
     for (CUDPPHashTableType htt = CUDPP_BASIC_HASH_TABLE;
@@ -745,19 +745,19 @@ int main(int argc, const char **argv)
             ((htt == CUDPP_COMPACTING_HASH_TABLE) && runCompactingHash) ||
             ((htt == CUDPP_MULTIVALUE_HASH_TABLE) && runMultivalueHash))
         {
-            total_errors += 
+            total_errors +=
                 testHashTable(theCudpp,
                               htt,
                               kMaxIterations,
-                              kInputSize, 
+                              kInputSize,
                               number_pool,
                               pool_size,
                               input_vals,
-                              input_keys, 
+                              input_keys,
                               d_test_vals,
                               d_test_vals_multivalue,
                               d_test_keys,
-                              query_vals, 
+                              query_vals,
                               query_vals_multivalue,
                               query_keys,
                               skipEveryNTests,
