@@ -43,8 +43,7 @@ int suffixArrayTest(int argc, const char **argv,
     bool quiet = checkCommandLineFlag(argc, (const char**) argv, "quiet");
     unsigned int test[] = {39, 128, 256, 512, 513, 1000, 1024, 1025, 32768,
                            45537, 65536, 131072, 262144, 500001, 524288,
-                           1048577, 1048576, 1048581, 2097152, 4194304,
-                           8388608};
+                           1048577, 1048576, 1048581};
 
     int numTests = sizeof(test) / sizeof(test[0]);
     int numElements;
@@ -62,6 +61,10 @@ int suffixArrayTest(int argc, const char **argv,
     }   
 
     numElements = test[numTests-1] + numTests; // maximum test size
+    if(testOptions.skiplongtests)
+    {
+          numTests -= 3;
+    }
 
     bool oneTest = false;
 
@@ -138,7 +141,7 @@ int suffixArrayTest(int argc, const char **argv,
         // Run the SA
 	// run once to avoid timing startup overhead.
         result = cudppSuffixArray(plan, d_idata, d_odata, test[k]);
-
+      
         if (result != CUDPP_SUCCESS)
 	{
 	     if(!quiet)

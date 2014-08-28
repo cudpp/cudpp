@@ -662,8 +662,8 @@ int main(int argc, const char **argv)
     if (!quiet && cudaGetDeviceProperties(&prop, dev) == 0)
     {
         printf("Using device %d:\n", dev);
-        printf("%s; global mem: %dB; compute v%d.%d; clock: %d kHz\n",
-               prop.name, (int)prop.totalGlobalMem, (int)prop.major, 
+        printf("%s; global mem: %uB; compute v%d.%d; clock: %d kHz\n",
+               prop.name, prop.totalGlobalMem, (int)prop.major, 
                (int)prop.minor, (int)prop.clockRate);
     }
 

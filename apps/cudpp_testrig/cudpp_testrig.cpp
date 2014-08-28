@@ -297,8 +297,8 @@ int main(int argc, const char** argv)
     if (!quiet)
     {
         printf("Using device %d:\n", dev);
-        printf("%s; global mem: %dB; compute v%d.%d; clock: %d kHz\n",
-               devProps.name, (int)devProps.totalGlobalMem, (int)devProps.major,
+        printf("%s; global mem: %uB; compute v%d.%d; clock: %d kHz\n",
+               devProps.name, devProps.totalGlobalMem, (int)devProps.major,
                (int)devProps.minor, (int)devProps.clockRate);
         int runtimeVersion, driverVersion;
         CUDA_SAFE_CALL(cudaRuntimeGetVersion(&runtimeVersion));
@@ -360,6 +360,7 @@ int main(int argc, const char** argv)
         printf("mat=<File Name>: File containing sparse matrix in Matrix Market format\n");
         printf("--- Rand Options ---\n");
         printf("dir=<directory>: Directory containing all the random number regression tests\n");
+        printf("skiplongtests should be set if GPU may trigger a watchdog timer on long tests\n");
     }
 
     bool runAll = checkCommandLineFlag(argc, argv, "all");

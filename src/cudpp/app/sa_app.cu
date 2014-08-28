@@ -161,7 +161,6 @@ void ComputeSA(unsigned int* d_str,
    ////////////////////////////////////////////////////////////////////
    sa12_keys_construct<<< grid_construct1, threads_construct >>>
          (d_str, d_keys_sa, plan->m_d_keys_srt_12, mod_1, tThreads1);
-   cudaThreadSynchronize();
    
    // LSB radix sort the triplets character by character
    // d_keys_sa store the value of the character from the triplets r->l
@@ -172,13 +171,11 @@ void ComputeSA(unsigned int* d_str,
 
    sa12_keys_construct_0<<< grid_construct1, threads_construct >>>
        (d_str, d_keys_sa, plan->m_d_keys_srt_12, tThreads1);
-   cudaThreadSynchronize();
 
    KeyValueSort((mod_1+mod_2), d_keys_sa, plan->m_d_keys_srt_12);
 
    sa12_keys_construct_1<<< grid_construct1, threads_construct >>>
        (d_str, d_keys_sa, plan->m_d_keys_srt_12, tThreads1);
-   CUDA_SAFE_CALL(cudaThreadSynchronize());
 
    KeyValueSort(tThreads1, d_keys_sa, plan->m_d_keys_srt_12);
 
@@ -191,7 +188,6 @@ void ComputeSA(unsigned int* d_str,
     compute_rank<<< grid_construct1, threads_construct >>>
           (d_str, plan->m_d_keys_srt_12, d_keys_sa, plan->m_d_unique, tThreads1,
           str_length);
-    CUDA_SAFE_CALL(cudaThreadSynchronize());
 
     CUDA_SAFE_CALL(cudaMemcpy(unique, plan->m_d_unique,  sizeof(bool),
                               cudaMemcpyDeviceToHost));
@@ -213,7 +209,6 @@ void ComputeSA(unsigned int* d_str,
         new_str_construct<<< grid_construct1, threads_construct >>>
                (plan->m_d_new_str, plan->m_d_keys_srt_12, d_keys_sa, mod_1,
                 tThreads1);
-        CUDA_SAFE_CALL(cudaThreadSynchronize());
 
         // recurse
         ComputeSA(plan->m_d_new_str, plan->m_d_keys_srt_12, tThreads1-1,
@@ -229,7 +224,6 @@ void ComputeSA(unsigned int* d_str,
         reconstruct<<< grid_construct1, threads_construct >>>
                (plan->m_d_keys_srt_12, plan->m_d_isa_12, d_keys_sa, mod_1,
                 tThreads1);
-        CUDA_SAFE_CALL(cudaThreadSynchronize());
 
      }
 
@@ -245,7 +239,6 @@ else
              (plan->m_d_keys_srt_12, plan->m_d_isa_12, d_keys_sa, mod_1,
               tThreads1);
 
-   CUDA_SAFE_CALL(cudaThreadSynchronize());
 }
 
 // Exclusive scan to compute the position of SA1
@@ -260,10 +253,8 @@ else
   sa3_srt_construct<<< grid_construct1, threads_construct >>>
       (plan->m_d_keys_srt_3, d_str, plan->m_d_keys_srt_12, d_keys_sa, tThreads1,
        tThreads2, str_length);
-  CUDA_SAFE_CALL(cudaThreadSynchronize());
   sa3_keys_construct<<<grid_construct2, threads_construct>>>
           (plan->m_d_keys_srt_3, d_keys_sa, d_str, tThreads2, str_length);
-  CUDA_SAFE_CALL(cudaThreadSynchronize());
   // Only one radix sort based on the result of SA1 (induced sorting)
   KeyValueSort(mod_3, d_keys_sa, plan->m_d_keys_srt_3);
 
@@ -278,7 +269,6 @@ else
   merge_akeys_construct<<< grid_construct1, threads_construct >>>
     (d_str, plan->m_d_keys_srt_12, plan->m_d_isa_12, plan->m_d_aKeys, tThreads1,
      mod_1, bound, str_length);
-  CUDA_SAFE_CALL(cudaThreadSynchronize());
 
   // Construct SA3 keys in terms of Vector
   // Composed of 1st char's value, 2nd char's value, 2nd char's rank
@@ -290,7 +280,6 @@ else
   merge_bkeys_construct<<< grid_construct2, threads_construct >>>
     (d_str, plan->m_d_keys_srt_3, plan->m_d_isa_12, plan->m_d_bKeys, tThreads2,
      mod_1, bound, str_length);
-  CUDA_SAFE_CALL(cudaThreadSynchronize());
 #if (__CUDA_ARCH__ >= 200) || (CUB_PTX_VERSION == 0)
 
   // Merge SA12 and SA3 based on aKeys and bKeys
@@ -383,9 +372,13 @@ void cudppSuffixArrayDispatch(void* d_str,
     size_t nBlocks = (fullBlocks) ? (tThreads/nThreads) : (tThreads/nThreads+1);
     dim3 grid_construct(nBlocks,1,1);
     dim3 threads_construct(nThreads,1,1);
+//    size_t freeMem, totalMem;
+//    CUDA_SAFE_CALL(cudaMemGetInfo(&freeMem, &totalMem));
+//    printf("freeMem=%u, totalMem=%u\n", freeMem, totalMem);
     strConstruct<<< grid_construct, threads_construct >>>
              ((unsigned char*)d_str, plan->d_str_value,  d_str_length);
-    CUDA_SAFE_CALL(cudaThreadSynchronize());
+//    CUDA_SAFE_CALL(cudaMemGetInfo(&freeMem, &totalMem));
+//    printf("freeMem=%u, totalMem=%u\n", freeMem, totalMem);
 
     ComputeSA((unsigned int*)plan->d_str_value, (unsigned int*)d_keys_sa,
               d_str_length, *context, plan, 0, 0);
@@ -393,7 +386,6 @@ void cudppSuffixArrayDispatch(void* d_str,
     d_keys_sa = d_keys_sa + 1;
     resultConstruct<<< grid_construct, threads_construct >>>
               (d_keys_sa, d_str_length);
-    CUDA_SAFE_CALL(cudaThreadSynchronize());
 }
 
 #ifdef __cplusplus
