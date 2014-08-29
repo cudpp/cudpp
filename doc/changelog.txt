@@ -2,6 +2,7 @@ CUDPP Change Log
 
 Release 2.2
 24 Aug 2014
+- Release czar: Leyuan Wang. Thanks!
 - Added cudppSuffixArray parallel skew algorithm for computing suffix array
 - Replaced the cudppStringSort in burrowsWheelerTransform in cudppCompress
   with cudppSuffixArray to achieve better performance
@@ -16,6 +17,7 @@ Release 2.2
 
 Release 2.1
 9 October 2013
+- Release czar: Edmund Yan. Thanks!
 - Added cudppCompress lossless data compression algorithms which implement
   the Move-to-Front transform, Burrows-Wheeler Transform, and
   Huffman encoding
