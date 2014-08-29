@@ -427,9 +427,9 @@ CUDPPResult cudppMergeSort(const CUDPPHandle planHandle,
     if (plan != NULL)
     {
         if ((plan->m_config.algorithm != CUDPP_SORT_MERGE) ||
-            ((plan->m.config.datatype != CUDPP_INT) &&
-             (plan->m.config.datatype != CUDPP_UINT) &&
-             (plan->m.config.datatype != CUDPP_FLOAT)))
+            ((plan->m_config.datatype != CUDPP_INT) &&
+             (plan->m_config.datatype != CUDPP_UINT) &&
+             (plan->m_config.datatype != CUDPP_FLOAT)))
         {
             return CUDPP_ERROR_INVALID_PLAN;
         }
@@ -437,9 +437,12 @@ CUDPPResult cudppMergeSort(const CUDPPHandle planHandle,
         {
             cudppMergeSortDispatch(d_keys, d_values, numElements, plan);
             return CUDPP_SUCCESS;
+        }
     }
     else
+    {
         return CUDPP_ERROR_INVALID_HANDLE;
+    }
 }
 /**
  * @brief Sorts strings. Keys are the first four characters of the string,
