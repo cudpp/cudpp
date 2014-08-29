@@ -142,14 +142,14 @@ CUDPPResult cudppScan(const CUDPPHandle planHandle,
  * <var>in<sub>k+1</sub></var>
  * @htmlonly&oplus;@endhtmlonly@latexonly$\oplus$@endlatexonly ...
  * @htmlonly&oplus;@endhtmlonly@latexonly$\oplus$@endlatexonly
- * <var>in<sub>i-1</sub></var>.
- * <i>k</i> is the index of the first element of the segment in which <i>i</i> lies
+ * <var>in<sub>i-1</sub></var>. <i>k</i> is the index of the first
+ * element of the segment in which <i>i</i> lies.
  *
- * We support both "exclusive" and "inclusive" variants. For a segmented sum-scan,
- * the exclusive variant computes the sum of all input elements before the
- * current element in that segment, while the inclusive variant computes the
- * sum of all input elements up to and including the current element, in
- * that segment.
+ * We support both "exclusive" and "inclusive" variants. For a
+ * segmented sum-scan, the exclusive variant computes the sum of all
+ * input elements before the current element in that segment, while
+ * the inclusive variant computes the sum of all input elements up to
+ * and including the current element, in that segment.
  *
  * Before calling segmented scan, create an internal plan using cudppPlan().
  *
@@ -250,11 +250,12 @@ CUDPPResult cudppMultiScan(const CUDPPHandle planHandle,
  * d_out   = [ a c d f ]
  * \endcode
  *
- * @todo [MJH] We need to evaluate whether cudppCompact should be a core member
- * of the public interface.  It's not clear to me that what the user always
- * wants is a final compacted array.  Often one just wants the array of indices
- * to which each input element should go in the output. The split() routine used
- * in radix sort might make more sense to expose.
+ * @todo [MJH] We need to evaluate whether cudppCompact should be a
+ * core member of the public interface. It's not clear to me that what
+ * the user always wants is a final compacted array. Often one just
+ * wants the array of indices to which each input element should go in
+ * the output. The split() routine used in radix sort might make more
+ * sense to expose.
  *
  * @param[in] planHandle handle to CUDPPCompactPlan
  * @param[out] d_out compacted output
@@ -304,9 +305,9 @@ CUDPPResult cudppCompact(const CUDPPHandle  planHandle,
  * d_out   = [ -4 ]
  * \endcode
  *
- * Limits:
- * \a numElements must be at least 1, and is currently limited only by the addressable memory
- * in CUDA (and the output accuracy is limited by numerical precision).
+ * Limits: \a numElements must be at least 1, and is currently limited
+ * only by the addressable memory in CUDA (and the output accuracy is
+ * limited by numerical precision).
  *
  * @param[in] planHandle handle to CUDPPReducePlan
  * @param[out] d_out Output of reduce (a single element) in GPU memory.
@@ -381,7 +382,7 @@ CUDPPResult cudppRadixSort(const CUDPPHandle planHandle,
         if (plan->m_config.algorithm != CUDPP_SORT_RADIX)
             return CUDPP_ERROR_INVALID_PLAN;
 
-	if(plan->m_config.algorithm == CUDPP_SORT_RADIX)
+        if(plan->m_config.algorithm == CUDPP_SORT_RADIX)
             cudppRadixSortDispatch(d_keys, d_values, numElements, plan);
 
         return CUDPP_SUCCESS;
@@ -425,10 +426,17 @@ CUDPPResult cudppMergeSort(const CUDPPHandle planHandle,
 
     if (plan != NULL)
     {
-        if (plan->m_config.algorithm != CUDPP_SORT_MERGE)
+        if ((plan->m_config.algorithm != CUDPP_SORT_MERGE) ||
+            ((plan->m.config.datatype != CUDPP_INT) &&
+             (plan->m.config.datatype != CUDPP_UINT) &&
+             (plan->m.config.datatype != CUDPP_FLOAT)))
+        {
             return CUDPP_ERROR_INVALID_PLAN;
-		cudppMergeSortDispatch(d_keys, d_values, numElements, plan);
-	    return CUDPP_SUCCESS;
+        }
+        else
+        {
+            cudppMergeSortDispatch(d_keys, d_values, numElements, plan);
+            return CUDPP_SUCCESS;
     }
     else
         return CUDPP_ERROR_INVALID_HANDLE;
@@ -437,9 +445,9 @@ CUDPPResult cudppMergeSort(const CUDPPHandle planHandle,
  * @brief Sorts strings. Keys are the first four characters of the string,
  * and values are the addresses where the strings reside in memory (stringVals)
  *
- * Takes as input an array of strings (broken up as first four chars (key),
- * addresses (values), and the strings themselves (stringVals) aligned by 4 character
- * and packed into a uint)
+ * Takes as input an array of strings (broken up as first four chars
+ * (key), addresses (values), and the strings themselves (stringVals)
+ * aligned by 4 character and packed into a uint)
  *
  *
  * @todo Determine if we need to provide an "out of place" sort interface.
@@ -469,8 +477,8 @@ CUDPPResult cudppStringSortAligned(const CUDPPHandle planHandle,
     {
         if (plan->m_config.algorithm != CUDPP_SORT_STRING)
             return CUDPP_ERROR_INVALID_PLAN;
-		cudppStringSortDispatch(d_keys, d_values, stringVals, numElements, stringArrayLength, 0, plan);
-	    return CUDPP_SUCCESS;
+                cudppStringSortDispatch(d_keys, d_values, stringVals, numElements, stringArrayLength, 0, plan);
+            return CUDPP_SUCCESS;
     }
     else
         return CUDPP_ERROR_INVALID_HANDLE;
@@ -480,9 +488,10 @@ CUDPPResult cudppStringSortAligned(const CUDPPHandle planHandle,
  * @brief Sorts strings. Keys are the first four characters of the string,
  * and values are the addresses where the strings reside in memory (stringVals)
  *
- * Takes as input an array of strings arranged as a char* array with NULL terminating
- * characters. This function will reformat this info into keys (first four chars)
- * values(pointers to string array addresses) and aligned string value array.
+ * Takes as input an array of strings arranged as a char* array with
+ * NULL terminating characters. This function will reformat this info
+ * into keys (first four chars) values(pointers to string array
+ * addresses) and aligned string value array.
  *
  *
  *
@@ -499,8 +508,8 @@ CUDPPResult cudppStringSortAligned(const CUDPPHandle planHandle,
 CUDPP_DLL
 CUDPPResult cudppStringSort(const CUDPPHandle planHandle,
                       unsigned char     *d_stringVals,
-					  unsigned int      *d_address,
-					  unsigned char     termC,
+                                          unsigned int      *d_address,
+                                          unsigned char     termC,
                       size_t            numElements,
                       size_t            stringArrayLength)
 {
@@ -513,36 +522,29 @@ CUDPPResult cudppStringSort(const CUDPPHandle planHandle,
         if (plan->m_config.algorithm != CUDPP_SORT_STRING)
             return CUDPP_ERROR_INVALID_PLAN;
 
+        unsigned int* packedStringVals;
+        unsigned int *packedStringLength = (unsigned int*)malloc(sizeof(unsigned int));;
+
+        calculateAlignedOffsets(d_address, plan->m_numSpaces, d_stringVals, termC, numElements, stringArrayLength);
+        cudppScanDispatch(plan->m_spaceScan, plan->m_numSpaces, numElements+1, 1, plan->m_scanPlan);
+        dotAdd(d_address, plan->m_spaceScan, plan->m_packedAddress, numElements+1, stringArrayLength);
+
+        cudaMemcpy(packedStringLength, (plan->m_packedAddress)+numElements, sizeof(unsigned int), cudaMemcpyDeviceToHost);
+        cudaMemcpy(plan->m_packedAddressRef, plan->m_packedAddress, sizeof(unsigned int)*numElements, cudaMemcpyDeviceToDevice);
+        cudaMemcpy(plan->m_addressRef, d_address, sizeof(unsigned int)*numElements, cudaMemcpyDeviceToDevice);
+
+        //system("PAUSE");
+        cudaMalloc((void**)&packedStringVals, sizeof(unsigned int)*packedStringLength[0]);
+
+        packStrings(packedStringVals, d_stringVals, plan->m_keys, plan->m_packedAddress, d_address, numElements, stringArrayLength, termC);
+
+        cudppStringSortDispatch(plan->m_keys, plan->m_packedAddress, packedStringVals, numElements, packedStringLength[0], termC, plan);
+        unpackStrings(plan->m_packedAddress, plan->m_packedAddressRef, d_address, plan->m_addressRef, numElements);
 
 
-
-		unsigned int* packedStringVals;
-		unsigned int *packedStringLength = (unsigned int*)malloc(sizeof(unsigned int));;
-
-		calculateAlignedOffsets(d_address, plan->m_numSpaces, d_stringVals, termC, numElements, stringArrayLength);
-		cudppScanDispatch(plan->m_spaceScan, plan->m_numSpaces, numElements+1, 1, plan->m_scanPlan);
-		dotAdd(d_address, plan->m_spaceScan, plan->m_packedAddress, numElements+1, stringArrayLength);
-
-		cudaMemcpy(packedStringLength, (plan->m_packedAddress)+numElements, sizeof(unsigned int), cudaMemcpyDeviceToHost);
-		cudaMemcpy(plan->m_packedAddressRef, plan->m_packedAddress, sizeof(unsigned int)*numElements, cudaMemcpyDeviceToDevice);
-		cudaMemcpy(plan->m_addressRef, d_address, sizeof(unsigned int)*numElements, cudaMemcpyDeviceToDevice);
-
-
-
-
-		//system("PAUSE");
-		cudaMalloc((void**)&packedStringVals, sizeof(unsigned int)*packedStringLength[0]);
-
-		packStrings(packedStringVals, d_stringVals, plan->m_keys, plan->m_packedAddress, d_address, numElements, stringArrayLength, termC);
-
-
-		cudppStringSortDispatch(plan->m_keys, plan->m_packedAddress, packedStringVals, numElements, packedStringLength[0], termC, plan);
-		unpackStrings(plan->m_packedAddress, plan->m_packedAddressRef, d_address, plan->m_addressRef, numElements);
-
-
-		free(packedStringLength);
-		cudaFree(packedStringVals);
-	    return CUDPP_SUCCESS;
+        free(packedStringLength);
+        cudaFree(packedStringVals);
+        return CUDPP_SUCCESS;
     }
     else
         return CUDPP_ERROR_INVALID_HANDLE;
@@ -550,9 +552,10 @@ CUDPPResult cudppStringSort(const CUDPPHandle planHandle,
 
 /** @brief Perform matrix-vector multiply y = A*x for arbitrary sparse matrix A and vector x
   *
-  * Given a matrix object handle (which has been initialized using cudppSparseMatrix()),
-  * This function multiplies the input vector \a d_x by the matrix referred to by
-  * \a sparseMatrixHandle, returning the result in \a d_y.
+  * Given a matrix object handle (which has been initialized using
+  * cudppSparseMatrix()), This function multiplies the input vector \a
+  * d_x by the matrix referred to by \a sparseMatrixHandle, returning
+  * the result in \a d_y.
   *
   * @param sparseMatrixHandle Handle to a sparse matrix object created with cudppSparseMatrix()
   * @param d_y The output vector, y
@@ -716,10 +719,11 @@ CUDPPResult cudppTridiagonal(CUDPPHandle planHandle,
 /**
  * @brief Compresses data stream
  *
- * Performs compression using a three stage pipeline consisting of the Burrows-Wheeler
- * transform, the move-to-front transform, and Huffman encoding.
- * The compression algorithms are described in our paper "Parallel Lossless
- * Data Compression on the GPU". (See the \ref references bibliography).
+ * Performs compression using a three stage pipeline consisting of the
+ * Burrows-Wheeler transform, the move-to-front transform, and Huffman
+ * encoding. The compression algorithms are described in our paper
+ * "Parallel Lossless Data Compression on the GPU". (See the \ref
+ * references bibliography).
  *
  * - Only unsigned char type is supported.
  * - Currently, the input stream (d_uncompressed) must be a buffer of 1,048,576 (uchar) elements (~1MB).
@@ -957,7 +961,8 @@ CUDPPResult cudppListRank(CUDPPHandle planHandle,
         if (plan->m_config.algorithm != CUDPP_LISTRANK)
             return CUDPP_ERROR_INVALID_PLAN;
 
-        return cudppListRankDispatch(d_ranked_values, d_unranked_values, d_next_indices, head, numElements, plan);
+        return cudppListRankDispatch(d_ranked_values, d_unranked_values,
+                                     d_next_indices, head, numElements, plan);
     }
     else
         return CUDPP_ERROR_INVALID_HANDLE;
@@ -985,13 +990,13 @@ CUDPPResult cudppListRank(CUDPPHandle planHandle,
  *
  * @see cudppPlan, CUDPPConfiguration, CUDPPAlgorithm
  */
- 
+
 CUDPP_DLL
 CUDPPResult cudppSuffixArray(CUDPPHandle planHandle,
                              unsigned char *d_in,
                              unsigned int *d_out,
                              size_t numElements)
-{  
+{
 
     // first check: is this device >= 2.0? if not, return error
     int dev;
@@ -1020,7 +1025,7 @@ CUDPPResult cudppSuffixArray(CUDPPHandle planHandle,
     }
     else
         return CUDPP_ERROR_INVALID_HANDLE;
-    
+
 }
 /** @} */ // end Algorithm Interface
 /** @} */ // end of publicInterface group
