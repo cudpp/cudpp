@@ -9,10 +9,10 @@ Release 2.2
 - Fixed bugs in cudppMoveToFrontTransform where originally only inputs with
   value smaller than 15 work
 - Fixed bugs to support cudppCompress to compress text containing all possible unsigned char values with the range of [1...255]
-- Changed test files for cudppCompression and cudppMoveToFrontTransform to
+- Changed test files for cudppCompress and cudppMoveToFrontTransform to
   target the new BWT method
 - Added -skiplargetests for MTF tests in order to avoid launch-timed-out errors
-- Fixed bugs to make string sort compatible for compute capability less than 2.0
+- Fixed bugs to make cudppStringSort compatible for compute capability less than 2.0
 - Makefile fixes for OS X with clang compilation
 
 Release 2.1
