@@ -53,7 +53,7 @@ const int SEGSCAN_ELTS_PER_THREAD = 8;           /**< Number of elements per seg
 // MTF
 #define MTF_PER_THREAD      64
 #define MTF_THREADS_BLOCK   64
-#define MTF_LIST_SIZE       25
+#define MTF_LIST_SIZE       256
 
 // Huffman
 #define HUFF_THREADS_PER_BLOCK_HIST     64

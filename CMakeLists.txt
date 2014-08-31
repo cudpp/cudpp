@@ -1,7 +1,7 @@
 project(cudpp)
 
 set(cudpp_VERSION_MAJOR 2)
-set(cudpp_VERSION_MINOR 0)
+set(cudpp_VERSION_MINOR 2)
 set(cudpp_VERSION_PATCH 0)
 
 cmake_minimum_required(VERSION 2.8)
@@ -43,6 +43,8 @@ set(CMAKE_MODULE_PATH
 
 set(cudpp_INCLUDE_DIRS
   ${CMAKE_SOURCE_DIR}/include
+  ${CMAKE_SOURCE_DIR}/ext/moderngpu/include/
+  ${CMAKE_SOURCE_DIR}/ext/cub/
   )
 include_directories(${cudpp_INCLUDE_DIRS})
 
@@ -51,7 +53,6 @@ if (CMAKE_SIZEOF_VOID_P EQUAL 8)
 else ()
   set(bits 32)
 endif (CMAKE_SIZEOF_VOID_P EQUAL 8)
-
 string(TOUPPER "${CMAKE_CONFIGURATION_TYPES}" configs)
 foreach (config ${configs})
   set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_${config} "${EXECUTABLE_OUTPUT_PATH}")
@@ -93,6 +94,27 @@ endif (WIN32)
 
 # copy data files
 file(COPY apps/data DESTINATION apps)
+
+if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+  exec_program(uname ARGS -v  OUTPUT_VARIABLE DARWIN_VERSION)
+  string(REGEX MATCH "[0-9]+" DARWIN_VERSION ${DARWIN_VERSION})
+  # message(STATUS "Detected Darwin kernel version: ${DARWIN_VERSION}")
+  if ((DARWIN_VERSION GREATER 13) OR (DARWIN_VERSION EQUAL 13))
+    set(APPLE_MAVERICKS_OR_LATER 1 INTERNAL)
+    set(CMAKE_CXX_FLAGS -stdlib=libstdc++)
+    set(CMAKE_C_FLAGS -stdlib=libstdc++)
+    if(CUDA_VERSION_MAJOR EQUAL 6 AND CUDA_VERSION_MINOR LESS 5)
+      set(CUDA_6_0 1)
+    endif(CUDA_VERSION_MAJOR EQUAL 6 AND CUDA_VERSION_MINOR LESS 5)
+    if(CUDA_VERSION_MAJOR LESS 6 OR CUDA_6_0)
+      if(NOT CUDA_NVCC_FLAGS MATCHES "ccbin")
+        set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} -ccbin;/usr/bin/clang)
+      endif(NOT CUDA_NVCC_FLAGS MATCHES "ccbin")
+    endif(CUDA_VERSION_MAJOR LESS 6 OR CUDA_6_0)
+  endif ((DARWIN_VERSION GREATER 13) OR (DARWIN_VERSION EQUAL 13))
+  # current CUDA on Mavericks uses libstdc++, not libc++
+  # https://github.com/cudpp/cudpp/wiki/BuildingCUDPPWithMavericks
+endif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 
 add_subdirectory(src/cudpp)
 add_subdirectory(src/cudpp_hash)

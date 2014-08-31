@@ -420,6 +420,7 @@ void lin_merge_simple(T& cmpValue, T myKey, T myAddress, int& index, T* BKeys, T
  * @param[in] myStartIdxA, myStartIdxB, myStartIdxC Beginning indices for our partitions
  * @param[in] localAPartSize, localBPartSize, localCPartSize Array of partition sizes for our inputs and outputs
  * @param[in] localMinB, localMaxB The minimum and maximum values in our B partition
+ * @param[in] tid thread ID
  * @param[in] aIndex, bIndex, totalSize, stringSize Address bounds and calculation helpers
  * @param[in] i The index of the local element we are merging
  * @param[in] termC Termination character for our strings 

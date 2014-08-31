@@ -126,11 +126,11 @@ public:
 
     mutable void *m_tempKeys;
     unsigned int *m_tempValues;
-	int *m_partitionBeginA;
-	int *m_partitionSizeA;
+    int *m_partitionBeginA;
+    int *m_partitionSizeA;
 
-	unsigned int m_numElements;
-	unsigned int m_subPartitions, m_swapPoint;
+    unsigned int m_numElements;
+    unsigned int m_subPartitions, m_swapPoint;
 };
 
 /** @brief Plan class for stringsort algorithm
@@ -148,8 +148,8 @@ public:
 	CUDPPScanPlan *m_scanPlan;
 	unsigned int m_numElements;
 	unsigned int *m_keys;
-    unsigned int *m_tempKeys;
-    unsigned int *m_tempAddress;
+        unsigned int *m_tempKeys;
+        unsigned int *m_tempAddress;
 	unsigned int *m_packedAddress;
 	unsigned int *m_packedAddressRef;
 	unsigned int *m_addressRef;
@@ -274,6 +274,39 @@ public:
     CUDPPTridiagonalPlan(CUDPPManager *mgr, CUDPPConfiguration config);
 };
 
+// Vector struct for merging SA12 and SA3
+struct Vector
+{
+    unsigned int a;
+    unsigned int b;
+    unsigned int c;
+    unsigned int d;  
+};
+
+/** @brief Plan class for suffix array
+*
+*/
+class CUDPPSaPlan : public CUDPPPlan
+{
+public:
+    CUDPPSaPlan(CUDPPManager *mgr, CUDPPConfiguration config, size_t str_length);
+    virtual ~CUDPPSaPlan();
+   
+    // Intermediate buffers and variables during suffix array construction 
+    bool *m_d_unique;                    //!< @internal the flag to mark if SA12 is fully sorted
+    unsigned int* d_str_value;           //!< @internal the input unsigned int array
+    unsigned int* m_d_keys_srt_12;       //!< @internal SA12
+    unsigned int* m_d_keys_srt_3;        //!< @internal SA3
+
+    Vector* m_d_aKeys;                   //!< @internal SA12 keys for final merge
+    Vector* m_d_bKeys;                   //!< @internal SA3 keys for final merge
+    Vector* m_d_cKeys;                   //!< @internal merging result
+
+    unsigned int* m_d_new_str;           //!< @internal new string for recursion
+    unsigned int* m_d_isa_12;	         //!< @internal ISA12
+};
+
+
 /** @brief Plan class for compressor
 *
 */
@@ -285,18 +318,9 @@ public:
     virtual ~CUDPPCompressPlan();
 
     // BWT
-    unsigned int *m_d_keys;
     unsigned int *m_d_values;
     unsigned char *m_d_bwtOut;
-
-    unsigned int *m_d_bwtInRef;
-    unsigned int *m_d_bwtInRef2;
-    unsigned int *m_d_keys_dev;
-    unsigned int *m_d_values_dev;
-    int *m_d_partitionBeginA;
-    int *m_d_partitionSizeA;
-    int *m_d_partitionBeginB;
-    int *m_d_partitionSizeB;
+    CUDPPSaPlan *m_saPlan;         //!< @internal Suffix Array performs sorting permutations of the string using this plan
 
     // MTF
     unsigned char *m_d_mtfIn;
@@ -310,11 +334,7 @@ public:
     unsigned int *m_d_huffCodeLocations;  // keep track of where each huffman code starts
     unsigned char *m_d_huffCodeLengths;   // lengths of each huffman codes (in bits)
     unsigned int *m_d_histograms;         // histogram used to build huffman tree
-    //unsigned int *m_d_encodedData;        // encoded data only
-    //unsigned int *m_d_totalEncodedSize;   // total words we need to read
     unsigned int *m_d_nCodesPacked;       // Size of all Huffman codes packed together (in bytes)
-    //unsigned int *m_d_histogram;          // Final histogram
-    //unsigned int *m_d_encodeOffset;
     encoded *m_d_encoded;
 
 };
@@ -329,18 +349,8 @@ public:
     virtual ~CUDPPBwtPlan();
 
     // BWT
-    unsigned int *m_d_keys;
     unsigned int *m_d_values;
-
-    unsigned int *m_d_bwtInRef;
-    unsigned int *m_d_bwtInRef2;
-    unsigned int *m_d_keys_dev;
-    unsigned int *m_d_values_dev;
-    int *m_d_partitionBeginA;
-    int *m_d_partitionSizeA;
-    int *m_d_partitionBeginB;
-    int *m_d_partitionSizeB;
-
+    CUDPPSaPlan *m_saPlan;         //!< @internal Suffix Array performs sorting permutations of the string using this plan
 };
 
 /** @brief Plan class for MTF
@@ -372,5 +382,7 @@ public:
     int *m_d_tmp2; //!< @internal temporary start indices array
     int *m_d_tmp3; //!< @internal temporary next indices array
 };
+
+
 
 #endif // __CUDPP_PLAN_H__

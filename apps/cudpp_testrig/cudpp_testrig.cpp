@@ -57,6 +57,7 @@ int testMtf(int argc, const char** argv, const CUDPPConfiguration *config);
 int testBwt(int argc, const char** argv, const CUDPPConfiguration *config);
 int testCompress(int argc, const char** argv, const CUDPPConfiguration *config);
 int testListRank(int argc, const char** argv, const CUDPPConfiguration *config);
+int testSuffixArray(int argc, const char** argv, const CUDPPConfiguration *config);
 
 int testAllDatatypes(int argc,
                      const char** argv,
@@ -107,6 +108,13 @@ int testAllDatatypes(int argc,
         return retval;
     }
 
+    if(config.algorithm == CUDPP_SA)
+    {
+        config.datatype = CUDPP_UCHAR;
+        retval += testSuffixArray(argc, argv, &config);
+        return retval;
+    }
+
     for (CUDPPDatatype dt = CUDPP_INT; dt != CUDPP_DATATYPE_INVALID; dt = CUDPPDatatype((int)dt+1))
     {
         config.datatype = dt;
@@ -136,7 +144,8 @@ int testAllDatatypes(int argc,
                 else
                     retval += testMergeSort(argc, argv, &config);
                 break;
-
+            default:            // ignore datatype
+                break;
             }
         }
     }
@@ -251,19 +260,22 @@ int testAllOptionsAndDatatypes(int argc,
 /**
  * main in cudpp_testrig is a dispatch routine to exercise cudpp functionality.
  *
- * - --all calls every regression routine.
- *   - The scan regression calls forward and backward sum and max scans.
- * - --scan calls one scan regression routine (by default, forward sum-scan)
- *   - Use --backward and/or --op=max to change default
- * - --multiscan calls the multiscan regression routine
- * - --compact calls the compact regression routine
- * - --sort calls the sort regression routine
- * - --mergesort calls the merge sort regression routine
- * - --stringsort calls the string sort regression routine
- * - --spmvmult calls the sparse matrix-vector routine
- * - --reduce calls the reduce regression routine
- * - --n=# sets the size of the dataset
- * - --iterations=# sets the number of iterations to run
+ * - -all calls every regression routine.
+ *    - The scan regression calls forward and backward sum and max scans.
+ * - -scan calls one scan regression routine (by default, forward sum-scan)
+ *    - Use -backward and/or -op=max to change default
+ * - -multiscan calls the multiscan regression routine
+ * - -compact calls the compact regression routine
+ * - -sort calls the sort regression routine
+ * - -mergesort calls the merge sort regression routine
+ * - -stringsort calls the string sort regression routine
+ * - -spmvmult calls the sparse matrix-vector routine
+ * - -sa calls the suffix array regression rountine
+ * - -reduce calls the reduce regression routine
+ * - -n=# sets the size of the dataset
+ * - -skiplongtests should be set if GPU may trigger a watchdog timer on long
+ *    tests
+ * - -iterations=# sets the number of iterations to run
  */
 int main(int argc, const char** argv)
 {
@@ -285,8 +297,8 @@ int main(int argc, const char** argv)
     if (!quiet)
     {
         printf("Using device %d:\n", dev);
-        printf("%s; global mem: %dB; compute v%d.%d; clock: %d kHz\n",
-               devProps.name, (int)devProps.totalGlobalMem, (int)devProps.major,
+        printf("%s; global mem: %uB; compute v%d.%d; clock: %d kHz\n",
+               devProps.name, devProps.totalGlobalMem, (int)devProps.major,
                (int)devProps.minor, (int)devProps.clockRate);
         int runtimeVersion, driverVersion;
         CUDA_SAFE_CALL(cudaRuntimeGetVersion(&runtimeVersion));
@@ -322,6 +334,7 @@ int main(int argc, const char** argv)
                "(compute 2.0+ only)\n\n");
         printf("compress: Run compression test(s) (compute 2.0+ only)\n\n");
         printf("listrank: Run list ranking test(s)\n\n");
+        printf("sa: Run suffix array test(s) (compute 2.0+ only)\n\n");
         printf("--- Global Options ---\n");
         printf("iterations=<N>: Number of times to run each test\n");
         printf("n=<N>: Number of values to use in a single test\n");
@@ -347,6 +360,7 @@ int main(int argc, const char** argv)
         printf("mat=<File Name>: File containing sparse matrix in Matrix Market format\n");
         printf("--- Rand Options ---\n");
         printf("dir=<directory>: Directory containing all the random number regression tests\n");
+        printf("skiplongtests should be set if GPU may trigger a watchdog timer on long tests\n");
     }
 
     bool runAll = checkCommandLineFlag(argc, argv, "all");
@@ -383,6 +397,13 @@ int main(int argc, const char** argv)
                 "compute capability 2.0+\n");
         runCompress = false;
     }
+    bool runSA = runAll || checkCommandLineFlag(argc, argv, "sa");
+    if(!supports48KBInShared && runSA)
+    {
+        fprintf(stderr, "Suffix Array is only supported on devices with "
+                "compute capability 2.0+\n");
+        runSA = false;
+    }
 
     bool hasopts = hasOptions(argc, argv);
 
@@ -402,6 +423,7 @@ int main(int argc, const char** argv)
         if (runBwt)       retval += testBwt(argc, argv, NULL);
         if (runCompress)  retval += testCompress(argc, argv, NULL);
         if (runListRank)  retval += testListRank(argc, argv, NULL);
+        if (runSA)        retval += testSuffixArray(argc, argv, NULL);
     }
     else
     {
@@ -470,6 +492,11 @@ int main(int argc, const char** argv)
 
         if (runListRank) {
             config.algorithm = CUDPP_LISTRANK;
+            retval += testAllDatatypes(argc, argv, config, supportsDouble, false);
+        }
+
+        if (runSA) {
+            config.algorithm = CUDPP_SA;
             retval += testAllDatatypes(argc, argv, config, supportsDouble, false);
         }
     }

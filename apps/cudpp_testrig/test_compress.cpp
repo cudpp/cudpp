@@ -21,6 +21,7 @@
 #include <time.h>
 
 #include "cudpp.h"
+#include "sparse.h"
 #include "cudpp_testrig_options.h"
 #include "cudpp_testrig_utils.h"
 #include "cuda_util.h"
@@ -48,8 +49,6 @@ typedef struct my_huffman_node_t
 } my_huffman_node_t;
 
 using namespace cudpp_app;
-unsigned int blockSize;
-unsigned char *block;
 
 #define Wrap(value, limit) (((value) < (limit)) ? (value) : ((value) - (limit)))
 
@@ -77,160 +76,26 @@ int FindMinimumCountTest(my_huffman_node_t* ht, int elements)
     return currentIndex;
 }
 
-int ComparePresorted(const void *s1, const void *s2)
+void computeBwtGold(unsigned char *i_data, unsigned char *reference,
+                    int &ref_index, unsigned int numElements)
 {
-    int offset1, offset2;
-    int i;
-    int result;
-
-    offset1 = *((int *)s1);
-    offset2 = *((int *)s2);
-
-    /***********************************************************************
-     * Compare 1 character at a time until there's difference or the end of
-     * the block is reached.  Since we're only sorting strings that already
-     * match at the first two characters, start with the third character.
-     ***********************************************************************/
-    for(i = 2; i < (int)blockSize; i++)
+    unsigned int* sa = new unsigned int[numElements+3];
+    computeSaGold(i_data, sa, numElements);
+    for(int i=0; i<numElements; i++)
     {
-        result = (int)block[Wrap((offset1 + i), (int)blockSize)] -
-            (int)block[Wrap((offset2 + i), (int)blockSize)];
-
-        if (result != 0)
-        {
-            return result;
-        }
+        unsigned int val=sa[i];
+        if(val==0) ref_index = i;
+        reference[i] = (val==0) ? i_data[numElements-1] : i_data[val-1];
     }
-
-    /* strings are identical */
-    return 0;
+    delete [] sa;
 }
 
-void computeBwtGold(unsigned char *block_out, int &s0Idx, 
-                    unsigned int numElements)
-{
-    unsigned int i, k;
-    int j;
-    unsigned int *rotationIdx = new unsigned int[numElements];
-    unsigned int *v = new unsigned int[numElements];
-    unsigned int *counters = new unsigned int[256];
-    unsigned int *offsetTable = new unsigned int[256];
-    blockSize = numElements;
-
-    /*******************************************************************
-     * Sort the rotated strings in the block.  A radix sort is performed
-     * on the first two characters of all the rotated strings (2nd
-     * character then 1st).  All rotated strings with matching initial
-     * characters are then quicksorted. - Q4..Q7
-     *******************************************************************/
-
-    /*** radix sort on second character in rotation ***/
-
-    /* count number of characters for radix sort */
-    memset(counters, 0, 256 * sizeof(int));
-    for (i = 0; i < blockSize; i++)
-    {
-        counters[block[i]]++;
-    }
-
-    offsetTable[0] = 0;
-
-    for(i = 1; i < 256; i++)
-    {
-        /* determine number of values before those sorted under i */
-        offsetTable[i] = offsetTable[i - 1] + counters[i - 1];
-    }
-
-    /* sort on 2nd character */
-    for (i = 0; i < blockSize - 1; i++)
-    {
-        j = block[i + 1];
-        v[offsetTable[j]] = i;
-        offsetTable[j] = offsetTable[j] + 1;
-    }
-
-    /* handle wrap around for string starting at end of block */
-    j = block[0];
-    v[offsetTable[j]] = i;
-    offsetTable[0] = 0;
-
-    /*** radix sort on first character in rotation ***/
-
-    for(i = 1; i < 256; i++)
-    {
-        /* determine number of values before those sorted under i */
-        offsetTable[i] = offsetTable[i - 1] + counters[i - 1];
-    }
-
-    for (i = 0; i < blockSize; i++)
-    {
-        j = v[i];
-        j = block[j];
-        rotationIdx[offsetTable[j]] = v[i];
-        offsetTable[j] = offsetTable[j] + 1;
-    }
-
-    /*******************************************************************
-     * now rotationIdx contains the sort order of all strings sorted
-     * by their first 2 characters.  Use qsort to sort the strings
-     * that have their first two characters matching.
-     *******************************************************************/
-    for (i = 0, k = 0; (i <= UCHAR_MAX) && (k < (blockSize - 1)); i++)
-    {
-        for (j = 0; (j <= UCHAR_MAX) && (k < (blockSize - 1)); j++)
-        {
-            unsigned int first = k;
-
-            /* count strings starting with ij */
-            while ((i == block[rotationIdx[k]]) &&
-                   (j == block[Wrap(rotationIdx[k] + 1,  blockSize)]))
-            {
-                k++;
-
-                if (k == blockSize)
-                {
-                    /* we've searched the whole block */
-                    break;
-                }
-            }
-
-            if (k - first > 1)
-            {
-                /* there are at least 2 strings staring with ij, sort them */
-                qsort(&rotationIdx[first], k - first, sizeof(int),
-                      ComparePresorted);
-            }
-        }
-    }
-
-    /* find last characters of rotations (L) - C2 */
-    s0Idx = 0;
-    for (i = 0; i < blockSize; i++)
-    {
-        if (rotationIdx[i] != 0)
-        {
-            block_out[i] = block[rotationIdx[i] - 1];
-        }
-        else
-        {
-            /* unrotated string 1st character is end of string */
-            s0Idx = i;
-            block_out[i] = block[blockSize - 1];
-        }
-    }
-
-    delete [] rotationIdx;
-    delete [] v;
-    delete [] counters;
-    delete [] offsetTable;
-}
-
-void computeMtfGold( unsigned char* out, const unsigned char* idata, 
+void computeMtfGold( unsigned char* out, const unsigned char* idata,
                      const unsigned int len)
 {
     unsigned char* list = new unsigned char[256];
     unsigned int j = 0;
-    
+
     // init mtf list
     for(unsigned int i=0; i<256; i++)
         list[i] = i;
@@ -259,7 +124,7 @@ void computeMtfGold( unsigned char* out, const unsigned char* idata,
     delete [] list;
 }
 
-void huffman_build_tree_cpu(my_huffman_node_t* tree, unsigned int nNodes, 
+void huffman_build_tree_cpu(my_huffman_node_t* tree, unsigned int nNodes,
                             int &head)
 {
     int min1, min2;     // two nodes with the lowest count
@@ -335,7 +200,7 @@ void computeCompressGold(unsigned char* reference,
     // Host tree
     my_huffman_node_t* h_huffmanArray = new my_huffman_node_t[NUM_CHARS*2-1];
     int head;
-    
+
     // Set all iterations of the tree
     unsigned int nNodes = 0;
     for(int j=0; j<NUM_CHARS; j++) {
@@ -370,7 +235,6 @@ void computeCompressGold(unsigned char* reference,
             nNodes++;
         }
     }
-
     huffman_build_tree_cpu(h_huffmanArray, nNodes, head);
 
     for(int i=0; i<256; i++)
@@ -416,9 +280,8 @@ void computeCompressGold(unsigned char* reference,
                 }
 
                 // write out character
-                reference[i*BLOCK_CHARS+n_found_chars] = 
+                reference[i*BLOCK_CHARS+n_found_chars] =
                     (unsigned char)h_huffmanArray[currentNode].value;
-
                 n_found_chars++;
 
                 // back to top of tree
@@ -434,13 +297,11 @@ void computeCompressGold(unsigned char* reference,
     for(unsigned int i=0; i<256; i++) {
         mtfList[i] = (unsigned char)i;
     }
-
     for (unsigned int i = 0; i < numElements; i++)
     {
         // decode the character
         unsigned char tmp = reference[i];
         mtfOut[i] = mtfList[tmp];
-
         // now move the current character to the front of the list
         for (unsigned char j = tmp; j > 0; j--)
         {
@@ -466,29 +327,31 @@ void computeCompressGold(unsigned char* reference,
         h_values[i] = i;
     }
 
-    CUDA_SAFE_CALL( cudaMalloc( (void **) &d_keys, 
+
+    CUDA_SAFE_CALL( cudaMalloc( (void **) &d_keys,
                                 numElements*sizeof(unsigned char)));
-    CUDA_SAFE_CALL( cudaMalloc( (void **) &d_values, 
+    CUDA_SAFE_CALL( cudaMalloc( (void **) &d_values,
                                 numElements*sizeof(unsigned int)));
-    CUDA_SAFE_CALL( cudaMemcpy(d_keys, mtfOut, 
-                               numElements*sizeof(unsigned char), 
+    CUDA_SAFE_CALL( cudaMemcpy(d_keys, mtfOut,
+                               numElements*sizeof(unsigned char),
                                cudaMemcpyHostToDevice) );
-    CUDA_SAFE_CALL( cudaMemcpy(d_values, h_values, 
-                               numElements*sizeof(unsigned int), 
+    CUDA_SAFE_CALL( cudaMemcpy(d_values, h_values,
+                               numElements*sizeof(unsigned int),
                                cudaMemcpyHostToDevice) );
+
 
     // sort
     cudppRadixSort(plan, (void*)d_keys, (void*)d_values, numElements);
 
     // Decode final BWT
-    cudaMemcpy( h_values, d_values, numElements*sizeof(unsigned int), 
+    cudaMemcpy( h_values, d_values, numElements*sizeof(unsigned int),
                 cudaMemcpyDeviceToHost);
+
 
     for(unsigned int i=0; i<numElements; i++) {
         h_bwtIndex = h_values[h_bwtIndex];
         reference[i] = mtfOut[h_bwtIndex];
     }
-
     // Free
     delete [] h_huffmanArray;
     delete [] mtfOut;
@@ -507,11 +370,16 @@ int mtfTest(int argc, const char **argv, const CUDPPConfiguration &config,
 
     cudpp_app::StopWatch timer;
 
-    bool quiet = checkCommandLineFlag(argc, (const char**)argv, "quiet");   
+    bool quiet = checkCommandLineFlag(argc, (const char**)argv, "quiet");
 
-    unsigned int test[] = {39, 128, 256, 512, 1000, 1024, 1025, 32768, 45537, 65536, 131072,
-        262144, 500001, 524288, 1048577, 1048576, 1048581};
+    unsigned int test[] = {39, 128, 256, 512, 1000, 1024, 1025, 32768, 45537,
+                           65536, 131072, 262144, 500001, 524288, 1048577,
+                           1048576, 1048581};
     int numTests = sizeof(test) / sizeof(test[0]);
+    if (testOptions.skiplongtests)
+    {
+        numTests -= 3;          // leave out last 3 tests, they may time out
+    }
     int numElements = test[numTests-1]; // maximum test size
 
     bool oneTest = false;
@@ -528,7 +396,7 @@ int mtfTest(int argc, const char **argv, const CUDPPConfiguration &config,
     if (result != CUDPP_SUCCESS)
     {
         if (!quiet)
-            fprintf(stderr, "Error initializing CUDPP Library.\n");
+            fprintf(stderr, "Error initializing CUDPP library.\n");
         retval = (oneTest) ? 1 : numTests;
         return retval;
     }
@@ -545,7 +413,7 @@ int mtfTest(int argc, const char **argv, const CUDPPConfiguration &config,
     }
 
     unsigned int memSize = sizeof(unsigned char) * numElements;
-    
+
     // allocate host memory to store the input data
     unsigned char* i_data = new unsigned char[numElements];
     unsigned char* reference = new unsigned char[numElements];
@@ -568,14 +436,18 @@ int mtfTest(int argc, const char **argv, const CUDPPConfiguration &config,
         }
 
         // initialize the input data on the host
-        float range = (float)(sizeof(unsigned char)*8);
-        VectorSupport<unsigned char>::fillVector(i_data, test[k], range);
+         srand(95835);
+         for(int j=0; j<test[k]; ++j)
+                     i_data[j] = (unsigned char)(rand()%255+1);
 
         memset(reference, 0, sizeof(unsigned char) * test[k]);
         computeMtfGold( reference, i_data, test[k]);
 
-        CUDA_SAFE_CALL( cudaMemcpy(d_idata, i_data, sizeof(unsigned char) * test[k], cudaMemcpyHostToDevice) );
-        CUDA_SAFE_CALL( cudaMemset(d_odata, 0, sizeof(unsigned char) * test[k]) );
+        CUDA_SAFE_CALL( cudaMemcpy(d_idata, i_data,
+                                   sizeof(unsigned char) * test[k],
+                                   cudaMemcpyHostToDevice) );
+        CUDA_SAFE_CALL( cudaMemset(d_odata, 0,
+                                   sizeof(unsigned char) * test[k]) );
 
         // run once to avoid timing startup overhead.
         cudppMoveToFrontTransform(plan, d_idata, d_odata, test[k]);
@@ -590,9 +462,11 @@ int mtfTest(int argc, const char **argv, const CUDPPConfiguration &config,
         timer.stop();
 
         // allocate host memory to store the output data
-        unsigned char* o_data = (unsigned char*) malloc( sizeof(unsigned char) * test[k]);
-        CUDA_SAFE_CALL(cudaMemcpy( o_data, d_odata, sizeof(unsigned char) * test[k],
-            cudaMemcpyDeviceToHost));
+        unsigned char* o_data = (unsigned char*) malloc( sizeof(unsigned char) *
+                                                         test[k]);
+        CUDA_SAFE_CALL(cudaMemcpy( o_data, d_odata,
+                                   sizeof(unsigned char) * test[k],
+                                   cudaMemcpyDeviceToHost));
 
         bool result = compareArrays<unsigned char>( reference, o_data, test[k]);
 
@@ -601,7 +475,7 @@ int mtfTest(int argc, const char **argv, const CUDPPConfiguration &config,
         retval += result ? 0 : 1;
         if (!quiet)
         {
-            printf("test %s\n", result ? "PASSED" : "FAILED");
+            printf("MTF test %s\n", result ? "PASSED" : "FAILED");
         }
         if (!quiet)
         {
@@ -609,7 +483,8 @@ int mtfTest(int argc, const char **argv, const CUDPPConfiguration &config,
                 timer.getTime() / testOptions.numIterations);
         }
         else
-            printf("\t%10d\t%0.4f\n", test[k], timer.getTime() / testOptions.numIterations);
+            printf("\t%10d\t%0.4f\n", test[k],
+                   timer.getTime() / testOptions.numIterations);
     }
 
     result = cudppDestroyPlan(plan);
@@ -638,7 +513,6 @@ int bwtTest(int argc, const char **argv, const CUDPPConfiguration &config,
 {
     int retval = 0;
     int numElements = 1048576; // test size
-
     bool quiet = checkCommandLineFlag(argc, argv, "quiet");
     int numTests = 1;
     bool oneTest = true;
@@ -650,7 +524,7 @@ int bwtTest(int argc, const char **argv, const CUDPPConfiguration &config,
     result = cudppCreate(&theCudpp);
     if (result != CUDPP_SUCCESS)
     {
-        fprintf(stderr, "Error initializing CUDPP Library\n");
+        fprintf(stderr, "Error initializing CUDPP library\n");
         retval = 1;
         return retval;
     }
@@ -667,20 +541,20 @@ int bwtTest(int argc, const char **argv, const CUDPPConfiguration &config,
     }
 
     unsigned int memSize = sizeof(unsigned char) * numElements;
-    
+
     // allocate host memory to store the input data
     unsigned char* i_data = new unsigned char[numElements];
 
     // initialize the input data on the host
     float range = (float)(sizeof(unsigned char)*8);
-        
+
     //VectorSupport<unsigned char>::fillVector(i_data, numElements, range);
     srand(95835);
     for(int j = 0; j < numElements; j++)
     {
-        i_data[j] = (unsigned char)(rand()%245+1);
+        i_data[j] = (unsigned char)(rand()%255+1);
     }
-    
+
     unsigned char* reference = new unsigned char[numElements];
     int ref_index;
 
@@ -693,7 +567,7 @@ int bwtTest(int argc, const char **argv, const CUDPPConfiguration &config,
     CUDA_SAFE_CALL( cudaMalloc( (void **) &d_odata, memSize));
     CUDA_SAFE_CALL( cudaMalloc( (void **) &d_oindex, sizeof(int)));
 
-    CUDA_SAFE_CALL( cudaMemcpy(d_idata, i_data, memSize, 
+    CUDA_SAFE_CALL( cudaMemcpy(d_idata, i_data, memSize,
                                cudaMemcpyHostToDevice) );
     CUDA_SAFE_CALL( cudaMemset(d_odata, 0, memSize) );
 
@@ -702,21 +576,20 @@ int bwtTest(int argc, const char **argv, const CUDPPConfiguration &config,
 
     if (!quiet)
     {
-        printf("Running a bwt of %d %s elements\n", 
+        printf("Running a BWT of %d %s elements\n",
                numElements, dt);
         fflush(stdout);
     }
 
-    block = i_data;
-    computeBwtGold( reference, ref_index, numElements);
+    computeBwtGold(i_data,reference, ref_index, numElements);
 
     // Run the BWT
     // run once to avoid timing startup overhead.
-    result = cudppBurrowsWheelerTransform(plan, d_idata, d_odata, d_oindex, 
+    result = cudppBurrowsWheelerTransform(plan, d_idata, d_odata, d_oindex,
                                           (unsigned int)numElements);
 
     if (result != CUDPP_SUCCESS)
-    {   
+    {
         if(!quiet)
             printf("Error destroying cudppBurrowsWheelerTransform for BWT\n");
         retval = numTests;
@@ -725,9 +598,9 @@ int bwtTest(int argc, const char **argv, const CUDPPConfiguration &config,
     // copy result from device to host
     unsigned char* o_data = new unsigned char[numElements];
     int o_index;
-    CUDA_SAFE_CALL(cudaMemcpy( o_data, d_odata, memSize, 
+    CUDA_SAFE_CALL(cudaMemcpy( o_data, d_odata, memSize,
                                cudaMemcpyDeviceToHost));
-    CUDA_SAFE_CALL(cudaMemcpy( &o_index, d_oindex, sizeof(int), 
+    CUDA_SAFE_CALL(cudaMemcpy( &o_index, d_oindex, sizeof(int),
                                cudaMemcpyDeviceToHost));
 
     // check results
@@ -746,12 +619,12 @@ int bwtTest(int argc, const char **argv, const CUDPPConfiguration &config,
         retval = 1;
     }
 
-    printf("test %s\n", (error) ? "FAILED" : "PASSED");
+    printf("BWT test %s\n", (error) ? "FAILED" : "PASSED");
 
     result = cudppDestroyPlan(plan);
 
     if (result != CUDPP_SUCCESS)
-    {   
+    {
         printf("Error destroying CUDPPPlan for BWT\n");
         retval = numTests;
     }
@@ -759,8 +632,8 @@ int bwtTest(int argc, const char **argv, const CUDPPConfiguration &config,
     result = cudppDestroy(theCudpp);
 
     if (result != CUDPP_SUCCESS)
-    {   
-        printf("Error shutting down CUDPP Library.\n");
+    {
+        printf("Error shutting down CUDPP library.\n");
         retval = numTests;
     }
 
@@ -770,6 +643,7 @@ int bwtTest(int argc, const char **argv, const CUDPPConfiguration &config,
     cudaFree(d_odata);
     cudaFree(d_idata);
     cudaFree(d_oindex);
+
     return retval;
 }
 
@@ -790,7 +664,7 @@ int compressTest(int argc, const char **argv, const CUDPPConfiguration &config,
     result = cudppCreate(&theCudpp);
     if (result != CUDPP_SUCCESS)
     {
-        fprintf(stderr, "Error initializing CUDPP Library\n");
+        fprintf(stderr, "Error initializing CUDPP library\n");
         retval = 1;
         return retval;
     }
@@ -805,48 +679,47 @@ int compressTest(int argc, const char **argv, const CUDPPConfiguration &config,
         cudppDestroy(theCudpp);
         return retval;
     }
-    
+
     // allocate host memory to store the input data
     unsigned char* i_data = new unsigned char[numElements];
 
     // initialize the input data on the host
     srand(95835);
-    for(int j = 0; j < numElements; j++)
+    for(int j = 0; j < numElements-1; j++)
     {
-        i_data[j] = (unsigned char)(rand()%15+1);
+        i_data[j] = (unsigned char)(rand()%255+1);
     }
-
+    i_data[numElements-1]=(unsigned char)0;
     // host ptrs
     int h_bwtIndex;
-    unsigned int* h_hist = new unsigned int[256];
+    unsigned int* h_hist = new unsigned int[NUM_CHARS];
     unsigned int* h_encodeOffset = new unsigned int[256];
     size_t        h_compressedSize = 0;
-    unsigned int* h_compressed = new unsigned int[numElements/4];
     unsigned char* reference = new unsigned char[numElements];
 
     // allocate device memory input and output arrays
     unsigned char  *d_uncompressed;         // user provides
-    int            *d_bwtIndex;             // sizeof(uint)
+    int            *d_bwtIndex;             // sizeof(int)
     unsigned int   *d_histSize;             // ignored
     unsigned int   *d_hist;                 // 256*sizeof(uint)
     unsigned int   *d_encodeOffset;         // 256*sizeof(uint)
     unsigned int   *d_compressedSize;       // sizeof(uint)
     unsigned int   *d_compressed;           // d_compressedSize*sizeof(uint)
 
-    CUDA_SAFE_CALL(cudaMalloc( (void**)&d_uncompressed, 
+    CUDA_SAFE_CALL(cudaMalloc( (void**)&d_uncompressed,
                                numElements*sizeof(unsigned char) ));
     CUDA_SAFE_CALL(cudaMalloc( (void**)&d_bwtIndex, sizeof(int) ));
     CUDA_SAFE_CALL(cudaMalloc( (void**)&d_hist, 256*sizeof(unsigned int) ));
-    CUDA_SAFE_CALL(cudaMalloc( (void**)&d_encodeOffset, 
+    CUDA_SAFE_CALL(cudaMalloc( (void**)&d_encodeOffset,
                                256*sizeof(unsigned int) ));
-    CUDA_SAFE_CALL(cudaMalloc( (void**)&d_compressedSize, 
+    CUDA_SAFE_CALL(cudaMalloc( (void**)&d_compressedSize,
                                sizeof(unsigned int) ));
-    CUDA_SAFE_CALL(cudaMalloc( (void**)&d_compressed, 
+    CUDA_SAFE_CALL(cudaMalloc( (void**)&d_compressed,
                                (1536+1)*256*sizeof(unsigned int) ));
     d_histSize = (unsigned int*)NULL;
 
-    CUDA_SAFE_CALL(cudaMemcpy(d_uncompressed, i_data, 
-                              numElements*sizeof(unsigned char), 
+    CUDA_SAFE_CALL(cudaMemcpy(d_uncompressed, i_data,
+                              numElements*sizeof(unsigned char),
                               cudaMemcpyHostToDevice));
 
     char dt[10];
@@ -854,7 +727,7 @@ int compressTest(int argc, const char **argv, const CUDPPConfiguration &config,
 
     if (!quiet)
     {
-        printf("Running a compress of %d %s elements\n", 
+        printf("Running a compress of %d %s elements\n",
                numElements, dt);
         fflush(stdout);
     }
@@ -866,14 +739,13 @@ int compressTest(int argc, const char **argv, const CUDPPConfiguration &config,
                                sizeof(unsigned int) ));
     CUDA_SAFE_CALL(cudaMemset( (void*)d_compressed,  0,
                                (1536+1)*256*sizeof(unsigned int) ));
-
     // Run the compression
     // run once to avoid timing startup overhead.
-    result = cudppCompress(plan, d_uncompressed, d_bwtIndex, 
-                           d_histSize, d_hist, 
-                           d_encodeOffset, d_compressedSize, 
+    result = cudppCompress(plan, d_uncompressed, d_bwtIndex,
+                           d_histSize, d_hist,
+                           d_encodeOffset, d_compressedSize,
                            d_compressed, numElements);
-    
+
     if (result != CUDPP_SUCCESS)
     {
         if (!quiet)
@@ -881,59 +753,70 @@ int compressTest(int argc, const char **argv, const CUDPPConfiguration &config,
         retval = numTests;
     } else {
         // Copy from device back to host
-        CUDA_SAFE_CALL(cudaMemcpy(&h_bwtIndex, d_bwtIndex, sizeof(int), 
+        CUDA_SAFE_CALL(cudaMemcpy(&h_bwtIndex, d_bwtIndex, sizeof(int),
                                   cudaMemcpyDeviceToHost));
-        CUDA_SAFE_CALL(cudaMemcpy(h_hist, d_hist, 256*sizeof(unsigned int), 
+        CUDA_SAFE_CALL(cudaMemcpy(h_hist, d_hist, 256*sizeof(unsigned int),
                                   cudaMemcpyDeviceToHost));
-        CUDA_SAFE_CALL(cudaMemcpy(h_encodeOffset, d_encodeOffset, 
-                                  256*sizeof(unsigned int), 
+        CUDA_SAFE_CALL(cudaMemcpy(h_encodeOffset, d_encodeOffset,
+                                  256*sizeof(unsigned int),
                                   cudaMemcpyDeviceToHost));
-        CUDA_SAFE_CALL(cudaMemcpy(&h_compressedSize, d_compressedSize, 
-                                  sizeof(unsigned int), 
+        CUDA_SAFE_CALL(cudaMemcpy(&h_compressedSize, d_compressedSize,
+                                  sizeof(unsigned int),
                                   cudaMemcpyDeviceToHost));
-        CUDA_SAFE_CALL(cudaMemcpy(h_compressed, d_compressed, 
-                                  h_compressedSize*sizeof(unsigned int), 
+
+        unsigned int* h_compressed = new unsigned int[h_compressedSize];
+
+        CUDA_SAFE_CALL(cudaMemcpy(h_compressed, d_compressed,
+                                  h_compressedSize*sizeof(unsigned int),
                                   cudaMemcpyDeviceToHost));
 
         // Decompress on the CPU
-        computeCompressGold( reference, h_bwtIndex, h_hist, h_encodeOffset, 
+        computeCompressGold( reference, h_bwtIndex, h_hist, h_encodeOffset,
                              h_compressedSize, h_compressed, numElements);
+
+        delete [] h_compressed;
     }
 
     // check results
-    bool error = false;
-    for(int i=0; i<numElements; i++)
+    int errorCount = 0;
+
+    for (int i = 0; i < h_compressedSize; i++)
     {
-        if(i_data[i] != reference[i])
+        if (i_data[i] != reference[i])
         {
-            error = true;
+            errorCount++;
+            printf("Found compress error on char %d (%c, should be %c)\n",
+                   i, i_data[i], reference[i]);
             retval = 1;
-            break;
+            if (errorCount > 5)
+            {
+                printf("Stopping after 5 errors.\n");
+                break;
+            }
         }
     }
+    printf("Compress test %s\n", errorCount ? "FAILED" : "PASSED");
 
-    printf("test %s\n", (error) ? "FAILED" : "PASSED");
 
     result = cudppDestroyPlan(plan);
 
     if (result != CUDPP_SUCCESS)
-    {   
-        printf("Error destroying CUDPPPlan for MTF\n");
+    {
+        printf("Error destroying CUDPPPlan for compress\n");
         retval = numTests;
     }
 
     result = cudppDestroy(theCudpp);
 
     if (result != CUDPP_SUCCESS)
-    {   
-        printf("Error shutting down CUDPP Library.\n");
+    {
+        printf("Error shutting down CUDPP library.\n");
         retval = numTests;
     }
 
     delete [] reference;
     delete [] h_hist;
     delete [] h_encodeOffset;
-    delete [] h_compressed;
     delete [] i_data;
     CUDA_SAFE_CALL(cudaFree(d_hist));
     CUDA_SAFE_CALL(cudaFree(d_encodeOffset));
@@ -986,7 +869,7 @@ int testBwt(int argc, const char **argv, const CUDPPConfiguration *configPtr)
     return bwtTest(argc, argv, config, testOptions);
 }
 
-int testCompress(int argc, const char **argv, 
+int testCompress(int argc, const char **argv,
                  const CUDPPConfiguration *configPtr)
 {
     testrigOptions testOptions;

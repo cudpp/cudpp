@@ -3,22 +3,27 @@
 // -------------------------------------------------------------
 // $Revision$
 // $Date$
-// ------------------------------------------------------------- 
+// -------------------------------------------------------------
 // This source code is distributed under the terms of license.txt
 // in the root directory of this source distribution.
-// ------------------------------------------------------------- 
+// -------------------------------------------------------------
+#include <cuda_runtime_api.h>   // for cudaDeviceProp
 #include "cudpp_testrig_options.h"
 
 #define CUDPP_APP_COMMON_IMPL
 #include "commandline.h"
 
+extern cudaDeviceProp devProps;
+
 using namespace cudpp_app;
 
 /**
- * Sets "global" options in testOptions given command line 
+ * Sets "global" options in testOptions given command line
  *  -debug: sets bool <var>debug</var>. Usage is application-dependent.
  *  -op=OP: sets char * <var>op</var> to OP
  *  -iterations=#: sets int <var>numIterations</var> to #
+ *  -skiplongtests: set to skip long tests that might otherwise trigger a
+ *   watchdog timer
  *  -dir=<path>: sets the search path for cudppRand test inputs
  */
 void setOptions(int argc, const char **argv, testrigOptions &testOptions)
@@ -50,18 +55,26 @@ void setOptions(int argc, const char **argv, testrigOptions &testOptions)
         testOptions.algorithm = "bwt";
     else if (checkCommandLineFlag(argc, argv, "compress"))
         testOptions.algorithm = "compress";
-            
+    else if(checkCommandLineFlag(argc, argv, "sa"))
+        testOptions.algorithm = "sa";
+
     testOptions.op = "sum";
     commandLineArg(testOptions.op, argc, argv, "op");
-    
+
     testOptions.numIterations = numTestIterations;
     commandLineArg(testOptions.numIterations, argc, argv, "iterations");
-    
+
+    /* currently: skiplongtests if GPU has a timeout and <= 2 SMs */
+    testOptions.skiplongtests =
+        checkCommandLineFlag(argc, argv, "skiplongtests") ||
+        (devProps.kernelExecTimeoutEnabled &&
+         (devProps.multiProcessorCount <= 2));
+
     testOptions.dir = "";
     commandLineArg(testOptions.dir, argc, argv, "dir");
 }
 
-bool hasOptions(int argc, const char**argv) 
+bool hasOptions(int argc, const char**argv)
 {
     std::string temp;
     if (commandLineArg(temp, argc, argv, "op") ||

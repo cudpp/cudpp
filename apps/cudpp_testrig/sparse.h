@@ -104,6 +104,8 @@ public:
     }
 };
 
+void computeSaGold(unsigned char* idata, unsigned int* reference, size_t len);
+
 #endif /* __SPARSE_HPP__ */
 
 // Leave this at the end of the file

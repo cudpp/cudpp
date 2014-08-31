@@ -1718,7 +1718,7 @@ mtf_GLdownsweep_kernel(uchar    *d_lists,
 
 /** @brief Compute final MTF lists and final MTF output
  * @param[in]     d_mtfIn      A char array of the input data stream to perform the MTF on.
- * @param[in]     d_mtfOut     A char array of the output with the transformed MTF string.
+ * @param[out]     d_mtfOut     A char array of the output with the transformed MTF string.
  * @param[in,out] d_lists      A pointer to the start of MTF lists.
  * @param[in]     d_list_sizes An array storing the size of each MTF list.
  * @param[in]     nLists       Total number of MTF lists.
@@ -1786,7 +1786,6 @@ mtf_localscan_lists_kernel(const uchar * d_mtfIn,
         uint sd_tid = 0;
         int* C = &tmpPreviouslySeen[tid*8];
         ushort tid_list_size = d_list_sizes[tid+blockIdx.x*blockDim.x-1];
-
         if(lid == tid)
         {
             list_size = tid_list_size;
@@ -1796,7 +1795,6 @@ mtf_localscan_lists_kernel(const uchar * d_mtfIn,
         for(int i = (int)lid; i < tid_list_size; i += blockDim.x)
         {
             mtfVal = d_lists[(tid+blockIdx.x*blockDim.x-1)*256+i];
-            
             if(i < MTF_LIST_SIZE) {
                 sd_tid++;
                 sLists[tid*MTF_LIST_SIZE+i] = mtfVal;
@@ -1847,7 +1845,6 @@ mtf_localscan_lists_kernel(const uchar * d_mtfIn,
             // We only append the characters that are not
             // present in our the list we are appending to
             for(int i=0; i<(int)add_size; i++) {
-
                 mtfVal = (i<MTF_LIST_SIZE) ?
                     sLists[add_data_index+i] : d_lists[256*(add_threadId+blockIdx.x*blockDim.x-1)+i];
 
@@ -1855,13 +1852,12 @@ mtf_localscan_lists_kernel(const uchar * d_mtfIn,
                 C_bit = mtfVal%32;
 
                 int bit_to_set = 1 << (31-C_bit);
-
                 if(!((C[C_ID]<<C_bit) & 0x80000000))
-                {
+                { 
                     C[C_ID] |= bit_to_set;
                     if(list_size < MTF_LIST_SIZE) {
                         sMyList[list_size] = mtfVal;      // Append to current MTF list if value is not present in the list
-                    } else
+                     } else if(idx>0)
                         d_lists[256*(idx-1)+list_size] = mtfVal;
                     list_size++;
                 }
@@ -1894,7 +1890,6 @@ mtf_localscan_lists_kernel(const uchar * d_mtfIn,
             int add_threadId = lid-l_offset;                // The ID of the list we are appending to current list
             ushort add_size = s_sizes[add_threadId];        // The size of the list we are appending to current list
             int add_data_index = add_threadId*MTF_LIST_SIZE;    // The location of the list we are appending to current list
-
             for(int i=0; i<add_size; i++) {
 
                 mtfVal = (i<MTF_LIST_SIZE) ?
@@ -1909,7 +1904,7 @@ mtf_localscan_lists_kernel(const uchar * d_mtfIn,
                 {
                     if(list_size < MTF_LIST_SIZE) {
                         sMyList[list_size] = mtfVal;      // Append to current MTF list if value is not present in the list
-                    } else
+                    } else if (idx>0)
                         d_lists[256*(idx-1)+list_size] = mtfVal;
                     list_size++;
                     C[C_ID] |= bit_to_set;
@@ -1926,15 +1921,17 @@ mtf_localscan_lists_kernel(const uchar * d_mtfIn,
         __syncthreads();
     }
 
+
     // Read in d_mtfIn to s_mtfIn
     for(int i = 0; i < MTF_PER_THREAD; i++)
     {
         // Coalesced reads
         int index = blockIdx.x*MTF_PER_THREAD*MTF_THREADS_BLOCK + lid+MTF_THREADS_BLOCK*i;
+
+	if(lid+MTF_THREADS_BLOCK*i < MTF_THREADS_BLOCK*MTF_PER_THREAD)
         s_mtfIn[lid+MTF_THREADS_BLOCK*i] = (index<numElements) ? d_mtfIn[index] : 0;
     }
     __syncthreads();
-
     //========================================================================
     //                      Final MTF
     // Done computing each MTF list. Now, compute final MTF values
@@ -1948,7 +1945,7 @@ mtf_localscan_lists_kernel(const uchar * d_mtfIn,
             uchar mtfOut = 0;
             bool found = false;
 
-            // Read next MTF inpute
+            // Read next MTF input
             mtfVal = s_mtfIn[lid*MTF_PER_THREAD + i];
             C_ID = mtfVal/32;
             C_bit = mtfVal%32;
@@ -1956,22 +1953,22 @@ mtf_localscan_lists_kernel(const uchar * d_mtfIn,
             int bit_to_set = 1 << (31-C_bit);
             if( !((C[C_ID]<<C_bit) & 0x80000000) ) C[C_ID] |= bit_to_set;
             else found = true;
-
+	    if(mtfVal==37){
+}
             if(found)
-            {
+            { 
                 // Element already exists in list, Moving to front
                 uint tmp1 = mtfVal;
                 uint tmp2;
-
                 for(int j=0; j<(int)list_size; j++)
                 {
                     if(j < MTF_LIST_SIZE) {
                         tmp2 = sMyList[j];
-                        sMyList[j] = tmp1;
-                    } else {
-                        tmp2 = d_lists[256*(idx-1)+j];
-                        d_lists[256*(idx-1)+j] = tmp1;
-                    }
+                        sMyList[j] = tmp1; 
+		    }else if(idx>0){
+                           tmp2 = d_lists[256*(idx-1)+j];
+                           d_lists[256*(idx-1)+j] = tmp1; 
+		    }
 
                     tmp1 = tmp2;
                     if(tmp1 == mtfVal) {
@@ -1979,18 +1976,23 @@ mtf_localscan_lists_kernel(const uchar * d_mtfIn,
                         break;
                     }
                 }
+
             }
             else
-            {
+	    {
                 // Adding new element to front of the list, shift all other elements
                 uchar greater_cnt = 0;
                 for(int j=(int)list_size; j>0; j--)
                 {
                     if(j > MTF_LIST_SIZE) {
+		        if(idx>0){   
                         d_lists[256*(idx-1)+j] = d_lists[256*(idx-1)+j-1];
                         if(d_lists[256*(idx-1)+j] > mtfVal) greater_cnt++;
+			}
                     } else if(j == MTF_LIST_SIZE) {
+		        if(idx>0) 
                         d_lists[256*(idx-1)+j] = sMyList[j-1]; // Shifting elements
+
                         if(sMyList[j-1] > mtfVal) greater_cnt++;
                     } else if(j < MTF_LIST_SIZE) {
                         sMyList[j] = sMyList[j-1]; // shifting elements
@@ -2117,6 +2119,69 @@ huffman_build_histogram_kernel(uint     *d_input, // Read in as words, instead o
     }
 #endif
 }
+
+/* Compute 256-entry histogram of an array of char
+   d_input An array of chars
+   d_histograms A pointer where we store our global histograms
+   numElements The total number of elements to build the histogram
+*/
+
+__global__ void
+histo_kernel(uchar *d_input,
+             uint  *d_histograms,
+             uint  numElements)
+{
+#if (__CUDA_ARCH__ >= 200)
+    // Per-thread Histogram
+    __shared__ uchar threadHist[HUFF_THREADS_PER_BLOCK_HIST*256]; // Eash thread has 256 1-byte bins
+
+    uint* blockHist = &d_histograms[blockIdx.x*256];
+
+    // Global, local IDs
+    uint lid = threadIdx.x;
+
+    //Clear thread histograms
+    for(uint i=lid; i<HUFF_THREADS_PER_BLOCK_HIST*256; i+=blockDim.x) //64 threads per block
+    {
+	threadHist[i]=0;
+    }
+
+    //Clear block histogram
+    for(uint i=lid; i<256; i+= blockDim.x)
+    {
+	blockHist[i]=0;
+    }
+    __syncthreads();
+
+    // Update thread histograms + spill to shared if overflowing
+    for(uint i=0; i<HUFF_WORK_PER_THREAD_HIST;++i)
+    {
+	uchar word=d_input[lid+blockIdx.x*HUFF_THREADS_PER_BLOCK_HIST*256*HUFF_WORK_PER_THREAD_HIST+i*HUFF_THREADS_PER_BLOCK_HIST];
+	if(threadHist[lid*256+word]==255)
+        {
+	   atomicAdd(&blockHist[word], 255);
+           threadHist[lid*256+word]=0;
+	}
+	threadHist[lid*256+word]++;
+
+    }
+
+    __syncthreads();
+
+    // Merge thread histograms into a block histogram
+    for(uint i=0; i<(256/HUFF_THREADS_PER_BLOCK_HIST); ++i)
+    {
+	uint count = 0;
+	for(uint j=0; j<HUFF_THREADS_PER_BLOCK_HIST; ++j)
+	{
+	    count += threadHist[lid*(256/HUFF_THREADS_PER_BLOCK_HIST) + i + j*256];
+	}	
+	
+	blockHist[lid*(256/HUFF_THREADS_PER_BLOCK_HIST)+i] += count;
+    }
+#endif
+}
+
 
 /** @brief Build Huffman tree/codes
  * @param[in] d_input               An array of input elements to encode
