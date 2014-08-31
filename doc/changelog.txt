@@ -1,7 +1,7 @@
 CUDPP Change Log
 
 Release 2.2
-24 Aug 2014
+31 Aug 2014
 - Release czar: Leyuan Wang. Thanks!
 - Added cudppSuffixArray parallel skew algorithm for computing suffix array
 - Replaced the cudppStringSort in burrowsWheelerTransform in cudppCompress

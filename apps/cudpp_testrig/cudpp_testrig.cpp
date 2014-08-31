@@ -297,7 +297,7 @@ int main(int argc, const char** argv)
     if (!quiet)
     {
         printf("Using device %d:\n", dev);
-        printf("%s; global mem: %uB; compute v%d.%d; clock: %d kHz\n",
+        printf("%s; global mem: %luB; compute v%d.%d; clock: %d kHz\n",
                devProps.name, devProps.totalGlobalMem, (int)devProps.major,
                (int)devProps.minor, (int)devProps.clockRate);
         int runtimeVersion, driverVersion;
