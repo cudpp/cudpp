@@ -436,8 +436,6 @@ int mtfTest(int argc, const char **argv, const CUDPPConfiguration &config,
         }
 
         // initialize the input data on the host
-      //  float range = (float)(sizeof(unsigned char)*8);
-      //  VectorSupport<unsigned char>::fillVector(i_data, test[k], range);
          srand(95835);
          for(int j=0; j<test[k]; ++j)
                      i_data[j] = (unsigned char)(rand()%255+1);
@@ -697,7 +695,6 @@ int compressTest(int argc, const char **argv, const CUDPPConfiguration &config,
     unsigned int* h_hist = new unsigned int[NUM_CHARS];
     unsigned int* h_encodeOffset = new unsigned int[256];
     size_t        h_compressedSize = 0;
-   // unsigned int* h_compressed = new unsigned int[numElements/4];
     unsigned char* reference = new unsigned char[numElements];
 
     // allocate device memory input and output arrays

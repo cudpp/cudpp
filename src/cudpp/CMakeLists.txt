@@ -112,8 +112,8 @@ option(CUDPP_GENCODE_SM20
        ON)
 
 option(CUDPP_GENCODE_SM21
-       "ON to generate code for Compute Capability 2.1 devices (e.g. ?)"
-       ON)
+       "ON to generate code for Compute Capability 2.1 devices (e.g. NVS 4200M)"
+       OFF)
 
 option(CUDPP_GENCODE_SM30
        "ON to generate code for Compute Capability 3.0 devices (e.g. Tesla K10)"

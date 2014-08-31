@@ -95,7 +95,7 @@ CUDPP_SEGMENTED_SCAN | 67,107,840 elements
 CUDPP_COMPACT        | 67,107,840 elements
 CUDPP_COMPRESS       | 1,048,576 elements
 CUDPP_LISTRANK       | NO LIMIT
-CUDPP_MTF            | NO LIMIT
+CUDPP_MTF            | 
 CUDPP_BWT            | 1,048,576 elements
 CUDPP_SA             | 0.015 GPU memory
 CUDPP_STRINGSORT     | 2,147,450,880 elements
@@ -111,9 +111,9 @@ Operating System Support and Requirements
 
 This release (2.2) has been thoroughly tested on the following OSes.  For more information, visit our [test results page](https://github.com/cudpp/cudpp/wiki/RegressionStatus2.2).
 
-- Windows 7 (64-bit) (CUDA 5.0)
-- Ubuntu Linux (64-bit) (CUDA 5.0, CUDA 5.5)
-- Mac OS X 10.8.3 (Snow Leopard/Lion, 64-bit) (CUDA 5.0, CUDA 5.5)
+- Windows 7 (64-bit) (CUDA 6.0, CUDA 6.5)
+- Ubuntu Linux (64-bit) (CUDA 5.0, CUDA 5.5, CUDA 6.0, CUDA 6.5)
+- Mac OS X 10.9.4 (64-bit) (CUDA 6.0, CUDA 6.5)
 
 We expect CUDPP to build and run correctly on other flavors of Linux and Windows, but only the above are actively tested at this time.  Version 2.2 does not currently support 32-bit operating systems.
 
