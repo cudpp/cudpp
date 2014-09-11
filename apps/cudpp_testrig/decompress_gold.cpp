@@ -72,6 +72,7 @@ int computeBWT(char* i_data, char* o_data, size_t num_elements)
     char* r = new char[num_elements];  // Allocate a temporary array to store one rotation of the input array
     string* rotations = new string[num_elements];  // Allocate an array of strings to store all input array rotations
     
+    cout << endl;
     for (int i=0; i<num_elements; i++) {
         for (int j=0; j<num_elements; j++) {
             r[j] = i_data[(i+j) % num_elements];  /* Builds a rotation by iterating through the input array,
@@ -81,25 +82,29 @@ int computeBWT(char* i_data, char* o_data, size_t num_elements)
 
         string rot(r, num_elements);  // Convert the newly calcuated rotation from a char array into a string
         rotations[i] = rot;  // Store the string rotation for later use
+	cout << rot << endl;
     }
+    cout << endl;
 
     std::sort(rotations, rotations + num_elements);  // Sort all the rotations in lexigraphical order
     for (int i=0; i<num_elements; i++) {
         o_data[i] = rotations[i].back();  // Take the last character from each rotation and add it to the output array (in order)
+	cout << rotations[i] << endl;
     }
     
-    if (o_data[num_elements-1] == NULL) return -1;
+    cout << endl << endl;
+    if (o_data[num_elements-1] == 0) return -1;
     else return 0;
 }
 
 /** @brief Run a Move-To-Front (MTF) Transform for computeDecompressGold()
  *
- *  @param[in]  i_data           Pointer to input data array
- *  @param[in]  num_elements     Length of input data array
- *  @param[out] o_data           Pointer to output data array
- *  @param[out] MTF_list_length  Length of MTF character list
+ *  @param[in]  i_data        Pointer to input data array
+ *  @param[in]  num_elements  Length of input data array
+ *  @param[out] o_data        Pointer to output data array
+ *  @param[out] MTF_list      MTF character list
  */
-int computeMTF(char* i_data, char* o_data, int num_elements, string MTF_list)
+int computeMTF(char* i_data, int* o_data, int num_elements/*, string MTF_list*/)
 {
     /*  Steps:
      *     - Generate list of characters in array and sort (loop through)
@@ -109,24 +114,23 @@ int computeMTF(char* i_data, char* o_data, int num_elements, string MTF_list)
      *     - Store those numbers in order in an array
      */
 
-    string unique_chars = new string();  // Create a vector object to store unique characters from the input array
+    string MTF_list;
     bool found;  // Temporary boolean variable to determine if a character has already been discovered
 
     // Loop through the input array and build a list of unique characters
     for (int i=0; i<num_elements; i++){
         found = false;
-        for (int j=0; j<unique_chars.size(); j++){
-            if (i_data[i] == unique_chars[j]) {  // If the character has already been found, set the flag and exit the loop
+        for (int j=0; j<MTF_list.size(); j++){
+            if (i_data[i] == MTF_list[j]) {  // If the character has already been found, set the flag and exit the loop
                 found = true;
                 break;
             }
         }
 
-        if (!found) unique_chars.push_back(i_data[i]);  // If the character has not already been discovered, add it to the list
+        if (!found) MTF_list += i_data[i];  // If the character has not already been discovered, add it to the list
     }
 
-    string MTF_list(unique_chars.begin(), unique_chars.end()); // Convert complete list of unique characters to a string
-    std::sort(MTF_list, MTF_list + MTF_list.length());  // Sort string of unique characters
+    std::sort(MTF_list.begin(), MTF_list.end());  // Sort string of unique characters
     int position = 0;
 
     // Perform move-to-front transform
@@ -135,11 +139,11 @@ int computeMTF(char* i_data, char* o_data, int num_elements, string MTF_list)
         o_data[i] = position;  // Add input character position to output
         if (position) {  // If input character is not at front of MTF list, move it to front of MTF list
             MTF_list.erase(position, 1);
-            MTF_list.insert(0, i_data[i]);
+            MTF_list = i_data[i] + MTF_list;
         }
     }
     
-    if (o_data[num_elements-1] == NULL) return -1;
+    if (o_data[num_elements-1] == 0) return -1;
     else return 0;
 }
 
@@ -211,7 +215,7 @@ return 0;}
                            *)
  */
 
-int computeDecompressGold()
+int computeDecompressGold(char* input, size_t num_elements)
 {
     /*  Steps:
      *     - Allocate memory
@@ -219,12 +223,20 @@ int computeDecompressGold()
      *     - Run MTF transform
      *     - Run Huffman encoding
      */
-    char input[] = "the hat, the hat";
-    size_t num_elements = sizeof(input);
-    char* output = new char[num_elements];
-    cout << "Input:  " << input << endl;
-    int ret_val = (computeBWT(input, output, num_elements-1) == 0 ? 0 : 1);
-    cout << "Output: " << output << endl;
 
+    cout << "num_elements: " << num_elements << endl << endl;
+    char* bwt_output = new char[num_elements];
+    int* mtf_output = new int[num_elements];
+
+    cout << "Input:       |" << input << "|" << endl;
+    int ret_val = (computeBWT(input, bwt_output, num_elements) == 0 ? 0 : 1);
+    cout << "BWT Output:  |" << bwt_output << "|" << endl;
+
+    ret_val = (computeMTF(bwt_output, mtf_output, num_elements/*, *MTFList*/) == 0 ? 0 : 1);
+    cout << "MTF Output: ";
+    for (int i=0; i<num_elements; i++) { cout << mtf_output[i] << ","; }
+    cout << endl;
+
+    cout << endl << "ret_val: " << ret_val << endl;
     return ret_val;
 }
