@@ -17,5 +17,7 @@
 
 int main(int argc, char *argv[])
 {
-    return computeDecompressGold();
+    char input[] = "The quick brown fox jumps over the lazy dog.";
+    size_t num_elements = sizeof(input) - 1;
+    return computeDecompressGold(input, num_elements);
 }
