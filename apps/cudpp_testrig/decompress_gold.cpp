@@ -69,31 +69,22 @@ int computeBWT(char* i_data, char* o_data, size_t num_elements)
      *       output array in order
      */
 
-    char* r = new char[num_elements];  // Allocate a temporary array to store one rotation of the input array
-    string* rotations = new string[num_elements];  // Allocate an array of strings to store all input array rotations
+    vector<char> r(num_elements);  // Allocate a temporary array to store one rotation of the input array
+    vector<vector<char>> rotations(num_elements, vector<char> (num_elements));  // Allocate an array of strings to store all input array rotations
     
-    cout << endl;
     for (int i=0; i<num_elements; i++) {
         for (int j=0; j<num_elements; j++) {
-            r[j] = i_data[(i+j) % num_elements];  /* Builds a rotation by iterating through the input array,
-                                                    * looping back around to the beginning when reaching the end of the input array
-                                                    */
+            rotations[i][j] = i_data[(i+j) % num_elements];  /* Builds rotations by iterating through the input array,
+                                                                looping back around to the beginning when reaching the end */
         }
-
-        string rot(r, num_elements);  // Convert the newly calcuated rotation from a char array into a string
-        rotations[i] = rot;  // Store the string rotation for later use
-	cout << rot << endl;
     }
-    cout << endl;
 
-    std::sort(rotations, rotations + num_elements);  // Sort all the rotations in lexigraphical order
+    sort(rotations.begin(), rotations.end());  // Sort all the rotations in lexigraphical order
     for (int i=0; i<num_elements; i++) {
-        o_data[i] = rotations[i].back();  // Take the last character from each rotation and add it to the output array (in order)
-	cout << rotations[i] << endl;
+        o_data[i] = rotations[i][num_elements-1];  // Take the last character from each rotation and add it to the output array (in order)
     }
     
-    cout << endl << endl;
-    if (o_data[num_elements-1] == 0) return -1;
+    if (o_data[num_elements-1] == 0) return -1;  // If last character is bad, return an error
     else return 0;
 }
 
@@ -104,46 +95,38 @@ int computeBWT(char* i_data, char* o_data, size_t num_elements)
  *  @param[out] o_data        Pointer to output data array
  *  @param[out] MTF_list      MTF character list
  */
-int computeMTF(char* i_data, int* o_data, int num_elements/*, string MTF_list*/)
+int computeMTF(char* i_data, int* o_data, size_t num_elements, vector<char>* MTF_list)
 {
-    /*  Steps:
-     *     - Generate list of characters in array and sort (loop through)
-     *     - Loop through array, this time assigning a number to each
-     *       character corresponding to that charater's position in the MTF
-     *       list. Then move that character to the front of the MTF list
-     *     - Store those numbers in order in an array
-     */
-
-    string MTF_list;
+    //string MTF_list; // String object used to store the unique characters in the input array
     bool found;  // Temporary boolean variable to determine if a character has already been discovered
 
     // Loop through the input array and build a list of unique characters
     for (int i=0; i<num_elements; i++){
         found = false;
-        for (int j=0; j<MTF_list.size(); j++){
-            if (i_data[i] == MTF_list[j]) {  // If the character has already been found, set the flag and exit the loop
+        for (int j=0; j<(*MTF_list).size(); j++){
+            if (i_data[i] == (*MTF_list)[j]) {  // If the character has already been found, set the flag and exit the loop
                 found = true;
                 break;
             }
         }
-
-        if (!found) MTF_list += i_data[i];  // If the character has not already been discovered, add it to the list
+        if (!found) (*MTF_list).push_back(i_data[i]);  // If the character has not already been discovered, add it to the list
     }
 
-    std::sort(MTF_list.begin(), MTF_list.end());  // Sort string of unique characters
-    int position = 0;
+    sort((*MTF_list).begin(), (*MTF_list).end());  // Sort MTF list (unique characters)
+    string MTF((*MTF_list).begin(), (*MTF_list).end());
+    int position = 0;  // Variable used to store the position of a character in the MTF list
 
     // Perform move-to-front transform
     for (int i=0; i<num_elements; i++) {
-        position = MTF_list.find(i_data[i]);  // Find input character in list
+        position = MTF.find(i_data[i]);  // Find input character in list
         o_data[i] = position;  // Add input character position to output
         if (position) {  // If input character is not at front of MTF list, move it to front of MTF list
-            MTF_list.erase(position, 1);
-            MTF_list = i_data[i] + MTF_list;
+            MTF.erase(position, 1);
+            MTF = i_data[i] + MTF;
         }
     }
     
-    if (o_data[num_elements-1] == 0) return -1;
+    if (o_data[num_elements-1] == 0) return -1; // If last character is bad, return an error
     else return 0;
 }
 
@@ -172,7 +155,7 @@ int computeMTF(char* i_data, int* o_data, int num_elements/*, string MTF_list*/)
  *  @param[out] o_data        Pointer to output data array
  *  @param[out] tree          Pointer to final Huffman tree
  */
-int computeHuffmanTree(char* i_data, char* o_data, int num_elements, HuffmanTree* tree)
+int computeHuffmanTree(char* i_data, char* o_data, size_t num_elements, HuffmanTree* tree)
 {
     /*  Steps:
      *     - Loop through input array and calculate frequency of numbers.
@@ -227,15 +210,26 @@ int computeDecompressGold(char* input, size_t num_elements)
     cout << "num_elements: " << num_elements << endl << endl;
     char* bwt_output = new char[num_elements];
     int* mtf_output = new int[num_elements];
+    vector<char>* MTF_list = new vector<char>(0);
 
     cout << "Input:       |" << input << "|" << endl;
-    int ret_val = (computeBWT(input, bwt_output, num_elements) == 0 ? 0 : 1);
+    int ret_val = 0;
+    if ((ret_val = (computeBWT(input, bwt_output, num_elements) == 0 ? 0 : 1)) != 0) {
+        cout << "Error in BWT: " << ret_val << endl;
+        return ret_val;
+    }
     cout << "BWT Output:  |" << bwt_output << "|" << endl;
 
-    ret_val = (computeMTF(bwt_output, mtf_output, num_elements/*, *MTFList*/) == 0 ? 0 : 1);
-    cout << "MTF Output: ";
+    if ((ret_val = (computeMTF(bwt_output, mtf_output, num_elements, MTF_list) == 0 ? 0 : 1)) != 0) {
+        cout << "Error in MTF: " << ret_val << endl;
+        return ret_val;
+    }
+    cout << "MTF Output:  ";
     for (int i=0; i<num_elements; i++) { cout << mtf_output[i] << ","; }
-    cout << endl;
+
+    cout << endl << "MTF List:    |";
+    for (int i=0; i<(*MTF_list).size(); i++) { cout << (*MTF_list)[i]; }
+    cout << "|" << endl;
 
     cout << endl << "ret_val: " << ret_val << endl;
     return ret_val;
