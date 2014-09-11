@@ -37,20 +37,20 @@ enum huffman_node_type {root, internal, leaf};
  *  @brief Data structure for a Huffman tree node
  */
 struct HuffmanNode {
-    huffman_node_type type;    // Root, Internal, or Leaf
-    HuffmanNode* parent;       // Pointer to parent node (NULL if node is root)
-    HuffmanNode* left_child;   // Pointer to left child node (NULL if node is a leaf)
-    HuffmanNode* right_child;  // Pointer to right child node (NULL if node is a leaf)
-    int value;                 // Value (character frequency) represented by the node (NULL if internal or root)
+    huffman_node_type type;    ///< Root, Internal, or Leaf
+    HuffmanNode* parent;       ///< Pointer to parent node (NULL if node is root)
+    HuffmanNode* left_child;   ///< Pointer to left child node (NULL if node is a leaf)
+    HuffmanNode* right_child;  ///< Pointer to right child node (NULL if node is a leaf)
+    int value;                 ///< Value (character frequency) represented by the node (NULL if internal or root)
 };
 
 /** @struct HuffmanTree
  *  @brief Data structure for a Huffman tree
  */
 struct HuffmanTree {
-    HuffmanNode* nodes;  // Pointer to array of all nodes in the tree
-    HuffmanNode* root;   // Pointer to root node
-    int num_nodes;       // Number of nodes in the tree
+    HuffmanNode* nodes;  ///< Pointer to array of all nodes in the tree
+    HuffmanNode* root;   ///< Pointer to root node
+    int num_nodes;       ///< Number of nodes in the tree
 };
 
 /** @brief Run a Burrows-Wheeler Transform (BWT) for computeDecompressGold()
@@ -58,17 +58,11 @@ struct HuffmanTree {
  *  @param[in]  i_data        Pointer to input data array
  *  @param[in]  num_elements  Number of elements in the input array
  *  @param[out] o_data        Pointer to output data array
+ *
+ *  @return  Status. 0 = success, else = failure
  */
 int computeBWT(char* i_data, char* o_data, size_t num_elements)
 {
-    /*  Steps:
-     *     - Allocate memory for all rotations
-     *     - Calculate every rotation (loop 'array_len' times)
-     *     - Sort rotations in lexigraphical order
-     *     - Take last character from each rotation (in order) and add to
-     *       output array in order
-     */
-
     vector<char> r(num_elements);  // Allocate a temporary array to store one rotation of the input array
     vector<vector<char>> rotations(num_elements, vector<char> (num_elements));  // Allocate an array of strings to store all input array rotations
     
@@ -94,17 +88,18 @@ int computeBWT(char* i_data, char* o_data, size_t num_elements)
  *  @param[in]  num_elements  Length of input data array
  *  @param[out] o_data        Pointer to output data array
  *  @param[out] MTF_list      MTF character list
+ *
+ *  @return  Status. 0 = success, else = failure
  */
 int computeMTF(char* i_data, int* o_data, size_t num_elements, vector<char>* MTF_list)
 {
-    //string MTF_list; // String object used to store the unique characters in the input array
     bool found;  // Temporary boolean variable to determine if a character has already been discovered
 
     // Loop through the input array and build a list of unique characters
     for (int i=0; i<num_elements; i++){
         found = false;
         for (int j=0; j<(*MTF_list).size(); j++){
-            if (i_data[i] == (*MTF_list)[j]) {  // If the character has already been found, set the flag and exit the loop
+            if (i_data[i] == (*MTF_list)[j]) {  // If the character has already been discovered, set the flag and exit the loop
                 found = true;
                 break;
             }
@@ -113,15 +108,15 @@ int computeMTF(char* i_data, int* o_data, size_t num_elements, vector<char>* MTF
     }
 
     sort((*MTF_list).begin(), (*MTF_list).end());  // Sort MTF list (unique characters)
-    string MTF((*MTF_list).begin(), (*MTF_list).end());
-    int position = 0;  // Variable used to store the position of a character in the MTF list
+    string MTF((*MTF_list).begin(), (*MTF_list).end());  // Convert MTF list from vector to string (for searching functionality)
+    int pos = 0;  // Temporary variable used to store the position of a character in the MTF list
 
     // Perform move-to-front transform
     for (int i=0; i<num_elements; i++) {
-        position = MTF.find(i_data[i]);  // Find input character in list
-        o_data[i] = position;  // Add input character position to output
-        if (position) {  // If input character is not at front of MTF list, move it to front of MTF list
-            MTF.erase(position, 1);
+        pos = MTF.find(i_data[i]);  // Find input character in list
+        o_data[i] = pos;  // Add input character position to output
+        if (pos) {        // If input character is not at front of MTF list, move it to front of MTF list
+            MTF.erase(pos, 1);
             MTF = i_data[i] + MTF;
         }
     }
@@ -154,6 +149,8 @@ int computeMTF(char* i_data, int* o_data, size_t num_elements, vector<char>* MTF
  *  @param[in]  num_elements  Length of input data array
  *  @param[out] o_data        Pointer to output data array
  *  @param[out] tree          Pointer to final Huffman tree
+ *
+ *  @return  Status. 0 = success, else = failure
  */
 int computeHuffmanTree(char* i_data, char* o_data, size_t num_elements, HuffmanTree* tree)
 {
@@ -188,14 +185,10 @@ return 0;}
 
 /** @brief Compresses a file on the CPU to test decompression on the GPU
  *
- *  @param[in]  i_data
- *  @param[out] o_data
- *  @param[out] 
-                           *        - input file (uncompressed)
-                           *     Out:
-                           *        - output file (compressed)
-                           *        - final huffman tree object
-                           *)
+ *  @param[in]  input         Pointer to input data array
+ *  @param[in]  num_elements  Length of input data array
+ *
+ *  @return  Status. 0 = success, else = failure
  */
 
 int computeDecompressGold(char* input, size_t num_elements)
