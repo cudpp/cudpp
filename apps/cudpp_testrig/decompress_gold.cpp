@@ -23,6 +23,7 @@
 #include <string>
 #include <cstring>
 #include <algorithm>
+#include <vector>
 
 /** @namespace std */
 using namespace std;
@@ -91,26 +92,14 @@ int computeBWT(char* i_data, char* o_data, size_t num_elements)
     else return 0;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
 /** @brief Run a Move-To-Front (MTF) Transform for computeDecompressGold()
  *
- *  @param[in]  i_data              Pointer to input data array
- *  @param[in]  num_input_elements  Length of input data array
- *  @param[out] o_data              Pointer to output data array
- *  @param[out] MTF_list_length     Length of MTF character list
+ *  @param[in]  i_data           Pointer to input data array
+ *  @param[in]  num_elements     Length of input data array
+ *  @param[out] o_data           Pointer to output data array
+ *  @param[out] MTF_list_length  Length of MTF character list
  */
-int computeMTF(char* i_data, char* o_data, int num_input_elements, int* MTF_list_length)
+int computeMTF(char* i_data, char* o_data, int num_elements, string MTF_list)
 {
     /*  Steps:
      *     - Generate list of characters in array and sort (loop through)
@@ -119,7 +108,40 @@ int computeMTF(char* i_data, char* o_data, int num_input_elements, int* MTF_list
      *       list. Then move that character to the front of the MTF list
      *     - Store those numbers in order in an array
      */
-return 0;}
+
+    string unique_chars = new string();  // Create a vector object to store unique characters from the input array
+    bool found;  // Temporary boolean variable to determine if a character has already been discovered
+
+    // Loop through the input array and build a list of unique characters
+    for (int i=0; i<num_elements; i++){
+        found = false;
+        for (int j=0; j<unique_chars.size(); j++){
+            if (i_data[i] == unique_chars[j]) {  // If the character has already been found, set the flag and exit the loop
+                found = true;
+                break;
+            }
+        }
+
+        if (!found) unique_chars.push_back(i_data[i]);  // If the character has not already been discovered, add it to the list
+    }
+
+    string MTF_list(unique_chars.begin(), unique_chars.end()); // Convert complete list of unique characters to a string
+    std::sort(MTF_list, MTF_list + MTF_list.length());  // Sort string of unique characters
+    int position = 0;
+
+    // Perform move-to-front transform
+    for (int i=0; i<num_elements; i++) {
+        position = MTF_list.find(i_data[i]);  // Find input character in list
+        o_data[i] = position;  // Add input character position to output
+        if (position) {  // If input character is not at front of MTF list, move it to front of MTF list
+            MTF_list.erase(position, 1);
+            MTF_list.insert(0, i_data[i]);
+        }
+    }
+    
+    if (o_data[num_elements-1] == NULL) return -1;
+    else return 0;
+}
 
 
 
