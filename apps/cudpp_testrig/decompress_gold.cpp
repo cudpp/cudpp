@@ -8,32 +8,33 @@
 // the root directory of this source distribution.
 // -------------------------------------------------------------
 
-/** @file decompress_gold.cpp
- *
- *  Contains functions to compress a file on the CPU. These functions are called
- *  as part of the test routines in test_decompress.cpp
- *
- *  Resulting compressed file is decompressed on the GPU to test the CUDPP
- *  decompression functionality.
- */
-
 /*  Trevor Gibson, UC Davis Dept. of Electrical and Computer Engineering
  *  Date created: 8/20/14
  */
 
-#include <iostream>
-#include <string>
-
-using namespace std;
-
-/*
- *  Custom data objects
+/** @file decompress_gold.cpp
+ *  @brief Contains functions to compress a file on the CPU.
+ *
+ *  These functions are called as part of the test routines in test_decompress.cpp. Resulting compressed file is
+ *  decompressed on the GPU to test the CUDPP decompression functionality.
  */
 
-// Enumerated type for the different kinds of Huffman tree nodes
+#include <iostream>
+#include <string>
+#include <cstring>
+#include <algorithm>
+
+/** @namespace std */
+using namespace std;
+
+/** @enum huffman_node_type
+ *  @brief Enumerated type for the different kinds of Huffman tree nodes
+ */
 enum huffman_node_type {root, internal, leaf};
 
-// Data structure for a Huffman tree node
+/** @struct HuffmanNode
+ *  @brief Data structure for a Huffman tree node
+ */
 struct HuffmanNode {
     huffman_node_type type;    // Root, Internal, or Leaf
     HuffmanNode* parent;       // Pointer to parent node (NULL if node is root)
@@ -42,42 +43,22 @@ struct HuffmanNode {
     int value;                 // Value (character frequency) represented by the node (NULL if internal or root)
 };
 
-// Data structure for a Huffman tree
+/** @struct HuffmanTree
+ *  @brief Data structure for a Huffman tree
+ */
 struct HuffmanTree {
     HuffmanNode* nodes;  // Pointer to array of all nodes in the tree
     HuffmanNode* root;   // Pointer to root node
     int num_nodes;       // Number of nodes in the tree
 };
 
-/** @brief Compresses a file on the CPU to test decompression on the GPU
- *
- *  @param[in]  i_data
- *  @param[out] o_data
- *  @param[out] 
-                           *        - input file (uncompressed)
-                           *     Out:
-                           *        - output file (compressed)
-                           *        - final huffman tree object
-                           *)
- */
-int computeDecompressGold()
-{
-    /*  Steps:
-     *     - Allocate memory
-     *     - Run BWT
-     *     - Run MTF transform
-     *     - Run Huffman encoding
-     */
-}
-
 /** @brief Run a Burrows-Wheeler Transform (BWT) for computeDecompressGold()
- *
  *
  *  @param[in]  i_data        Pointer to input data array
  *  @param[in]  num_elements  Number of elements in the input array
  *  @param[out] o_data        Pointer to output data array
  */
-int computeBWT(char* i_data, char* o_data, unsigned long num_elements)
+int computeBWT(char* i_data, char* o_data, size_t num_elements)
 {
     /*  Steps:
      *     - Allocate memory for all rotations
@@ -89,10 +70,10 @@ int computeBWT(char* i_data, char* o_data, unsigned long num_elements)
 
     char* r = new char[num_elements];  // Allocate a temporary array to store one rotation of the input array
     string* rotations = new string[num_elements];  // Allocate an array of strings to store all input array rotations
-
+    
     for (int i=0; i<num_elements; i++) {
         for (int j=0; j<num_elements; j++) {
-            r[j] = i_data[(i+j) % num_rotations];  /* Builds a rotation by iterating through the input array,
+            r[j] = i_data[(i+j) % num_elements];  /* Builds a rotation by iterating through the input array,
                                                     * looping back around to the beginning when reaching the end of the input array
                                                     */
         }
@@ -101,17 +82,28 @@ int computeBWT(char* i_data, char* o_data, unsigned long num_elements)
         rotations[i] = rot;  // Store the string rotation for later use
     }
 
-    sort(rotations, rotations + num_elements);  // Sort all the rotations in lexigraphical order
-
+    std::sort(rotations, rotations + num_elements);  // Sort all the rotations in lexigraphical order
     for (int i=0; i<num_elements; i++) {
         o_data[i] = rotations[i].back();  // Take the last character from each rotation and add it to the output array (in order)
     }
-
-    return 0;
+    
+    if (o_data[num_elements-1] == NULL) return -1;
+    else return 0;
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
 /** @brief Run a Move-To-Front (MTF) Transform for computeDecompressGold()
- *
  *
  *  @param[in]  i_data              Pointer to input data array
  *  @param[in]  num_input_elements  Length of input data array
@@ -127,10 +119,27 @@ int computeMTF(char* i_data, char* o_data, int num_input_elements, int* MTF_list
      *       list. Then move that character to the front of the MTF list
      *     - Store those numbers in order in an array
      */
-}
+return 0;}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /** @brief Build a huffman tree for computeDecompressGold()
- *
  *
  *  @param[in]  i_data        Pointer to input data array
  *  @param[in]  num_elements  Length of input data array
@@ -143,7 +152,7 @@ int computeHuffmanTree(char* i_data, char* o_data, int num_elements, HuffmanTree
      *     - Loop through input array and calculate frequency of numbers.
      *       Assign to "huffman pairs" (key(number)-value(frequency) tuple)
      *     - Sort array by values (frequencies) from least to most
-     *     - Copy array for huffman treew
+     *     - Copy array for huffman tree
      *     - Create new huffman tree object. Add lowest 2 items from huffman
      *       tree array to the tree. Remove those two items from huffman tree
      *       array. Add new item with value = sum of previous 2 item
@@ -166,11 +175,34 @@ int computeHuffmanTree(char* i_data, char* o_data, int num_elements, HuffmanTree
      *          - (int) Value: Number that the node represents (frequency from
      *            output of MTF transform, NULL if internal or root node)
      */
+return 0;}
+
+/** @brief Compresses a file on the CPU to test decompression on the GPU
+ *
+ *  @param[in]  i_data
+ *  @param[out] o_data
+ *  @param[out] 
+                           *        - input file (uncompressed)
+                           *     Out:
+                           *        - output file (compressed)
+                           *        - final huffman tree object
+                           *)
+ */
+
+int computeDecompressGold()
+{
+    /*  Steps:
+     *     - Allocate memory
+     *     - Run BWT
+     *     - Run MTF transform
+     *     - Run Huffman encoding
+     */
+    char input[] = "the hat, the hat";
+    size_t num_elements = sizeof(input);
+    char* output = new char[num_elements];
+    cout << "Input:  " << input << endl;
+    int ret_val = (computeBWT(input, output, num_elements-1) == 0 ? 0 : 1);
+    cout << "Output: " << output << endl;
+
+    return ret_val;
 }
-
-
-
-
-
-
-int main(int argc, char *argv[]) {return 0;}
