@@ -15,9 +15,9 @@
 #include <iostream>
 #include "decompress_gold.cpp"
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
     char input[] = "The quick brown fox jumps over the lazy dog.";
     size_t num_elements = sizeof(input) - 1;
-    return computeDecompressGold(input, num_elements);
+    return computeDecompressGold(input, num_elements, (argc == 1) || ((argv[1] == string("q")) ? false : true));
 }
