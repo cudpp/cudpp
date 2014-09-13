@@ -42,13 +42,19 @@ struct HuffmanNode {
     HuffmanNode* left_child;   ///< Pointer to left child node (NULL if node is a leaf)
     HuffmanNode* right_child;  ///< Pointer to right child node (NULL if node is a leaf)
     int value;                 ///< Value (character frequency) represented by the node (NULL if internal or root)
+
+    HuffmanNode() {  ///< Constructor that initializes pointers to NULL
+        parent = NULL;
+        left_child = NULL;
+        right_child = NULL;
+    }
 };
 
 /** @struct HuffmanTree
  *  @brief Data structure for a Huffman tree
  */
 struct HuffmanTree {
-    HuffmanNode* nodes;  ///< Pointer to array of all nodes in the tree
+    HuffmanNode* nodes[];  ///< Pointer to array of all nodes in the tree
     HuffmanNode* root;   ///< Pointer to root node
     int num_nodes;       ///< Number of nodes in the tree
 };
@@ -63,12 +69,11 @@ struct HuffmanTree {
  */
 int computeBWT(char* i_data, char* o_data, size_t num_elements)
 {
-    vector<char> r(num_elements);  // Allocate a temporary array to store one rotation of the input array
-    vector<vector<char>> rotations(num_elements, vector<char> (num_elements));  // Allocate an array of strings to store all input array rotations
+    vector<vector<char>> rotations(num_elements, vector<char> (num_elements));  // Allocate a 2D vector to store all input array rotations
     
     for (int i=0; i<num_elements; i++) {
         for (int j=0; j<num_elements; j++) {
-            rotations[i][j] = i_data[(i+j) % num_elements];  /* Builds rotations by iterating through the input array,
+            rotations[i][j] = i_data[(i+j) % num_elements];  /* Build rotations by iterating through the input array,
                                                                 looping back around to the beginning when reaching the end */
         }
     }
@@ -77,7 +82,7 @@ int computeBWT(char* i_data, char* o_data, size_t num_elements)
     for (int i=0; i<num_elements; i++) {
         o_data[i] = rotations[i][num_elements-1];  // Take the last character from each rotation and add it to the output array (in order)
     }
-    
+
     if (o_data[num_elements-1] == 0) return -1;  // If last character is bad, return an error
     else return 0;
 }
@@ -120,28 +125,10 @@ int computeMTF(char* i_data, int* o_data, size_t num_elements, vector<char>* MTF
             MTF = i_data[i] + MTF;
         }
     }
-    
+
     if (o_data[num_elements-1] == 0) return -1; // If last character is bad, return an error
     else return 0;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /** @brief Build a huffman tree for computeDecompressGold()
  *
@@ -155,16 +142,12 @@ int computeMTF(char* i_data, int* o_data, size_t num_elements, vector<char>* MTF
 int computeHuffmanTree(char* i_data, char* o_data, size_t num_elements, HuffmanTree* tree)
 {
     /*  Steps:
-     *     - Loop through input array and calculate frequency of numbers.
-     *       Assign to "huffman pairs" (key(number)-value(frequency) tuple)
+     *     - Loop through input array and calculate frequency of numbers. Assign to "huffman pairs" (key(number)-value(frequency) tuple)
      *     - Sort array by values (frequencies) from least to most
      *     - Copy array for huffman tree
-     *     - Create new huffman tree object. Add lowest 2 items from huffman
-     *       tree array to the tree. Remove those two items from huffman tree
-     *       array. Add new item with value = sum of previous 2 item
-     *       frequencies. Sort huffman tree array.
-     *     - Repeat until only 1 item remains in huffman tree array. Add root
-     *       to huffman tree.
+     *     - Create new huffman tree object. Add lowest 2 items from huffman tree array to the tree. Remove those two items
+     *       from huffman tree array. Add new item with value = sum of previous 2 item frequencies. Sort huffman tree array.
+     *     - Repeat until only 1 item remains in huffman tree array. Add root to huffman tree.
      */
 
     /*  Data required:
@@ -176,22 +159,32 @@ int computeHuffmanTree(char* i_data, char* o_data, size_t num_elements, HuffmanT
      *     - HuffmanNode object
      *       Attributes:
      *          - (enum) Type: Root, Internal, or Leaf
-     *          - Pointers to Parent, Left Child, Right Child (NULL if
-     *            attribute does not exist)
-     *          - (int) Value: Number that the node represents (frequency from
-     *            output of MTF transform, NULL if internal or root node)
+     *          - Pointers to Parent, Left Child, Right Child (NULL if attribute does not exist)
+     *          - (int) Value: Number that the node represents (frequency from output of MTF transform, NULL if internal or root node)
      */
-return 0;}
 
-/** @brief Compresses a file on the CPU to test decompression on the GPU
+// - 2D vector, storing tuples of (frequency of data, data (number from MTF transform))
+// - Loop through input, calculating frequency of each number
+// - Sort 2D array by frequency
+// - Make Huffman nodes for the two lowest frequencies. Add the frequencies, remove them from the vector, and add a new vector item with the new sum
+// - Add the two nodes to the Huffman tree (insert into nodes array, increment num_nodes)
+// - Loop until there is only 1 item remaining in the vector, each time looking at the two lowest-valued (frequency) nodes
+// - The remaining node is the root
+
+    return 0;
+}
+
+/** @brief Compresses a file on the CPU using the bzip2 method.
+ *
+ *  The compressed file is then decompressed on the GPU and compared to the original file to verify CUDPP decompression functionality
  *
  *  @param[in]  input         Pointer to input data array
  *  @param[in]  num_elements  Length of input data array
+ *  @param[in]  verbose       Optional input to print out intermediate data
  *
  *  @return  Status. 0 = success, else = failure
  */
-
-int computeDecompressGold(char* input, size_t num_elements)
+int computeDecompressGold(char* input, size_t num_elements, bool verbose = false)
 {
     /*  Steps:
      *     - Allocate memory
@@ -200,30 +193,55 @@ int computeDecompressGold(char* input, size_t num_elements)
      *     - Run Huffman encoding
      */
 
-    cout << "num_elements: " << num_elements << endl << endl;
-    char* bwt_output = new char[num_elements];
-    int* mtf_output = new int[num_elements];
-    vector<char>* MTF_list = new vector<char>(0);
+    char* bwt_output = new char[num_elements];  // Pointer to char array that stores the output of the BWT operation
+    int* mtf_output = new int[num_elements];  // Pointer to char array that stores the output of the MTF operation
+    vector<char>* MTF_list = new vector<char>(0);  // Pointer to vector object that stores the list of unique characters
+    int ret_val = 0;  // Variable to store return value (status)
 
-    cout << "Input:       |" << input << "|" << endl;
-    int ret_val = 0;
+    // ----- Print input array -----
+    if (verbose) cout << "Number of Elements: " << num_elements << endl << endl;
+    if (verbose) cout << "Input:       |" << input << "|" << endl;
+    // -----------------------------
+
+    // ----- Compute BWT -----
     if ((ret_val = (computeBWT(input, bwt_output, num_elements) == 0 ? 0 : 1)) != 0) {
         cout << "Error in BWT: " << ret_val << endl;
+        delete [] bwt_output;
+        delete [] mtf_output;
+        delete MTF_list;
         return ret_val;
     }
-    cout << "BWT Output:  |" << bwt_output << "|" << endl;
+    // -----------------------
 
+    // ----- Print BWT output -----
+    if (verbose) cout << "BWT Output:  |" << bwt_output << "|" << endl;
+
+    // ----- Compute MTF transform -----
     if ((ret_val = (computeMTF(bwt_output, mtf_output, num_elements, MTF_list) == 0 ? 0 : 1)) != 0) {
         cout << "Error in MTF: " << ret_val << endl;
+        delete [] bwt_output;
+        delete [] mtf_output;
+        delete MTF_list;
         return ret_val;
     }
-    cout << "MTF Output:  ";
-    for (int i=0; i<num_elements; i++) { cout << mtf_output[i] << ","; }
+    // ---------------------------------
 
-    cout << endl << "MTF List:    |";
-    for (int i=0; i<(*MTF_list).size(); i++) { cout << (*MTF_list)[i]; }
-    cout << "|" << endl;
+    // ----- Print MTF output -----
+    if (verbose) {
+        cout << "MTF Output:  ";
+        for (int i=0; i<num_elements; i++) { cout << mtf_output[i] << ","; }
 
-    cout << endl << "ret_val: " << ret_val << endl;
+        cout << endl << "MTF List:    |";
+        for (int i=0; i<(*MTF_list).size(); i++) { cout << (*MTF_list)[i]; }
+        cout << "|" << endl;
+    }
+    // ----------------------------
+
+    cout << endl << "Return: " << ret_val << endl;
+
+    delete [] bwt_output;
+    delete [] mtf_output;
+    delete MTF_list;
+
     return ret_val;
 }
