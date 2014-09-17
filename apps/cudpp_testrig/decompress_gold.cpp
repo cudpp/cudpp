@@ -41,12 +41,34 @@ struct HuffmanNode {
     HuffmanNode* parent;       ///< Pointer to parent node (NULL if node is root)
     HuffmanNode* left_child;   ///< Pointer to left child node (NULL if node is a leaf)
     HuffmanNode* right_child;  ///< Pointer to right child node (NULL if node is a leaf)
-    int value;                 ///< Value (character frequency) represented by the node (NULL if internal or root)
+    int data;                  ///< Number (in MTF list) represented by the node (-1 if internal, -2 if root)
+    int freq;                  ///< Frequency of node data (in MTF list)
 
-    HuffmanNode() {  ///< Constructor that initializes pointers to NULL
+    HuffmanNode() {  ///< Default constructor that initializes pointers to NULL
         parent = NULL;
         left_child = NULL;
         right_child = NULL;
+        data = -2;
+        freq = 0;
+        type = root;
+    }
+
+    HuffmanNode(int d, int f) {  ///< Constructor used when creating nodes to initialize data
+        parent = NULL;
+        left_child = NULL;
+        right_child = NULL;
+        data = d;
+        freq = f;
+
+        if (data < -1) type = root;
+        else if (data < 0) type = huffman_node_type::internal;
+        else type = leaf;
+    }
+
+    ~HuffmanNode() {  ///< Destructor
+        delete parent;
+        delete left_child;
+        delete right_child;
     }
 };
 
@@ -54,9 +76,24 @@ struct HuffmanNode {
  *  @brief Data structure for a Huffman tree
  */
 struct HuffmanTree {
-    HuffmanNode* nodes[];  ///< Pointer to array of all nodes in the tree
-    HuffmanNode* root;   ///< Pointer to root node
-    int num_nodes;       ///< Number of nodes in the tree
+    HuffmanNode* root;           ///< Pointer to root node
+    vector<HuffmanNode>* nodes;  ///< Pointer to a vector of all nodes in the tree
+    int num_nodes;               ///< Number of nodes in the tree
+
+    HuffmanTree() {  ///< Default constructor that initializes the root pointer to NULL
+        root = NULL;
+    }
+ 
+    HuffmanTree(size_t n) {  ///< Constructor used to initialize nodes array
+        root = NULL;
+        nodes = new vector<HuffmanNode>();
+        num_nodes = n;
+    }
+
+    ~HuffmanTree() {
+        delete nodes;
+        delete root;
+    }
 };
 
 /** @brief Run a Burrows-Wheeler Transform (BWT) for computeDecompressGold()
@@ -103,18 +140,18 @@ int computeMTF(char* i_data, int* o_data, size_t num_elements, vector<char>* MTF
     // Loop through the input array and build a list of unique characters
     for (int i=0; i<num_elements; i++){
         found = false;
-        for (int j=0; j<(*MTF_list).size(); j++){
+        for (int j=0; j<MTF_list->size(); j++){
             if (i_data[i] == (*MTF_list)[j]) {  // If the character has already been discovered, set the flag and exit the loop
                 found = true;
                 break;
             }
         }
-        if (!found) (*MTF_list).push_back(i_data[i]);  // If the character has not already been discovered, add it to the list
+        if (!found) MTF_list->push_back(i_data[i]);  // If the character has not already been discovered, add it to the list
     }
 
-    sort((*MTF_list).begin(), (*MTF_list).end());  // Sort MTF list (unique characters)
-    string MTF((*MTF_list).begin(), (*MTF_list).end());  // Convert MTF list from vector to string (for searching functionality)
-    int pos = 0;  // Temporary variable used to store the position of a character in the MTF list
+    sort(MTF_list->begin(), MTF_list->end());  // Sort MTF list (unique characters)
+    string MTF(MTF_list->begin(), MTF_list->end());  // Convert MTF list from vector to string (for searching functionality)
+    int pos;  // Temporary variable used to store the position of a character in the MTF list
 
     // Perform move-to-front transform
     for (int i=0; i<num_elements; i++) {
@@ -139,7 +176,7 @@ int computeMTF(char* i_data, int* o_data, size_t num_elements, vector<char>* MTF
  *
  *  @return  Status. 0 = success, else = failure
  */
-int computeHuffmanTree(char* i_data, char* o_data, size_t num_elements, HuffmanTree* tree)
+int computeHuffmanTree(int* i_data, int* o_data, size_t num_elements, HuffmanTree* tree)
 {
     /*  Steps:
      *     - Loop through input array and calculate frequency of numbers. Assign to "huffman pairs" (key(number)-value(frequency) tuple)
@@ -171,6 +208,106 @@ int computeHuffmanTree(char* i_data, char* o_data, size_t num_elements, HuffmanT
 // - Loop until there is only 1 item remaining in the vector, each time looking at the two lowest-valued (frequency) nodes
 // - The remaining node is the root
 
+    vector<pair<int, int>> frequencies;
+    bool exists; cout << endl;
+
+    for (int i=0; i<num_elements; i++) {  // Generates pairs of MTF numbers and their corresponding frequencies in the input list
+        bool exists = false;
+        for (int j=0; j<frequencies.size(); j++) {
+            if (i_data[i] == frequencies.at(j).second) {
+                exists = true;
+                (frequencies.at(j).first)++;
+                break;
+            }
+        }
+        if (!exists) frequencies.push_back(make_pair(1, i_data[i]));
+    }
+
+    tree = new HuffmanTree(frequencies.size());  // Initialize the Huffman Tree
+    sort(frequencies.begin(), frequencies.end());  // Sort the nodes (this particular statement used only for cosmetic purposes when printing out the pairs)yy
+
+    for (int j=0; j<frequencies.size(); j++) {
+        cout << "{" << frequencies.at(j).first << ", " << frequencies.at(j).second << "}" << endl;
+    }
+
+    while (frequencies.size() > 1) {
+        sort(frequencies.begin(), frequencies.end());  // Sort the nodes every time the loop starts over
+        int a_num = frequencies.at(0).second;  // Shortcut to access the number represented by the pair
+        int a_freq = frequencies.at(0).first;  // Shortcut to access the frequency of the number represented by the pair
+        int b_num = frequencies.at(1).second;  // --------- SAME AS ^^^ -----------
+        int b_freq = frequencies.at(1).first;  // ---------------------------------
+cout << endl << "A: MTF number= " << a_num << ", frequency= " << a_freq << endl;
+cout << "B: MTF number= " << b_num << ", frequency= " << b_freq << endl;
+        HuffmanNode* a = new HuffmanNode(a_num, a_freq);  // Make a new HuffmanNode object for the two pairs at the beginning of the list
+        HuffmanNode* b = new HuffmanNode(b_num, a_freq);  // ---------- ^^^ ----------
+
+        if (a->type == huffman_node_type::internal) {  // If A is an internal node
+            for (int i=0; i<tree->nodes->size(); i++) {  // Loop through all the existing nodes
+                HuffmanNode* node1 = &tree->nodes->at(i);  // Shortcut to utilize a particular node
+                if (node1->parent == NULL) {  // If a particular node does not have a parent node
+                    if (a->left_child == NULL) {  // If A does not have a left child
+cout << "A:" << endl;
+cout << "\tData: " << node->data << " \tFreq: " << node->freq << " \tType: " << node->type << endl;
+cout << "\tData: " << a->data << " \tFreq: " << a->freq << " \tType: " << a->type << endl;
+                        a->left_child = node;  // Assign the node to be A's left child
+                        node->parent = a;  // Assign A to be the node's parent
+                    }
+                    else if (a->right_child == NULL) {  // Otherwise, if A has a left child, but no right child
+                        a->right_child = node;  // Assign the node to be A's right child
+                        node->parent = a;  // Assign A to be the node's parent
+                    }
+                    else break;
+                }
+            }
+        }
+
+        if (b->type == huffman_node_type::internal) {  // See notes from A ^^^
+            for (int i=0; i<tree->nodes->size(); i++) {
+                HuffmanNode* node = &tree->nodes->at(i);
+                if (node->parent == NULL) {
+                    if (b->left_child == NULL) {
+cout << "B:" << endl;
+cout << "\tData: " << node->data << " \tFreq: " << node->freq << " \tType: " << node->type << endl;
+cout << "\tData: " << a->data << " \tFreq: " << a->freq << " \tType: " << a->type << endl;
+                        b->left_child = node;
+                        node->parent = b;
+                    }
+                    else if (b->right_child == NULL) {
+                        b->right_child = node;
+                        node->parent = b;
+                    }
+                    else break;
+                }
+            }
+        }    // ---------------- END NOTES ------------------
+
+cout << "num nodes in tree->nodes: " << tree->nodes->size() << endl;
+cout << "num nodes in frequencies: " << frequencies.size() << endl;
+        tree->nodes->push_back(*a);  // Add A to the tree's list of nodes
+        tree->nodes->push_back(*b);  // Add B to the tree's list of nodes
+
+        int temp = a_freq + b_freq;  // Calculate the sum of the frequencies of A and B
+        frequencies.erase(frequencies.begin(), frequencies.begin()+2);  // Delete the 2 pairs with the lowest frequencies from the frequency list
+        frequencies.push_back(make_pair(temp, -1));  // Add a new value to the frequency list equal to the sum of the previous two lowest frequencies
+    }
+
+// Root node stuff...
+    HuffmanNode* r = new HuffmanNode(-2, frequencies.at(0).first);
+    tree->root = r;
+    r->left_child = &tree->nodes->at(tree->nodes->size()-2);
+    r->left_child = &tree->nodes->at(tree->nodes->size()-1);
+    tree->nodes->at(tree->nodes->size()-2).parent = r;
+    tree->nodes->at(tree->nodes->size()-1).parent = r;
+// -----------------
+
+/*  NOTES -----------------------
+ *
+ *  - This doesn't work
+ *  - I suspect this is because it isn't quite fully recursive
+ *  - In other words... I have yet to see it link an internal node to another internal node
+ *  - Program just seg faults when trying to add a (seemingly random, although consistently the same) leaf node 
+ *
+ */
     return 0;
 }
 
@@ -195,7 +332,11 @@ int computeDecompressGold(char* input, size_t num_elements, bool verbose = false
 
     char* bwt_output = new char[num_elements];  // Pointer to char array that stores the output of the BWT operation
     int* mtf_output = new int[num_elements];  // Pointer to char array that stores the output of the MTF operation
-    vector<char>* MTF_list = new vector<char>(0);  // Pointer to vector object that stores the list of unique characters
+
+    int* huffman_output = new int[num_elements];  // Pointer to char array that stores the output of the Huffman operation
+    HuffmanTree* myTree;
+
+    vector<char>* MTF_list = new vector<char>();  // Pointer to vector object that stores the list of unique characters
     int ret_val = 0;  // Variable to store return value (status)
 
     // ----- Print input array -----
@@ -204,7 +345,7 @@ int computeDecompressGold(char* input, size_t num_elements, bool verbose = false
     // -----------------------------
 
     // ----- Compute BWT -----
-    if ((ret_val = (computeBWT(input, bwt_output, num_elements) == 0 ? 0 : 1)) != 0) {
+    if (ret_val = computeBWT(input, bwt_output, num_elements)) {
         cout << "Error in BWT: " << ret_val << endl;
         delete [] bwt_output;
         delete [] mtf_output;
@@ -217,7 +358,7 @@ int computeDecompressGold(char* input, size_t num_elements, bool verbose = false
     if (verbose) cout << "BWT Output:  |" << bwt_output << "|" << endl;
 
     // ----- Compute MTF transform -----
-    if ((ret_val = (computeMTF(bwt_output, mtf_output, num_elements, MTF_list) == 0 ? 0 : 1)) != 0) {
+    if (ret_val = computeMTF(bwt_output, mtf_output, num_elements, MTF_list)) {
         cout << "Error in MTF: " << ret_val << endl;
         delete [] bwt_output;
         delete [] mtf_output;
@@ -237,11 +378,15 @@ int computeDecompressGold(char* input, size_t num_elements, bool verbose = false
     }
     // ----------------------------
 
+    if (ret_val = computeHuffmanTree(mtf_output, huffman_output, num_elements, myTree)) { ; }
+
     cout << endl << "Return: " << ret_val << endl;
 
     delete [] bwt_output;
     delete [] mtf_output;
+    delete [] huffman_output;
     delete MTF_list;
+    delete myTree;
 
     return ret_val;
 }
