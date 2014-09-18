@@ -87,11 +87,7 @@ struct HuffmanTree {
         nodes = new vector<HuffmanNode*>();
     }
 
-    ~HuffmanTree() {
-        //for (int i=0; i<nodes->size(); i++) { delete nodes->at(i); }
-        delete nodes;
-        delete root;
-    }
+    ~HuffmanTree() { delete nodes; }  ///< Destructor
 };
 
 /** @brief Run a Burrows-Wheeler Transform (BWT) for computeDecompressGold()
@@ -269,8 +265,8 @@ int computeHuffmanTree(int* i_data, vector<bool>* o_data, size_t num_elements, H
     }
 
 // Root node stuff...
-    HuffmanNode* r = new HuffmanNode(-1, frequencies.at(0).first);
-    tree->root = r;
+    tree->root = new HuffmanNode(-1, frequencies.at(0).first);
+    HuffmanNode* r = tree->root;
     r->left_child = tree->nodes->at(tree->nodes->size()-2);
     r->right_child = tree->nodes->back();
     tree->nodes->at(tree->nodes->size()-2)->parent = r;
@@ -432,7 +428,7 @@ int computeDecompressGold(char* input, size_t num_elements, bool verbose = false
 
     delete [] bwt_output;
     delete [] mtf_output;
-    delete [] huffman_output;
+    delete huffman_output;
     delete MTF_list;
     delete myTree;
 
