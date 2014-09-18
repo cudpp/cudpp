@@ -43,6 +43,7 @@ struct HuffmanNode {
     HuffmanNode* right_child;  ///< Pointer to right child node (NULL if node is a leaf)
     int data;                  ///< Number (in MTF list) represented by the node (-1 if root, -2 or less if internal)
     int freq;                  ///< Frequency of node data (in MTF list)
+    bool found;                ///< Variable used when generating Huffman codes to determine if a node has already been coded
 
     HuffmanNode() {  ///< Default constructor that initializes pointers to NULL
         parent = NULL;
@@ -51,6 +52,7 @@ struct HuffmanNode {
         data = -1;
         freq = 0;
         type = root;
+        found = false;
     }
 
     HuffmanNode(int d, int f) {  ///< Constructor used when creating nodes to initialize data
@@ -59,6 +61,7 @@ struct HuffmanNode {
         right_child = NULL;
         data = d;
         freq = f;
+        found = false;
 
         if (data == -1) type = root;
         else if (data < -1) type = huffman_node_type::internal;
@@ -76,25 +79,17 @@ struct HuffmanNode {
  *  @brief Data structure for a Huffman tree
  */
 struct HuffmanTree {
-    HuffmanNode* root;           ///< Pointer to root node
+    HuffmanNode* root;            ///< Pointer to root node
     vector<HuffmanNode*>* nodes;  ///< Pointer to a vector of all nodes in the tree
-    int num_nodes;               ///< Number of nodes in the tree
 
     HuffmanTree() {  ///< Default constructor that initializes the root pointer to NULL
         root = NULL;
         nodes = new vector<HuffmanNode*>();
-        num_nodes = 0;
-    }
- 
-    HuffmanTree(size_t n) {  ///< Constructor used to initialize the number of nodes
-        root = NULL;
-        nodes = new vector<HuffmanNode*>();
-        num_nodes = n;
     }
 
     ~HuffmanTree() {
-        for (int i=0; i<nodes->size(); i++) { delete nodes->at(i); }
-        //delete nodes;
+        //for (int i=0; i<nodes->size(); i++) { delete nodes->at(i); }
+        delete nodes;
         delete root;
     }
 };
@@ -174,48 +169,21 @@ int computeMTF(char* i_data, int* o_data, size_t num_elements, vector<char>* MTF
  *
  *  @param[in]  i_data        Pointer to input data array
  *  @param[in]  num_elements  Length of input data array
- *  @param[out] o_data        Pointer to output data array
+ *  @param[out] o_data        Pointer to output data vector
  *  @param[out] tree          Pointer to final Huffman tree
  *
  *  @return  Status. 0 = success, else = failure
  */
-int computeHuffmanTree(int* i_data, int* o_data, size_t num_elements, HuffmanTree* tree)
+int computeHuffmanTree(int* i_data, vector<bool>* o_data, size_t num_elements, HuffmanTree* tree)
 {
-    /*  Steps:
-     *     - Loop through input array and calculate frequency of numbers. Assign to "huffman pairs" (key(number)-value(frequency) pairs)
-     *     - Sort array by values (frequencies) from least to most
-     *     - Copy array for huffman tree
-     *     - Create new huffman tree object. Add lowest 2 items from huffman tree array to the tree. Remove those two items
-     *       from huffman tree array. Add new item with value = sum of previous 2 item frequencies. Sort huffman tree array.
-     *     - Repeat until only 1 item remains in huffman tree array. Add root to huffman tree.
-     */
-
-    /*  Data required:
-     *     - HuffmanTree object (contains nodes of "huffman pairs")
-     *       Attributes:
-     *          - Array of pointers to nodes
-     *          - Pointer to root node
-     *          - (int) Number of nodes
-     *     - HuffmanNode object
-     *       Attributes:
-     *          - (enum) Type: Root, Internal, or Leaf
-     *          - Pointers to Parent, Left Child, Right Child (NULL if attribute does not exist)
-     *          - (int) Value: Number that the node represents (frequency from output of MTF transform, NULL if internal or root node)
-     */
-
-// - 2D vector, storing tuples of (frequency of data, data (number from MTF transform))
-// - Loop through input, calculating frequency of each number
-// - Sort 2D array by frequency
-// - Make Huffman nodes for the two lowest frequencies. Add the frequencies, remove them from the vector, and add a new vector item with the new sum
-// - Add the two nodes to the Huffman tree (insert into nodes array, increment num_nodes)
-// - Loop until there is only 1 item remaining in the vector, each time looking at the two lowest-valued (frequency) nodes
-// - The remaining node is the root
-
     vector<pair<int, int>> frequencies;
-    bool exists; cout << endl;
+    bool exists;
+    int largest = 0;
 
     for (int i=0; i<num_elements; i++) {  // Generates pairs of MTF numbers and their corresponding frequencies in the input list
         bool exists = false;
+        if (i_data[i] > largest) largest = i_data[i];  // Finds the largest MTF number (to use in generating Huffman codes)
+
         for (int j=0; j<frequencies.size(); j++) {
             if (i_data[i] == frequencies.at(j).second) {
                 exists = true;
@@ -226,9 +194,8 @@ int computeHuffmanTree(int* i_data, int* o_data, size_t num_elements, HuffmanTre
         if (!exists) frequencies.push_back(make_pair(1, i_data[i]));
     }
 
-    int int_node_count = -2;
-    //tree = new HuffmanTree(frequencies.size());  // Initialize the Huffman Tree
-    sort(frequencies.begin(), frequencies.end());  // Sort the nodes (this particular statement used only for cosmetic purposes when printing out the pairs)yy
+    int int_node_count = -2;  // Temporary variable used to assign a unique value to all internal nodes
+//    sort(frequencies.begin(), frequencies.end());  // Sort the nodes (this particular statement used only for cosmetic purposes when printing out the pairs)yy
 
 //    for (int j=0; j<frequencies.size(); j++) {
 //        cout << "{" << frequencies.at(j).first << ", " << frequencies.at(j).second << "}" << endl;
@@ -311,6 +278,67 @@ int computeHuffmanTree(int* i_data, int* o_data, size_t num_elements, HuffmanTre
     tree->nodes->push_back(r);
 // -----------------
 
+    vector<bool> code;
+    vector<vector<bool>> codes(largest + 1);  // Create vector to store Huffman codes
+    bool done = false;  // Temporary variable used when generating Huffman codes to determine if the coding process is complete
+
+    while (!done) {
+        code.clear();
+        HuffmanNode* node = tree->root;
+        while (true) {
+            if (!(node->left_child->found)) {  // If all the subnodes of the left child node have not been completely coded yet
+                code.push_back(0);  // Add a 0 to the end of the code for this sequence
+                //codes[node->left_child->data].second.push_back(0);  // Add a 0 to the end of the code for this sequence
+                if (node->left_child->type == leaf) {  // If the left child node is a leaf node
+                    node->left_child->found = true;  // Mark the node as coded
+                    codes[node->left_child->data] = code;
+//cout << "Data: " << node->left_child->data << "   \tcode: ";
+//for (int i=0; i<code.size(); i++) { cout << code[i]; }
+//cout << endl;
+                    break;  // Go on to the next node
+                }
+                else if (node->left_child->type == huffman_node_type::internal) {  // If the left child is an internal node
+                    node = node->left_child;  // Make the left child the current node
+                    continue;  // Loop recursively
+                }
+                else return -5;
+            }
+            else if (!(node->right_child->found)) {  // If all the subnodes of the right child node have not been completely coded yet
+                code.push_back(1);  // Add a 1 to the end of the code for this sequence
+                //codes[node->right_child->data].second.push_back(1);  // Add a 1 to the end of the code for this sequence
+                if (node->right_child->type == leaf) {
+                    node->right_child->found = true;
+                    node->found = true;
+                    codes[node->right_child->data] = code;
+//cout << "Data: " << node->right_child->data << "   \tcode: ";
+//for (int i=0; i<code.size(); i++) { cout << code[i]; }
+//cout << endl;
+                    break;
+                }
+                else if (node->right_child->type == huffman_node_type::internal) {
+                    node = node->right_child;
+                    continue;
+                }
+                else return -5;
+            }
+            else {
+                node->found = true;
+                code.pop_back();
+                if (node->type == root) {
+                    done = true;
+                    break;
+                }
+                node = node->parent;
+            }
+        }
+    }
+
+    for (int i=0; i<num_elements; i++) {
+        for (int j=0; j<codes[i_data[i]].size(); j++) {
+            o_data->push_back(codes[i_data[i]][j]);
+        }
+    }
+
     return 0;
 }
 
@@ -336,15 +364,15 @@ int computeDecompressGold(char* input, size_t num_elements, bool verbose = false
     char* bwt_output = new char[num_elements];  // Pointer to char array that stores the output of the BWT operation
     int* mtf_output = new int[num_elements];  // Pointer to char array that stores the output of the MTF operation
 
-    int* huffman_output = new int[num_elements];  // Pointer to char array that stores the output of the Huffman operation
     HuffmanTree* myTree = new HuffmanTree();
-
     vector<char>* MTF_list = new vector<char>();  // Pointer to vector object that stores the list of unique characters
+    vector<bool>* huffman_output = new vector<bool>();  // Pointer to vector object that stores the huffman encoded data
+
     int ret_val = 0;  // Variable to store return value (status)
 
     // ----- Print input array -----
     if (verbose) cout << "Number of Elements: " << num_elements << endl << endl;
-    if (verbose) cout << "Input:       |" << input << "|" << endl;
+    if (verbose) cout << "Input:         |" << input << "|" << endl;
     // -----------------------------
 
     // ----- Compute BWT -----
@@ -358,7 +386,7 @@ int computeDecompressGold(char* input, size_t num_elements, bool verbose = false
     // -----------------------
 
     // ----- Print BWT output -----
-    if (verbose) cout << "BWT Output:  |" << bwt_output << "|" << endl;
+    if (verbose) cout << "BWT Output:    |" << bwt_output << "|" << endl;
 
     // ----- Compute MTF transform -----
     if (ret_val = computeMTF(bwt_output, mtf_output, num_elements, MTF_list)) {
@@ -372,11 +400,12 @@ int computeDecompressGold(char* input, size_t num_elements, bool verbose = false
 
     // ----- Print MTF output -----
     if (verbose) {
-        cout << "MTF Output:  ";
-        for (int i=0; i<num_elements; i++) { cout << mtf_output[i] << ","; }
+        cout << "MTF Output:    |";
+        for (int i=0; i<num_elements-1; i++) { cout << mtf_output[i] << ","; }
+        cout << mtf_output[num_elements-1] << "|" << endl;
 
-        cout << endl << "MTF List:    |";
-        for (int i=0; i<(*MTF_list).size(); i++) { cout << (*MTF_list)[i]; }
+        cout << "MTF List:      |";
+        for (int i=0; i<MTF_list->size(); i++) { cout << (*MTF_list)[i]; }
         cout << "|" << endl;
     }
     // ----------------------------
@@ -394,7 +423,9 @@ int computeDecompressGold(char* input, size_t num_elements, bool verbose = false
         }*/
 // -----------------------------------------------
 
-    
+        cout << "Huffman code:  |";
+        for (int i=0; i<huffman_output->size(); i++) { cout << huffman_output->at(i); }
+        cout << "|" << endl;
     }
 
     cout << endl << "Return: " << ret_val << endl;
