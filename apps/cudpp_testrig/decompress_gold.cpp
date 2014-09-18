@@ -230,9 +230,9 @@ int computeHuffmanTree(int* i_data, int* o_data, size_t num_elements, HuffmanTre
     //tree = new HuffmanTree(frequencies.size());  // Initialize the Huffman Tree
     sort(frequencies.begin(), frequencies.end());  // Sort the nodes (this particular statement used only for cosmetic purposes when printing out the pairs)yy
 
-    for (int j=0; j<frequencies.size(); j++) {
-        cout << "{" << frequencies.at(j).first << ", " << frequencies.at(j).second << "}" << endl;
-    }
+//    for (int j=0; j<frequencies.size(); j++) {
+//        cout << "{" << frequencies.at(j).first << ", " << frequencies.at(j).second << "}" << endl;
+//    }
 
     while (frequencies.size() > 1) {
         sort(frequencies.begin(), frequencies.end());  // Sort the nodes every time the loop starts over
@@ -240,8 +240,8 @@ int computeHuffmanTree(int* i_data, int* o_data, size_t num_elements, HuffmanTre
         int a_freq = frequencies.at(0).first;  // Shortcut to access the frequency of the number represented by the pair
         int b_num = frequencies.at(1).second;  // --------- SAME AS ^^^ -----------
         int b_freq = frequencies.at(1).first;  // ---------------------------------
-cout << endl << "A: MTF number= " << a_num << ", frequency= " << a_freq << endl;
-cout << "B: MTF number= " << b_num << ", frequency= " << b_freq << endl;
+//cout << endl << "A: MTF number= " << a_num << ", frequency= " << a_freq << endl;
+//cout << "B: MTF number= " << b_num << ", frequency= " << b_freq << endl;
         HuffmanNode* a = new HuffmanNode(a_num, a_freq);  // Make a new HuffmanNode object for the two pairs at the beginning of the list
         HuffmanNode* b = new HuffmanNode(b_num, b_freq);  // ---------- ^^^ ----------
 
@@ -250,16 +250,16 @@ cout << "B: MTF number= " << b_num << ", frequency= " << b_freq << endl;
                 HuffmanNode* node1 = tree->nodes->at(i);  // Shortcut to utilize a particular node
                 if (node1->parent == NULL) {  // If a particular node does not have a parent node
                     if (a->left_child == NULL) {  // If A does not have a left child
-cout << "A left child:" << endl;
-cout << "\tOld Node Data (child):  " << node1->data << " \tFreq: " << node1->freq << " \tType: " << (node1->type==2 ? "Leaf" : (node1->type==1 ? "Internal" : "Root")) << endl;
-cout << "\tNew Node Data (parent): " << a->data << " \tFreq: " << a->freq << " \tType: " << (a->type==2 ? "Leaf" : (a->type==1 ? "Internal" : "Root")) << endl;
+//cout << "A left child:" << endl;
+//cout << "\tOld Node Data (child):  " << node1->data << " \tFreq: " << node1->freq << " \tType: " << (node1->type==2 ? "Leaf" : (node1->type==1 ? "Internal" : "Root")) << endl;
+//cout << "\tNew Node Data (parent): " << a->data << " \tFreq: " << a->freq << " \tType: " << (a->type==2 ? "Leaf" : (a->type==1 ? "Internal" : "Root")) << endl;
                         a->left_child = node1;  // Assign the node to be A's left child
                         node1->parent = a;  // Assign A to be the node's parent
                     }
                     else if (a->right_child == NULL) {  // Otherwise, if A has a left child, but no right child
-cout << "A right child:" << endl;
-cout << "\tOld Node Data (child):  " << node1->data << " \tFreq: " << node1->freq << " \tType: " << (node1->type==2 ? "Leaf" : (node1->type==1 ? "Internal" : "Root")) << endl;
-cout << "\tNew Node Data (parent): " << a->data << " \tFreq: " << a->freq << " \tType: " << (a->type==2 ? "Leaf" : (a->type==1 ? "Internal" : "Root")) << endl;
+//cout << "A right child:" << endl;
+//cout << "\tOld Node Data (child):  " << node1->data << " \tFreq: " << node1->freq << " \tType: " << (node1->type==2 ? "Leaf" : (node1->type==1 ? "Internal" : "Root")) << endl;
+//cout << "\tNew Node Data (parent): " << a->data << " \tFreq: " << a->freq << " \tType: " << (a->type==2 ? "Leaf" : (a->type==1 ? "Internal" : "Root")) << endl;
                         a->right_child = node1;  // Assign the node to be A's right child
                         node1->parent = a;  // Assign A to be the node's parent
                     }
@@ -273,16 +273,16 @@ cout << "\tNew Node Data (parent): " << a->data << " \tFreq: " << a->freq << " \
                 HuffmanNode* node = tree->nodes->at(i);
                 if (node->parent == NULL) {
                     if (b->left_child == NULL) {
-cout << "B left child:" << endl;
-cout << "\tOld Node Data (child):  " << node->data << " \tFreq: " << node->freq << " \tType: " << (node->type==2 ? "Leaf" : (node->type==1 ? "Internal" : "Root")) << endl;
-cout << "\tNew Node Data (parent): " << b->data << " \tFreq: " << b->freq << " \tType: " << (b->type==2 ? "Leaf" : (b->type==1 ? "Internal" : "Root")) << endl;
+//cout << "B left child:" << endl;
+//cout << "\tOld Node Data (child):  " << node->data << " \tFreq: " << node->freq << " \tType: " << (node->type==2 ? "Leaf" : (node->type==1 ? "Internal" : "Root")) << endl;
+//cout << "\tNew Node Data (parent): " << b->data << " \tFreq: " << b->freq << " \tType: " << (b->type==2 ? "Leaf" : (b->type==1 ? "Internal" : "Root")) << endl;
                         b->left_child = node;
                         node->parent = b;
                     }
                     else if (b->right_child == NULL) {
-cout << "B right child:" << endl;
-cout << "\tOld Node Data (child):  " << node->data << " \tFreq: " << node->freq << " \tType: " << (node->type==2 ? "Leaf" : (node->type==1 ? "Internal" : "Root")) << endl;
-cout << "\tNew Node Data (parent): " << b->data << " \tFreq: " << b->freq << " \tType: " << (b->type==2 ? "Leaf" : (b->type==1 ? "Internal" : "Root")) << endl;
+//cout << "B right child:" << endl;
+//cout << "\tOld Node Data (child):  " << node->data << " \tFreq: " << node->freq << " \tType: " << (node->type==2 ? "Leaf" : (node->type==1 ? "Internal" : "Root")) << endl;
+//cout << "\tNew Node Data (parent): " << b->data << " \tFreq: " << b->freq << " \tType: " << (b->type==2 ? "Leaf" : (b->type==1 ? "Internal" : "Root")) << endl;
                         b->right_child = node;
                         node->parent = b;
                     }
@@ -291,8 +291,8 @@ cout << "\tNew Node Data (parent): " << b->data << " \tFreq: " << b->freq << " \
             }
         }    // ---------------- END NOTES ------------------
 
-cout << "num nodes in tree->nodes: " << tree->nodes->size() << endl;
-cout << "num nodes in frequencies: " << frequencies.size() << endl;
+//cout << "num nodes in tree->nodes: " << tree->nodes->size() << endl;
+//cout << "num nodes in frequencies: " << frequencies.size() << endl;
         tree->nodes->push_back(a);  // Add A to the tree's list of nodes
         tree->nodes->push_back(b);  // Add B to the tree's list of nodes
 
@@ -305,9 +305,9 @@ cout << "num nodes in frequencies: " << frequencies.size() << endl;
     HuffmanNode* r = new HuffmanNode(-1, frequencies.at(0).first);
     tree->root = r;
     r->left_child = tree->nodes->at(tree->nodes->size()-2);
-    r->left_child = tree->nodes->at(tree->nodes->size()-1);
+    r->right_child = tree->nodes->back();
     tree->nodes->at(tree->nodes->size()-2)->parent = r;
-    tree->nodes->at(tree->nodes->size()-1)->parent = r;
+    tree->nodes->back()->parent = r;
     tree->nodes->push_back(r);
 // -----------------
 
@@ -384,14 +384,17 @@ int computeDecompressGold(char* input, size_t num_elements, bool verbose = false
     if (ret_val = computeHuffmanTree(mtf_output, huffman_output, num_elements, myTree)) { ; }
 
     if (verbose) {
-cout << myTree->nodes->at(1) << endl;
-        for (int i=0; i<myTree->nodes->size(); i++) {
+// ----------- DEBUG COUT STATEMENTS -------------
+/*        for (int i=0; i<myTree->nodes->size(); i++) {
             HuffmanNode* node = (myTree->nodes->at(i));
             cout << endl << "Node (value, frequency): {" << node->data << "," << node->freq << "}, Type: " << (node->type==2 ? "Leaf" : (node->type==1 ? "Internal" : "Root"))  << endl;
             (node->left_child==NULL ? (cout << "\tNo left child" << endl) : (cout << "\tLeft Child (value, frequency): {" << node->left_child->data << "," << node->left_child->freq << "}, Type: " << (node->left_child->type==2 ? "Leaf" : (node->left_child->type==1 ? "Internal" : "Root")) << endl));
             (node->right_child==NULL ? (cout << "\tNo right child" << endl) : (cout << "\tRight Child (value, frequency): {" << node->right_child->data << "," << node->right_child->freq << "}, Type: " << (node->right_child->type==2 ? "Leaf" : (node->right_child->type==1 ? "Internal" : "Root")) << endl));
             //cout << "\tRight Child (value, frequency): {" << node.right_child->data << "," << node.right_child->freq << "}, Type: " << node.right_child->type << endl;
-        }
+        }*/
+// -----------------------------------------------
+
+    
     }
 
     cout << endl << "Return: " << ret_val << endl;
