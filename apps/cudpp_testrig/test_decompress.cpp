@@ -17,7 +17,23 @@
 
 int main(int argc, char* argv[])
 {
-    char input[] = "The quick brown fox jumps over the lazy dog.";
-    size_t num_elements = sizeof(input) - 1;
-    return computeDecompressGold(input, num_elements, (argc == 1) || ((argv[1] == string("q")) ? false : true));
+    int ret_val = 0;
+    int length = 100;
+    unsigned char* input;
+
+    if (argc > 1 && argv[1] == string("rand")) {
+        if (argc > 2 && argv[2] != string("q")) length = (int)*argv[2];
+        //input = new unsigned char[length + 1];
+        input = new unsigned char[length];
+
+        for (int i=0; i<length; i++)
+            input[i] = (rand() % 255) + 1;
+
+        //input[length] = (unsigned char)*"\0";
+    }
+    //unsigned char input[] = "The quick brown fox jumps over the lazy dog.";
+    size_t num_elements = length;
+    ret_val = computeDecompressGold(input, num_elements, !(argc-1) || ((argv[argc-1] == string("q")) ? false : true));
+
+    return ret_val;
 }
