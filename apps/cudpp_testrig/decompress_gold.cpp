@@ -98,9 +98,9 @@ struct HuffmanTree {
  *
  *  @return  Status. 0 = success, else = failure
  */
-int computeBWT(char* i_data, char* o_data, size_t num_elements)
+int computeBWT(unsigned char* i_data, unsigned char* o_data, size_t num_elements)
 {
-    vector<vector<char>> rotations(num_elements, vector<char> (num_elements));  // Allocate a 2D vector to store all input array rotations
+    vector<vector<unsigned char>> rotations(num_elements, vector<unsigned char> (num_elements));  // Allocate a 2D vector to store all input array rotations
     
     for (int i=0; i<num_elements; i++) {
         for (int j=0; j<num_elements; j++) {
@@ -127,9 +127,10 @@ int computeBWT(char* i_data, char* o_data, size_t num_elements)
  *
  *  @return  Status. 0 = success, else = failure
  */
-int computeMTF(char* i_data, int* o_data, size_t num_elements, vector<char>* MTF_list)
+int computeMTF(unsigned char* i_data, int* o_data, size_t num_elements, vector<unsigned char>* MTF_list)
 {
     bool found;  // Temporary boolean variable to determine if a character has already been discovered
+    typedef std::basic_string <unsigned char> ustring;
 
     // Loop through the input array and build a list of unique characters
     for (int i=0; i<num_elements; i++){
@@ -144,7 +145,7 @@ int computeMTF(char* i_data, int* o_data, size_t num_elements, vector<char>* MTF
     }
 
     sort(MTF_list->begin(), MTF_list->end());  // Sort MTF list (unique characters)
-    string MTF(MTF_list->begin(), MTF_list->end());  // Convert MTF list from vector to string (for searching functionality)
+    ustring MTF(MTF_list->begin(), MTF_list->end());  // Convert MTF list from vector to string (for searching functionality)
     int pos;  // Temporary variable used to store the position of a character in the MTF list
 
     // Perform move-to-front transform
@@ -348,7 +349,7 @@ int computeHuffmanTree(int* i_data, vector<bool>* o_data, size_t num_elements, H
  *
  *  @return  Status. 0 = success, else = failure
  */
-int computeDecompressGold(char* input, size_t num_elements, bool verbose = false)
+int computeDecompressGold(unsigned char* input, size_t num_elements, bool verbose = false)
 {
     /*  Steps:
      *     - Allocate memory
@@ -357,11 +358,11 @@ int computeDecompressGold(char* input, size_t num_elements, bool verbose = false
      *     - Run Huffman encoding
      */
 
-    char* bwt_output = new char[num_elements];  // Pointer to char array that stores the output of the BWT operation
+    unsigned char* bwt_output = new unsigned char[num_elements];  // Pointer to char array that stores the output of the BWT operation
     int* mtf_output = new int[num_elements];  // Pointer to char array that stores the output of the MTF operation
 
     HuffmanTree* myTree = new HuffmanTree();
-    vector<char>* MTF_list = new vector<char>();  // Pointer to vector object that stores the list of unique characters
+    vector<unsigned char>* MTF_list = new vector<unsigned char>();  // Pointer to vector object that stores the list of unique characters
     vector<bool>* huffman_output = new vector<bool>();  // Pointer to vector object that stores the huffman encoded data
 
     int ret_val = 0;  // Variable to store return value (status)
