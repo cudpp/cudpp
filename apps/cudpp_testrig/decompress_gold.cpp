@@ -109,6 +109,12 @@ int computeBWT(unsigned char* i_data, unsigned char* o_data, size_t num_elements
         }
     }
 
+/*    for (int i=0; i<num_elements; i++) {
+        cout << "               |";
+        for (vector<unsigned char>::iterator j=rotations[i].begin(); j!=rotations[i].end(); j++) { cout << *j; }
+        cout << "|" << endl;
+    }
+*/
     sort(rotations.begin(), rotations.end());  // Sort all the rotations in lexigraphical order
     for (int i=0; i<num_elements; i++) {
         o_data[i] = rotations[i][num_elements-1];  // Take the last character from each rotation and add it to the output array (in order)
