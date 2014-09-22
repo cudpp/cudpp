@@ -14,13 +14,25 @@
 
 #include <iostream>
 #include <ctime>
+#include <string>
+#include <exception>
 #include "decompress_gold.cpp"
+
+class myError : exception {
+    public:
+    string* msg;
+
+    myError(string str) {
+        msg = new string(str);
+    }
+};
 
 int main(int argc, char* argv[])
 {
+    int ret_val = 0;
+    try {
     srand(time(NULL));
 
-    int ret_val = 0;
     int length = 44;
     bool verbose = true;
     unsigned char* input = new unsigned char[length+1];
@@ -29,8 +41,11 @@ int main(int argc, char* argv[])
 
     if (argc > 1) {
         for (int i=1; i<argc; i++) {
-            if (argv[i] == string("q"))verbose = false;
+            if (argv[i] == string("q")) verbose = false;
+            else if (argv[i] == string("e")) throw myError("This is an error");
+            else if (argv[i] == string("f")) throw string("This is also an error");
             else if (argv[i] == string("rand")) for (int j=0; j<length; j++) { input[j] = (rand() % 126) + 1; }
+            else if ((argv[i]) == "../data/") cout << "OK" << endl;
         }
     }
 
@@ -39,6 +54,15 @@ int main(int argc, char* argv[])
     ret_val = computeDecompressGold(input, num_elements, verbose);
 
     delete [] input;
-
+    }
+    catch (myError& ex) {
+        cout << *ex.msg << endl;
+    }
+    catch (string err) {
+        cout << err << endl;
+    }
+    catch(...) {
+        cout << "Error" << endl;
+    }
     return ret_val;
 }
