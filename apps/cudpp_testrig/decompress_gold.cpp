@@ -378,10 +378,12 @@ int computeDecompressGold(unsigned char* input, size_t num_elements, bool verbos
         for (int i=0; i<num_elements; i++) {
             char temp = input[i];
             if (temp == '\t') cout << "\\t";
+            else if (temp == 28) cout << "\\s";
             else if (temp == '\n') cout << "\\n";
             else if (temp == '\b') cout << "\\b";
             else if (temp == '\v') cout << "\\v";
             else if (temp == '\r') cout << "\\r";
+            else if (temp == '\f') cout << "\\f";
             else if (temp == '\0') cout << "Ø";
             else cout << temp;
         }
@@ -408,10 +410,12 @@ int computeDecompressGold(unsigned char* input, size_t num_elements, bool verbos
 
             char temp = bwt_output[i];
             if (temp == '\t') cout << "\\t";
+            else if (temp == 28) cout << "\\s";
             else if (temp == '\n') cout << "\\n";
             else if (temp == '\b') cout << "\\b";
             else if (temp == '\v') cout << "\\v";
             else if (temp == '\r') cout << "\\r";
+            else if (temp == '\f') cout << "\\f";
             else if (temp == '\0') cout << "Ø";
             else cout << temp;
         }
@@ -438,11 +442,14 @@ int computeDecompressGold(unsigned char* input, size_t num_elements, bool verbos
         for (int i=0; i<MTF_list->size(); i++) {
             char temp = (*MTF_list)[i];
             if (temp == '\t') cout << "\\t";
+            else if (temp == 28) cout << "\\s";
             else if (temp == '\n') cout << "\\n";
             else if (temp == '\b') cout << "\\b";
             else if (temp == '\v') cout << "\\v";
             else if (temp == '\r') cout << "\\r";
+            else if (temp == '\f') cout << "\\f";
             else if (temp == '\0') cout << "Ø";
+            //else if (iscntrl(temp)) cout << "(" << (int)temp << ")";
             else cout << temp;
         }
         cout << "|" << endl;
