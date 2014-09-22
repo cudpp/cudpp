@@ -30,7 +30,7 @@ int main(int argc, char* argv[])
     if (argc > 1) {
         for (int i=1; i<argc; i++) {
             if (argv[i] == string("q"))verbose = false;
-            else if (argv[i] == string("rand")) for (int j=0; j<length; j++) { input[j] = (rand() % 255) + 1; }
+            else if (argv[i] == string("rand")) for (int j=0; j<length; j++) { input[j] = (rand() % 126) + 1; }
         }
     }
 
