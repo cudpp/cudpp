@@ -22,20 +22,21 @@ int main(int argc, char* argv[])
 
     int ret_val = 0;
     int length = 44;
-    unsigned char* input = new unsigned char[length];
-    unsigned char input2[] = "The quick brown fox jumps over the lazy dog.";
+    bool verbose = true;
+    unsigned char* input = new unsigned char[length+1];
 
-    if (argc > 1 && argv[1] == string("rand")) {
-        //input = new unsigned char[length + 1];
-        input = new unsigned char[length];
+    strcpy((char*)input, ("The quick brown fox jumps over the lazy dog."));
 
-        for (int i=0; i<length; i++) {
-            input[i] = (rand() % 255) + 1;
+    if (argc > 1) {
+        for (int i=1; i<argc; i++) {
+            if (argv[i] == string("q"))verbose = false;
+            else if (argv[i] == string("rand")) for (int j=0; j<length; j++) { input[j] = (rand() % 255) + 1; }
         }
     }
+
+    input[length] = '\0';
     size_t num_elements = length;
-    ret_val = (argc > 1 ? computeDecompressGold(input, num_elements, !(argc-1) || ((argv[argc-1] == string("q")) ? false : true)):
-                          computeDecompressGold(input2, num_elements, !(argc-1) || ((argv[argc-1] == string("q")) ? false : true)));
+    ret_val = computeDecompressGold(input, num_elements, verbose);
 
     delete [] input;
 
