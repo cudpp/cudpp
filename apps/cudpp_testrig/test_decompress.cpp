@@ -37,6 +37,8 @@ int main(int argc, char* argv[])
     bool verbose = true;  // Determines whether the program prints output data or not
     unsigned char* input = new unsigned char[length];  // Input data array. Initialized for the default input string but is reinitialized if input comes from a different source
 
+    strcpy((char*)input, ("The quick brown fox jumps over the lazy dog."));  // Default input string if nothing else is specified
+
     try {  // Try-catch block used to handle errors with files
 	if (argc > 1) {  // If there are any command-line arguments, process them
 	    for (int i=1; i<argc; i++) {  // Loop through all the command-line arguments
@@ -57,7 +59,6 @@ int main(int argc, char* argv[])
 		}
 	    }
 	}
-	else strcpy((char*)input, ("The quick brown fox jumps over the lazy dog."));  // Default input string (if nothing else is specified
 
 	size_t num_elements = length;
 	ret_val = computeDecompressGold(input, num_elements, verbose);  // Run the compression code in decompress_gold.cpp
