@@ -362,8 +362,6 @@ int computeDecompressGold(unsigned char* input, size_t num_elements, bool verbos
      *     - Run Huffman encoding
      */
 
-    unsigned char* bwt_output = new unsigned char[num_elements+1];  // Pointer to char array that stores the output of the BWT operation
-    int* mtf_output = new int[num_elements+1];  // Pointer to char array that stores the output of the MTF operation
 
     HuffmanTree* myTree = new HuffmanTree();
     vector<unsigned char>* MTF_list = new vector<unsigned char>();  // Pointer to vector object that stores the list of unique characters
@@ -391,11 +389,11 @@ int computeDecompressGold(unsigned char* input, size_t num_elements, bool verbos
     }
     // -----------------------------
 
+    unsigned char* bwt_output = new unsigned char[num_elements+1];  // Pointer to char array that stores the output of the BWT operation
     // ----- Compute BWT -----
     if (ret_val = computeBWT(input, bwt_output, num_elements)) {
         cout << "Error in BWT: " << ret_val << endl;
         delete [] bwt_output;
-        delete [] mtf_output;
         delete MTF_list;
         return ret_val;
     }
@@ -422,6 +420,7 @@ int computeDecompressGold(unsigned char* input, size_t num_elements, bool verbos
         cout << "|" << endl;
     }
 
+    int* mtf_output = new int[num_elements+1];  // Pointer to char array that stores the output of the MTF operation
     // ----- Compute MTF transform -----
     if (ret_val = computeMTF(bwt_output, mtf_output, num_elements, MTF_list)) {
         cout << "Error in MTF: " << ret_val << endl;
@@ -431,6 +430,7 @@ int computeDecompressGold(unsigned char* input, size_t num_elements, bool verbos
         return ret_val;
     }
     // ---------------------------------
+    delete [] bwt_output;
 
     // ----- Print MTF output -----
     if (verbose) {
@@ -454,21 +454,13 @@ int computeDecompressGold(unsigned char* input, size_t num_elements, bool verbos
         }
         cout << "|" << endl;
     }
+    delete MTF_list;
     // ----------------------------
 
     if (ret_val = computeHuffmanTree(mtf_output, huffman_output, num_elements, myTree)) { ; }
+    delete [] mtf_output;
 
     if (verbose) {
-// ----------- DEBUG COUT STATEMENTS -------------
-/*        for (int i=0; i<myTree->nodes->size(); i++) {
-            HuffmanNode* node = (myTree->nodes->at(i));
-            cout << endl << "Node (value, frequency): {" << node->data << "," << node->freq << "}, Type: " << (node->type==2 ? "Leaf" : (node->type==1 ? "Internal" : "Root"))  << endl;
-            (node->left_child==NULL ? (cout << "\tNo left child" << endl) : (cout << "\tLeft Child (value, frequency): {" << node->left_child->data << "," << node->left_child->freq << "}, Type: " << (node->left_child->type==2 ? "Leaf" : (node->left_child->type==1 ? "Internal" : "Root")) << endl));
-            (node->right_child==NULL ? (cout << "\tNo right child" << endl) : (cout << "\tRight Child (value, frequency): {" << node->right_child->data << "," << node->right_child->freq << "}, Type: " << (node->right_child->type==2 ? "Leaf" : (node->right_child->type==1 ? "Internal" : "Root")) << endl));
-            //cout << "\tRight Child (value, frequency): {" << node.right_child->data << "," << node.right_child->freq << "}, Type: " << node.right_child->type << endl;
-        }*/
-// -----------------------------------------------
-
         cout << "Huffman code:  |";
         for (int i=0; i<huffman_output->size(); i++) { cout << huffman_output->at(i); }
         cout << "|" << endl;
@@ -476,10 +468,7 @@ int computeDecompressGold(unsigned char* input, size_t num_elements, bool verbos
 
     cout << endl << "Return: " << ret_val << endl;
 
-    delete [] bwt_output;
-    delete [] mtf_output;
     delete huffman_output;
-    delete MTF_list;
     delete myTree;
 
     return ret_val;
