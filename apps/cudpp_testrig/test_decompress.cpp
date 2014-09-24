@@ -35,9 +35,9 @@ int main(int argc, char* argv[])
     int ret_val = 0;  // Stores the return value
     int length = 44;  // Default input array length (based on default input string). Changes if input comes from a file
     bool verbose = true;  // Determines whether the program prints output data or not
-    unsigned char* input = new unsigned char[length];  // Input data array. Initialized for the default input string but is reinitialized if input comes from a different source
+    char* input = new char[length];  // Input data array. Initialized for the default input string but is reinitialized if input comes from a different source
 
-    strcpy((char*)input, ("The quick brown fox jumps over the lazy dog."));  // Default input string if nothing else is specified
+    strcpy(input, ("The quick brown fox jumps over the lazy dog."));  // Default input string if nothing else is specified
 
     try {  // Try-catch block used to handle errors with files
 	if (argc > 1) {  // If there are any command-line arguments, process them
@@ -54,8 +54,8 @@ int main(int argc, char* argv[])
                     streamsize size = length = input_file.tellg();  // Return the position of the end of the file (size of file)
                     input_file.seekg(0, ios::beg);  // Return the pointer to the beginning of the file so the file can be read
 
-                    input = new unsigned char[length+1];  // Initialize input array to size of file
-                    input_file.read((char*)input, size);  // Read file into input array
+                    input = new char[length+1];  // Initialize input array to size of file
+                    input_file.read(input, size);  // Read file into input array
 		}
 	    }
 	}
