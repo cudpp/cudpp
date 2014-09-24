@@ -126,11 +126,11 @@ void mySort(char** a, size_t num_elements) {
  *
  *  @return  Status. 0 = success, else = failure
  */
-int computeBWT(char* i_data, char* o_data, size_t num_elements)
+int computeBWT(unsigned char* i_data, unsigned char* o_data, size_t num_elements)
 {
     o_data[num_elements] = '\0';  // Null-terminate the output array
 
-    vector<vector<char>> rotations(num_elements, vector<char> (NUM_CHARS + 1));  // Allocate a 2D vector to store all input array rotations
+    vector<vector<unsigned char>> rotations(num_elements, vector<unsigned char> (NUM_CHARS + 1));  // Allocate a 2D vector to store all input array rotations
     
     for (int i=0; i<num_elements; i++) {
         for (int j=0; j<NUM_CHARS; j++) {
@@ -158,11 +158,12 @@ int computeBWT(char* i_data, char* o_data, size_t num_elements)
  *
  *  @return  Status. 0 = success, else = failure
  */
-int computeMTF(char* i_data, char* o_data, size_t num_elements, vector<char>* MTF_list)
+int computeMTF(unsigned char* i_data, unsigned char* o_data, size_t num_elements, vector<unsigned char>* MTF_list)
 {
     o_data[num_elements] = '\0';  // Null-terminate the output array
 
     bool found;  // Temporary boolean variable to determine if a character has already been discovered
+    typedef std::basic_string<unsigned char> ustring;
 
     // Loop through the input array and build a list of unique characters
     for (int i=0; i<num_elements; i++){
@@ -177,8 +178,8 @@ int computeMTF(char* i_data, char* o_data, size_t num_elements, vector<char>* MT
     }
 
     sort(MTF_list->begin(), MTF_list->end());  // Sort MTF list (unique characters)
-    string MTF(MTF_list->begin(), MTF_list->end());  // Convert MTF list from vector to string (for searching functionality)
-    char pos;  // Temporary variable used to store the position of a character in the MTF list
+    ustring MTF(MTF_list->begin(), MTF_list->end());  // Convert MTF list from vector to string (for searching functionality)
+    unsigned char pos;  // Temporary variable used to store the position of a character in the MTF list
 
     // Perform move-to-front transform
     for (int i=0; i<num_elements; i++) {
@@ -203,7 +204,7 @@ int computeMTF(char* i_data, char* o_data, size_t num_elements, vector<char>* MT
  *
  *  @return  Status. 0 = success, else = failure
  */
-int computeHuffmanTree(char* i_data, vector<bool>* o_data, size_t num_elements, HuffmanTree* tree)
+int computeHuffmanTree(unsigned char* i_data, vector<bool>* o_data, size_t num_elements, HuffmanTree* tree)
 {
     vector<pair<int, int>> frequencies;
     bool exists;      // Variable that stores whether a pair exists for a given MTF number
@@ -354,10 +355,10 @@ int computeHuffmanTree(char* i_data, vector<bool>* o_data, size_t num_elements, 
  *
  *  @return  Status. 0 = success, else = failure
  */
-int computeDecompressGold(char* input, vector<bool>* output, size_t num_elements, bool verbose = false)
+int computeDecompressGold(unsigned char* input, vector<bool>* output, size_t num_elements, bool verbose = false)
 {
     HuffmanTree* myTree = new HuffmanTree();
-    vector<char>* MTF_list = new vector<char>();  // Pointer to vector object that stores the list of unique characters
+    vector<unsigned char>* MTF_list = new vector<unsigned char>();  // Pointer to vector object that stores the list of unique characters
 
     int ret_val = 0;  // Variable to store return value (status)
 
@@ -366,7 +367,7 @@ int computeDecompressGold(char* input, vector<bool>* output, size_t num_elements
     if (verbose) {
         cout << "Input:         |";
         for (int i=0; i<num_elements; i++) {
-            char temp = input[i];
+            unsigned char temp = input[i];
             if (temp == '\t') cout << "\\t";
             else if (temp == 28) cout << "\\s";
             else if (temp == '\n') cout << "\\n";
@@ -381,7 +382,7 @@ int computeDecompressGold(char* input, vector<bool>* output, size_t num_elements
     }
     // -----------------------------
 
-    char* bwt_output = new char[num_elements+1];  // Pointer to char array that stores the output of the BWT operation
+    unsigned char* bwt_output = new unsigned char[num_elements+1];  // Pointer to char array that stores the output of the BWT operation
     // ----- Compute BWT -----
     if (ret_val = computeBWT(input, bwt_output, num_elements)) {
         cout << "Error in BWT: " << ret_val << endl;
@@ -395,7 +396,7 @@ int computeDecompressGold(char* input, vector<bool>* output, size_t num_elements
     if (verbose) {
         cout << "BWT Output:    |";
         for (int i=0; i<num_elements; i++) {
-            char temp = bwt_output[i];
+            unsigned char temp = bwt_output[i];
             if (temp == '\t') cout << "\\t";
             else if (temp == 28) cout << "\\s";
             else if (temp == '\n') cout << "\\n";
@@ -409,7 +410,7 @@ int computeDecompressGold(char* input, vector<bool>* output, size_t num_elements
         cout << "|" << endl;
     }
 
-    char* mtf_output = new char[num_elements+1];  // Pointer to char array that stores the output of the MTF operation
+    unsigned char* mtf_output = new unsigned char[num_elements+1];  // Pointer to char array that stores the output of the MTF operation
     // ----- Compute MTF transform -----
     if (ret_val = computeMTF(bwt_output, mtf_output, num_elements, MTF_list)) {
         cout << "Error in MTF: " << ret_val << endl;
@@ -429,7 +430,7 @@ int computeDecompressGold(char* input, vector<bool>* output, size_t num_elements
 
         cout << "MTF List:      |";
         for (int i=0; i<MTF_list->size(); i++) {
-            char temp = (*MTF_list)[i];
+            unsigned char temp = (*MTF_list)[i];
             if (temp == '\t') cout << "\\t";
             else if (temp == 28) cout << "\\s";
             else if (temp == '\n') cout << "\\n";
