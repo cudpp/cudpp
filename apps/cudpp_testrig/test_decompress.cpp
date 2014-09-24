@@ -15,6 +15,7 @@
 #include <iostream>
 #include <fstream>
 #include <ctime>
+#include <cmath>
 #include <string>
 #include <exception>
 #include "decompress_gold.cpp"
