@@ -165,29 +165,18 @@ int computeMTF(unsigned char* i_data, unsigned char* o_data, size_t num_elements
     bool found;  // Temporary boolean variable to determine if a character has already been discovered
     typedef std::basic_string<unsigned char> ustring;
 
-    // Loop through the input array and build a list of unique characters
-    for (int i=0; i<num_elements; i++){
-        found = false;
-        for (int j=0; j<MTF_list->size(); j++){
-            if (i_data[i] == (*MTF_list)[j]) {  // If the character has already been discovered, set the flag and exit the loop
-                found = true;
-                break;
-            }
-        }
-        if (!found) MTF_list->push_back(i_data[i]);  // If the character has not already been discovered, add it to the list
-    }
+    for (int i=0; i<256; i++) { MTF_list->push_back(i); }  // Build MTF list from all possible character values
 
-    sort(MTF_list->begin(), MTF_list->end());  // Sort MTF list (unique characters)
     ustring MTF(MTF_list->begin(), MTF_list->end());  // Convert MTF list from vector to string (for searching functionality)
     unsigned char pos;  // Temporary variable used to store the position of a character in the MTF list
 
     // Perform move-to-front transform
     for (int i=0; i<num_elements; i++) {
         pos = MTF.find(i_data[i]);  // Find input character in list
-        o_data[i] = pos;  // Add input character position to output
-        if (pos) {        // If input character is not at front of MTF list, move it to front of MTF list
-            MTF.erase(pos, 1);
-            MTF = i_data[i] + MTF;
+        o_data[i] = pos;            // Add input character position to output
+        if (pos) {                    // If input character is not at front of MTF list
+            MTF.erase(pos, 1);        // Erase it from it's current position
+            MTF = i_data[i] + MTF;    // Add it to the front of the list
         }
     }
 
