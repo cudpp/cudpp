@@ -90,6 +90,18 @@ struct HuffmanTree {
     ~HuffmanTree() { delete nodes; }  ///< Destructor
 };
 
+/*void myInsert(char* b, int init, int loc, size_t num_elements) {
+    char* temp = new char[num_elements];
+    for (int i=0; i<num_elements; i++) {
+        temp[i] = b[(init * num_elements) + i];
+    }
+//cout << b << endl;
+//cout << &b[init] << endl;
+//cout << &temp << endl;
+    for (int i=(init * num_elements) + num_elements - 1; i>loc * num_elements; i--) { b[i] = b[(i - num_elements)]; }
+    for (int i=0; i<num_elements; i++) { b[(loc * num_elements) + i] = temp[i]; }
+    delete [] temp;
+}*/
 void myInsert(char** b, int init, int loc) {
     char* temp = b[init];
 //cout << b << endl;
@@ -99,6 +111,28 @@ void myInsert(char** b, int init, int loc) {
     b[loc] = temp;
 }
 
+/*void mySort(char* a, size_t num_elements) {
+    bool out;
+    for (int i=1; i<num_elements; i++) {
+        out = false;
+        for (int j=0; j<i; j++) {
+            for (int k=0; k<num_elements; k++) {
+//cout << a[i][k] << "," << a[j][k] << "\ti:" << i << ", j:" << j << "k:" << k << endl;
+                if (a[(i * num_elements) + k] < a[(j * num_elements) + k]) {
+//cout << a << endl;
+//cout << &a[i] << endl;
+                    myInsert(a, i, j, num_elements);
+                    out = true;
+                    break;
+                }
+                if (a[(i * num_elements) + k] > a[(j * num_elements) + k]) {
+                    break;
+                }
+            }
+            if (out) break;
+        }
+    }
+}*/
 void mySort(char** a, size_t num_elements) {
     bool out;
     for (int i=1; i<num_elements; i++) {
@@ -133,12 +167,14 @@ void mySort(char** a, size_t num_elements) {
 int computeBWT(char* i_data, char* o_data, size_t num_elements)
 {
     o_data[num_elements] = '\0';  // Null-terminate the output array
-
-    //vector<vector<char>> rotations(num_elements, vector<char> (num_elements));  // Allocate a 2D vector to store all input array rotations
-    char** rotations = new char*[num_elements];
+cout << "num_elements: " << num_elements << endl;
+    vector<vector<char>> rotations(num_elements, vector<char> (num_elements));  // Allocate a 2D vector to store all input array rotations
+    //rotations.reserve(num_elements);
+    //char** rotations = new char*[num_elements];
+    //char* rotations = new char[num_elements * num_elements];
     
     for (int i=0; i<num_elements; i++) {
-        rotations[i] = new char[num_elements];
+    //    rotations[i] = new char[num_elements];
         for (int j=0; j<num_elements; j++) {
             rotations[i][j] = i_data[(i+j) % num_elements];  /* Build rotations by iterating through the input array,
                                                                 looping back around to the beginning when reaching the end */
@@ -146,13 +182,15 @@ int computeBWT(char* i_data, char* o_data, size_t num_elements)
 //cout << rotations[i] << " " << &rotations[i] << endl;
     }
 //cout << endl;
-    mySort(rotations, num_elements);
+    //mySort(rotations, num_elements);
+cout << "OK" << endl;
+    sort(rotations.begin(), rotations.end());
     for (int i=0; i<num_elements; i++) {
 //cout << rotations[i] << endl;
         o_data[i] = rotations[i][num_elements - 1];  // Take the last character from each rotation and add it to the output array (in order)
     }
 
-    delete [] rotations;
+    //delete [] rotations;
 
     if (o_data[num_elements] != '\0') return -1;  // If output array is not null-terminated, return an error
     else return 0;
