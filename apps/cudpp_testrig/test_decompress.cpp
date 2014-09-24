@@ -61,14 +61,10 @@ int main(int argc, char* argv[])
                     input_file.read((char*)input, size);    // Read file into input array
 
                     name = new char[strlen(argv[i]) + 12];  // Store file name for use in generating an output file
-cout << argv[i] << endl;
                     strncpy(name, argv[i], strlen(argv[i]) - 4);
                     name[strlen(argv[i]) - 4] = '\0';
-cout << name << endl;
                     strcat(name, "_compressed");
-cout << name << endl;
                     strcat(name, ".txt");
-cout << name << endl;
 		}
 	    }
 	}
