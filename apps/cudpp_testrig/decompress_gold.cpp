@@ -90,6 +90,38 @@ struct HuffmanTree {
     ~HuffmanTree() { delete nodes; }  ///< Destructor
 };
 
+void myInsert(char** b, int init, int loc) {
+    char* temp = b[init];
+//cout << b << endl;
+//cout << &b[init] << endl;
+//cout << &temp << endl;
+    for (int i=init; i>loc; i--) { b[i] = b[i-1]; }
+    b[loc] = temp;
+}
+
+void mySort(char** a, size_t num_elements) {
+    bool out;
+    for (int i=1; i<num_elements; i++) {
+        out = false;
+        for (int j=0; j<i; j++) {
+            for (int k=0; k<num_elements; k++) {
+//cout << a[i][k] << "," << a[j][k] << "\ti:" << i << ", j:" << j << "k:" << k << endl;
+                if (a[i][k] < a[j][k]) {
+//cout << a << endl;
+//cout << &a[i] << endl;
+                    myInsert(a, i, j);
+                    out = true;
+                    break;
+                }
+                if (a[i][k] > a[j][k]) {
+                    break;
+                }
+            }
+            if (out) break;
+        }
+    }
+}
+
 /** @brief Run a Burrows-Wheeler Transform (BWT) for computeDecompressGold()
  *
  *  @param[in]  i_data        Pointer to input data array
@@ -98,23 +130,29 @@ struct HuffmanTree {
  *
  *  @return  Status. 0 = success, else = failure
  */
-int computeBWT(unsigned char* i_data, unsigned char* o_data, size_t num_elements)
+int computeBWT(char* i_data, char* o_data, size_t num_elements)
 {
     o_data[num_elements] = '\0';  // Null-terminate the output array
 
-    vector<vector<unsigned char>> rotations(num_elements, vector<unsigned char> (num_elements));  // Allocate a 2D vector to store all input array rotations
+    //vector<vector<char>> rotations(num_elements, vector<char> (num_elements));  // Allocate a 2D vector to store all input array rotations
+    char** rotations = new char*[num_elements];
     
     for (int i=0; i<num_elements; i++) {
+        rotations[i] = new char[num_elements];
         for (int j=0; j<num_elements; j++) {
             rotations[i][j] = i_data[(i+j) % num_elements];  /* Build rotations by iterating through the input array,
                                                                 looping back around to the beginning when reaching the end */
         }
+//cout << rotations[i] << " " << &rotations[i] << endl;
+    }
+//cout << endl;
+    mySort(rotations, num_elements);
+    for (int i=0; i<num_elements; i++) {
+//cout << rotations[i] << endl;
+        o_data[i] = rotations[i][num_elements - 1];  // Take the last character from each rotation and add it to the output array (in order)
     }
 
-    sort(rotations.begin(), rotations.end());  // Sort all the rotations in lexigraphical order
-    for (int i=0; i<num_elements; i++) {
-        o_data[i] = rotations[i][num_elements-1];  // Take the last character from each rotation and add it to the output array (in order)
-    }
+    delete [] rotations;
 
     if (o_data[num_elements] != '\0') return -1;  // If output array is not null-terminated, return an error
     else return 0;
@@ -129,12 +167,11 @@ int computeBWT(unsigned char* i_data, unsigned char* o_data, size_t num_elements
  *
  *  @return  Status. 0 = success, else = failure
  */
-int computeMTF(unsigned char* i_data, int* o_data, size_t num_elements, vector<unsigned char>* MTF_list)
+int computeMTF(char* i_data, char* o_data, size_t num_elements, vector<char>* MTF_list)
 {
     o_data[num_elements] = '\0';  // Null-terminate the output array
 
     bool found;  // Temporary boolean variable to determine if a character has already been discovered
-    typedef std::basic_string <unsigned char> ustring;
 
     // Loop through the input array and build a list of unique characters
     for (int i=0; i<num_elements; i++){
@@ -149,8 +186,8 @@ int computeMTF(unsigned char* i_data, int* o_data, size_t num_elements, vector<u
     }
 
     sort(MTF_list->begin(), MTF_list->end());  // Sort MTF list (unique characters)
-    ustring MTF(MTF_list->begin(), MTF_list->end());  // Convert MTF list from vector to string (for searching functionality)
-    int pos;  // Temporary variable used to store the position of a character in the MTF list
+    string MTF(MTF_list->begin(), MTF_list->end());  // Convert MTF list from vector to string (for searching functionality)
+    char pos;  // Temporary variable used to store the position of a character in the MTF list
 
     // Perform move-to-front transform
     for (int i=0; i<num_elements; i++) {
@@ -175,7 +212,7 @@ int computeMTF(unsigned char* i_data, int* o_data, size_t num_elements, vector<u
  *
  *  @return  Status. 0 = success, else = failure
  */
-int computeHuffmanTree(int* i_data, vector<bool>* o_data, size_t num_elements, HuffmanTree* tree)
+int computeHuffmanTree(char* i_data, vector<bool>* o_data, size_t num_elements, HuffmanTree* tree)
 {
     vector<pair<int, int>> frequencies;
     bool exists;
@@ -353,18 +390,12 @@ int computeHuffmanTree(int* i_data, vector<bool>* o_data, size_t num_elements, H
  *
  *  @return  Status. 0 = success, else = failure
  */
-int computeDecompressGold(unsigned char* input, size_t num_elements, bool verbose = false)
+int computeDecompressGold(char* input, size_t num_elements, bool verbose = false)
 {
-    /*  Steps:
-     *     - Allocate memory
-     *     - Run BWT
-     *     - Run MTF transform
-     *     - Run Huffman encoding
-     */
-
-
+    int total = sizeof(char) * num_elements;
+    cout << "sizeof(input): " << total << ", total: " << total << endl;
     HuffmanTree* myTree = new HuffmanTree();
-    vector<unsigned char>* MTF_list = new vector<unsigned char>();  // Pointer to vector object that stores the list of unique characters
+    vector<char>* MTF_list = new vector<char>();  // Pointer to vector object that stores the list of unique characters
     vector<bool>* huffman_output = new vector<bool>();  // Pointer to vector object that stores the huffman encoded data
 
     int ret_val = 0;  // Variable to store return value (status)
@@ -389,7 +420,9 @@ int computeDecompressGold(unsigned char* input, size_t num_elements, bool verbos
     }
     // -----------------------------
 
-    unsigned char* bwt_output = new unsigned char[num_elements+1];  // Pointer to char array that stores the output of the BWT operation
+    char* bwt_output = new char[num_elements+1];  // Pointer to char array that stores the output of the BWT operation
+    total += (sizeof(char) * num_elements);
+    cout << "sizeof(bwt_output): " << sizeof(char) * num_elements << ", total: " << total << endl;
     // ----- Compute BWT -----
     if (ret_val = computeBWT(input, bwt_output, num_elements)) {
         cout << "Error in BWT: " << ret_val << endl;
@@ -420,7 +453,9 @@ int computeDecompressGold(unsigned char* input, size_t num_elements, bool verbos
         cout << "|" << endl;
     }
 
-    int* mtf_output = new int[num_elements+1];  // Pointer to char array that stores the output of the MTF operation
+    char* mtf_output = new char[num_elements+1];  // Pointer to char array that stores the output of the MTF operation
+    total += (sizeof(char) * num_elements);
+    cout << "sizeof(mtf_output): " << sizeof(char) * num_elements << ", total: " << total << endl;
     // ----- Compute MTF transform -----
     if (ret_val = computeMTF(bwt_output, mtf_output, num_elements, MTF_list)) {
         cout << "Error in MTF: " << ret_val << endl;
@@ -431,12 +466,13 @@ int computeDecompressGold(unsigned char* input, size_t num_elements, bool verbos
     }
     // ---------------------------------
     delete [] bwt_output;
+    //total -= (sizeof(char) * num_elements);
 
     // ----- Print MTF output -----
     if (verbose) {
         cout << "MTF Output:    |";
-        for (int i=0; i<num_elements-1; i++) { cout << mtf_output[i] << ","; }
-        cout << mtf_output[num_elements-1] << "|" << endl;
+        for (int i=0; i<num_elements-1; i++) { cout << (int)mtf_output[i] << ","; }
+        cout << (int)mtf_output[num_elements-1] << "|" << endl;
 
         cout << "MTF List:      |";
         for (int i=0; i<MTF_list->size(); i++) {
@@ -454,10 +490,13 @@ int computeDecompressGold(unsigned char* input, size_t num_elements, bool verbos
         }
         cout << "|" << endl;
     }
+    cout << "sizeof(MTF_list): " << sizeof(*MTF_list) << endl;
     delete MTF_list;
     // ----------------------------
 
     if (ret_val = computeHuffmanTree(mtf_output, huffman_output, num_elements, myTree)) { ; }
+    cout << "sizeof(huffman_output): " << huffman_output->capacity()  << endl;
+    cout << "sizeof(HuffmanNode): " << sizeof(myTree->nodes->at(0)) << endl;
     delete [] mtf_output;
 
     if (verbose) {
