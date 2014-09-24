@@ -34,7 +34,7 @@ int main(int argc, char* argv[])
 
     int ret_val = 0;  // Stores the return value
     int length = 44;  // Default input array length (based on default input string). Changes if input comes from a file
-    bool verbose = true;  // Determines whether the program prints output data or not
+    bool verbose = false;  // Determines whether the program prints output data or not
     char* input = new char[length];  // Input data array. Initialized for the default input string but is reinitialized if input comes from a different source
 
     strcpy(input, ("The quick brown fox jumps over the lazy dog."));  // Default input string if nothing else is specified
@@ -42,7 +42,7 @@ int main(int argc, char* argv[])
     try {  // Try-catch block used to handle errors with files
 	if (argc > 1) {  // If there are any command-line arguments, process them
 	    for (int i=1; i<argc; i++) {  // Loop through all the command-line arguments
-		if (argv[i] == string("q")) verbose = false;  // "Quiet mode". Disables printing of output data
+		if (argv[i] == string("v")) verbose = true;  // "Verbose mode". Enables printing of output data
 		else if (argv[i] == string("e")) throw myError("This is an error");  // Option to test try-catch functionality
 		else if (argv[i] == string("f")) throw string("This is also an error");  // Another option to test try-catch funtionality
 		else if (argv[i] == string("rand")) for (int j=0; j<length; j++) { input[j] = (rand() % 126) + 1; }  // Generates random ASCII characters as input
