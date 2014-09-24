@@ -350,14 +350,14 @@ int computeHuffmanTree(char* i_data, vector<bool>* o_data, size_t num_elements, 
  *  @param[in]  input         Pointer to input data array
  *  @param[in]  num_elements  Length of input data array
  *  @param[in]  verbose       Optional input to print out intermediate data
+ *  @param[out] output        Pointer to output data vector
  *
  *  @return  Status. 0 = success, else = failure
  */
-int computeDecompressGold(char* input, size_t num_elements, bool verbose = false)
+int computeDecompressGold(char* input, vector<bool>* output, size_t num_elements, bool verbose = false)
 {
     HuffmanTree* myTree = new HuffmanTree();
     vector<char>* MTF_list = new vector<char>();  // Pointer to vector object that stores the list of unique characters
-    vector<bool>* huffman_output = new vector<bool>();  // Pointer to vector object that stores the huffman encoded data
 
     int ret_val = 0;  // Variable to store return value (status)
 
@@ -446,9 +446,8 @@ int computeDecompressGold(char* input, size_t num_elements, bool verbose = false
     delete MTF_list;
 
     // ----- Build Huffman code -----
-    if (ret_val = computeHuffmanTree(mtf_output, huffman_output, num_elements, myTree)) {
+    if (ret_val = computeHuffmanTree(mtf_output, output, num_elements, myTree)) {
         delete [] mtf_output;
-        delete huffman_output;
         delete myTree;
         return ret_val;
     }
@@ -458,15 +457,13 @@ int computeDecompressGold(char* input, size_t num_elements, bool verbose = false
     // ----- Print Huffman code -----
     if (verbose) {
         cout << "Huffman code:  |";
-        for (int i=0; i<huffman_output->size(); i++) { cout << huffman_output->at(i); }
+        for (int i=0; i<output->size(); i++) { cout << output->at(i); }
         cout << "|" << endl;
     }
     // ------------------------------
+    delete myTree;
 
     //cout << endl << "Return: " << ret_val << endl;
-
-    delete huffman_output;
-    delete myTree;
 
     return ret_val;
 }

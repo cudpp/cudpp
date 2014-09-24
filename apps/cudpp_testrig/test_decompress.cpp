@@ -36,6 +36,7 @@ int main(int argc, char* argv[])
     int length = 44;  // Default input array length (based on default input string). Changes if input comes from a file
     bool verbose = false;  // Determines whether the program prints output data or not
     char* input = new char[length];  // Input data array. Initialized for the default input string but is reinitialized if input comes from a different source
+    vector<bool>* output = new vector<bool>();
 
     strcpy(input, ("The quick brown fox jumps over the lazy dog."));  // Default input string if nothing else is specified
 
@@ -61,13 +62,14 @@ int main(int argc, char* argv[])
 	}
 
 	size_t num_elements = length;
-	ret_val = computeDecompressGold(input, num_elements, verbose);  // Run the compression code in decompress_gold.cpp
+	ret_val = computeDecompressGold(input, output, num_elements, verbose);  // Run the compression code in decompress_gold.cpp
     }
     catch (myError& ex) { cout << *ex.msg << endl; }  // Just some error handling...
     catch (string err) { cout << err << endl; }
     catch(...) { cout << "Error" << endl; }
 
     delete [] input;
+    delete output;
 
     return ret_val;
 }
