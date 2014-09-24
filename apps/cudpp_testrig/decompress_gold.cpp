@@ -28,6 +28,8 @@
 /** @namespace std */
 using namespace std;
 
+#define NUM_CHARS 10
+
 /** @enum huffman_node_type
  *  @brief Enumerated type for the different kinds of Huffman tree nodes
  */
@@ -90,59 +92,19 @@ struct HuffmanTree {
     ~HuffmanTree() { delete nodes; }  ///< Destructor
 };
 
-/*void myInsert(char* b, int init, int loc, size_t num_elements) {
-    char* temp = new char[num_elements];
-    for (int i=0; i<num_elements; i++) {
-        temp[i] = b[(init * num_elements) + i];
-    }
-//cout << b << endl;
-//cout << &b[init] << endl;
-//cout << &temp << endl;
-    for (int i=(init * num_elements) + num_elements - 1; i>loc * num_elements; i--) { b[i] = b[(i - num_elements)]; }
-    for (int i=0; i<num_elements; i++) { b[(loc * num_elements) + i] = temp[i]; }
-    delete [] temp;
-}*/
 void myInsert(char** b, int init, int loc) {
     char* temp = b[init];
-//cout << b << endl;
-//cout << &b[init] << endl;
-//cout << &temp << endl;
     for (int i=init; i>loc; i--) { b[i] = b[i-1]; }
     b[loc] = temp;
 }
 
-/*void mySort(char* a, size_t num_elements) {
-    bool out;
-    for (int i=1; i<num_elements; i++) {
-        out = false;
-        for (int j=0; j<i; j++) {
-            for (int k=0; k<num_elements; k++) {
-//cout << a[i][k] << "," << a[j][k] << "\ti:" << i << ", j:" << j << "k:" << k << endl;
-                if (a[(i * num_elements) + k] < a[(j * num_elements) + k]) {
-//cout << a << endl;
-//cout << &a[i] << endl;
-                    myInsert(a, i, j, num_elements);
-                    out = true;
-                    break;
-                }
-                if (a[(i * num_elements) + k] > a[(j * num_elements) + k]) {
-                    break;
-                }
-            }
-            if (out) break;
-        }
-    }
-}*/
 void mySort(char** a, size_t num_elements) {
     bool out;
     for (int i=1; i<num_elements; i++) {
         out = false;
         for (int j=0; j<i; j++) {
             for (int k=0; k<num_elements; k++) {
-//cout << a[i][k] << "," << a[j][k] << "\ti:" << i << ", j:" << j << "k:" << k << endl;
                 if (a[i][k] < a[j][k]) {
-//cout << a << endl;
-//cout << &a[i] << endl;
                     myInsert(a, i, j);
                     out = true;
                     break;
@@ -167,30 +129,21 @@ void mySort(char** a, size_t num_elements) {
 int computeBWT(char* i_data, char* o_data, size_t num_elements)
 {
     o_data[num_elements] = '\0';  // Null-terminate the output array
-cout << "num_elements: " << num_elements << endl;
-    vector<vector<char>> rotations(num_elements, vector<char> (num_elements));  // Allocate a 2D vector to store all input array rotations
-    //rotations.reserve(num_elements);
-    //char** rotations = new char*[num_elements];
-    //char* rotations = new char[num_elements * num_elements];
+
+    vector<vector<char>> rotations(num_elements, vector<char> (NUM_CHARS + 1));  // Allocate a 2D vector to store all input array rotations
     
     for (int i=0; i<num_elements; i++) {
-    //    rotations[i] = new char[num_elements];
-        for (int j=0; j<num_elements; j++) {
+        for (int j=0; j<NUM_CHARS; j++) {
             rotations[i][j] = i_data[(i+j) % num_elements];  /* Build rotations by iterating through the input array,
                                                                 looping back around to the beginning when reaching the end */
         }
-//cout << rotations[i] << " " << &rotations[i] << endl;
+        rotations[i].back() = i_data[(i + num_elements - 1) % num_elements];
     }
-//cout << endl;
-    //mySort(rotations, num_elements);
-cout << "OK" << endl;
     sort(rotations.begin(), rotations.end());
     for (int i=0; i<num_elements; i++) {
-//cout << rotations[i] << endl;
-        o_data[i] = rotations[i][num_elements - 1];  // Take the last character from each rotation and add it to the output array (in order)
+        o_data[i] = rotations[i].back();  // Take the last character from each rotation and add it to the output array (in order)
     }
 
-    //delete [] rotations;
 
     if (o_data[num_elements] != '\0') return -1;  // If output array is not null-terminated, return an error
     else return 0;
@@ -271,11 +224,6 @@ int computeHuffmanTree(char* i_data, vector<bool>* o_data, size_t num_elements, 
     }
 
     int int_node_count = -2;  // Temporary variable used to assign a unique value to all internal nodes
-//    sort(frequencies.begin(), frequencies.end());  // Sort the nodes (this particular statement used only for cosmetic purposes when printing out the pairs)yy
-
-//    for (int j=0; j<frequencies.size(); j++) {
-//        cout << "{" << frequencies.at(j).first << ", " << frequencies.at(j).second << "}" << endl;
-//    }
 
     while (frequencies.size() > 1) {
         sort(frequencies.begin(), frequencies.end());  // Sort the nodes every time the loop starts over
@@ -430,8 +378,6 @@ int computeHuffmanTree(char* i_data, vector<bool>* o_data, size_t num_elements, 
  */
 int computeDecompressGold(char* input, size_t num_elements, bool verbose = false)
 {
-    int total = sizeof(char) * num_elements;
-    cout << "sizeof(input): " << total << ", total: " << total << endl;
     HuffmanTree* myTree = new HuffmanTree();
     vector<char>* MTF_list = new vector<char>();  // Pointer to vector object that stores the list of unique characters
     vector<bool>* huffman_output = new vector<bool>();  // Pointer to vector object that stores the huffman encoded data
@@ -459,8 +405,6 @@ int computeDecompressGold(char* input, size_t num_elements, bool verbose = false
     // -----------------------------
 
     char* bwt_output = new char[num_elements+1];  // Pointer to char array that stores the output of the BWT operation
-    total += (sizeof(char) * num_elements);
-    cout << "sizeof(bwt_output): " << sizeof(char) * num_elements << ", total: " << total << endl;
     // ----- Compute BWT -----
     if (ret_val = computeBWT(input, bwt_output, num_elements)) {
         cout << "Error in BWT: " << ret_val << endl;
@@ -492,8 +436,6 @@ int computeDecompressGold(char* input, size_t num_elements, bool verbose = false
     }
 
     char* mtf_output = new char[num_elements+1];  // Pointer to char array that stores the output of the MTF operation
-    total += (sizeof(char) * num_elements);
-    cout << "sizeof(mtf_output): " << sizeof(char) * num_elements << ", total: " << total << endl;
     // ----- Compute MTF transform -----
     if (ret_val = computeMTF(bwt_output, mtf_output, num_elements, MTF_list)) {
         cout << "Error in MTF: " << ret_val << endl;
@@ -504,7 +446,6 @@ int computeDecompressGold(char* input, size_t num_elements, bool verbose = false
     }
     // ---------------------------------
     delete [] bwt_output;
-    //total -= (sizeof(char) * num_elements);
 
     // ----- Print MTF output -----
     if (verbose) {
@@ -528,13 +469,10 @@ int computeDecompressGold(char* input, size_t num_elements, bool verbose = false
         }
         cout << "|" << endl;
     }
-    cout << "sizeof(MTF_list): " << sizeof(*MTF_list) << endl;
     delete MTF_list;
     // ----------------------------
 
     if (ret_val = computeHuffmanTree(mtf_output, huffman_output, num_elements, myTree)) { ; }
-    cout << "sizeof(huffman_output): " << huffman_output->capacity()  << endl;
-    cout << "sizeof(HuffmanNode): " << sizeof(myTree->nodes->at(0)) << endl;
     delete [] mtf_output;
 
     if (verbose) {
