@@ -29,7 +29,7 @@ class myError : exception {
     }
 };
 
-int main(int argc, char* argv[])
+int test_decompress(int argc, char* argv[])
 {
     srand(time(NULL));  // Used to generate random characters every time the code is run
 
