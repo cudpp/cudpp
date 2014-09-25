@@ -29,7 +29,10 @@ set(CCFILES
   test_compress.cpp
   test_listrank.cpp
   test_sa.cpp
+  test_decompress.cpp
   )
+
+set_property(SOURCE test_decompress.cpp APPEND PROPERTY COMPILE_FLAGS -std=c++0x) 
 
 set(HFILES
   cudpp_testrig_options.h
