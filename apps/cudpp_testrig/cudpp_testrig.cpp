@@ -120,7 +120,7 @@ int testAllDatatypes(int argc,
     {
         config.datatype = CUDPP_UCHAR;
         cout << "Decompression is still in development..." << endl;
-        retval += testDecompress(argc, argv);
+        retval += testDecompress(argc, (char**)argv);
         retval += 0;
         return retval;
     }
@@ -437,7 +437,7 @@ int main(int argc, const char** argv)
         if (runCompress)    retval += testCompress(argc, argv, NULL);
         if (runListRank)    retval += testListRank(argc, argv, NULL);
         if (runSA)          retval += testSuffixArray(argc, argv, NULL);
-        if (runDecompress)  retval += testDecompress(argc, argv);
+        if (runDecompress)  retval += testDecompress(argc, (char**)argv);
     }
     else
     {
