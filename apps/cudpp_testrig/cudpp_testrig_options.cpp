@@ -52,6 +52,8 @@ void setOptions(int argc, const char **argv, testrigOptions &testOptions)
         testOptions.algorithm = "compress";
     else if(checkCommandLineFlag(argc, argv, "sa"))
         testOptions.algorithm = "sa";
+    else if(checkCommandLineFlag(argc, argv, "decompress"))
+        testOptions.algorithm = "decompress";
             
     testOptions.op = "sum";
     commandLineArg(testOptions.op, argc, argv, "op");

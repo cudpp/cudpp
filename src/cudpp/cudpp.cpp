@@ -54,6 +54,7 @@
 #include "cudpp_tridiagonal.h"
 #include "cudpp_compress.h"
 #include "cudpp_sa.h"
+#include "cudpp_decompress.h"
 #include "cudpp_listrank.h"
 #include <stdio.h>
 
@@ -1022,6 +1023,16 @@ CUDPPResult cudppSuffixArray(CUDPPHandle planHandle,
         return CUDPP_ERROR_INVALID_HANDLE;
     
 }
+
+/** @brief Performs data decompression on the GPU.
+ *
+ *  - Not completed yet, just put in place for future development
+ */
+CUDPP_DLL
+CUDPPResult cudppDecompress (void) {
+    return CUDPP_ERROR_INVALID_HANDLE;
+}
+
 /** @} */ // end Algorithm Interface
 /** @} */ // end of publicInterface group
 

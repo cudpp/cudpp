@@ -141,6 +141,7 @@ enum CUDPPAlgorithm
     CUDPP_BWT,               //!< Burrows-Wheeler transform
     CUDPP_MTF,               //!< Move-to-Front transform
     CUDPP_SA,                //!< Suffix Array algorithm
+    CUDPP_DECOMPRESS,        //!< Data decompression
     CUDPP_ALGORITHM_INVALID, //!< Placeholder at end of enum
 };
 
@@ -312,6 +313,10 @@ CUDPPResult cudppCompress(CUDPPHandle planHandle,
                           unsigned int *d_compressedSize,
                           unsigned int *d_compressed,
                           size_t numElements);
+
+// Data decompression algorithm
+CUDPP_DLL
+CUDPPResult cudppDecompress();
 
 // Burrows-Wheeler Transform
 CUDPP_DLL

@@ -58,6 +58,7 @@ int testBwt(int argc, const char** argv, const CUDPPConfiguration *config);
 int testCompress(int argc, const char** argv, const CUDPPConfiguration *config);
 int testListRank(int argc, const char** argv, const CUDPPConfiguration *config);
 int testSuffixArray(int argc, const char** argv, const CUDPPConfiguration *config);
+int testDecompress(int argc, char* argv[]);
 
 int testAllDatatypes(int argc,
                      const char** argv,
@@ -112,6 +113,15 @@ int testAllDatatypes(int argc,
     {
         config.datatype = CUDPP_UCHAR;
         retval += testSuffixArray(argc, argv, &config);
+        return retval;
+    }
+
+    if(config.algorithm == CUDPP_DECOMPRESS)
+    {
+        config.datatype = CUDPP_UCHAR;
+        cout << "Decompression is still in development..." << endl;
+        retval += testDecompress(argc, argv);
+        retval += 0;
         return retval;
     }
 
@@ -400,26 +410,34 @@ int main(int argc, const char** argv)
                 "compute capability 2.0+\n");
         runSA = false;
     }
+    bool runDecompress = runAll || checkCommandLineFlag(argc, argv, "decompress");
+    if(!supports48KBInShared && runSA)
+    {
+        fprintf(stderr, "Suffix Array is only supported on devices with "
+                "compute capability 2.0+\n");
+        runSA = false;
+    }
 
     bool hasopts = hasOptions(argc, argv);
 
     if (hasopts)
     {
         printf("has opts\n");
-        if (runScan)      retval += testScan(argc, argv, NULL, false, devProps);
-        if (runSegScan)   retval += testScan(argc, argv, NULL, false, devProps);
-        if (runCompact)   retval += testCompact(argc, argv, NULL);
-        if (runReduce)    retval += testReduce(argc, argv, NULL);
-        if (runMergeSort) retval += testMergeSort(argc, argv, NULL);
-        if (runRadixSort) retval += testRadixSort(argc, argv, NULL);
-        if (runStringSort)retval += testStringSort(argc, argv, NULL);
-        if (runMultiScan) retval += testScan(argc, argv, NULL, true, devProps);
+        if (runScan)        retval += testScan(argc, argv, NULL, false, devProps);
+        if (runSegScan)     retval += testScan(argc, argv, NULL, false, devProps);
+        if (runCompact)     retval += testCompact(argc, argv, NULL);
+        if (runReduce)      retval += testReduce(argc, argv, NULL);
+        if (runMergeSort)   retval += testMergeSort(argc, argv, NULL);
+        if (runRadixSort)   retval += testRadixSort(argc, argv, NULL);
+        if (runStringSort)  retval += testStringSort(argc, argv, NULL);
+        if (runMultiScan)   retval += testScan(argc, argv, NULL, true, devProps);
         if (runTridiagonal) retval += testTridiagonal(argc, argv, NULL);
-        if (runMtf)       retval += testMtf(argc, argv, NULL);
-        if (runBwt)       retval += testBwt(argc, argv, NULL);
-        if (runCompress)  retval += testCompress(argc, argv, NULL);
-        if (runListRank)  retval += testListRank(argc, argv, NULL);
-        if (runSA)        retval += testSuffixArray(argc, argv, NULL);
+        if (runMtf)         retval += testMtf(argc, argv, NULL);
+        if (runBwt)         retval += testBwt(argc, argv, NULL);
+        if (runCompress)    retval += testCompress(argc, argv, NULL);
+        if (runListRank)    retval += testListRank(argc, argv, NULL);
+        if (runSA)          retval += testSuffixArray(argc, argv, NULL);
+        if (runDecompress)  retval += testDecompress(argc, argv);
     }
     else
     {
@@ -493,6 +511,11 @@ int main(int argc, const char** argv)
 
         if (runSA) {
             config.algorithm = CUDPP_SA;
+            retval += testAllDatatypes(argc, argv, config, supportsDouble, false);
+        }
+
+        if (runDecompress) {
+            config.algorithm = CUDPP_DECOMPRESS;
             retval += testAllDatatypes(argc, argv, config, supportsDouble, false);
         }
     }
