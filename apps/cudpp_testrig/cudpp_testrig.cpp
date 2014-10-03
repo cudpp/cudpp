@@ -432,7 +432,7 @@ int main(int argc, const char** argv)
         if (runCompress)    retval += testCompress(argc, argv, NULL);
         if (runListRank)    retval += testListRank(argc, argv, NULL);
         if (runSA)          retval += testSuffixArray(argc, argv, NULL);
-        if (runDecompress)  retval += testDecompress(argc, argv);
+        if (runDecompress)  retval += testDecompress(argc, argv, NULL);
     }
     else
     {

@@ -40,30 +40,34 @@ class myError : exception {
  *  @param[out] name     Name of the output file
  *  @param[out] verbose  Enables verbose output
  */
-void processInput(int argc, char* argv[], int* length, unsigned char* input, char* name, bool* verbose)
+void processInput(int argc, const char* argv[], int* length, unsigned char* input, char* name, bool* verbose)
 {
     srand(time(NULL));  // Used to generate random characters every time the code is run
 
+    bool found = false;                                                    // Stores whether a good input file has already been found
     strcpy((char*)input, "The quick brown fox jumps over the lazy dog.");  // Default input string if nothing else is specified
     *length = 44;                                                          // Default input string length
     strcpy(name, "default_compressed.txt");                                // Default output file name
 
     if (argc > 1) {  // If there are any command-line arguments, process them
         for (int i=1; i<argc; i++) {  // Loop through all the command-line arguments
-            if (argv[i] == string("v")) *verbose = true;                              // "Verbose mode". Enables printing of output data
+            if (argv[i] == string("v")) *verbose = true;                             // "Verbose mode". Enables printing of output data
             else if (argv[i] == string("e")) throw myError("This is an error");      // Option to test try-catch functionality
             else if (argv[i] == string("f")) throw string("This is also an error");  // Another option to test try-catch funtionality
             else if (argv[i] == string("rand")) for (int j=0; j<(*length); j++) { input[j] = (rand() % 126) + 1; }  // Generates random ASCII characters as input
-            else {                             // If an option exists that isn't recognized, try and use it as a file name
+            else {  // If an option exists that isn't recognized, try and use it as a file name
+                if (found) continue;           // If an input file has already been successfully scanned, process the other arguments
                 ifstream input_file(argv[i]);  // Try and open the file
-                if (!input_file.is_open()) throw string("Error opening file: " + string(argv[i]));  // If the file doesn't exist, throw an error
+                if (!input_file.is_open()) throw string("Could not find any input files");  // If the file doesn't exist, go to the next argument
+                                                                                            // If it's the last argument, throw an error
 
-                input_file.seekg(0, ios::end);                  // Move the pointer to the end of the file
+                input_file.seekg(0, ios::end);                     // Move the pointer to the end of the file
                 streamsize size = (*length) = input_file.tellg();  // Return the position of the end of the file (size of file)
-                input_file.seekg(0, ios::beg);                  // Return the pointer to the beginning of the file so the file can be read
+                input_file.seekg(0, ios::beg);                     // Return the pointer to the beginning of the file so the file can be read
 
-                input = new unsigned char[(*length)+1];    // Initialize input array to size of file
-                input_file.read((char*)input, size);    // Read file into input array
+                input = new unsigned char[(*length)+1];  // Initialize input array to size of file
+                input_file.read((char*)input, size);     // Read file into input array
+                found = true;                            // Mark that a good input file has been found
 
                 name = new char[strlen(argv[i]) + 12];  // Store file name for use in generating an output file
                 strncpy(name, argv[i], strlen(argv[i]) - 4);
@@ -107,7 +111,7 @@ void writeOutput(vector<bool>* output, char* name)
  *
  *  @return Status. 0 = passed, else = failed
  */
-int testDecompress(int argc, const char* argv[])
+int testDecompress(int argc, const char* argv[], CUDPPConfiguration* init_config)
 {
     int ret_val = 0;            // Stores the return value
     int* length;                // Stores input array length. Changes if input comes from a file
@@ -116,28 +120,58 @@ int testDecompress(int argc, const char* argv[])
     unsigned char* input = new unsigned char[*length];  // Input data array. Initialized for the default input string but is reinitialized if input comes from a different source
     vector<bool>* output = new vector<bool>();          // Output data vector. Stores output data in binary form.
 
+    CUDPPConfiguration config;   // CUDPP configuration used to tell the CUDPP library to run decompression
+    CUDPPHandle cudppLibrary;    // CUDPP handle for the CUDPP library
+    CUDPPHandle decompressPlan;  // CUDPP handle for the decompress plan
+
     try
     {
-/* ------------------------- TO DO --------------------------
- *
- *  - Allocate input memory on host and populate input data
- *  - Allocate output memory on host
- *  - Allocate memory on device
- *  - Copy input data from host to device
- *  - Perform decompression on device
- *  - Copy output data back from device
- *  - Free memory on device
- *  - Calculate decompress gold on host
- *  - Compare results
- *  - Free memory on host
- *
- * ---------------------------------------------------------- */
+// ------------------------- TO DO --------------------------
+
+//  Initialize CUDPP  configuration
+    if (init_config) config = *init_config;   // If no configuration is specified, initialize one
+    else {
+        config.algorithm = CUDPP_DECOMPRESS;  // Set algorithm to decompress
+        config.options = 0;                   // Ensure no options are set
+        config.datatype = CUDPP_UCHAR;        // Set data type to unsigned char
+    }
+
+//  Initialize CUDPP library
+
+    if (cudppCreate(&cudppLibrary) != CUDPP_SUCCESS) {     // Try and initialize the CUDPP library
+        ret_val = 1;
+        throw string("Error initializing CUDPP library");  // If there was a problem initializing the library, throw an error
+    }
+
+//  Allocate input memory on host and populate input data
+//  Allocate temporary output memory on host
+//  Calculate decompress gold on host and store in temporary output memory
+//  Initialize CUDPP Plan
+    if (cudppPlan(cudppLibrary, &decompressPlan, config, 1, 0) != CUDPP_SUCCESS) {  // Try and initialize the CUDPP decompress plan
+        ret_val = 1;
+        throw string("Error creating decompress plan");  // If there was a problem initializing the decompress plan, throw an error
+    }
+
+//  Allocate input memory on device
+//  Allocate output memory on device
+//  Allocate output memory on host
+//  Copy temporary output data from host to device
+//  Perform decompression on device
+    computeDecompress();
+
+//  Copy output data back from device
+//  Free memory on device
+//  Compare output from device to original input data
+//  Free memory on host
+
 
     }
     catch (myError& ex) { cout << *ex.msg << endl; }  // Just some error handling...
     catch (string err) { cout << err << endl; }
     catch (...) { cout << "Generic error in testCompress\n"; }
 
+    cudppDestroyPlan(decompressPlan);
+    cudppDestroy(cudppLibrary);
     delete [] input;
     delete [] name;
     delete output;
@@ -154,7 +188,7 @@ int testDecompress(int argc, const char* argv[])
  *
  *  @return Status. 0 = passed, else = failed
  */
-int testDecompressStandalone(int argc, char* argv[])  // Rename to main() to run as standalone
+int testDecompressStandalone(int argc, const char* argv[])  // Rename to main() to run as standalone
 {
     int ret_val = 0;            // Stores the return value
     int* length;                // Stores input array length. Changes if input comes from a file
