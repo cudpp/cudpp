@@ -58,7 +58,7 @@ int testBwt(int argc, const char** argv, const CUDPPConfiguration *config);
 int testCompress(int argc, const char** argv, const CUDPPConfiguration *config);
 int testListRank(int argc, const char** argv, const CUDPPConfiguration *config);
 int testSuffixArray(int argc, const char** argv, const CUDPPConfiguration *config);
-int testDecompress(int argc, char* argv[]);
+int testDecompress(int argc, const char* argv[]);
 
 int testAllDatatypes(int argc,
                      const char** argv,
@@ -120,7 +120,7 @@ int testAllDatatypes(int argc,
     {
         config.datatype = CUDPP_UCHAR;
         cout << "Decompression is still in development..." << endl;
-        retval += testDecompress(argc, (char**)argv);
+        //retval += testDecompress(argc, argv);
         retval += 0;
         return retval;
     }
@@ -335,6 +335,7 @@ int main(int argc, const char** argv)
         printf("reduce: Run reduce test(s)\n\n");
         printf("rand: Run random number generator test(s)\n\n");
         printf("tridiagonal: Run tridiagonal solver test(s)\n\n");
+        printf("decompress: Run decompression test(s)\n\n");
         printf("mtf: Run move-to-front transform test(s) "
                "(compute 2.0+ only)\n\n");
         printf("bwt: Run Burrows-Wheeler transform test(s) "
@@ -383,6 +384,7 @@ int main(int argc, const char** argv)
     bool runTridiagonal = runAll ||  checkCommandLineFlag(argc, argv, "tridiagonal");
     bool runMtf = runAll || checkCommandLineFlag(argc, argv, "mtf");
     bool runListRank = runAll || checkCommandLineFlag(argc, argv, "listrank");
+    bool runDecompress = runAll || checkCommandLineFlag(argc, argv, "decompress");
     if (!supports48KBInShared && runMtf)
     {
         fprintf(stderr, "MTF is only supported on devices with "
@@ -410,13 +412,6 @@ int main(int argc, const char** argv)
                 "compute capability 2.0+\n");
         runSA = false;
     }
-    bool runDecompress = runAll || checkCommandLineFlag(argc, argv, "decompress");
-    if(!supports48KBInShared && runSA)
-    {
-        fprintf(stderr, "Suffix Array is only supported on devices with "
-                "compute capability 2.0+\n");
-        runSA = false;
-    }
 
     bool hasopts = hasOptions(argc, argv);
 
@@ -437,7 +432,7 @@ int main(int argc, const char** argv)
         if (runCompress)    retval += testCompress(argc, argv, NULL);
         if (runListRank)    retval += testListRank(argc, argv, NULL);
         if (runSA)          retval += testSuffixArray(argc, argv, NULL);
-        if (runDecompress)  retval += testDecompress(argc, (char**)argv);
+        if (runDecompress)  retval += testDecompress(argc, argv);
     }
     else
     {

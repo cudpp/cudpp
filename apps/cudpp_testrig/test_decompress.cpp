@@ -107,14 +107,61 @@ void writeOutput(vector<bool>* output, char* name)
  *
  *  @return Status. 0 = passed, else = failed
  */
-int testDecompress(int argc, char* argv[])
+int testDecompress(int argc, const char* argv[])
 {
     int ret_val = 0;            // Stores the return value
     int* length;                // Stores input array length. Changes if input comes from a file
     char* name = new char[23];  // Stores the name of an input file, if that's where the input is sourced from
     bool* verbose = false;      // Determines whether the program prints output data or not
     unsigned char* input = new unsigned char[*length];  // Input data array. Initialized for the default input string but is reinitialized if input comes from a different source
-    vector<bool>* output = new vector<bool>();
+    vector<bool>* output = new vector<bool>();          // Output data vector. Stores output data in binary form.
+
+    try
+    {
+/* ------------------------- TO DO --------------------------
+ *
+ *  - Allocate input memory on host and populate input data
+ *  - Allocate output memory on host
+ *  - Allocate memory on device
+ *  - Copy input data from host to device
+ *  - Perform decompression on device
+ *  - Copy output data back from device
+ *  - Free memory on device
+ *  - Calculate decompress gold on host
+ *  - Compare results
+ *  - Free memory on host
+ *
+ * ---------------------------------------------------------- */
+
+    }
+    catch (myError& ex) { cout << *ex.msg << endl; }  // Just some error handling...
+    catch (string err) { cout << err << endl; }
+    catch (...) { cout << "Generic error in testCompress\n"; }
+
+    delete [] input;
+    delete [] name;
+    delete output;
+
+    return ret_val;
+}
+
+/** @brief Run CUDPP decompress gold functionality
+ *
+ *  Runs the CUDPP decompress gold function by compressing data on the CPU.
+ *
+ *  @param[in] argc  Number of input arguments
+ *  @param[in] argv  Pointer to char array storing input arguments
+ *
+ *  @return Status. 0 = passed, else = failed
+ */
+int testDecompressStandalone(int argc, char* argv[])  // Rename to main() to run as standalone
+{
+    int ret_val = 0;            // Stores the return value
+    int* length;                // Stores input array length. Changes if input comes from a file
+    char* name = new char[23];  // Stores the name of an input file, if that's where the input is sourced from
+    bool* verbose = false;      // Determines whether the program prints output data or not
+    unsigned char* input = new unsigned char[*length];  // Input data array. Initialized for the default input string but is reinitialized if input comes from a different source
+    vector<bool>* output = new vector<bool>();          // Output data vector. Stores output data in binary form.
 
     try
     {
