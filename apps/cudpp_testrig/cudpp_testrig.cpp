@@ -10,7 +10,7 @@
 
 /**
  * @file
- * cudpp_testrig.cu
+ * cudpp_testrig.cpp
  *
  * @brief Main testing file for cudpp library.
  *
@@ -303,7 +303,7 @@ int main(int argc, const char** argv)
     CUDA_SAFE_CALL( cudaGetDeviceProperties(&devProps, dev) );
     if (!quiet)
     {
-        printf("Using device %d:\n", dev);
+        printf("UUsing device %d:\n", dev);
         printf("%s; global mem: %dB; compute v%d.%d; clock: %d kHz\n",
                devProps.name, (int)devProps.totalGlobalMem, (int)devProps.major,
                (int)devProps.minor, (int)devProps.clockRate);
@@ -331,18 +331,18 @@ int main(int argc, const char** argv)
         printf("mergesort: Run merge sort test(s)\n");
         printf("radixsort: Run radix sort test(s)\n");
         printf("stringsort: Run string sort test(s)\n");
-        printf("compact: Run compact test(s)\n\n");
-        printf("reduce: Run reduce test(s)\n\n");
-        printf("rand: Run random number generator test(s)\n\n");
-        printf("tridiagonal: Run tridiagonal solver test(s)\n\n");
-        printf("decompress: Run decompression test(s)\n\n");
+        printf("compact: Run compact test(s)\n");
+        printf("reduce: Run reduce test(s)\n");
+        printf("rand: Run random number generator test(s)\n");
+        printf("tridiagonal: Run tridiagonal solver test(s)\n");
+        printf("decompress: Run decompression test(s)\n");
         printf("mtf: Run move-to-front transform test(s) "
-               "(compute 2.0+ only)\n\n");
+               "(compute 2.0+ only)\n");
         printf("bwt: Run Burrows-Wheeler transform test(s) "
-               "(compute 2.0+ only)\n\n");
-        printf("compress: Run compression test(s) (compute 2.0+ only)\n\n");
-        printf("listrank: Run list ranking test(s)\n\n");
-        printf("sa: Run suffix array test(s) (compute 2.0+ only)\n\n");
+               "(compute 2.0+ only)\n");
+        printf("compress: Run compression test(s) (compute 2.0+ only)\n");
+        printf("listrank: Run list ranking test(s)\n");
+        printf("sa: Run suffix array test(s) (compute 2.0+ only)\n");
         printf("--- Global Options ---\n");
         printf("iterations=<N>: Number of times to run each test\n");
         printf("n=<N>: Number of values to use in a single test\n");
@@ -510,6 +510,7 @@ int main(int argc, const char** argv)
         }
 
         if (runDecompress) {
+            printf("\n\nOK\n\n");
             config.algorithm = CUDPP_DECOMPRESS;
             retval += testAllDatatypes(argc, argv, config, supportsDouble, false);
         }

@@ -48,7 +48,6 @@ void processInput(int argc, const char* argv[], size_t* length, unsigned char* i
 
     bool found = false;                                                    // Stores whether a good input file has already been found
     strcpy((char*)input, "The quick brown fox jumps over the lazy dog.");  // Default input string if nothing else is specified
-    *length = 44;                                                          // Default input string length
     strcpy(name, "default_compressed.txt");                                // Default output file name
 
     if (argc > 1) {  // If there are any command-line arguments, process them
@@ -57,7 +56,7 @@ void processInput(int argc, const char* argv[], size_t* length, unsigned char* i
             else if (argv[i] == string("e")) throw myError("This is an error");      // Option to test try-catch functionality
             else if (argv[i] == string("f")) throw string("This is also an error");  // Another option to test try-catch funtionality
             else if (argv[i] == string("rand")) for (int j=0; j<(*length); j++) { input[j] = (rand() % 126) + 1; }  // Generates random ASCII characters as input
-            else {  // If an option exists that isn't recognized, try and use it as a file name
+            else {   // If an option exists that isn't recognized, try and use it as a file name
                 if (found) continue;           // If an input file has already been successfully scanned, process the other arguments
                 ifstream input_file(argv[i]);  // Try and open the file
                 if (!input_file.is_open()) throw string("Could not find any input files");  // If the file doesn't exist, go to the next argument
@@ -116,11 +115,12 @@ void writeOutput(vector<bool>* output, char* name)
 int testDecompress(int argc, const char* argv[], const CUDPPConfiguration* init_config)
 {
     int ret_val = 0;            // Stores the return value
-    size_t* length;                // Stores input array length. Changes if input comes from a file
+    size_t* num_elements;       // Stores number of input array elements, initialized to default input
+    *num_elements = 44;         // Default number of input elements, based on default input string. Changes if input comes from a file
     char* name = new char[23];  // Stores the name of an input file, if that's where the input is sourced from
     bool* verbose = false;      // Determines whether the program prints output data or not
-    unsigned char* input = new unsigned char[*length];  // Input data array. Initialized for the default input string but is reinitialized if input comes from a different source
-    vector<bool>* output = new vector<bool>();          // Output data vector. Stores output data in binary form.
+    unsigned char* input = new unsigned char[*num_elements];  // Input data array. Initialized for the default input string but is reinitialized if input comes from a different source
+    vector<bool>* output = new vector<bool>();                // Output data vector. Stores output data in binary form.
 
     CUDPPConfiguration config;   // CUDPP configuration used to tell the CUDPP library to run decompression
     CUDPPHandle cudppLibrary;    // CUDPP handle for the CUDPP library
@@ -131,37 +131,39 @@ int testDecompress(int argc, const char* argv[], const CUDPPConfiguration* init_
 // ------------------------- TO DO --------------------------
 
 //  Initialize CUDPP  configuration
-    if (init_config) config = *init_config;   // If no configuration is specified, initialize one
-    else {
-        config.algorithm = CUDPP_DECOMPRESS;  // Set algorithm to decompress
-        config.options = 0;                   // Ensure no options are set
-        config.datatype = CUDPP_UCHAR;        // Set data type to unsigned char
-    }
+        if (init_config) config = *init_config;   // If no configuration is specified, initialize one
+        else {
+            config.algorithm = CUDPP_DECOMPRESS;  // Set algorithm to decompress
+            config.options = 0;                   // Ensure no options are set
+            config.datatype = CUDPP_UCHAR;        // Set data type to unsigned char
+        }
 
 //  Initialize CUDPP library
-
-    if (cudppCreate(&cudppLibrary) != CUDPP_SUCCESS) {     // Try and initialize the CUDPP library
-        ret_val = 1;
-        throw string("Error initializing CUDPP library");  // If there was a problem initializing the library, throw an error
-    }
+        if (cudppCreate(&cudppLibrary) != CUDPP_SUCCESS) {     // Try and initialize the CUDPP library
+            ret_val = 1;
+            throw string("Error initializing CUDPP library");  // If there was a problem initializing the library, throw an error
+        }
 
 //  Allocate input memory on host and populate input data
-    int num_elements = 44;
+        processInput(argc, argv, num_elements, input, name, verbose);  // Process the input to determine configuration
+
 //  Allocate temporary output memory on host
 //  Calculate decompress gold on host and store in temporary output memory
+	if (ret_val = computeDecompressGold(input, output, *num_elements, *verbose)) throw string("Error computing decompressGold");  // Run the compression code in decompress_gold.cpp
+    
 //  Initialize CUDPP Plan
-    if (cudppPlan(cudppLibrary, &decompressPlan, config, num_elements, 1, 0) != CUDPP_SUCCESS) {  // Try and initialize the CUDPP decompress plan
-        ret_val = 1;
-        throw string("Error creating decompress plan");  // If there was a problem initializing the decompress plan, throw an error
-    }
+        if (cudppPlan(cudppLibrary, &decompressPlan, config, *num_elements, 1, 0) != CUDPP_SUCCESS) {  // Try and initialize the CUDPP decompress plan
+            ret_val = 1;
+            throw string("Error creating decompress plan");  // If there was a problem initializing the decompress plan, throw an error
+        }
 
 //  Allocate input memory on device
 //  Allocate output memory on device
 //  Allocate output memory on host
 //  Copy temporary output data from host to device
 //  Perform decompression on device
-    HuffmanTreeArray* t = new HuffmanTreeArray();
-    computeDecompress(decompressPlan, t, 0, 0);
+        //HuffmanTreeArray* t = new HuffmanTreeArray();
+        //computeDecompress(decompressPlan, t, 0, 0);
 
 //  Copy output data back from device
 //  Free memory on device
@@ -195,7 +197,8 @@ int testDecompress(int argc, const char* argv[], const CUDPPConfiguration* init_
 int testDecompressStandalone(int argc, const char* argv[])  // Rename to main() to run as standalone
 {
     int ret_val = 0;            // Stores the return value
-    size_t* length;                // Stores input array length. Changes if input comes from a file
+    size_t* length;             // Stores input array length
+    *length = 44;               // Default input array length. Changes if input comes from a file
     char* name = new char[23];  // Stores the name of an input file, if that's where the input is sourced from
     bool* verbose = false;      // Determines whether the program prints output data or not
     unsigned char* input = new unsigned char[*length];  // Input data array. Initialized for the default input string but is reinitialized if input comes from a different source
