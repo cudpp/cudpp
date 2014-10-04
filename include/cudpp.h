@@ -25,6 +25,7 @@
 #define __CUDPP_H__
 
 #include <stdlib.h> // for size_t
+//#include "../apps/cudpp_testrig/decompress_gold.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -157,6 +158,44 @@ struct CUDPPConfiguration
     CUDPPOperator  op;        //!< The numerical operator to be applied
     CUDPPDatatype  datatype;  //!< The datatype of the input arrays
     unsigned int   options;   //!< Options to configure the algorithm
+};
+
+/** @enum huffman_node_type
+ *  @brief Enumerated type for the different kinds of Huffman tree nodes
+ */
+enum huffman_node_type {root, internal, leaf};
+
+/** @struct HuffmanNode
+ *  @brief Data structure for a Huffman tree node
+ */
+struct HuffmanNode {
+    huffman_node_type type;    ///< Root, Internal, or Leaf
+    HuffmanNode* parent;       ///< Pointer to parent node (NULL if node is root)
+    HuffmanNode* left_child;   ///< Pointer to left child node (NULL if node is a leaf)
+    HuffmanNode* right_child;  ///< Pointer to right child node (NULL if node is a leaf)
+    int data;                  ///< Number (in MTF list) represented by the node (-1 if root, -2 or less if internal)
+    int freq;                  ///< Frequency of node data (in MTF list)
+    bool found;                ///< Variable used when generating Huffman codes to determine if a node has already been coded
+
+    HuffmanNode();              ///< Default constructor that initializes pointers to NULL
+    HuffmanNode(int d, int f);  ///< Constructor used when creating nodes to initialize data
+    ~HuffmanNode() {            ///< Destructor
+        delete parent;
+        delete left_child;
+        delete right_child;
+    }
+
+};
+
+/** @struct HuffmanTreeArray
+ *  @brief Data structure for a Huffman tree that stores the nodes in an array
+ */
+struct HuffmanTreeArray {
+    HuffmanNode* root;   ///< Pointer to root node
+    HuffmanNode** nodes;  ///< Pointer to an array of all nodes in the tree
+
+    HuffmanTreeArray() { root = NULL; }  ///< Default constructor that initializes the root pointer to NULL
+    ~HuffmanTreeArray() { delete [] nodes; }  ///< Destructor
 };
 
 #define CUDPP_INVALID_HANDLE 0xC0DABAD1
@@ -316,7 +355,7 @@ CUDPPResult cudppCompress(CUDPPHandle planHandle,
 
 // Data decompression algorithm
 CUDPP_DLL
-CUDPPResult cudppDecompress();
+CUDPPResult computeDecompress(CUDPPHandle plan, HuffmanTreeArray* d_tree, unsigned char* d_input, unsigned char* d_output);
 
 // Burrows-Wheeler Transform
 CUDPP_DLL

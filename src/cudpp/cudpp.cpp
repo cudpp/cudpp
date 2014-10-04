@@ -1029,7 +1029,7 @@ CUDPPResult cudppSuffixArray(CUDPPHandle planHandle,
  *  - Not completed yet, just put in place for future development
  */
 CUDPP_DLL
-CUDPPResult computeDecompress(CUDPPHandle plan, HuffmanTree* d_tree, unsigned char* d_input, unsigned char* d_output)
+CUDPPResult computeDecompress(CUDPPHandle plan, HuffmanTreeArray* d_tree, unsigned char* d_input, unsigned char* d_output)
 {
     return CUDPP_ERROR_INVALID_HANDLE;
 }

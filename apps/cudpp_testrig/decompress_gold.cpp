@@ -25,57 +25,12 @@
 #include <algorithm>
 #include <vector>
 
+#include "cudpp.h"
+
 /** @namespace std */
 using namespace std;
 
 #define NUM_CHARS 10
-
-/** @enum huffman_node_type
- *  @brief Enumerated type for the different kinds of Huffman tree nodes
- */
-enum huffman_node_type {root, internal, leaf};
-
-/** @struct HuffmanNode
- *  @brief Data structure for a Huffman tree node
- */
-struct HuffmanNode {
-    huffman_node_type type;    ///< Root, Internal, or Leaf
-    HuffmanNode* parent;       ///< Pointer to parent node (NULL if node is root)
-    HuffmanNode* left_child;   ///< Pointer to left child node (NULL if node is a leaf)
-    HuffmanNode* right_child;  ///< Pointer to right child node (NULL if node is a leaf)
-    int data;                  ///< Number (in MTF list) represented by the node (-1 if root, -2 or less if internal)
-    int freq;                  ///< Frequency of node data (in MTF list)
-    bool found;                ///< Variable used when generating Huffman codes to determine if a node has already been coded
-
-    HuffmanNode() {  ///< Default constructor that initializes pointers to NULL
-        parent = NULL;
-        left_child = NULL;
-        right_child = NULL;
-        data = -1;
-        freq = 0;
-        type = root;
-        found = false;
-    }
-
-    HuffmanNode(int d, int f) {  ///< Constructor used when creating nodes to initialize data
-        parent = NULL;
-        left_child = NULL;
-        right_child = NULL;
-        data = d;
-        freq = f;
-        found = false;
-
-        if (data == -1) type = root;
-        else if (data < -1) type = huffman_node_type::internal;
-        else type = leaf;
-    }
-
-    ~HuffmanNode() {  ///< Destructor
-        delete parent;
-        delete left_child;
-        delete right_child;
-    }
-};
 
 /** @struct HuffmanTree
  *  @brief Data structure for a Huffman tree
@@ -84,14 +39,55 @@ struct HuffmanTree {
     HuffmanNode* root;            ///< Pointer to root node
     vector<HuffmanNode*>* nodes;  ///< Pointer to a vector of all nodes in the tree
 
-    HuffmanTree() {  ///< Default constructor that initializes the root pointer to NULL
-        root = NULL;
-        nodes = new vector<HuffmanNode*>();
-    }
-
+    HuffmanTree();                    ///< Default constructor that initializes the root pointer to NULL
     ~HuffmanTree() { delete nodes; }  ///< Destructor
 };
 
+// ----- HuffmanNode -----
+HuffmanNode::HuffmanNode()  ///< Default constructor that initializes pointers to NULL
+{
+    parent = NULL;
+    left_child = NULL;
+    right_child = NULL;
+    data = -1;
+    freq = 0;
+    type = root;
+    found = false;
+}
+
+HuffmanNode::HuffmanNode(int d, int f)  ///< Constructor used when creating nodes to initialize data
+{
+    parent = NULL;
+    left_child = NULL;
+    right_child = NULL;
+    data = d;
+    freq = f;
+    found = false;
+    if (data == -1) type = root;
+    else if (data < -1) type = huffman_node_type::internal;
+    else type = leaf;
+}
+
+// ----- HuffmanTree -----
+HuffmanTree::HuffmanTree()  ///< Default constructor that initializes the root pointer to NULL
+{
+    root = NULL;
+    nodes = new vector<HuffmanNode*>();
+}
+
+// ----- HuffmanTreeArray -----
+/*HuffmanTreeArray::HuffmanTreeArray(HuffmanTree* old_tree)  ///< Constructor that makes a HuffmanTreeArray object from an existing HuffmanTree object
+{
+    root = old_tree->root;
+    this->nodes = new HuffmanNode*[old_tree->nodes->size()];
+    for (int i=0; i<old_tree->nodes->size(); i++) { this->nodes[i] = old_tree->nodes->at(i); }
+}*/
+
+
+
+
+// =================================================================
+// =================================================================
 void myInsert(char** b, int init, int loc) {
     char* temp = b[init];
     for (int i=init; i>loc; i--) { b[i] = b[i-1]; }
@@ -117,6 +113,10 @@ void mySort(char** a, size_t num_elements) {
         }
     }
 }
+// =================================================================
+// =================================================================
+
+
 
 /** @brief Run a Burrows-Wheeler Transform (BWT) for computeDecompressGold()
  *
@@ -193,8 +193,9 @@ int computeMTF(unsigned char* i_data, unsigned char* o_data, size_t num_elements
  *
  *  @return  Status. 0 = success, else = failure
  */
-int computeHuffmanTree(unsigned char* i_data, vector<bool>* o_data, size_t num_elements, HuffmanTree* tree)
+int computeHuffmanTree(unsigned char* i_data, vector<bool>* o_data, size_t num_elements, HuffmanTreeArray* tree_array)
 {
+    HuffmanTree* tree = new HuffmanTree();
     vector<pair<int, int>> frequencies;
     bool exists;      // Variable that stores whether a pair exists for a given MTF number
     int largest = 0;  // 
@@ -277,6 +278,12 @@ int computeHuffmanTree(unsigned char* i_data, vector<bool>* o_data, size_t num_e
     tree->nodes->push_back(r);
 // -----------------
 
+    tree_array = new HuffmanTreeArray();
+    tree_array->root = tree->root;
+    tree_array->nodes = new HuffmanNode*[tree->nodes->size()];
+    for (int i=0; i<tree->nodes->size(); i++) { tree_array->nodes[i] = tree->nodes->at(i); }
+//   tree_array = new HuffmanTreeArray(tree); 
+
     vector<bool> code;                        // Create a vector to store the Huffman code for an individual character
     vector<vector<bool>> codes(largest + 1);  // Create vector to store all Huffman codes
     bool done = false;                        // Temporary variable used when generating Huffman codes to determine if the coding process is complete
@@ -346,7 +353,7 @@ int computeHuffmanTree(unsigned char* i_data, vector<bool>* o_data, size_t num_e
  */
 int computeDecompressGold(unsigned char* input, vector<bool>* output, size_t num_elements, bool verbose = false)
 {
-    HuffmanTree* myTree = new HuffmanTree();
+    HuffmanTreeArray* myTree = new HuffmanTreeArray();
     vector<unsigned char>* MTF_list = new vector<unsigned char>();  // Pointer to vector object that stores the list of unique characters
 
     int ret_val = 0;  // Variable to store return value (status)

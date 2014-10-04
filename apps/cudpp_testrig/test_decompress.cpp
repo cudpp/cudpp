@@ -18,7 +18,9 @@
 #include <cmath>
 #include <string>
 #include <exception>
+
 #include "decompress_gold.cpp"
+#include "cudpp.h"
 
 class myError : exception {
     public:
@@ -40,7 +42,7 @@ class myError : exception {
  *  @param[out] name     Name of the output file
  *  @param[out] verbose  Enables verbose output
  */
-void processInput(int argc, const char* argv[], int* length, unsigned char* input, char* name, bool* verbose)
+void processInput(int argc, const char* argv[], size_t* length, unsigned char* input, char* name, bool* verbose)
 {
     srand(time(NULL));  // Used to generate random characters every time the code is run
 
@@ -111,10 +113,10 @@ void writeOutput(vector<bool>* output, char* name)
  *
  *  @return Status. 0 = passed, else = failed
  */
-int testDecompress(int argc, const char* argv[], CUDPPConfiguration* init_config)
+int testDecompress(int argc, const char* argv[], const CUDPPConfiguration* init_config)
 {
     int ret_val = 0;            // Stores the return value
-    int* length;                // Stores input array length. Changes if input comes from a file
+    size_t* length;                // Stores input array length. Changes if input comes from a file
     char* name = new char[23];  // Stores the name of an input file, if that's where the input is sourced from
     bool* verbose = false;      // Determines whether the program prints output data or not
     unsigned char* input = new unsigned char[*length];  // Input data array. Initialized for the default input string but is reinitialized if input comes from a different source
@@ -144,10 +146,11 @@ int testDecompress(int argc, const char* argv[], CUDPPConfiguration* init_config
     }
 
 //  Allocate input memory on host and populate input data
+    int num_elements = 44;
 //  Allocate temporary output memory on host
 //  Calculate decompress gold on host and store in temporary output memory
 //  Initialize CUDPP Plan
-    if (cudppPlan(cudppLibrary, &decompressPlan, config, 1, 0) != CUDPP_SUCCESS) {  // Try and initialize the CUDPP decompress plan
+    if (cudppPlan(cudppLibrary, &decompressPlan, config, num_elements, 1, 0) != CUDPP_SUCCESS) {  // Try and initialize the CUDPP decompress plan
         ret_val = 1;
         throw string("Error creating decompress plan");  // If there was a problem initializing the decompress plan, throw an error
     }
@@ -157,7 +160,8 @@ int testDecompress(int argc, const char* argv[], CUDPPConfiguration* init_config
 //  Allocate output memory on host
 //  Copy temporary output data from host to device
 //  Perform decompression on device
-    computeDecompress();
+    HuffmanTreeArray* t = new HuffmanTreeArray();
+    computeDecompress(decompressPlan, t, 0, 0);
 
 //  Copy output data back from device
 //  Free memory on device
@@ -191,7 +195,7 @@ int testDecompress(int argc, const char* argv[], CUDPPConfiguration* init_config
 int testDecompressStandalone(int argc, const char* argv[])  // Rename to main() to run as standalone
 {
     int ret_val = 0;            // Stores the return value
-    int* length;                // Stores input array length. Changes if input comes from a file
+    size_t* length;                // Stores input array length. Changes if input comes from a file
     char* name = new char[23];  // Stores the name of an input file, if that's where the input is sourced from
     bool* verbose = false;      // Determines whether the program prints output data or not
     unsigned char* input = new unsigned char[*length];  // Input data array. Initialized for the default input string but is reinitialized if input comes from a different source
@@ -200,7 +204,7 @@ int testDecompressStandalone(int argc, const char* argv[])  // Rename to main() 
     try
     {
         processInput(argc, argv, length, input, name, verbose);  // Process the input to determine configuration
-	if (ret_val = computeDecompressGold(input, output, (size_t)(*length), *verbose)) throw string("Error computing decompressGold");  // Run the compression code in decompress_gold.cpp
+	if (ret_val = computeDecompressGold(input, output, *length, *verbose)) throw string("Error computing decompressGold");  // Run the compression code in decompress_gold.cpp
         writeOutput(output, name);  // Write the output data out to a file
     }
     catch (myError& ex) { cout << *ex.msg << endl; }  // Just some error handling...

@@ -58,7 +58,7 @@ int testBwt(int argc, const char** argv, const CUDPPConfiguration *config);
 int testCompress(int argc, const char** argv, const CUDPPConfiguration *config);
 int testListRank(int argc, const char** argv, const CUDPPConfiguration *config);
 int testSuffixArray(int argc, const char** argv, const CUDPPConfiguration *config);
-int testDecompress(int argc, const char* argv[]);
+int testDecompress(int argc, const char* argv[], const CUDPPConfiguration* config);
 
 int testAllDatatypes(int argc,
                      const char** argv,
