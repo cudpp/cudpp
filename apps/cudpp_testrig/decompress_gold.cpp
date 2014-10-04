@@ -39,8 +39,18 @@ struct HuffmanTree {
     HuffmanNode* root;            ///< Pointer to root node
     vector<HuffmanNode*>* nodes;  ///< Pointer to a vector of all nodes in the tree
 
-    HuffmanTree();                    ///< Default constructor that initializes the root pointer to NULL
+    HuffmanTree() {                   ///< Default constructor that initializes the root pointer to NULL
+        root = NULL;
+        nodes = new vector<HuffmanNode*>();
+    }
+    void copy(HuffmanTreeArray* new_tree) {
+        new_tree->root = this->root;
+        new_tree->nodes = new HuffmanNode*[this->nodes->size()];
+        for (int i=0; i<this->nodes->size(); i++) { new_tree->nodes[i] = this->nodes->at(i); }
+    }
+
     ~HuffmanTree() { delete nodes; }  ///< Destructor
+    
 };
 
 // ----- HuffmanNode -----
@@ -67,21 +77,6 @@ HuffmanNode::HuffmanNode(int d, int f)  ///< Constructor used when creating node
     else if (data < -1) type = huffman_node_type::internal;
     else type = leaf;
 }
-
-// ----- HuffmanTree -----
-HuffmanTree::HuffmanTree()  ///< Default constructor that initializes the root pointer to NULL
-{
-    root = NULL;
-    nodes = new vector<HuffmanNode*>();
-}
-
-// ----- HuffmanTreeArray -----
-/*HuffmanTreeArray::HuffmanTreeArray(HuffmanTree* old_tree)  ///< Constructor that makes a HuffmanTreeArray object from an existing HuffmanTree object
-{
-    root = old_tree->root;
-    this->nodes = new HuffmanNode*[old_tree->nodes->size()];
-    for (int i=0; i<old_tree->nodes->size(); i++) { this->nodes[i] = old_tree->nodes->at(i); }
-}*/
 
 
 
@@ -278,11 +273,10 @@ int computeHuffmanTree(unsigned char* i_data, vector<bool>* o_data, size_t num_e
     tree->nodes->push_back(r);
 // -----------------
 
-    tree_array = new HuffmanTreeArray();
-    tree_array->root = tree->root;
+    tree->copy(tree_array);
+    /*tree_array->root = tree->root;
     tree_array->nodes = new HuffmanNode*[tree->nodes->size()];
-    for (int i=0; i<tree->nodes->size(); i++) { tree_array->nodes[i] = tree->nodes->at(i); }
-//   tree_array = new HuffmanTreeArray(tree); 
+    for (int i=0; i<tree->nodes->size(); i++) { tree_array->nodes[i] = tree->nodes->at(i); }*/
 
     vector<bool> code;                        // Create a vector to store the Huffman code for an individual character
     vector<vector<bool>> codes(largest + 1);  // Create vector to store all Huffman codes
