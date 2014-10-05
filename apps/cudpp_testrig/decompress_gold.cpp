@@ -273,10 +273,7 @@ int computeHuffmanTree(unsigned char* i_data, vector<bool>* o_data, size_t num_e
     tree->nodes->push_back(r);
 // -----------------
 
-    tree->copy(tree_array);
-    /*tree_array->root = tree->root;
-    tree_array->nodes = new HuffmanNode*[tree->nodes->size()];
-    for (int i=0; i<tree->nodes->size(); i++) { tree_array->nodes[i] = tree->nodes->at(i); }*/
+    tree->copy(tree_array);  // Copy data from the HuffmanTree object to a HuffmanTreeArray object, so it can be used on the GPU for decompression
 
     vector<bool> code;                        // Create a vector to store the Huffman code for an individual character
     vector<vector<bool>> codes(largest + 1);  // Create vector to store all Huffman codes
@@ -411,30 +408,15 @@ int computeDecompressGold(unsigned char* input, vector<bool>* output, size_t num
     }
     // ---------------------------------
     delete [] bwt_output;
+    delete MTF_list;
 
     // ----- Print MTF output -----
     if (verbose) {
         cout << "MTF Output:    |";
         for (int i=0; i<num_elements-1; i++) { cout << (int)mtf_output[i] << ","; }
         cout << (int)mtf_output[num_elements-1] << "|" << endl;
-
-        cout << "MTF List:      |";
-        for (int i=0; i<MTF_list->size(); i++) {
-            unsigned char temp = (*MTF_list)[i];
-            if (temp == '\t') cout << "\\t";
-            else if (temp == 28) cout << "\\s";
-            else if (temp == '\n') cout << "\\n";
-            else if (temp == '\b') cout << "\\b";
-            else if (temp == '\v') cout << "\\v";
-            else if (temp == '\r') cout << "\\r";
-            else if (temp == '\f') cout << "\\f";
-            else if (temp == '\0') cout << "Ø";
-            else cout << temp;
-        }
-        cout << "|" << endl;
     }
     // ----------------------------
-    delete MTF_list;
 
     // ----- Build Huffman code -----
     if (ret_val = computeHuffmanTree(mtf_output, output, num_elements, myTree)) {
