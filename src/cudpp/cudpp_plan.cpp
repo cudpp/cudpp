@@ -169,6 +169,11 @@ CUDPPResult cudppPlan(const CUDPPHandle  cudppHandle,
             plan = new CUDPPSaPlan(mgr, config, numElements);
             break;
         }
+    case CUDPP_DECOMPRESS:
+    {
+        printf("Creating decompress plan\n");
+        break;
+    }
     default:
         return CUDPP_ERROR_ILLEGAL_CONFIGURATION; 
         break;
