@@ -342,9 +342,8 @@ int computeHuffmanTree(unsigned char* i_data, vector<bool>* o_data, size_t num_e
  *
  *  @return  Status. 0 = success, else = failure
  */
-int computeDecompressGold(unsigned char* input, vector<bool>* output, size_t num_elements, bool verbose = false)
+int computeDecompressGold(unsigned char* input, vector<bool>* output, HuffmanTreeArray* tree, size_t num_elements, bool verbose = false)
 {
-    HuffmanTreeArray* myTree = new HuffmanTreeArray();
     vector<unsigned char>* MTF_list = new vector<unsigned char>();  // Pointer to vector object that stores the list of unique characters
 
     int ret_val = 0;  // Variable to store return value (status)
@@ -419,9 +418,8 @@ int computeDecompressGold(unsigned char* input, vector<bool>* output, size_t num
     // ----------------------------
 
     // ----- Build Huffman code -----
-    if (ret_val = computeHuffmanTree(mtf_output, output, num_elements, myTree)) {
+    if (ret_val = computeHuffmanTree(mtf_output, output, num_elements, tree)) {
         delete [] mtf_output;
-        delete myTree;
         return ret_val;
     }
     // ------------------------------
@@ -434,7 +432,6 @@ int computeDecompressGold(unsigned char* input, vector<bool>* output, size_t num
         cout << "|" << endl;
     }
     // ------------------------------
-    delete myTree;
 
     //cout << endl << "Return: " << ret_val << endl;
 

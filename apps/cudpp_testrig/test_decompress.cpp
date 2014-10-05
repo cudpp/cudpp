@@ -21,6 +21,8 @@
 
 #include "decompress_gold.cpp"
 #include "cudpp.h"
+#include "cuda_util.h"
+#include "cuda_runtime_api.h"
 
 class myError : exception {
     public:
@@ -67,32 +69,22 @@ int testDecompress(int argc, const char* argv[], const CUDPPConfiguration* init_
 {
     int ret_val = 0;           // Stores the return value
     bool verbose = false;      // Determines whether the program prints output data or not
+    bool failed = false;       // Stores whether the first try block has a failure and if so, prevents the second one from executing
     size_t num_elements = 44;  // Stores number of input array elements, initialized to number of input elements based on default input string. Changes if input comes from a file
     unsigned char* input = new unsigned char[num_elements];  // Input data array. Initialized for the default input string but is reinitialized if input comes from a different source
-    vector<bool>* output = new vector<bool>();               // Output data vector. Stores output data in binary form.
+    vector<bool>* compressionOutput = new vector<bool>();    // Output data vector. Stores output data in binary form.
+    HuffmanTreeArray* myTree = new HuffmanTreeArray();       // Tree object containing Huffman code for output data
+
+    bool* h_compressionOutput;
+    bool* d_compressionOutput;
+    unsigned char* h_output;
+    unsigned char* d_output;
 
     CUDPPConfiguration config;   // CUDPP configuration used to tell the CUDPP library to run decompression
     CUDPPHandle cudppLibrary;    // CUDPP handle for the CUDPP library
     CUDPPHandle decompressPlan;  // CUDPP handle for the decompress plan
 
-    try
-    {
-// ------------------------- TO DO --------------------------
-
-//  Initialize CUDPP  configuration
-        if (init_config) config = *init_config;   // If no configuration is specified, initialize one
-        else {
-            config.algorithm = CUDPP_DECOMPRESS;  // Set algorithm to decompress
-            config.options = 0;                   // Ensure no options are set
-            config.datatype = CUDPP_UCHAR;        // Set data type to unsigned char
-        }
-
-//  Initialize CUDPP library
-        if (cudppCreate(&cudppLibrary) != CUDPP_SUCCESS) {     // Try and initialize the CUDPP library
-            ret_val = 1;
-            throw string("Error initializing CUDPP library");  // If there was a problem initializing the library, throw an error
-        }
-
+    try {
 //  Allocate input memory on host and populate input data
         srand(time(NULL));   // Used to generate random characters every time the code is run
         bool found = false;  // Stores whether an input source has already been found
@@ -115,7 +107,7 @@ int testDecompress(int argc, const char* argv[], const CUDPPConfiguration* init_
                                                                                                         // If it's the last argument, throw an error
 
                     input_file.seekg(0, input_file.end);                  // Move the pointer to the end of the file
-                    streamsize size = num_elements = input_file.tellg();  // Return the position of the end of the file (size of file)
+                    streamsize size = num_elements = input_file.tellg();  // Get the position of the end of the file (size of file)
                     input_file.seekg(0, input_file.beg);                  // Return the pointer to the beginning of the file so the file can be read
 
                     delete [] input;
@@ -125,40 +117,80 @@ int testDecompress(int argc, const char* argv[], const CUDPPConfiguration* init_
                 }
             }
         }
+    }
+    catch (myError& ex) { cout << *ex.msg << endl; failed = true; }  // Just some error handling...
+    catch (string err) { cout << err << endl; failed = true; }
+    catch (...) { cout << "Generic error in testDeompress\n"; failed = true; }
+
+    try
+    {
+        if (failed) throw string("");
+// ------------------------- TO DO --------------------------
+
+//  Allocate input memory on device
+        cudaMalloc((void**)&d_compressionOutput, num_elements * sizeof(bool));
+
+//  Allocate output memory on device
+        cudaMalloc((void**)&d_output, num_elements * sizeof(unsigned char));
 
 //  Allocate temporary output memory on host
-//  Calculate decompress gold on host and store in temporary output memory
-	if (ret_val = computeDecompressGold(input, output, num_elements, verbose)) throw string("Error computing decompressGold");  // Run the compression code in decompress_gold.cpp
-    
+        h_compressionOutput = new bool[num_elements];
+
+//  Allocate output memory on host
+        h_output = new unsigned char[num_elements];
+
+//  Initialize CUDPP  configuration
+        if (init_config) config = *init_config;   // If no configuration is specified, initialize one
+        else {
+            config.algorithm = CUDPP_DECOMPRESS;  // Set algorithm to decompress
+            config.options = 0;                   // Ensure no options are set
+            config.datatype = CUDPP_UCHAR;        // Set data type to unsigned char
+        }
+
+//  Initialize CUDPP library
+        if (cudppCreate(&cudppLibrary) != CUDPP_SUCCESS) {     // Try and initialize the CUDPP library
+            ret_val = 1;
+            throw string("Error initializing CUDPP library");  // If there was a problem initializing the library, throw an error
+        }
+
 //  Initialize CUDPP Plan
         if (cudppPlan(cudppLibrary, &decompressPlan, config, num_elements, 1, 0) != CUDPP_SUCCESS) {  // Try and initialize the CUDPP decompress plan
             ret_val = 1;
             throw string("Error creating decompress plan");  // If there was a problem initializing the decompress plan, throw an error
         }
 
-//  Allocate input memory on device
-//  Allocate output memory on device
-//  Allocate output memory on host
+//  Calculate decompress gold on host and store in temporary output memory
+	if (ret_val = computeDecompressGold(input, compressionOutput, myTree, num_elements, verbose)) throw string("Error computing decompressGold");  // Run the compression code in decompress_gold.cpp
+        for (int i=0; i<num_elements; i++) { h_compressionOutput[i] = compressionOutput->at(i); }
+    
 //  Copy temporary output data from host to device
+        cudaMemcpy(d_compressionOutput, h_compressionOutput, num_elements * sizeof(bool), cudaMemcpyHostToDevice);
+
 //  Perform decompression on device
-        //HuffmanTreeArray* t = new HuffmanTreeArray();
-        //computeDecompress(decompressPlan, t, 0, 0);
+        if (cudppDecompress(decompressPlan, myTree, 0, 0) != CUDPP_SUCCESS) throw string("Error computing cudppDecompress");
 
 //  Copy output data back from device
-//  Free memory on device
-//  Compare output from device to original input data
-//  Free memory on host
+        cudaMemcpy(h_output, d_output, num_elements * sizeof(unsigned char), cudaMemcpyDeviceToHost);
 
+//  Compare output from device to original input data
 
     }
-    catch (myError& ex) { cout << *ex.msg << endl; }  // Just some error handling...
     catch (string err) { cout << err << endl; }
     catch (...) { cout << "Generic error in testDeompress\n"; }
 
     cudppDestroyPlan(decompressPlan);
     cudppDestroy(cudppLibrary);
+
+//  Free memory on host
     delete [] input;
-    delete output;
+    delete [] h_compressionOutput;
+    delete [] h_output;
+    delete compressionOutput;
+    delete myTree;
+
+//  Free memory on device
+    cudaFree(d_compressionOutput);
+    cudaFree(d_output);
 
     return ret_val;
 }

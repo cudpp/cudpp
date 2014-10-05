@@ -119,7 +119,7 @@ int testAllDatatypes(int argc,
     if(config.algorithm == CUDPP_DECOMPRESS)
     {
         config.datatype = CUDPP_UCHAR;
-        cout << "Decompression is still in development..." << endl;
+        cout << "\n\nDecompression is still in development..." << endl;
         retval += testDecompress(argc, argv, &config);
         return retval;
     }

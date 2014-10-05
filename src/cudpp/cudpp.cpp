@@ -1029,9 +1029,12 @@ CUDPPResult cudppSuffixArray(CUDPPHandle planHandle,
  *  - Not completed yet, just put in place for future development
  */
 CUDPP_DLL
-CUDPPResult computeDecompress(CUDPPHandle plan, HuffmanTreeArray* d_tree, unsigned char* d_input, unsigned char* d_output)
+CUDPPResult cudppDecompress(CUDPPHandle plan, HuffmanTreeArray* d_tree, unsigned char* d_input, unsigned char* d_output)
 {
-    return CUDPP_ERROR_INVALID_HANDLE;
+    printf("No code in cudpp.cpp/cudppDecompress yet\n");
+
+    return CUDPP_SUCCESS;
+    //return CUDPP_ERROR_INVALID_HANDLE;
 }
 
 /** @} */ // end Algorithm Interface

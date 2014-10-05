@@ -355,7 +355,7 @@ CUDPPResult cudppCompress(CUDPPHandle planHandle,
 
 // Data decompression algorithm
 CUDPP_DLL
-CUDPPResult computeDecompress(CUDPPHandle plan, HuffmanTreeArray* d_tree, unsigned char* d_input, unsigned char* d_output);
+CUDPPResult cudppDecompress(CUDPPHandle plan, HuffmanTreeArray* d_tree, unsigned char* d_input, unsigned char* d_output);
 
 // Burrows-Wheeler Transform
 CUDPP_DLL
