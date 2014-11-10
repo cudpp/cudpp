@@ -28,6 +28,22 @@
  * @{
  */
 
+
+
+/* ========================= NOTES ============================
+ *
+ *    - This file contains kernel functions.
+ *    - They are defined as __global__ before the function definition.
+ *    - Contains CUDA code that runs on the device and is called from the host.
+ *
+ */
+
+
+
+
+
+
+
 typedef unsigned int uint;
 typedef unsigned char uchar;
 typedef unsigned short ushort;

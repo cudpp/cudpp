@@ -26,5 +26,20 @@
 #include <stdio.h>
 #include <cudpp_globals.h>
 
+
+
+/* ========================== NOTES ==========================
+ *
+ *    - This file contains CTA (CUDA block level) functions
+ *    - These functions are defined by __device__ before the function definitions.
+ *    - They can only be called from within kernel (__global__) functions.
+ *    - They operate on code within a block/warp (ie - for searching, etc...)
+ *
+ */
+
+
+
+
+
 /** @} */ // end compress functions
 /** @} */ // end cudpp_cta

@@ -40,6 +40,16 @@ using namespace std;
 
 void cudppDecompressDispatch(void ) { }
 
+/* ========================= NOTES ==========================
+ *
+ *    - Functions in this file call kernel functions. 
+ *    - They are not __global__ or __device__ functions as they are not CUDA code
+ *
+ */
+
+
+
+
 #ifdef __cplusplus
 }
 #endif
