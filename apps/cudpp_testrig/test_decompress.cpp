@@ -71,6 +71,7 @@ int testDecompress(int argc, const char* argv[], const CUDPPConfiguration* init_
     bool verbose = false;      // Determines whether the program prints output data or not
     bool failed = false;       // Stores whether the first try block has a failure and if so, prevents the second one from executing
     size_t num_elements = 44;  // Stores number of input array elements, initialized to number of input elements based on default input string. Changes if input comes from a file
+    char* name = new char[23];                               // Default output file name. Changes if input comes from a file
     unsigned char* input = new unsigned char[num_elements];  // Input data array. Initialized for the default input string but is reinitialized if input comes from a different source
     vector<bool>* compressionOutput = new vector<bool>();    // Output data vector. Stores output data in binary form.
     HuffmanTreeArray* myTree = new HuffmanTreeArray();       // Tree object containing Huffman code for output data
@@ -89,6 +90,7 @@ int testDecompress(int argc, const char* argv[], const CUDPPConfiguration* init_
         srand(time(NULL));   // Used to generate random characters every time the code is run
         bool found = false;  // Stores whether an input source has already been found
         strcpy((char*)input, "The quick brown fox jumps over the lazy dog.");  // Default input string if nothing else is specified
+        strcpy(name, "default_compressed.txt");                                // Default output file name if nothing else is specified
 
         if (argc > 1) {  // If there are any command-line arguments, process them
             for (int i=1; i<argc; i++) {  // Loop through all the command-line arguments
@@ -102,6 +104,7 @@ int testDecompress(int argc, const char* argv[], const CUDPPConfiguration* init_
                     found = true;                                                          // Mark that an input source has been found
                 }
                 else {  // If an option exists that isn't recognized, try and use it as a file name
+                    cout << "\n\n" << argv[i] << "\n\n";
                     ifstream input_file(argv[i]);                                                       // Try and open the file
                     if (!input_file.is_open()) throw string("Unrecognized input: " + string(argv[i]));  // If the file doesn't exist, go to the next argument
                                                                                                         // If it's the last argument, throw an error
@@ -114,6 +117,13 @@ int testDecompress(int argc, const char* argv[], const CUDPPConfiguration* init_
                     input = new unsigned char[num_elements+1];  // Initialize input array to size of file plus 1 for null-termination
                     input_file.read((char*)input, size);        // Read file into input array
                     found = true;                               // Mark that an input source has been found
+
+                    size_t name_length = strlen(argv[i]);
+                    delete [] name;
+                    name = new char[name_length + 12];
+                    strncpy(name, argv[i], name_length - 4);
+                    name[name_length - 4] = '\0';
+                    strcat(name, "_compressed.txt");
                 }
             }
         }
@@ -124,7 +134,7 @@ int testDecompress(int argc, const char* argv[], const CUDPPConfiguration* init_
 
     try
     {
-        if (failed) throw string("");
+        if (failed) throw string("FAILED");
 // ------------------------- TO DO --------------------------
 
 //  Allocate input memory on device
@@ -162,6 +172,8 @@ int testDecompress(int argc, const char* argv[], const CUDPPConfiguration* init_
 //  Calculate decompress gold on host and store in temporary output memory
 	if (ret_val = computeDecompressGold(input, compressionOutput, myTree, num_elements, verbose)) throw string("Error computing decompressGold");  // Run the compression code in decompress_gold.cpp
         for (int i=0; i<num_elements; i++) { h_compressionOutput[i] = compressionOutput->at(i); }
+
+        writeOutput(compressionOutput, name);
     
 //  Copy temporary output data from host to device
         cudaMemcpy(d_compressionOutput, h_compressionOutput, num_elements * sizeof(bool), cudaMemcpyHostToDevice);
