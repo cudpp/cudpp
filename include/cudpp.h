@@ -188,7 +188,7 @@ struct HuffmanNode {
 };
 
 /** @struct HuffmanTreeArray
- *  @brief Data structure for a Huffman tree that stores the nodes in an array
+ *  @brief Data structure for a Huffman tree that stores the nodes in an array instead of a vector (for C compatibility)
  */
 struct HuffmanTreeArray {
     HuffmanNode* root;   ///< Pointer to root node
