@@ -44,7 +44,7 @@ template <class T, class Oper>
 void reduceBlocks(T *d_odata, const T *d_idata, size_t numElements, const CUDPPReducePlan *plan)
 {
     unsigned int numThreads = (unsigned int)(((unsigned int)numElements > 2 * plan->m_threadsPerBlock) ?
-        plan->m_threadsPerBlock : ceilPow2((unsigned int)numElements) / 2);
+        plan->m_threadsPerBlock : max(1, ceilPow2((unsigned int)numElements) / 2));
     dim3 dimBlock(numThreads, 1, 1);
     unsigned int numBlocks =
         min(plan->m_maxBlocks,
