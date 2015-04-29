@@ -75,9 +75,9 @@ configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/include/cudpp_config.h
   )
 
-set (CUDPP_APP_DATA_DIR
-  "${CMAKE_SOURCE_DIR}/apps/data/"
-  )
+#set (CUDPP_APP_DATA_DIR
+#  "${CMAKE_SOURCE_DIR}/apps/data/"
+#  )
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/apps/common/include/common_config.h.in
   ${CMAKE_CURRENT_SOURCE_DIR}/apps/common/include/common_config.h
@@ -93,7 +93,7 @@ endif (bits EQUAL 64)
 endif (WIN32)
 
 # copy data files
-file(COPY apps/data DESTINATION apps)
+#file(COPY apps/data DESTINATION apps)
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
   exec_program(uname ARGS -v  OUTPUT_VARIABLE DARWIN_VERSION)
