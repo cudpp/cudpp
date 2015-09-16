@@ -141,6 +141,7 @@ enum CUDPPAlgorithm
     CUDPP_BWT,               //!< Burrows-Wheeler transform
     CUDPP_MTF,               //!< Move-to-Front transform
     CUDPP_SA,                //!< Suffix Array algorithm
+    CUDPP_MULTISPLIT,        //!< Multi-Split algorithm
     CUDPP_ALGORITHM_INVALID, //!< Placeholder at end of enum
 };
 
@@ -242,6 +243,12 @@ CUDPPResult cudppMergeSort(const CUDPPHandle planHandle,
                       void              *d_keys,                                          
                       void              *d_values,                                                                       
                       size_t            numElements);
+
+CUDPP_DLL
+CUDPPResult cudppMultiSplit(const CUDPPHandle planHandle,
+                      unsigned int      *d_elements,
+                      size_t            numElements,
+                      size_t            numBuckets);
 
 CUDPP_DLL
 CUDPPResult cudppStringSort(const CUDPPHandle planHandle,						   

@@ -384,5 +384,15 @@ public:
 };
 
 
+/** @brief Plan class for MultiSplit
+*
+*/
+class CUDPPMultiSplitPlan : public CUDPPPlan
+{
+public:
+    CUDPPMultiSplitPlan(CUDPPManager *mgr, CUDPPConfiguration config, size_t numElements);
+    virtual ~CUDPPMultiSplitPlan();
+
+};
 
 #endif // __CUDPP_PLAN_H__

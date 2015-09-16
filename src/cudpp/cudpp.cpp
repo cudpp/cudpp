@@ -47,6 +47,7 @@
 #include "cudpp_compact.h"
 #include "cudpp_spmvmult.h"
 #include "cudpp_mergesort.h"
+#include "cudpp_multisplit.h"
 #include "cudpp_radixsort.h"
 #include "cudpp_rand.h"
 #include "cudpp_reduce.h"
@@ -438,6 +439,31 @@ CUDPPResult cudppMergeSort(const CUDPPHandle planHandle,
             cudppMergeSortDispatch(d_keys, d_values, numElements, plan);
             return CUDPP_SUCCESS;
         }
+    }
+    else
+    {
+        return CUDPP_ERROR_INVALID_HANDLE;
+    }
+}
+/**
+ * @brief BLAHBLAHBLAH
+ *
+ * BLAHBLAHBLAH
+ * @see cudppPlan, CUDPPConfiguration, CUDPPAlgorithm
+ */
+CUDPP_DLL
+CUDPPResult cudppMultiSplit(const CUDPPHandle planHandle,
+                      unsigned int     *d_elements,
+                      size_t            numElements,
+                      size_t            numBuckets)
+{
+    CUDPPMultiSplitPlan *plan =
+        (CUDPPMultiSplitPlan*)getPlanPtrFromHandle<CUDPPMultiSplitPlan>(planHandle);
+
+    if (plan != NULL)
+    {
+        cudppMultiSplitDispatch(d_elements, numElements, numBuckets, plan);
+        return CUDPP_SUCCESS;
     }
     else
     {

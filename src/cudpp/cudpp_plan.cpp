@@ -169,6 +169,12 @@ CUDPPResult cudppPlan(const CUDPPHandle  cudppHandle,
             plan = new CUDPPSaPlan(mgr, config, numElements);
             break;
         }
+    case CUDPP_MULTISPLIT:
+        {
+            plan = new CUDPPMultiSplitPlan(mgr, config, numElements);
+            break;
+        }
+
     default:
         return CUDPP_ERROR_ILLEGAL_CONFIGURATION; 
         break;
@@ -784,4 +790,22 @@ CUDPPSaPlan::CUDPPSaPlan(CUDPPManager *mgr, CUDPPConfiguration config, size_t st
 CUDPPSaPlan::~CUDPPSaPlan()
 {
     freeSaStorage(this);
+}
+
+/** @brief CUDPP MultiSplit Plan Constructor
+  *
+  * @param[in] mgr pointer to the CUDPPManager
+  * @param[in] config The configuration struct specifying options
+  * @param[in] The maximum number of elements to be split
+  */
+CUDPPMultiSplitPlan::CUDPPMultiSplitPlan(CUDPPManager *mgr, CUDPPConfiguration config, size_t numElements)
+ : CUDPPPlan(mgr, config, numElements, 1, 0)
+{
+    //allocSaStorage(this);
+}
+
+/** brief SA plan destructor*/
+CUDPPMultiSplitPlan::~CUDPPMultiSplitPlan()
+{
+    //freeSaStorage(this);
 }

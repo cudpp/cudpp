@@ -58,6 +58,7 @@ int testBwt(int argc, const char** argv, const CUDPPConfiguration *config);
 int testCompress(int argc, const char** argv, const CUDPPConfiguration *config);
 int testListRank(int argc, const char** argv, const CUDPPConfiguration *config);
 int testSuffixArray(int argc, const char** argv, const CUDPPConfiguration *config);
+int testMultiSplit(int argc, const char ** argv, const CUDPPConfiguration *config);
 
 int testAllDatatypes(int argc,
                      const char** argv,
@@ -143,6 +144,9 @@ int testAllDatatypes(int argc,
                            "merge sort ... skipping\n");
                 else
                     retval += testMergeSort(argc, argv, &config);
+                break;
+            case CUDPP_MULTISPLIT:
+                retval += testMultiSplit(argc, argv, &config);
                 break;
             default:            // ignore datatype
                 break;
@@ -335,6 +339,7 @@ int main(int argc, const char** argv)
         printf("compress: Run compression test(s) (compute 2.0+ only)\n\n");
         printf("listrank: Run list ranking test(s)\n\n");
         printf("sa: Run suffix array test(s) (compute 2.0+ only)\n\n");
+        printf("multisplit: Run multisplit test(s)\n\n");
         printf("--- Global Options ---\n");
         printf("iterations=<N>: Number of times to run each test\n");
         printf("n=<N>: Number of values to use in a single test\n");
@@ -377,6 +382,7 @@ int main(int argc, const char** argv)
     bool runTridiagonal = runAll ||  checkCommandLineFlag(argc, argv, "tridiagonal");
     bool runMtf = runAll || checkCommandLineFlag(argc, argv, "mtf");
     bool runListRank = runAll || checkCommandLineFlag(argc, argv, "listrank");
+    bool runMultiSplit = runAll || checkCommandLineFlag(argc, argv, "multisplit");
     if (!supports48KBInShared && runMtf)
     {
         fprintf(stderr, "MTF is only supported on devices with "
@@ -424,6 +430,7 @@ int main(int argc, const char** argv)
         if (runCompress)  retval += testCompress(argc, argv, NULL);
         if (runListRank)  retval += testListRank(argc, argv, NULL);
         if (runSA)        retval += testSuffixArray(argc, argv, NULL);
+        if (runMultiSplit)retval += testMultiSplit(argc, argv, NULL);
     }
     else
     {
@@ -497,6 +504,11 @@ int main(int argc, const char** argv)
 
         if (runSA) {
             config.algorithm = CUDPP_SA;
+            retval += testAllDatatypes(argc, argv, config, supportsDouble, false);
+        }
+
+        if (runMultiSplit) {
+            config.algorithm = CUDPP_MULTISPLIT;
             retval += testAllDatatypes(argc, argv, config, supportsDouble, false);
         }
     }

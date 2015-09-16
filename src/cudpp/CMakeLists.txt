@@ -32,6 +32,7 @@ set (HFILES
   cudpp_listrank.h
   cudpp_sa.h
   cudpp_mergesort.h
+  cudpp_multisplit.h
   cudpp_radixsort.h
   cudpp_rand.h
   cudpp_reduce.h
@@ -72,6 +73,7 @@ set(CUFILES
   app/listrank_app.cu
   app/sa_app.cu
   app/mergesort_app.cu
+  app/multisplit_app.cu
   app/scan_app.cu
   app/segmented_scan_app.cu
   app/spmvmult_app.cu
