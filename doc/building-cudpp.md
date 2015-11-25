@@ -5,7 +5,9 @@ CUDPP has currently been tested on Windows, Mac OS X and Linux.
 See the [Release Notes](@ref release-notes) for release-specific platform support.
 
 Initial checkout 
-git clone https://github.com/cudpp/cudpp.git
+
+$ git clone https://github.com/cudpp/cudpp.git
+
 With CUDPP 2.2, we've added suffix_array which has dependencies on [cub](http://nvlabs.github.io/cub/) and [moderngpu](http://nvlabs.github.io/moderngpu/) libraries. They are added as submodules and you will need to pull them in using the following two commands in the cudpp/ root directory:
 
 $ git submodule init
