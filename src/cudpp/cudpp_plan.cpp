@@ -277,6 +277,11 @@ CUDPPResult cudppDestroyPlan(CUDPPHandle planHandle)
             delete static_cast<CUDPPSaPlan*>(plan);
             break;
         }
+    case CUDPP_MULTISPLIT:
+        {
+            delete static_cast<CUDPPMultiSplitPlan*>(plan);
+            break;
+        }
     default:
         return CUDPP_ERROR_ILLEGAL_CONFIGURATION; 
         break;

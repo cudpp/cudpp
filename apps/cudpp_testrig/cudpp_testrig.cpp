@@ -328,22 +328,23 @@ int main(int argc, const char** argv)
         printf("mergesort: Run merge sort test(s)\n");
         printf("radixsort: Run radix sort test(s)\n");
         printf("stringsort: Run string sort test(s)\n");
-        printf("compact: Run compact test(s)\n\n");
-        printf("reduce: Run reduce test(s)\n\n");
-        printf("rand: Run random number generator test(s)\n\n");
-        printf("tridiagonal: Run tridiagonal solver test(s)\n\n");
+        printf("compact: Run compact test(s)\n");
+        printf("reduce: Run reduce test(s)\n");
+        printf("rand: Run random number generator test(s)\n");
+        printf("tridiagonal: Run tridiagonal solver test(s)\n");
         printf("mtf: Run move-to-front transform test(s) "
-               "(compute 2.0+ only)\n\n");
+               "(compute 2.0+ only)\n");
         printf("bwt: Run Burrows-Wheeler transform test(s) "
-               "(compute 2.0+ only)\n\n");
-        printf("compress: Run compression test(s) (compute 2.0+ only)\n\n");
-        printf("listrank: Run list ranking test(s)\n\n");
-        printf("sa: Run suffix array test(s) (compute 2.0+ only)\n\n");
-        printf("multisplit: Run multisplit test(s)\n\n");
+               "(compute 2.0+ only)\n");
+        printf("compress: Run compression test(s) (compute 2.0+ only)\n");
+        printf("listrank: Run list ranking test(s)\n");
+        printf("sa: Run suffix array test(s) (compute 2.0+ only)\n");
+        printf("multisplit: Run multisplit test(s)\n");
+        printf("\n");
         printf("--- Global Options ---\n");
         printf("iterations=<N>: Number of times to run each test\n");
         printf("n=<N>: Number of values to use in a single test\n");
-        printf("r=<N>: Number of rows to scan (--multiscan only)\n\n");
+        printf("r=<N>: Number of rows to scan (--multiscan only)\n");
         printf("--- Scan (Segmented and Unsegmented) Options ---\n");
         printf("backward: Run backward scans\n");
         printf("forward: Run forward scans (default)\n");
