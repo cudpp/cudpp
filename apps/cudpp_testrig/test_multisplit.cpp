@@ -94,6 +94,11 @@ void cpu_multisplit(uint* key_input, uint* key_output, uint n, uint buckets,
   // bucket_mode == 0: equal number of elements per bucket
   // bucket_mode == 1: most significant bits of input represent bucket ID
   // n: number of elements
+  if (buckets == 1) {
+    for (unsigned int k = 0; k < n; k++)
+      key_output[k] = key_input[k];
+    return;
+  }
 
   uint log_buckets = ceil(log2(buckets));
   uint *bins = new uint[buckets]; // histogram results holder
@@ -176,11 +181,10 @@ int verifySplit(unsigned int *keysSorted, unsigned int *valuesSorted,
 
 int multiSplitTest(CUDPPHandle theCudpp, CUDPPConfiguration config,
     size_t *element_tests, size_t *bucket_tests, unsigned int num_element_tests,
-    unsigned int num_bucket_tests, size_t maxNumElements,
+    unsigned int num_bucket_tests, size_t maxNumElements, size_t maxNumBuckets,
     testrigOptions testOptions, bool quiet) {
   int retval = 0;
     srand(44);
-    unsigned int numBuckets = 32;
 
     unsigned int* elements = (unsigned int*) malloc(sizeof(unsigned int)*maxNumElements);
     unsigned int* h_result = (unsigned int*) malloc(sizeof(unsigned int)*maxNumElements);
@@ -189,12 +193,11 @@ int multiSplitTest(CUDPPHandle theCudpp, CUDPPConfiguration config,
     //for(int i = 0; i<maxNumElements; i++)
     //  elements[i] = i;
     //randomPermute(elements, maxNumElements);
-
     unsigned int *d_elements = NULL;
     CUDA_SAFE_CALL(cudaMalloc((void**) &d_elements, maxNumElements*sizeof(unsigned int)));   // gpu input (keys)
 
     CUDPPHandle plan;
-    CUDPPResult result = cudppPlan(theCudpp, &plan, config, maxNumElements, 1, 0);
+    CUDPPResult result = cudppPlan(theCudpp, &plan, config, maxNumElements, maxNumBuckets, 0);
 
     if(result != CUDPP_SUCCESS)
     {
@@ -210,11 +213,14 @@ int multiSplitTest(CUDPPHandle theCudpp, CUDPPConfiguration config,
 
     for (unsigned int k = 0; k < num_element_tests; ++k)
     {
+      // an arbitrary initialization
+      for(unsigned int i = 0; i<maxNumElements; i++)
+        elements[i] = rand();
+      randomPermute(elements, maxNumElements);
+
       for (unsigned int b = 0; b < num_bucket_tests; ++b)
       {
-
-        if(num_element_tests == 1)
-            element_tests[0] = maxNumElements;
+        int passed = 0;
 
         if (!quiet)
         {
@@ -226,10 +232,6 @@ int multiSplitTest(CUDPPHandle theCudpp, CUDPPConfiguration config,
 
         float totalTime = 0;
 
-        // an arbitrary initialization
-        for(unsigned int i = 0; i<maxNumElements; i++)
-          elements[i] = rand();
-        randomPermute(elements, maxNumElements);
 
         CUDA_SAFE_CALL( cudaMemcpy(d_elements, elements,
               element_tests[k] * sizeof(unsigned int),
@@ -256,9 +258,9 @@ int multiSplitTest(CUDPPHandle theCudpp, CUDPPConfiguration config,
         uint count = 0;
         uint *h_output = new uint[element_tests[k]];
         cpu_multisplit(elements, h_output, element_tests[k], bucket_tests[b], 1);
-        for(unsigned int i = 0; i < 10; i++)
+        for(unsigned int i = 0; i < element_tests[k]; i++)
         {
-          unsigned int elems_per_bucket = element_tests[k] / numBuckets;
+      //    unsigned int elems_per_bucket = element_tests[k] / numBuckets;
 /*
       printf("cpu val %d bucket %d gpu val %d bucket %d\n", h_output[i],
           h_output[i] / elems_per_bucket, h_result[i],
@@ -267,16 +269,18 @@ int multiSplitTest(CUDPPHandle theCudpp, CUDPPConfiguration config,
           if(h_output[i] != h_result[i]){
             count++;
             printf(" ##### index %d, correct = %d, computed = %d\n", i, h_output[i], h_result[i]);
-            if (i == 9)
+            passed = 1;
+            if (count == 10) {
               printf("...\n");
-            retval = -1;
+              break;
+            }
           }
         }
         delete h_output;
 
         if(!quiet)
         {
-            printf("test %s\n", (retval == 0) ? "PASSED" : "FAILED");
+            printf("test %s\n", (passed == 0) ? "PASSED" : "FAILED");
             printf("Average execution time: %f ms\n", totalTime / testOptions.numIterations);
         }
         else
@@ -347,7 +351,8 @@ int testMultiSplit(int argc, const char **argv,
 
     // The last test size should be the largest
     size_t element_tests[] = {2097152, 4194304, 8388608, 16777216};
-    size_t bucket_tests[] = {12, 13, 32, 97, 98, 99, 112, 128, 129, 230, 12, 13, 32, 8, 16, 32, 64, 96};
+    //size_t element_tests[] = {2097152};
+    size_t bucket_tests[] = {1, 2, 3, 13, 32, 33, 63, 83, 97, 100, 112, 129, 145};
 
     int num_element_tests = sizeof(element_tests)/sizeof(element_tests[0]);
     int num_bucket_tests = sizeof(bucket_tests)/sizeof(bucket_tests[0]);
@@ -357,7 +362,8 @@ int testMultiSplit(int argc, const char **argv,
     size_t freeMem, totalMem;
     CUDA_SAFE_CALL(cudaMemGetInfo(&freeMem, &totalMem));
     printf("freeMem: %d, totalMem: %d\n", int(freeMem), int(totalMem));
-    while (freeMem < 40 * element_tests[num_element_tests - 1]) // 90B/item appears to be enough
+
+    while (freeMem < 175 * element_tests[num_element_tests - 1]) // 175B/item appears to be enough
     {
         num_element_tests--;
         if (num_element_tests <= 0)
@@ -369,6 +375,7 @@ int testMultiSplit(int argc, const char **argv,
     }
 
     size_t numElements = element_tests[num_element_tests - 1];
+    size_t numBuckets = bucket_tests[num_bucket_tests - 1];
 
     if( commandLineArg( cmdVal, argc, (const char**)argv, "n" ) )
     {
@@ -389,7 +396,9 @@ int testMultiSplit(int argc, const char **argv,
     }
 
   retval = multiSplitTest(theCudpp, config, element_tests,
-      bucket_tests, num_element_tests, num_bucket_tests, numElements, testOptions, quiet);
+      bucket_tests,
+      num_element_tests, num_bucket_tests, numElements, numBuckets, testOptions,
+      quiet);
     result = cudppDestroy(theCudpp);
     
     return retval;

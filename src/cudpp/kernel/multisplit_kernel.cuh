@@ -30,8 +30,6 @@
 
 #define DIST_OPTION 1
 
-extern __shared__ uint shitPad[];
-
 //======================================
 template<uint NUM_WARPS, uint NUM_BUCKETS, uint LOG_BUCKETS, uint LOG_WARPS>
 __global__ void histogramBallot_Mode13_large(uint* input, uint* bin, uint numElements)
@@ -186,7 +184,7 @@ __global__ void splitBallot_Mode13_large(unsigned int* input, unsigned int* binO
   uint item = input[index];
   // uint laneId = threadIdx.x & 0x1F;
   // uint warpId = threadIdx.x >> 5;
-  uint msb_shift = 32 - (uint)(log2(NUM_BUCKETS * 1.0f));
+  uint msb_shift = 32 - ceil(log2(NUM_BUCKETS * 1.0f));
   uint bucketId = item>>msb_shift; //item/elsPerBucket;
 
   // Loading all warp indices regarding to each bucket into the shared memory:
@@ -199,6 +197,8 @@ __global__ void splitBallot_Mode13_large(unsigned int* input, unsigned int* binO
 
   // writing back the results:
   output[scratchPad[bucketId] + threadIdx.x - scanBlock[bucketId]] = item;
+//  if (scratchPad[bucketId] + threadIdx.x - scanBlock[bucketId] == 8)
+//    printf("blockidx %u ndx %u ITEM %u\n", blockIdx.x, index, item);
 }
 //========================================
 template<uint NUM_W, uint NUM_B, uint LOG_B, uint DEPTH>
@@ -348,22 +348,24 @@ __global__ void split_WMS(uint* key_input, uint* warpOffsets, uint* key_output, 
   }
 }
 //=====================================
-template<uint NUM_W, uint LOG_W, uint NUM_B, uint LOG_B, uint DEPTH>
-__global__ void histogram_block(uint* input, uint* bin, uint numElements)
-{
+__global__ void histogram_block(uint* input, uint* bin, uint numElements,
+    uint numBuckets, uint numWarps, uint depth) {
   // this kernel just computes warp-level histograms for the pre-scan stage
   // can be used for both direct MS and warp-level MS
 
   uint  index = threadIdx.x + blockIdx.x * blockDim.x;
+  uint logBuckets = ceil(log2((float) numBuckets));
+  uint logWarps = ceil(log2((float) numWarps));
   // if(index > numElements) return;
 
-  __shared__ uint scratchPad[NUM_B * NUM_W * DEPTH];
+  //__shared__ uint scratchPad[NUM_B * NUM_W * DEPTH];
+  extern __shared__ uint scratchPad[];
 
   uint  laneId = threadIdx.x & 0x1F;
   uint  warpId = threadIdx.x >> 5;
 
   #if DIST_OPTION == 0 // uniform distribution
-    uint  elsPerBucket = (numElements+NUM_B-1)/NUM_B;
+    uint  elsPerBucket = (numElements+numBuckets-1)/numBuckets;
   #endif
 
 //  uint  myInput[DEPTH];
@@ -371,7 +373,7 @@ __global__ void histogram_block(uint* input, uint* bin, uint numElements)
 
   // === Histogram and local index computation
   #pragma unroll
-  for(int kk = 0; kk<DEPTH; kk++){
+  for(int kk = 0; kk<depth; kk++){
     uint  myInput;
     uint  binCounter;  // results of histograms
   // for(int kk = 0; kk<DEPTH && (index + kk * gridDim.x * blockDim.x) < numElements; kk++){
@@ -380,14 +382,14 @@ __global__ void histogram_block(uint* input, uint* bin, uint numElements)
     #if DIST_OPTION == 0 // uniform distribution
       myBucket = myInput/elsPerBucket;
     #elif DIST_OPTION >= 1 // Binomial distribution
-      myBucket = myInput >> (32 - LOG_B);
+      myBucket = myInput >> (32 - logBuckets);
     #endif
     uint myHisto = 0xFFFFFFFF;
     uint bit = myBucket;
     uint rx_buffer;
     // Computing the histogram and local indices:
     #pragma unroll
-    for(int i = 0; i<LOG_B; i++)
+    for(int i = 0; i<logBuckets; i++)
     {
       rx_buffer = __ballot(bit & 0x01);
       myHisto = myHisto & (((laneId >> i) & 0x01)?rx_buffer:(0xFFFFFFFF ^ rx_buffer));
@@ -395,12 +397,12 @@ __global__ void histogram_block(uint* input, uint* bin, uint numElements)
     }
     binCounter = __popc(myHisto);
     // storing the results into the shared memory
-    if(laneId < NUM_B)
+    if(laneId < numBuckets)
     {
       // // stored in this hierarchy: Bucket -> Roll -> Warp
       // scratchPad[laneId*NUM_W*DEPTH + (kk * NUM_W) + warpId] = binCounter[kk];
       // Hierarchy: Roll -> warp -> bucket
-      scratchPad[kk * NUM_W * NUM_B + warpId * NUM_B + laneId] = binCounter;
+      scratchPad[kk * numWarps * numBuckets + warpId * numBuckets + laneId] = binCounter;
     }
   }
   __syncthreads();
@@ -411,18 +413,18 @@ __global__ void histogram_block(uint* input, uint* bin, uint numElements)
   //  printf("block = %d, warp %d, bucket = %d, histo = %d\n", blockIdx.x, warpId, laneId, scratchPad[laneId + warpId * NUM_B]);
   // === storing histogram results from shared memory into global memory:
   #pragma unroll
-  for(int i = 1; i <= LOG_W; i++)
+  for(int i = 1; i <= logWarps; i++)
   {
     // Performing reduction over all elements:
     #pragma unroll
-    for(int kk = 0; kk<DEPTH; kk++)
+    for(int kk = 0; kk<depth; kk++)
     {
       // uint offset = kk * NUM_B * NUM_W;
       if((warpId & ((1<<i)-1)) == 0)
       {
-        if(laneId < NUM_B){
+        if(laneId < numBuckets){
           // printf("block = %d, warpId = %d, 1 = %d, 2 = %d\n", blockIdx.x, warpId, scratchPad[laneId + warpId * NUM_B + offset], scratchPad[laneId + (warpId + (1<<(i-1)))*NUM_B + offset]);
-          scratchPad[laneId + warpId * NUM_B + kk * NUM_W * NUM_B] += scratchPad[laneId + (warpId + (1<<(i-1)))*NUM_B + kk * NUM_W * NUM_B];
+          scratchPad[laneId + warpId * numBuckets + kk * numWarps * numBuckets] += scratchPad[laneId + (warpId + (1<<(i-1)))*numBuckets + kk * numWarps * numBuckets];
         }
       }
     }
@@ -453,23 +455,25 @@ __global__ void histogram_block(uint* input, uint* bin, uint numElements)
   //  printf("block = %d, smem[%d] = %d\n", blockIdx.x, threadIdx.x, scratchPad[threadIdx.x]);
   // storing the results into global memory:
   // each warp store results of each roll
-  if(NUM_W >= DEPTH)
+  if(numWarps >= depth)
   {
     // Global memory hierarchy: Bucket -> Roll -> block
-    if((laneId < NUM_B) && (warpId < DEPTH))
-      bin[laneId * gridDim.x * DEPTH + warpId * gridDim.x + blockIdx.x] = scratchPad[laneId + warpId * NUM_B * NUM_W];
+    if((laneId < numBuckets) && (warpId < depth))
+      bin[laneId * gridDim.x * depth + warpId * gridDim.x + blockIdx.x] = scratchPad[laneId + warpId * numBuckets * numWarps];
   }
 }
-//===================================
+
 template<uint NUM_W, uint LOG_W, uint NUM_B, uint LOG_B, uint DEPTH>
-__global__ void split_BMS(uint* key_input, uint* blockOffsets, uint* key_output, uint numElements)
+__global__ void split_BMS2(uint* key_input, uint* blockOffsets, uint* key_output, uint numElements)
 {
   // Block-level MS, post-scan stage:
   // Histogram and local block indices are recomputed. Keys are then reordered in shared memory and results are then stored into global memory.
 
   uint  index = threadIdx.x + blockIdx.x * blockDim.x;
 
+  //extern __shared__ uint scratchPad[];
   __shared__ uint scratchPad[2 * NUM_B * DEPTH + 32 * NUM_W * DEPTH + NUM_B * NUM_W * DEPTH];
+
   uint* block_offsets_smem = scratchPad;
   uint* warp_offsets_smem = &block_offsets_smem[NUM_B * DEPTH];
   uint* keys_ms_smem = &warp_offsets_smem[NUM_B * DEPTH];
@@ -481,19 +485,19 @@ __global__ void split_BMS(uint* key_input, uint* blockOffsets, uint* key_output,
   uint  elsPerBucket = (numElements+NUM_B-1)/NUM_B;
   #endif
 
-  uint  myInput[DEPTH];
-  uint  binCounter[DEPTH];  // results of histograms
-  uint  scan_temp[DEPTH];
-
   // === Histogram and local index computation
   #pragma unroll
   for(int kk = 0; kk<DEPTH; kk++){
-    myInput[kk] = key_input[index + kk * gridDim.x * blockDim.x];
+    uint  myInput;
+    uint  scan_temp;
+    uint  binCounter;
+
+    myInput = key_input[index + kk * gridDim.x * blockDim.x];
     uint myBucket;
     #if DIST_OPTION == 0 // uniform distribution
-      myBucket = myInput[kk]/elsPerBucket;
+      myBucket = myInput/elsPerBucket;
     #elif DIST_OPTION >= 1 // Binomial distribution
-      myBucket = myInput[kk] >> (32 - LOG_B);
+      myBucket = myInput >> (32 - LOG_B);
     #endif
     uint myMask = 0xFFFFFFFF;
     uint myHisto = 0xFFFFFFFF;
@@ -508,34 +512,34 @@ __global__ void split_BMS(uint* key_input, uint* blockOffsets, uint* key_output,
       myHisto = myHisto & (((laneId >> i) & 0x01)?rx_buffer:(0xFFFFFFFF ^ rx_buffer));
       bit >>= 1;
     }
-    binCounter[kk] = __popc(myHisto);
+    binCounter = __popc(myHisto);
     // Hieararchy: Roll -> warp -> bucket
     if(laneId < NUM_B)
-      scan_histo_smem[laneId + warpId * NUM_B + kk * NUM_B * NUM_W] = binCounter[kk];
+      scan_histo_smem[laneId + warpId * NUM_B + kk * NUM_B * NUM_W] = binCounter;
     __syncthreads();
 
     // computing block-wise scan over buckets:
-    scan_temp[kk] = binCounter[kk];
+    scan_temp = binCounter;
     for(int i = 1; i<(1<<LOG_W) ; i<<=1)
     {
       if(laneId < NUM_B)
-        scan_temp[kk] += ((warpId >= i)?scan_histo_smem[kk * NUM_B * NUM_W + (warpId-i)*NUM_B + laneId]:0);
+        scan_temp += ((warpId >= i)?scan_histo_smem[kk * NUM_B * NUM_W + (warpId-i)*NUM_B + laneId]:0);
       __syncthreads();
       if(laneId < NUM_B)
-        scan_histo_smem[kk * NUM_B * NUM_W + warpId * NUM_B + laneId] = scan_temp[kk];
+        scan_histo_smem[kk * NUM_B * NUM_W + warpId * NUM_B + laneId] = scan_temp;
       __syncthreads();
     }
 
     // Computing block-level indices:
-    scan_temp[kk] -= binCounter[kk]; // exclusive scan
-    uint myLocalBlockIndex = __shfl(scan_temp[kk], myBucket, 32);
+    scan_temp -= binCounter; // exclusive scan
+    uint myLocalBlockIndex = __shfl(scan_temp, myBucket, 32);
     myLocalBlockIndex += __popc(myMask & (0xFFFFFFFF >> (31-laneId))) - 1;
 
     // Computing warp-level offsets within each block:
     uint block_scan;
     if(warpId == (NUM_W-1))
     {
-      block_scan = scan_temp[kk] + binCounter[kk];
+      block_scan = scan_temp + binCounter;
       uint n;
       #pragma unroll
       for(int i = 1; i<=(1<<LOG_B); i<<=1)
@@ -544,8 +548,8 @@ __global__ void split_BMS(uint* key_input, uint* blockOffsets, uint* key_output,
         if(laneId >= i)
           block_scan += n;
       }
-      scan_temp[kk] += binCounter[kk];
-      block_scan -= scan_temp[kk];
+      scan_temp += binCounter;
+      block_scan -= scan_temp;
       if(laneId < NUM_B){
         warp_offsets_smem[laneId + kk * NUM_B] = block_scan;
       }
@@ -554,7 +558,7 @@ __global__ void split_BMS(uint* key_input, uint* blockOffsets, uint* key_output,
 
     uint myNewBlockIndex = warp_offsets_smem[myBucket + kk * NUM_B] + myLocalBlockIndex;
     // block-level reordering in shared memory
-    keys_ms_smem[myNewBlockIndex + kk * blockDim.x] = myInput[kk];
+    keys_ms_smem[myNewBlockIndex + kk * blockDim.x] = myInput;
 
     // loading block offsets from global memory
     if((laneId < NUM_B) && (warpId == 0)){
@@ -575,6 +579,131 @@ __global__ void split_BMS(uint* key_input, uint* blockOffsets, uint* key_output,
     #endif
     uint finalIndex = block_offsets_smem[NUM_B * kk + myNewBucket] + threadIdx.x;
     finalIndex -= warp_offsets_smem[myNewBucket + kk * NUM_B];
+    // global memory write:
+    // if(blockIdx.x == 0)
+    //  printf("blockIdx.x = %d, thread = %d, finalIndex = %d\n", blockIdx.x, threadIdx.x, finalIndex);
+    // if(finalIndex < 128)
+    //  printf("block = %d, thread = %d, bucket = %d, item = %d, finalIndex = %d, block_offsets_smem = %d, warp_offset_smem = %d\n", blockIdx.x, threadIdx.x, myNewBucket, myNewKey, finalIndex, block_offsets_smem[NUM_B * kk + myNewBucket], warp_offsets_smem[myNewBucket + kk * NUM_B]);
+    key_output[finalIndex] = myNewKey;
+  }
+}
+
+//===================================
+__global__ void split_BMS(uint* key_input, uint* blockOffsets, uint* key_output,
+    uint numElements, uint numBuckets, uint numWarps, uint depth) {
+  // Block-level MS, post-scan stage:
+  // Histogram and local block indices are recomputed. Keys are then reordered in shared memory and results are then stored into global memory.
+
+  uint  index = threadIdx.x + blockIdx.x * blockDim.x;
+  uint logBuckets = ceil(log2((float) numBuckets));
+  uint logWarps = ceil(log2((float) numWarps));
+
+  extern __shared__ uint scratchPad[];
+  uint* block_offsets_smem = scratchPad;
+  uint* warp_offsets_smem = &block_offsets_smem[numBuckets * depth];
+  uint* keys_ms_smem = &warp_offsets_smem[numBuckets * depth];
+  uint* scan_histo_smem = &keys_ms_smem[32 * numWarps * depth];
+
+  uint  laneId = threadIdx.x & 0x1F;
+  uint  warpId = threadIdx.x >> 5;
+  #if DIST_OPTION == 0 // uniform distribution
+  uint  elsPerBucket = (numElements+numBuckets-1)/numBuckets;
+  #endif
+
+  // === Histogram and local index computation
+  #pragma unroll
+  for(int kk = 0; kk<depth; kk++){
+    uint  myInput;
+    uint  binCounter;  // results of histograms
+    uint  scan_temp;
+
+    myInput = key_input[index + kk * gridDim.x * blockDim.x];
+    uint myBucket;
+    #if DIST_OPTION == 0 // uniform distribution
+      myBucket = myInput/elsPerBucket;
+    #elif DIST_OPTION >= 1 // Binomial distribution
+      myBucket = myInput >> (32 - logBuckets);
+    #endif
+    uint myMask = 0xFFFFFFFF;
+    uint myHisto = 0xFFFFFFFF;
+    uint bit = myBucket;
+    uint rx_buffer;
+    // Computing the histogram and local indices:
+    #pragma unroll
+    for(int i = 0; i<logBuckets; i++)
+    {
+      rx_buffer = __ballot(bit & 0x01);
+      myMask  = myMask  & ((bit & 0x01)?rx_buffer:(0xFFFFFFFF ^ rx_buffer));
+      myHisto = myHisto & (((laneId >> i) & 0x01)?rx_buffer:(0xFFFFFFFF ^ rx_buffer));
+      bit >>= 1;
+    }
+    binCounter = __popc(myHisto);
+    // Hieararchy: Roll -> warp -> bucket
+    if(laneId < numBuckets)
+      scan_histo_smem[laneId + warpId * numBuckets + kk * numBuckets * numWarps] = binCounter;
+    __syncthreads();
+
+    // computing block-wise scan over buckets:
+    scan_temp = binCounter;
+    for(int i = 1; i<(1<<logWarps) ; i<<=1)
+    {
+      if(laneId < numBuckets)
+        scan_temp += ((warpId >= i)?scan_histo_smem[kk * numBuckets * numWarps + (warpId-i)*numBuckets + laneId]:0);
+      __syncthreads();
+      if(laneId < numBuckets)
+        scan_histo_smem[kk * numBuckets * numWarps + warpId * numBuckets + laneId] = scan_temp;
+      __syncthreads();
+    }
+
+    // Computing block-level indices:
+    scan_temp -= binCounter; // exclusive scan
+    uint myLocalBlockIndex = __shfl(scan_temp, myBucket, 32);
+    myLocalBlockIndex += __popc(myMask & (0xFFFFFFFF >> (31-laneId))) - 1;
+
+    // Computing warp-level offsets within each block:
+    uint block_scan;
+    if(warpId == (numWarps-1))
+    {
+      block_scan = scan_temp + binCounter;
+      uint n;
+      #pragma unroll
+      for(int i = 1; i<=(1<<logBuckets); i<<=1)
+      {
+        n = __shfl_up(block_scan, i, 32);
+        if(laneId >= i)
+          block_scan += n;
+      }
+      scan_temp += binCounter;
+      block_scan -= scan_temp;
+      if(laneId < numBuckets){
+        warp_offsets_smem[laneId + kk * numBuckets] = block_scan;
+      }
+    }
+    __syncthreads();
+
+    uint myNewBlockIndex = warp_offsets_smem[myBucket + kk * numBuckets] + myLocalBlockIndex;
+    // block-level reordering in shared memory
+    keys_ms_smem[myNewBlockIndex + kk * blockDim.x] = myInput;
+
+    // loading block offsets from global memory
+    if((laneId < numBuckets) && (warpId == 0)){
+      block_offsets_smem[laneId + kk * numBuckets] = blockOffsets[laneId * gridDim.x * depth + kk * gridDim.x + blockIdx.x];
+      // block_offsets_smem[laneId + kk * NUM_B] = blockOffsets[kk * gridDim.x * NUM_B + laneId * gridDim.x + blockIdx.x];
+    }
+    __syncthreads();
+  }
+
+  // Final position computaiton and storing the results:
+  #pragma unroll
+  for(int kk = 0; kk<depth; kk++){
+    uint myNewKey = keys_ms_smem[threadIdx.x + kk * blockDim.x];
+    #if DIST_OPTION == 0 // uniform distribution
+      uint myNewBucket = myNewKey/elsPerBucket;
+    #elif DIST_OPTION >= 1 // Binomial distribution
+      uint myNewBucket = myNewKey >> (32 - logBuckets);
+    #endif
+    uint finalIndex = block_offsets_smem[numBuckets * kk + myNewBucket] + threadIdx.x;
+    finalIndex -= warp_offsets_smem[myNewBucket + kk * numBuckets];
     // global memory write:
     // if(blockIdx.x == 0)
     //  printf("blockIdx.x = %d, thread = %d, finalIndex = %d\n", blockIdx.x, threadIdx.x, finalIndex);

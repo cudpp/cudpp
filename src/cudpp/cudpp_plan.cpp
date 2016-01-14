@@ -21,9 +21,10 @@
 #include "cudpp_compress.h"
 #include "cudpp_listrank.h"
 #include "cudpp_sa.h"
+#include "cudpp_multisplit.h"
 #include "cuda_util.h"
 #include <cuda_runtime_api.h>
-
+#include <math.h>
 #include <assert.h>
 
 CUDPPResult validateOptions(CUDPPConfiguration config, size_t numElements, size_t numRows, size_t /*rowPitch*/)
@@ -171,7 +172,7 @@ CUDPPResult cudppPlan(const CUDPPHandle  cudppHandle,
         }
     case CUDPP_MULTISPLIT:
         {
-            plan = new CUDPPMultiSplitPlan(mgr, config, numElements);
+            plan = new CUDPPMultiSplitPlan(mgr, config, numElements, numRows);
             break;
         }
 
@@ -803,10 +804,14 @@ CUDPPSaPlan::~CUDPPSaPlan()
   * @param[in] config The configuration struct specifying options
   * @param[in] The maximum number of elements to be split
   */
-CUDPPMultiSplitPlan::CUDPPMultiSplitPlan(CUDPPManager *mgr, CUDPPConfiguration config, size_t numElements)
+CUDPPMultiSplitPlan::CUDPPMultiSplitPlan(CUDPPManager *mgr, CUDPPConfiguration config, size_t numElements, size_t numBuckets)
  : CUDPPPlan(mgr, config, numElements, 1, 0)
 {
-    //allocSaStorage(this);
+    m_numElements = numElements;
+    m_numBuckets = numBuckets;
+    m_logBuckets = ceil(log2(numBuckets));
+
+    allocMultiSplitStorage(this);
 }
 
 /** brief SA plan destructor*/

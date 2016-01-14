@@ -390,9 +390,17 @@ public:
 class CUDPPMultiSplitPlan : public CUDPPPlan
 {
 public:
-    CUDPPMultiSplitPlan(CUDPPManager *mgr, CUDPPConfiguration config, size_t numElements);
+  CUDPPMultiSplitPlan(CUDPPManager *mgr, CUDPPConfiguration config,
+      size_t numElements, size_t numBuckets);
     virtual ~CUDPPMultiSplitPlan();
 
+    unsigned int m_numElements;
+    unsigned int m_numBuckets;
+    unsigned int m_logBuckets;
+    unsigned int *m_d_mask;
+    unsigned int *m_d_out;
+    unsigned int *m_d_histo;
+    unsigned int *m_d_fin;
 };
 
 #endif // __CUDPP_PLAN_H__
