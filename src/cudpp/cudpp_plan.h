@@ -401,6 +401,8 @@ public:
     unsigned int *m_d_out;
     unsigned int *m_d_histo;
     unsigned int *m_d_fin;
+    unsigned int *m_d_temp_keys;
+    unsigned int *m_d_temp_values;
 };
 
 #endif // __CUDPP_PLAN_H__

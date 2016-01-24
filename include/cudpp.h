@@ -246,7 +246,8 @@ CUDPPResult cudppMergeSort(const CUDPPHandle planHandle,
 
 CUDPP_DLL
 CUDPPResult cudppMultiSplit(const CUDPPHandle planHandle,
-                      unsigned int      *d_elements,
+                      unsigned int      *d_keys,
+                      unsigned int      *d_values,
                       size_t            numElements,
                       size_t            numBuckets);
 

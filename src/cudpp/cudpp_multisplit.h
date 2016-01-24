@@ -23,7 +23,8 @@ void freeMultiSplitStorage(CUDPPMultiSplitPlan* plan);
 
 
 extern "C"
-void cudppMultiSplitDispatch(unsigned int *input,
+void cudppMultiSplitDispatch(unsigned int *d_keys,
+                             unsigned int *d_values,
                             size_t numElements,
                             size_t numBuckets,
                             const CUDPPMultiSplitPlan *plan);

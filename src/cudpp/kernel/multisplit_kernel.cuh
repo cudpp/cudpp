@@ -264,8 +264,8 @@ __global__ void histogram_warp(uint* input, uint* bin, uint numElements)
 }
 //==============================================
 template<uint NUM_W, uint NUM_B, uint LOG_B, uint DEPTH>
-__global__ void split_WMS(uint* key_input, uint* warpOffsets, uint* key_output, uint numElements)
-{
+__global__ void split_WMS(uint* key_input, uint* warpOffsets, uint* key_output,
+    uint numElements) {
   // Warp-level MS, post-scan stage:
   // Histogram and local warp indices are recomputed. Keys are then reordered in shared memory and results are then stored into global memory.
   uint  index = threadIdx.x + blockIdx.x * blockDim.x;
@@ -345,6 +345,97 @@ __global__ void split_WMS(uint* key_input, uint* warpOffsets, uint* key_output, 
     finalIndex -= __shfl(scan_histo[kk], myNewBucket, 32);
     // printf("thread %d, finalIndex = %d\n", threadIdx.x, finalIndex);
     key_output[finalIndex] = myNewKey;
+  }
+}
+//====================================
+template<uint NUM_W, uint NUM_B, uint LOG_B, uint DEPTH>
+__global__ void split_WMS_pairs(uint* key_input, uint* value_input,
+    uint* warpOffsets, uint* key_output, uint* value_output, uint numElements) {
+  // Warp-level MS, post-scan stage:
+  // Histogram and local warp indices are recomputed. Keys are then reordered in shared memory and results are then stored into global memory.
+  uint  index = threadIdx.x + blockIdx.x * blockDim.x;
+
+  extern __shared__ uint scratchPad[];
+  uint* warp_offsets_smem = scratchPad;
+  uint* keys_ms_smem = &warp_offsets_smem[NUM_B * NUM_W * DEPTH];
+  uint* values_ms_smem = &keys_ms_smem[32 * NUM_W * DEPTH];
+
+  uint  laneId = threadIdx.x & 0x1F;
+  uint  warpId = threadIdx.x >> 5;
+ // uint  elsPerBucket = (numElements+NUM_B-1)/NUM_B;
+  uint  myInput[DEPTH];
+  uint  myValue[DEPTH];
+  uint  myNewIndex[DEPTH];  // warp-level indices
+  uint  binCounter[DEPTH];  // results of histograms
+  uint  scan_histo[DEPTH];
+
+  // === Histogram and local index computation
+  #pragma unroll
+  for(int kk = 0; kk<DEPTH; kk++){
+    myInput[kk] = key_input[index + kk * gridDim.x * blockDim.x];
+    myValue[kk] = value_input[index + kk * gridDim.x * blockDim.x];
+    uint myBucket = myInput[kk] >> (32 - LOG_B);
+    uint myMask = 0xFFFFFFFF;
+    uint myHisto = 0xFFFFFFFF;
+    uint bit = myBucket;
+    uint rx_buffer;
+    // Computing the histogram and local indices:
+    #pragma unroll
+    for(int i = 0; i<LOG_B; i++)
+    {
+      rx_buffer = __ballot(bit & 0x01);
+      myMask  = myMask  & ((bit & 0x01)?rx_buffer:(0xFFFFFFFF ^ rx_buffer));
+      myHisto = myHisto & (((laneId >> i) & 0x01)?rx_buffer:(0xFFFFFFFF ^ rx_buffer));
+      bit >>= 1;
+    }
+    // writing back the local masks:
+    binCounter[kk] = __popc(myHisto);
+    uint n;
+    scan_histo[kk] = binCounter[kk];
+    #pragma unroll
+    for(int i = 1; i<=(1<<LOG_B); i<<=1)
+    {
+      n = __shfl_up(scan_histo[kk], i, 32);
+      if(laneId >= i)
+        scan_histo[kk] += n;
+    }
+    scan_histo[kk] -= binCounter[kk]; //making it exclusive scan.
+
+    // finding its new index within the warp:
+    myNewIndex[kk]  = __popc(myMask & (0xFFFFFFFF >> (31-laneId))) - 1;
+    myNewIndex[kk] += __shfl(scan_histo[kk], myBucket, 32);
+  }
+
+  // ===== Storing the results from global memory:
+  uint tid = threadIdx.x;
+  while(tid < NUM_B*NUM_W*DEPTH)
+  {
+    uint whatBin = threadIdx.x / (NUM_W * DEPTH);
+    uint whatWarp = threadIdx.x % (NUM_W * DEPTH);
+    uint whatRoll = whatWarp / NUM_W;
+    whatWarp = whatWarp % NUM_W;
+    warp_offsets_smem[threadIdx.x] = warpOffsets[(whatBin * DEPTH + whatRoll) * NUM_W * gridDim.x + (blockIdx.x * NUM_W) + whatWarp];
+    tid += blockDim.x;
+  }
+
+  // Reordering key elements in shared memory:
+  #pragma unroll
+  for(int kk = 0; kk<DEPTH; kk++){
+    keys_ms_smem[threadIdx.x + kk * blockDim.x - laneId + myNewIndex[kk]] = myInput[kk];
+    values_ms_smem[threadIdx.x + kk * blockDim.x - laneId + myNewIndex[kk]] = myValue[kk];
+  }
+  __syncthreads();
+
+  #pragma unroll
+  for(int kk = 0; kk<DEPTH; kk++){
+    uint myNewKey = keys_ms_smem[threadIdx.x + kk * blockDim.x];
+    uint myNewValue = values_ms_smem[threadIdx.x + kk * blockDim.x];
+    uint myNewBucket = myNewKey >> (32 - LOG_B);
+    uint finalIndex = warp_offsets_smem[NUM_W * DEPTH * myNewBucket + kk * NUM_W + warpId] + laneId;
+    finalIndex -= __shfl(scan_histo[kk], myNewBucket, 32);
+
+    key_output[finalIndex] = myNewKey;
+    value_output[finalIndex] = myNewValue;
   }
 }
 //=====================================
