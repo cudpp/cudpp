@@ -396,7 +396,6 @@ public:
 
     unsigned int m_numElements;
     unsigned int m_numBuckets;
-    unsigned int m_logBuckets;
     unsigned int *m_d_mask;
     unsigned int *m_d_out;
     unsigned int *m_d_histo;

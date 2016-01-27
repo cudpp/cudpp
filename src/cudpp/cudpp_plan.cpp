@@ -24,7 +24,6 @@
 #include "cudpp_multisplit.h"
 #include "cuda_util.h"
 #include <cuda_runtime_api.h>
-#include <math.h>
 #include <assert.h>
 
 CUDPPResult validateOptions(CUDPPConfiguration config, size_t numElements, size_t numRows, size_t /*rowPitch*/)
@@ -809,7 +808,6 @@ CUDPPMultiSplitPlan::CUDPPMultiSplitPlan(CUDPPManager *mgr, CUDPPConfiguration c
 {
     m_numElements = numElements;
     m_numBuckets = numBuckets;
-    m_logBuckets = ceil(log2(numBuckets));
 
     allocMultiSplitStorage(this);
 }

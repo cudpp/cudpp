@@ -26,7 +26,6 @@
 #include "cuda_util.h"
 #include "cudpp.h"
 #include "cudpp_util.h"
-#include "limits.h"
 #include "kernel/multisplit_kernel.cuh"
 
 
@@ -61,6 +60,7 @@ typedef unsigned long long int uint64;
 void runMultiSplit(unsigned int *d_inp, uint numElements, uint numBuckets, const CUDPPMultiSplitPlan *plan) {
   unsigned int numBlocks = ceil(numElements / (NUM_WARPS * 32));
   unsigned int numThreads = NUM_WARPS * 32;
+  unsigned int logBuckets = ceil(log2((float)numBuckets));
   void     *d_temp_storage = NULL;
   size_t   temp_storage_bytes = 0;
 
@@ -73,7 +73,7 @@ void runMultiSplit(unsigned int *d_inp, uint numElements, uint numBuckets, const
     cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes, plan->m_d_histo, plan->m_d_histo, numBuckets * numBlocks * PACK_DEPTH);
   } else if (numBuckets > 96) {
     cub::DeviceRadixSort::SortPairs(d_temp_storage, temp_storage_bytes, plan->m_d_mask, plan->m_d_out, d_inp, plan->m_d_fin,
-        numElements, 0, plan->m_logBuckets);
+        numElements, 0, logBuckets);
   } else if (numBuckets <= 96){
     cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes, plan->m_d_histo, plan->m_d_histo, numBuckets * numBlocks);
   } else {
@@ -640,6 +640,7 @@ void runMultiSplit(unsigned int *d_keys, unsigned int *d_values,
     const CUDPPMultiSplitPlan *plan) {
   unsigned int numBlocks = ceil(numElements / (NUM_WARPS * 32));
   unsigned int numThreads = NUM_WARPS * 32;
+  unsigned int logBuckets = ceil(log2((float) numBuckets));
   void     *d_temp_storage = NULL;
   size_t   temp_storage_bytes = 0;
 
@@ -652,7 +653,7 @@ void runMultiSplit(unsigned int *d_keys, unsigned int *d_values,
     cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes, plan->m_d_histo, plan->m_d_histo, numBuckets * numBlocks * PACK_DEPTH);
   } else if (numBuckets > 96) {
     cub::DeviceRadixSort::SortPairs(d_temp_storage, temp_storage_bytes, plan->m_d_mask, plan->m_d_out, d_keys, plan->m_d_fin,
-        numElements, 0, plan->m_logBuckets);
+        numElements, 0, logBuckets);
   } else if (numBuckets <= 96){
     cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes, plan->m_d_histo, plan->m_d_histo, numBuckets * numBlocks);
   } else {
