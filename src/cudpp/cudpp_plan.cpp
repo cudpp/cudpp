@@ -810,6 +810,9 @@ CUDPPMultiSplitPlan::CUDPPMultiSplitPlan(CUDPPManager *mgr, CUDPPConfiguration c
     m_numBuckets = numBuckets;
 
     allocMultiSplitStorage(this);
+
+    m_d_temp_keys = (unsigned int *) m_d_key_value_pairs;
+    m_d_temp_values = (unsigned int *) m_d_key_value_pairs + numElements;
 }
 
 /** brief SA plan destructor*/

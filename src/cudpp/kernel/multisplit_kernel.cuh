@@ -270,7 +270,7 @@ __global__ void split_WMS(uint* key_input, uint* warpOffsets, uint* key_output,
   // Histogram and local warp indices are recomputed. Keys are then reordered in shared memory and results are then stored into global memory.
   uint  index = threadIdx.x + blockIdx.x * blockDim.x;
 
-  __shared__ uint scratchPad[NUM_B * NUM_W * DEPTH + 32 * NUM_W * DEPTH];
+  extern __shared__ uint scratchPad[];
   uint* warp_offsets_smem = scratchPad;
   uint* keys_ms_smem = &warp_offsets_smem[NUM_B * NUM_W * DEPTH];
 
@@ -825,7 +825,37 @@ __global__ void markBins_general(uint* d_mark, uint* d_elements, uint numElement
     d_mark[i] = myBucket;
   }
 }
-//=========================================
+//===========================================
+__global__ void packingKeyValuePairs(uint64* packed, uint* input_key,
+    uint* input_value, uint numElements) {
+  uint tid = threadIdx.x + blockIdx.x * blockDim.x;
+  if (tid > numElements)
+    return;
+
+  uint myKey = input_key[tid];
+  uint myValue = input_value[tid];
+  // if(myKey == 130767)
+  //  printf("1) thread %d, myKey = %d, myValue = %d\n", tid, myKey, myValue);
+  // putting the key as the more significant 32 bits.
+  uint64 output = (static_cast<uint64>(myKey) << 32)
+      + static_cast<uint>(myValue);
+  packed[tid] = output;
+}
+//===========================================
+__global__ void unpackingKeyValuePairs(uint64* packed, uint* out_key,
+    uint* out_value, uint numElements) {
+  uint tid = threadIdx.x + blockIdx.x * blockDim.x;
+  if (tid > numElements)
+    return;
+
+  uint64 myPacked = packed[tid];
+  out_value[tid] = static_cast<uint>(myPacked & 0x00000000FFFFFFFF);
+  out_key[tid] = static_cast<uint>(myPacked >> 32);
+  // if((out_key[tid] > 65536) && (tid < 65536))
+  // if(tid == 100)
+  //  printf("thread %d: (%d, %d) key-value\n", tid, out_key[tid], out_value[tid]);
+}
+//===========================================
 
 
 /** @} */ // end Multisplit functions

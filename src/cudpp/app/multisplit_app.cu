@@ -26,6 +26,9 @@
 #include "cuda_util.h"
 #include "cudpp.h"
 #include "cudpp_util.h"
+
+typedef unsigned long long int uint64;
+
 #include "kernel/multisplit_kernel.cuh"
 
 
@@ -34,7 +37,6 @@
 //===============================================
 cub::CachingDeviceAllocator  g_allocator(true);  // Caching allocator for device memory
 #define gpuErrCheck(ans) { gpuAssert((ans), __FILE__, __LINE__); }
-typedef unsigned long long int uint64;
 //===============================================
 // Definitions:
 //===============================================
@@ -86,7 +88,10 @@ void runMultiSplit(unsigned int *d_inp, uint numElements, uint numBuckets, const
     histogram_warp<NUM_WARPS, 2, 1, PACK_PRE> <<<numBlocks / PACK_PRE, numThreads>>>(d_inp,
         plan->m_d_histo, numElements);
     cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes, plan->m_d_histo, plan->m_d_histo, 2 * numBlocks * NUM_WARPS * PACK_DEPTH);
-    split_WMS<NUM_WARPS, 2, 1, PACK_POST><<<numBlocks/PACK_POST, numThreads>>>(d_inp, plan->m_d_histo, plan->m_d_fin, numElements);
+    split_WMS<NUM_WARPS, 2, 1, PACK_POST> <<<numBlocks / PACK_POST, numThreads,
+        (numBuckets * NUM_WARPS * PACK_DEPTH
+            + 32 * NUM_WARPS * PACK_DEPTH) * sizeof(unsigned int)>>>(d_inp,
+        plan->m_d_histo, plan->m_d_fin, numElements);
   } else if (numBuckets <= 32) {
     histogram_block<<<numBlocks / PACK_PRE, numThreads,
         NUM_WARPS * numBuckets * DEPTH * sizeof(uint)>>>(d_inp, plan->m_d_histo,
@@ -652,8 +657,10 @@ void runMultiSplit(unsigned int *d_keys, unsigned int *d_values,
   } else if (numBuckets <= 32) {
     cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes, plan->m_d_histo, plan->m_d_histo, numBuckets * numBlocks * PACK_DEPTH);
   } else if (numBuckets > 96) {
-    cub::DeviceRadixSort::SortPairs(d_temp_storage, temp_storage_bytes, plan->m_d_mask, plan->m_d_out, d_keys, plan->m_d_fin,
-        numElements, 0, logBuckets);
+    cub::DeviceRadixSort::SortPairs(d_temp_storage, temp_storage_bytes,
+        plan->m_d_mask, plan->m_d_out, plan->m_d_key_value_pairs,
+        plan->m_d_key_value_pairs, numElements, 0,
+        int(ceil(log2(float(numBuckets)))));
   } else if (numBuckets <= 96){
     cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes, plan->m_d_histo, plan->m_d_histo, numBuckets * numBlocks);
   } else {
@@ -665,24 +672,35 @@ void runMultiSplit(unsigned int *d_keys, unsigned int *d_values,
   if (numBuckets == 2) {
     histogram_warp<NUM_WARPS, 2, 1, PACK_PRE> <<<numBlocks / PACK_PRE, numThreads>>>(d_keys,
         plan->m_d_histo, numElements);
-    cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes, plan->m_d_histo, plan->m_d_histo, 2 * numBlocks * NUM_WARPS * PACK_DEPTH);
-    split_WMS_pairs<NUM_WARPS, 2, 1, PACK_POST><<<numBlocks/PACK_POST,
-      numThreads>>>(d_keys, d_values, plan->m_d_histo, plan->m_d_temp_keys,
-          plan->m_d_temp_values, numElements);
+    cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
+        plan->m_d_histo, plan->m_d_histo,
+        2 * numBlocks * NUM_WARPS * PACK_DEPTH);
+    split_WMS_pairs<NUM_WARPS, 2, 1, PACK_POST> <<<numBlocks / PACK_POST,
+        numThreads,
+        (numBuckets * NUM_WARPS * PACK_DEPTH + 64 * NUM_WARPS * PACK_DEPTH)
+            * sizeof(unsigned int)>>>(d_keys, d_values, plan->m_d_histo,
+        plan->m_d_temp_keys, plan->m_d_temp_values, numElements);
   } else if (numBuckets <= 32) {
     histogram_block<<<numBlocks / PACK_PRE, numThreads,
-        NUM_WARPS * numBuckets * DEPTH * sizeof(uint)>>>(d_keys, plan->m_d_histo,
-        numElements, numBuckets, NUM_WARPS, PACK_PRE);
-    cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes, plan->m_d_histo, plan->m_d_histo, numBuckets * numBlocks * PACK_DEPTH);
+        NUM_WARPS * numBuckets * DEPTH * sizeof(uint)>>>(d_keys,
+        plan->m_d_histo, numElements, numBuckets, NUM_WARPS, PACK_PRE);
+    cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
+        plan->m_d_histo, plan->m_d_histo, numBuckets * numBlocks * PACK_DEPTH);
     split_BMS<<<numBlocks / PACK_POST, numThreads,
         (2 * numBuckets * PACK_POST + 32 * NUM_WARPS * PACK_POST
             + numBuckets * NUM_WARPS * PACK_POST) * sizeof(uint)>>>(d_keys, plan->m_d_histo, plan->m_d_fin,
         numElements, numBuckets, NUM_WARPS, PACK_POST);
   } else if (numBuckets > 96) {
-    markBins_general<<<numBlocks, numThreads>>>(plan->m_d_mask, d_keys, numElements, numBuckets);
-    cub::DeviceRadixSort::SortPairs(d_temp_storage, temp_storage_bytes, plan->m_d_mask,
-        plan->m_d_out, d_keys, plan->m_d_fin, numElements, 0,
+    markBins_general<<<numBlocks, numThreads>>>(plan->m_d_mask, d_keys,
+        numElements, numBuckets);
+    packingKeyValuePairs<<<numBlocks, numThreads>>>(plan->m_d_key_value_pairs,
+        d_keys, d_values, numElements);
+    cub::DeviceRadixSort::SortPairs(d_temp_storage, temp_storage_bytes,
+        plan->m_d_mask, plan->m_d_out, plan->m_d_key_value_pairs,
+        plan->m_d_key_value_pairs, numElements, 0,
         int(ceil(log2(float(numBuckets)))));
+    unpackingKeyValuePairs<<<numBlocks, numThreads>>>(plan->m_d_key_value_pairs,
+        d_keys, d_values, numElements);
   } else if (numBuckets <= 96) {
     switch(numBuckets){
       default:
@@ -690,8 +708,14 @@ void runMultiSplit(unsigned int *d_keys, unsigned int *d_values,
     }
   }
 
-  CUDA_SAFE_CALL(cudaMemcpy(d_keys, plan->m_d_temp_keys, numElements*sizeof(unsigned int), cudaMemcpyDeviceToDevice));
-  CUDA_SAFE_CALL(cudaMemcpy(d_values, plan->m_d_temp_values, numElements*sizeof(unsigned int), cudaMemcpyDeviceToDevice));
+  if (numBuckets < 96) {
+    CUDA_SAFE_CALL(
+        cudaMemcpy(d_keys, plan->m_d_temp_keys,
+            numElements * sizeof(unsigned int), cudaMemcpyDeviceToDevice));
+    CUDA_SAFE_CALL(
+        cudaMemcpy(d_values, plan->m_d_temp_values,
+            numElements * sizeof(unsigned int), cudaMemcpyDeviceToDevice));
+  }
   
   if(d_temp_storage)
     CubDebugExit(g_allocator.DeviceFree(d_temp_storage));
@@ -719,8 +743,11 @@ void allocMultiSplitStorage(CUDPPMultiSplitPlan *plan)
           sizeof(unsigned int) * plan->m_numBuckets * nB * NUM_WARPS * 2 * PACK_DEPTH + plan->m_numElements*sizeof(unsigned int));
 */
   if (plan->m_config.options & CUDPP_OPTION_KEY_VALUE_PAIRS) {
-    CUDA_SAFE_CALL(cudaMalloc((void**) &plan->m_d_temp_keys, plan->m_numElements*sizeof(unsigned int))); // gpu output
-    CUDA_SAFE_CALL(cudaMalloc((void**) &plan->m_d_temp_values, plan->m_numElements*sizeof(unsigned int))); // gpu output
+    CUDA_SAFE_CALL(
+        cudaMalloc((void** ) &plan->m_d_key_value_pairs,
+            plan->m_numElements * sizeof(uint64))); // key value pair intermediate vector.
+    //CUDA_SAFE_CALL(cudaMalloc((void**) &plan->m_d_temp_keys, plan->m_numElements*sizeof(unsigned int))); // gpu output
+    //CUDA_SAFE_CALL(cudaMalloc((void**) &plan->m_d_temp_values, plan->m_numElements*sizeof(unsigned int))); // gpu output
   }
 
   if (plan->m_numBuckets > 96) {
@@ -749,8 +776,9 @@ void allocMultiSplitStorage(CUDPPMultiSplitPlan *plan)
 void freeMultiSplitStorage(CUDPPMultiSplitPlan* plan)
 {
   if (plan->m_config.options & CUDPP_OPTION_KEY_VALUE_PAIRS) {
-    cudaFree (plan->m_d_temp_keys);
-    cudaFree (plan->m_d_temp_values);
+    cudaFree (plan->m_d_key_value_pairs);
+    //cudaFree (plan->m_d_temp_keys);
+    //cudaFree (plan->m_d_temp_values);
   }
   if (plan->m_numBuckets > 96) {
     cudaFree (plan->m_d_mask);
