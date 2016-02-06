@@ -160,6 +160,10 @@ install(FILES ${LIBRARY_OUTPUT_PATH}/cudpp-config-version.cmake
   DESTINATION lib
   )
 
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/include/cudpp_config.h
+  DESTINATION include
+  )
+
 set(CPACK_PACKAGE_VERSION_MAJOR ${cudpp_VERSION_MAJOR})
 set(CPACK_PACKAGE_VERSION_MINOR ${cudpp_VERSION_MINOR})
 set(CPACK_PACKAGE_VERSION_PATCH ${cudpp_VERSION_PATCH})
