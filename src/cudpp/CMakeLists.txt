@@ -84,6 +84,7 @@ set(CUFILES
 
 set(HFILES_PUBLIC
   ${CMAKE_SOURCE_DIR}/include/cudpp.h
+  ${CMAKE_SOURCE_DIR}/include/cudpp_config.h
   )
 
 source_group("CUDA Source Files" FILES ${CUFILES})
