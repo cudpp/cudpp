@@ -471,7 +471,7 @@ int testMultiSplit(int argc, const char **argv,
   size_t elementTests[] = {262144, 2097152, 4194304, 8388608, 16777216 };
   //size_t element_tests[] = {2097152};
   size_t bucketTests[] =
-      { 1, 2, /*3, 13, 32, 33, 63, 83,*/ 97, 100, 112, 129, 145 };
+      { 1, 2, 3, 13, 32, 33, 63, 83, 97, 100, 112, 129, 145 };
 
   int numElementTests = sizeof(elementTests) / sizeof(elementTests[0]);
   int numBucketTests = sizeof(bucketTests) / sizeof(bucketTests[0]);

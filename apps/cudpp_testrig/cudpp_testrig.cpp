@@ -509,8 +509,7 @@ int main(int argc, const char** argv)
         }
 
         if (runMultiSplit) {
-            config.algorithm = CUDPP_MULTISPLIT;
-            retval += testAllDatatypes(argc, argv, config, supportsDouble, false);
+          retval += testMultiSplit(argc, argv, NULL);
         }
     }
 
