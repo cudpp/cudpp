@@ -97,7 +97,7 @@ CUDPP_COMPRESS       | 1,048,576 elements
 CUDPP_LISTRANK       | NO LIMIT
 CUDPP_MTF            | Bounded by GPU memory 
 CUDPP_BWT            | 1,048,576 elements
-CUDPP_SA             | 0.015 GPU memory
+CUDPP_SA             | 0.14 GPU memory
 CUDPP_STRINGSORT     | 2,147,450,880 elements
 CUDPP_MERGESORT      | 2,147,450,880 elements
 CUDPP_REDUCE         | NO LIMIT
