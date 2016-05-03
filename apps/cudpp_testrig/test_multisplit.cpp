@@ -47,8 +47,23 @@ void randomPermute(unsigned int *elements, unsigned int numElements)
   }
 }
 
+class MSBMapper {
+public:
+  MSBMapper(unsigned int numBuckets) {
+    msbShift = 32 - ceil(log2(numBuckets));
+  }
+
+  unsigned int operator()(unsigned int element) {
+    return element >> msbShift;
+  }
+
+private:
+  unsigned int msbShift;
+};
+
+template<class T>
 void cpuMultisplit(uint *input, uint *output, uint numElements, uint numBuckets,
-    int bucket_mode) {
+    T bucketMapper) {
   // Performs the mutlisplit with arbitrary bucket distribution on cpu:
   // bucket_mode == 0: equal number of elements per bucket
   // bucket_mode == 1: most significant bits of input represent bucket ID
@@ -74,7 +89,8 @@ void cpuMultisplit(uint *input, uint *output, uint numElements, uint numBuckets,
 
   for(unsigned int i = 0; i<numElements ; i++)
   {
-    bucketId = ((bucket_mode == 0)?(input[i]/elsPerBucket):(input[i]>>msbShift));
+    //bucketId = ((bucket_mode == 0)?(input[i]/elsPerBucket):(input[i]>>msbShift));
+    bucketId = bucketMapper(input[i]);
     bins[bucketId]++;
   }
 
@@ -89,7 +105,7 @@ void cpuMultisplit(uint *input, uint *output, uint numElements, uint numBuckets,
 
   for(unsigned int i = 0; i<numElements; i++)
   {
-    bucketId = ((bucket_mode == 0)?(input[i]/elsPerBucket):(input[i]>>msbShift));
+    bucketId = bucketMapper(input[i]);
     output[scanBins[bucketId] + currentIdx[bucketId]] = input[i];
     currentIdx[bucketId]++;
   }
@@ -99,8 +115,9 @@ void cpuMultisplit(uint *input, uint *output, uint numElements, uint numBuckets,
   delete[] currentIdx;
 }
 
+template<class T>
 void cpuMultiSplitPairs(uint* keys_input, uint* keys_output, uint* values_input,
-    uint* values_output, uint numElements, uint numBuckets, int bucket_mode) {
+    uint* values_output, uint numElements, uint numBuckets, T bucketMapper) {
   // Performs the mutlisplit with arbitrary bucket distribution on cpu:
   // bucket_mode == 0: equal number of elements per bucket
   // bucket_mode == 1: most significant bits of input represent bucket ID
@@ -128,7 +145,7 @@ void cpuMultiSplitPairs(uint* keys_input, uint* keys_output, uint* values_input,
 
   for(int i = 0; i<numElements ; i++)
   {
-    bucketId = ((bucket_mode == 0)?(keys_input[i]/elsPerBucket):(keys_input[i]>>msb_shift));
+    bucketId = bucketMapper(keys_input[i]);
     bins[bucketId]++;
   }
 
@@ -142,7 +159,7 @@ void cpuMultiSplitPairs(uint* keys_input, uint* keys_output, uint* values_input,
 
   for(int i = 0; i<numElements; i++)
   {
-    bucketId = ((bucket_mode == 0)?(keys_input[i]/elsPerBucket):(keys_input[i]>>msb_shift));
+    bucketId = bucketMapper(keys_input[i]);
     keys_output[scan_bins[bucketId] + current_idx[bucketId]] = keys_input[i];
     values_output[scan_bins[bucketId] + current_idx[bucketId]] = values_input[i];
     current_idx[bucketId]++;
@@ -267,7 +284,8 @@ int multiSplitKeysOnlyTest(CUDPPHandle theCudpp, CUDPPConfiguration config,
       // === Sanity check:
       uint count = 0;
       uint *cpu_result_keys = new uint[elementTests[k]];
-      cpuMultisplit(keys, cpu_result_keys, elementTests[k], bucketTests[b], 1);
+      cpuMultisplit(keys, cpu_result_keys, elementTests[k], bucketTests[b],
+          MSBMapper(bucketTests[b]));
       testFailed = verifyMultiSplit(cpu_result_keys, gpu_result_keys, NULL,
           NULL, elementTests[k], false);
       retVal += testFailed;
@@ -396,7 +414,7 @@ int multiSplitKeyValueTest(CUDPPHandle theCudpp, CUDPPConfiguration config,
       uint *cpu_result_keys = new uint[elementTests[k]];
       uint *cpu_result_values = new uint[elementTests[k]];
       cpuMultiSplitPairs(keys, cpu_result_keys, values, cpu_result_values,
-          elementTests[k], bucketTests[b], 1);
+          elementTests[k], bucketTests[b], MSBMapper(bucketTests[b]));
       testFailed = verifyMultiSplit(cpu_result_keys, gpu_result_keys,
           cpu_result_values, gpu_result_values, elementTests[k], true);
       retVal += testFailed;
