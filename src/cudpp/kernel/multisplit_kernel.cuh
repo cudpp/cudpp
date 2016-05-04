@@ -28,12 +28,12 @@
  * @{
  */
 
-#define DIST_OPTION 1
+#define DIST_OPTION 54
 
 //======================================
-template<uint NUM_WARPS, uint NUM_BUCKETS, uint LOG_BUCKETS, uint LOG_WARPS>
-__global__ void histogramBallot_Mode13_large(uint* input, uint* bin, uint numElements)
-{
+template<uint NUM_WARPS, uint NUM_BUCKETS, uint LOG_BUCKETS, uint LOG_WARPS, class T>
+__global__ void histogramBallot_Mode13_large(uint* input, uint* bin,
+    uint numElements, T bucketMapper) {
   // Block level MS: with more buckets than 32
   // Computing the histogram and local index within each block and storing them in the corresponding localIndex array:
   // we also re-arrange both input elements and their index into the global memory.
@@ -72,7 +72,7 @@ __global__ void histogramBallot_Mode13_large(uint* input, uint* bin, uint numEle
   uint  rx_buffer;
   uint  item = input[index];
   uint msb_shift = 32 - LOG_BUCKETS;
-  bucketId = item>>msb_shift;//item/elsPerBucket;
+  bucketId = bucketMapper(item);
 
   // computing warp-level histogram:
   #pragma unroll
@@ -166,9 +166,9 @@ __global__ void histogramBallot_Mode13_large(uint* input, uint* bin, uint numEle
   }
 }
 //======================================
-template<uint NUM_WARPS, uint NUM_BUCKETS>
+template<uint NUM_WARPS, uint NUM_BUCKETS, class T>
 __global__ void splitBallot_Mode13_large(unsigned int* input, unsigned int* binOffsets,
-  unsigned int* output, unsigned int numElements)
+  unsigned int* output, unsigned int numElements, T bucketMapper)
 {
   // Performing the splitting proces using the prefixed-sum histograms (binOffsets), and the
   // local warp-level masks (binMask).
@@ -185,7 +185,7 @@ __global__ void splitBallot_Mode13_large(unsigned int* input, unsigned int* binO
   // uint laneId = threadIdx.x & 0x1F;
   // uint warpId = threadIdx.x >> 5;
   uint msb_shift = 32 - ceil(log2(NUM_BUCKETS * 1.0f));
-  uint bucketId = item>>msb_shift; //item/elsPerBucket;
+  uint bucketId = bucketMapper(item);
 
   // Loading all warp indices regarding to each bucket into the shared memory:
   if(threadIdx.x < NUM_BUCKETS)
@@ -804,24 +804,30 @@ __global__ void split_BMS(uint* key_input, uint* blockOffsets, uint* key_output,
   }
 }
 //==========================================
-__global__ void markBins_general(uint* d_mark, uint* d_elements, uint numElements, uint numBuckets)
-{
+template<class T>
+__global__ void markBins_general(uint* d_mark, uint* d_elements,
+    uint numElements, uint numBuckets, T bucketMapper) {
 
   unsigned int myId = threadIdx.x + blockIdx.x*blockDim.x;
   unsigned int offset = blockDim.x*gridDim.x;
   unsigned int logBuckets = ceil(log2((float)numBuckets));
+/*
   #if DIST_OPTION == 0
     unsigned int elsPerBucket = (numElements + numBuckets - 1)/numBuckets;
   #endif
+*/
 
   for(int i = myId; i < numElements; i+=offset)
   {
     unsigned int myVal = d_elements[i];
+/*
     #if DIST_OPTION == 0
       unsigned int myBucket = myVal/elsPerBucket;
     #elif DIST_OPTION >= 1
       unsigned int myBucket = myVal >> (32 - logBuckets);
     #endif
+*/
+    unsigned int myBucket = bucketMapper(myVal);
     d_mark[i] = myBucket;
   }
 }
@@ -856,8 +862,9 @@ __global__ void unpackingKeyValuePairs(uint64* packed, uint* out_key,
   //  printf("thread %d: (%d, %d) key-value\n", tid, out_key[tid], out_value[tid]);
 }
 //=============================
-template<uint numWarps, uint numBuckets, uint logBuckets, uint depth>
-__global__ void histogram_warp_ver6(uint* input, uint* bin, uint numElements) {
+template<uint numWarps, uint numBuckets, uint logBuckets, uint depth, class T>
+__global__ void histogram_warp_ver6(uint* input, uint* bin, uint numElements,
+    T bucketMapper) {
   // The new warp-level histogram computing kernel:
   uint  index = threadIdx.x + blockIdx.x * blockDim.x;
   uint  laneId = threadIdx.x & 0x1F;
@@ -902,9 +909,8 @@ __global__ void histogram_warp_ver6(uint* input, uint* bin, uint numElements) {
           myBucket = myInput[kk]/elsPerBucket;
         #elif DIST_OPTION == 4 // identity buckets (keys == buckets)
           myBucket = myInput[kk];
-        #elif DIST_OPTION >= 1 // Binomial distribution
-          myBucket = myInput[kk] >> (32 - logBuckets);
         #endif
+        myBucket = bucketMapper(myInput[kk]);
       }
       uint myHisto = 0xFFFFFFFF;
       uint bit = myBucket;
@@ -966,9 +972,8 @@ __global__ void histogram_warp_ver6(uint* input, uint* bin, uint numElements) {
         myBucket = myInput[kk]/elsPerBucket;
       #elif DIST_OPTION == 4 // identity buckets (keys == buckets)
         myBucket = myInput[kk];
-      #elif DIST_OPTION >= 1 // Binomial distribution
-        myBucket = myInput[kk] >> (32 - logBuckets);
       #endif
+      myBucket = bucketMapper(myInput[kk]);
 
       uint myHisto = 0xFFFFFFFF;
       uint bit = myBucket;
@@ -1010,9 +1015,9 @@ __global__ void histogram_warp_ver6(uint* input, uint* bin, uint numElements) {
   }
 }
 //=============================
-template<uint NUM_W, uint NUM_B, uint LOG_B, uint DEPTH>
-__global__ void split_WMS_ver6(uint* key_input, uint* warpOffsets, uint* key_output, uint numElements)
-{
+template<uint NUM_W, uint NUM_B, uint LOG_B, uint DEPTH, class T>
+__global__ void split_WMS_ver6(uint* key_input, uint* warpOffsets,
+    uint* key_output, uint numElements, T bucketMapper) {
   // For this kernel, the last CTA follows a different branch than the rest
   // this kernel use different memory hierarchy: bucket -> block -> warp -> roll
   // Warp-level MS, post-scan stage:
@@ -1063,9 +1068,8 @@ __global__ void split_WMS_ver6(uint* key_input, uint* warpOffsets, uint* key_out
         myInput[kk] = key_input[global_index + laneId];
         #if DIST_OPTION == 0 // uniform distribution
           myBucket = myInput[kk]/elsPerBucket;
-        #elif DIST_OPTION >= 1 // Binomial distribution
-          myBucket = myInput[kk] >> (32 - LOG_B);
         #endif
+        myBucket = bucketMapper(myInput[kk]);
       }
 
       uint mask = __ballot(valid_input);
@@ -1119,9 +1123,8 @@ __global__ void split_WMS_ver6(uint* key_input, uint* warpOffsets, uint* key_out
         uint myNewBucket = myNewKey/elsPerBucket;
       #elif DIST_OPTION == 4
         uint myNewBucket = myNewKey;
-      #elif DIST_OPTION >= 1 // Binomial distribution
-        uint myNewBucket = myNewKey >> (32 - LOG_B);
       #endif
+      uint myNewBucket = bucketMapper(myNewKey);
 
       uint finalIndex = (valid_input)?warp_offsets_smem[NUM_W * DEPTH * myNewBucket + warpId * DEPTH + kk] + laneId:0;
       finalIndex -= __shfl(scan_histo[kk], myNewBucket, 32);
@@ -1143,9 +1146,8 @@ __global__ void split_WMS_ver6(uint* key_input, uint* warpOffsets, uint* key_out
         myBucket = myInput[kk]/elsPerBucket;
       #elif DIST_OPTION == 4
         myBucket = myInput[kk];
-      #elif DIST_OPTION >= 1 // Binomial distribution
-        myBucket = myInput[kk] >> (32 - LOG_B);
       #endif
+      myBucket = bucketMapper(myInput[kk]);
 
       uint myMask = 0xFFFFFFFF;
       uint myHisto = 0xFFFFFFFF;
@@ -1193,9 +1195,8 @@ __global__ void split_WMS_ver6(uint* key_input, uint* warpOffsets, uint* key_out
         uint myNewBucket = myNewKey/elsPerBucket;
       #elif DIST_OPTION == 4
         uint myNewBucket = myNewKey;
-      #elif DIST_OPTION >= 1 // Binomial distribution
-        uint myNewBucket = myNewKey >> (32 - LOG_B);
       #endif
+      uint myNewBucket = bucketMapper(myNewKey);
 
       uint finalIndex = warp_offsets_smem[NUM_W * DEPTH * myNewBucket + warpId * DEPTH + kk] + laneId;
       finalIndex -= __shfl(scan_histo[kk], myNewBucket, 32);
@@ -1204,9 +1205,10 @@ __global__ void split_WMS_ver6(uint* key_input, uint* warpOffsets, uint* key_out
   }
 }
 //=============================================
-template<uint numWarps, uint numBuckets, uint logBuckets, uint depth>
+template<uint numWarps, uint numBuckets, uint logBuckets, uint depth, class T>
 __global__ void split_WMS_pairs_ver6(uint* key_input, uint* value_input,
-    uint* warpOffsets, uint* key_output, uint* value_output, uint numElements) {
+    uint* warpOffsets, uint* key_output, uint* value_output, uint numElements,
+    T bucketMapper) {
   // this kernel use different memory hierarchy: bucket -> block -> warp -> roll
   // Warp-level MS, post-scan stage:
   // Histogram and local warp indices are recomputed. Keys are then reordered in shared memory and results are then stored into global memory.
@@ -1261,9 +1263,8 @@ __global__ void split_WMS_pairs_ver6(uint* key_input, uint* value_input,
           myBucket = myInput[kk]/elsPerBucket;
         #elif DIST_OPTION == 4
           myBucket = myInput[kk];
-        #elif DIST_OPTION >= 1 // Binomial distribution
-          myBucket = myInput[kk] >> (32 - logBuckets);
         #endif
+        myBucket = bucketMapper(myInput[kk]);
       }
 
       uint mask = __ballot(valid_input);
@@ -1319,9 +1320,8 @@ __global__ void split_WMS_pairs_ver6(uint* key_input, uint* value_input,
         uint myNewBucket = myNewKey/elsPerBucket;
       #elif DIST_OPTION == 4
         uint  myNewBucket = myInput[kk];
-      #elif DIST_OPTION >= 1 // Binomial distribution
-        uint myNewBucket = myNewKey >> (32 - logBuckets);
       #endif
+      uint myNewBucket = bucketMapper(myNewKey);
 
       uint finalIndex = (valid_input)?warp_offsets_smem[numWarps * depth * myNewBucket + warpId * depth + kk] + laneId:0;
       finalIndex -= __shfl(scan_histo[kk], myNewBucket, 32);
@@ -1332,7 +1332,7 @@ __global__ void split_WMS_pairs_ver6(uint* key_input, uint* value_input,
       }
     }
   }
-  else{
+  else {
     // === Histogram and local index computation
     #pragma unroll
     for(int kk = 0; kk<depth; kk++){
@@ -1345,9 +1345,8 @@ __global__ void split_WMS_pairs_ver6(uint* key_input, uint* value_input,
         myBucket = myInput[kk]/elsPerBucket;
       #elif DIST_OPTION == 4
         myBucket = myInput[kk];
-      #elif DIST_OPTION >= 1 // Binomial distribution
-        myBucket = myInput[kk] >> (32 - logBuckets);
       #endif
+      myBucket = bucketMapper(myInput[kk]);
 
       uint myMask = 0xFFFFFFFF;
       uint myHisto = 0xFFFFFFFF;
@@ -1397,9 +1396,8 @@ __global__ void split_WMS_pairs_ver6(uint* key_input, uint* value_input,
         uint myNewBucket = myNewKey/elsPerBucket;
       #elif DIST_OPTION == 4
         uint myNewBucket = myInput[kk];
-      #elif DIST_OPTION >= 1 // Binomial distribution
-        uint myNewBucket = myNewKey >> (32 - logBuckets);
       #endif
+      uint myNewBucket = bucketMapper(myNewKey);
 
       uint finalIndex = warp_offsets_smem[numWarps * depth * myNewBucket + warpId * depth + kk] + laneId;
 
@@ -1413,8 +1411,9 @@ __global__ void split_WMS_pairs_ver6(uint* key_input, uint* value_input,
 //======================================================================
 //======== Block level MS
 //======================================================================
+template<class T>
 __global__ void histogram_block_ver6(uint* input, uint* bin, uint numElements,
-    uint numBuckets, uint numWarps, uint depth) {
+    uint numBuckets, uint numWarps, uint depth, T bucketMapper) {
   // this kernel just computes block-level histograms for the pre-scan stage
   // Memory hierarchy which is used to store histogram results: Bucket -> blocks -> roll
 
@@ -1460,9 +1459,8 @@ __global__ void histogram_block_ver6(uint* input, uint* bin, uint numElements,
           myBucket = myInput/elsPerBucket;
         #elif DIST_OPTION == 4 // identity buckets (keys == buckets)
           myBucket = myInput;
-        #elif DIST_OPTION >= 1 // Binomial distribution
-          myBucket = myInput >> (32 - logBuckets);
         #endif
+        myBucket = bucketMapper(myInput);
       }
       uint myHisto = 0xFFFFFFFF;
       uint bit = myBucket;
@@ -1538,9 +1536,8 @@ __global__ void histogram_block_ver6(uint* input, uint* bin, uint numElements,
         myBucket = myInput/elsPerBucket;
       #elif DIST_OPTION == 4 // identity buckets (keys = buckets)
         myBucket = myInput;
-      #elif DIST_OPTION >= 1 // Binomial distribution
-        myBucket = myInput >> (32 - logBuckets);
       #endif
+      myBucket = bucketMapper(myInput);
       uint myHisto = 0xFFFFFFFF;
       uint bit = myBucket;
       uint rx_buffer;
@@ -1590,8 +1587,10 @@ __global__ void histogram_block_ver6(uint* input, uint* bin, uint numElements,
   }
 }
 //============================
+template<class T>
 __global__ void split_BMS_ver6(uint* key_input, uint* blockOffsets,
-    uint* key_output, uint numElements, uint numBuckets, uint numWarps, uint depth) {
+    uint* key_output, uint numElements, uint numBuckets, uint numWarps,
+    uint depth, T bucketMapper) {
   // Block-level MS with post-scan reordering
   // In this kernel, the last thread block follows a different branch than the rest
   // Global memory hierarchy that we use: bucket -> block -> roll
@@ -1641,9 +1640,8 @@ __global__ void split_BMS_ver6(uint* key_input, uint* blockOffsets,
           myBucket = myInput/elsPerBucket;
         #elif DIST_OPTION == 4 // identity buckets (keys == buckets)
           myBucket = myInput;
-        #elif DIST_OPTION >= 1 // Binomial distribution
-          myBucket = myInput >> (32 - logBuckets);
         #endif
+        myBucket = bucketMapper(myInput);
       }
 
       uint myHisto = 0xFFFFFFFF;
@@ -1719,9 +1717,8 @@ __global__ void split_BMS_ver6(uint* key_input, uint* blockOffsets,
         uint myNewBucket = myNewKey/elsPerBucket;
       #elif DIST_OPTION == 4 // identity buckets
         uint myNewBucket = myNewKey;
-      #elif DIST_OPTION >= 1 // Binomial distribution
-        uint myNewBucket = myNewKey >> (32 - logBuckets);
       #endif
+        uint myNewBucket = bucketMapper(myNewKey);
       uint finalIndex = 0;
       if(valid_input) {
         finalIndex = block_offsets_smem[numBuckets * kk + myNewBucket] + threadIdx.x;
@@ -1745,9 +1742,8 @@ __global__ void split_BMS_ver6(uint* key_input, uint* blockOffsets,
         myBucket = myInput/elsPerBucket;
       #elif DIST_OPTION == 4 // identity buckets (keys = buckets)
         myBucket = myInput;
-      #elif DIST_OPTION >= 1 // Binomial distribution
-        myBucket = myInput >> (32 - logBuckets);
       #endif
+      myBucket = bucketMapper(myInput);
 
       uint myHisto = 0xFFFFFFFF;
       uint myLocalIndex = 0xFFFFFFFF;
@@ -1818,9 +1814,8 @@ __global__ void split_BMS_ver6(uint* key_input, uint* blockOffsets,
         uint myNewBucket = myNewKey/elsPerBucket;
       #elif DIST_OPTION == 4 // identity buckets
         uint myNewBucket = myNewKey;
-      #elif DIST_OPTION >= 1 // Binomial distribution
-        uint myNewBucket = myNewKey >> (32 - logBuckets);
       #endif
+        uint myNewBucket = bucketMapper(myNewKey);
       uint finalIndex = block_offsets_smem[numBuckets * kk + myNewBucket] + threadIdx.x;
       finalIndex -= warp_offsets_smem[myNewBucket + kk * numBuckets];
       key_output[finalIndex] = myNewKey;
@@ -1828,9 +1823,10 @@ __global__ void split_BMS_ver6(uint* key_input, uint* blockOffsets,
   }
 }
 //===============================
+template<class T>
 __global__ void split_BMS_pairs_ver6(uint* key_input, uint* value_input,
     uint* blockOffsets, uint* key_output, uint* value_output,
-    uint numElements, uint numBuckets, uint numWarps, uint depth) {
+    uint numElements, uint numBuckets, uint numWarps, uint depth, T bucketMapper) {
   // Block-level MS with post-scan reordering
   // In this kernel, the last thread block follows a different branch than the rest
   // Global memory hierarchy that we use: bucket -> block -> roll
@@ -1883,9 +1879,8 @@ __global__ void split_BMS_pairs_ver6(uint* key_input, uint* value_input,
           myBucket = myInput/elsPerBucket;
         #elif DIST_OPTION == 4 // identity buckets (keys == buckets)
           myBucket = myInput;
-        #elif DIST_OPTION >= 1 // Binomial distribution
-          myBucket = myInput >> (32 - logBuckets);
         #endif
+        myBucket = bucketMapper(myInput);
       }
 
       uint myHisto = 0xFFFFFFFF;
@@ -1964,9 +1959,9 @@ __global__ void split_BMS_pairs_ver6(uint* key_input, uint* value_input,
         uint myNewBucket = myNewKey/elsPerBucket;
       #elif DIST_OPTION == 4 // identity buckets
         uint myNewBucket = myNewKey;
-      #elif DIST_OPTION >= 1 // Binomial distribution
-        uint myNewBucket = myNewKey >> (32 - logBuckets);
       #endif
+      uint myNewBucket = bucketMapper(myNewKey);
+
       uint finalIndex = 0;
       if(valid_input) {
         finalIndex = block_offsets_smem[numBuckets * kk + myNewBucket] + threadIdx.x;
@@ -1994,9 +1989,8 @@ __global__ void split_BMS_pairs_ver6(uint* key_input, uint* value_input,
         myBucket = myInput/elsPerBucket;
       #elif DIST_OPTION == 4 // identity buckets (keys == buckets)
         myBucket = myInput;
-      #elif DIST_OPTION >= 1 // Binomial distribution
-        myBucket = myInput >> (32 - logBuckets);
       #endif
+      myBucket = bucketMapper(myInput);
 
       uint myHisto = 0xFFFFFFFF;
       uint myLocalIndex = 0xFFFFFFFF;
@@ -2070,9 +2064,9 @@ __global__ void split_BMS_pairs_ver6(uint* key_input, uint* value_input,
         uint myNewBucket = myNewKey/elsPerBucket;
       #elif DIST_OPTION == 4
         uint myNewBucket = myNewKey;
-      #elif DIST_OPTION >= 1 // Binomial distribution
-        uint myNewBucket = myNewKey >> (32 - logBuckets);
       #endif
+      uint myNewBucket = bucketMapper(myNewKey);
+
       uint finalIndex = block_offsets_smem[numBuckets * kk + myNewBucket] + threadIdx.x;
       finalIndex -= warp_offsets_smem[myNewBucket + kk * numBuckets];
       key_output[finalIndex] = myNewKey;
@@ -2081,9 +2075,9 @@ __global__ void split_BMS_pairs_ver6(uint* key_input, uint* value_input,
   }
 }
 //===============================
-template<uint NUM_WARPS, uint NUM_BUCKETS, uint LOG_BUCKETS, uint LOG_WARPS>
+template<uint NUM_WARPS, uint NUM_BUCKETS, uint LOG_BUCKETS, uint LOG_WARPS, class T>
 __global__ void histogramBallot_Mode13_large_pairs(uint* key_input,
-    uint* value_input, uint* bin, uint numElements) {
+    uint* value_input, uint* bin, uint numElements, T bucketMapper) {
   // Block level MS: with more buckets than 32
   // Computing the histogram and local index within each block and storing them in the corresponding localIndex array:
   // we also re-arrange both input elements and their index into the global memory.
@@ -2129,10 +2123,8 @@ __global__ void histogramBallot_Mode13_large_pairs(uint* key_input,
   bucketId = item/elsPerBucket;
 #elif DIST_OPTION == 4 // identity buckets (keys == buckets)
   bucketId = item;
-#elif DIST_OPTION >= 1 // Binomial distribution
-  bucketId = item >> (32 - LOG_BUCKETS);
 #endif
-
+  bucketId = bucketMapper(item);
   // computing warp-level histogram:
 #pragma unroll
   for (int i = 0; i < num_roll; i++)
@@ -2226,9 +2218,9 @@ __global__ void histogramBallot_Mode13_large_pairs(uint* key_input,
   }
 }
 //======================================
-template<uint NUM_WARPS, uint NUM_BUCKETS>
+template<uint NUM_WARPS, uint NUM_BUCKETS, class T>
 __global__ void splitBallot_Mode13_large_pairs(uint* key_input, uint* value_input, unsigned int* binOffsets,
-  uint* key_output, uint* value_output, unsigned int numElements)
+  uint* key_output, uint* value_output, unsigned int numElements, T bucketMapper)
 {
   // Performing the splitting proces using the prefixed-sum histograms (binOffsets), and the
   // local warp-level masks (binMask).
@@ -2251,10 +2243,8 @@ __global__ void splitBallot_Mode13_large_pairs(uint* key_input, uint* value_inpu
   bucketId = item/elsPerBucket;
 #elif DIST_OPTION == 4 // identity buckets (keys == buckets)
   bucketId = item;
-#elif DIST_OPTION >= 1 // Binomial distribution
-  bucketId = item >> (32 - logBuckets);
 #endif
-
+  bucketId = bucketMapper(item);
   // Loading all warp indices regarding to each bucket into the shared memory:
   if(threadIdx.x < NUM_BUCKETS)
   {

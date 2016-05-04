@@ -50,6 +50,20 @@ cub::CachingDeviceAllocator  g_allocator(true);  // Caching allocator for device
 #define BLOCKSORT_SIZE 1024
 #define DEPTH 8
 
+class MSBMapper {
+public:
+  MSBMapper(unsigned int numBuckets) {
+    msbShift = 32 - ceil(log2((float)numBuckets));
+  }
+
+  __device__ unsigned int operator()(unsigned int element) {
+    return element >> msbShift;
+  }
+
+private:
+  unsigned int msbShift;
+};
+
 /** @brief Performs merge sort utilizing 3 stages:
  * (1) Blocksort, (2) simple merge and (3) multi merge
  *
@@ -87,26 +101,27 @@ void runMultiSplit(unsigned int *d_inp, uint numElements, uint numBuckets, const
 
   if (numBuckets == 2) {
     histogram_warp_ver6<NUM_WARPS, 2, 1, PACK_DEPTH> <<<numBlocksPack, numThreads>>>(d_inp,
-        plan->m_d_histo, numElements);
+        plan->m_d_histo, numElements, MSBMapper(numBuckets));
     cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
         plan->m_d_histo, plan->m_d_histo,
         numBuckets * numBlocksPack * NUM_WARPS * PACK_DEPTH);
     split_WMS_ver6<NUM_WARPS, 2, 1, PACK_DEPTH> <<<numBlocksPack, numThreads,
         (numBuckets * NUM_WARPS * PACK_DEPTH
             + 32 * NUM_WARPS * PACK_DEPTH) * sizeof(unsigned int)>>>(d_inp,
-        plan->m_d_histo, plan->m_d_fin, numElements);
+        plan->m_d_histo, plan->m_d_fin, numElements, MSBMapper(numBuckets));
   } else if (numBuckets <= 32) {
     histogram_block_ver6<<<numBlocksPack, numThreads,
         NUM_WARPS * numBuckets * DEPTH * sizeof(uint)>>>(d_inp, plan->m_d_histo,
-        numElements, numBuckets, NUM_WARPS, PACK_DEPTH);
+        numElements, numBuckets, NUM_WARPS, PACK_DEPTH, MSBMapper(numBuckets));
     cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
         plan->m_d_histo, plan->m_d_histo, numBuckets * numBlocksPack * PACK_DEPTH);
     split_BMS_ver6<<<numBlocksPack, numThreads,
         (2 * numBuckets * PACK_DEPTH + 32 * NUM_WARPS * PACK_DEPTH
             + numBuckets * NUM_WARPS * PACK_DEPTH) * sizeof(uint)>>>(d_inp, plan->m_d_histo, plan->m_d_fin,
-        numElements, numBuckets, NUM_WARPS, PACK_DEPTH);
+        numElements, numBuckets, NUM_WARPS, PACK_DEPTH, MSBMapper(numBuckets));
   } else if (numBuckets > 96) {
-    markBins_general<<<numBlocks, numThreads>>>(plan->m_d_mask, d_inp, numElements, numBuckets);
+    markBins_general<<<numBlocks, numThreads>>>(plan->m_d_mask, d_inp,
+        numElements, numBuckets, MSBMapper(numBuckets));
     cub::DeviceRadixSort::SortPairs(d_temp_storage, temp_storage_bytes, plan->m_d_mask,
         plan->m_d_out, d_inp, plan->m_d_fin, numElements, 0,
         int(ceil(log2(float(numBuckets)))));
@@ -114,515 +129,515 @@ void runMultiSplit(unsigned int *d_inp, uint numElements, uint numBuckets, const
     switch(numBuckets){
       case 33:
         histogramBallot_Mode13_large<NUM_WARPS, 33, 6, LOG_WARPS> <<<
-          numBlocks, numThreads>>>(d_inp, plan->m_d_histo, numElements);
+          numBlocks, numThreads>>>(d_inp, plan->m_d_histo, numElements, MSBMapper(numBuckets));
         cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes, plan->m_d_histo,
           plan->m_d_histo, 33 * numBlocks);
         splitBallot_Mode13_large<NUM_WARPS, 33> <<<numBlocks, numThreads>>>(d_inp, plan->m_d_histo,
-          plan->m_d_fin, numElements);
+          plan->m_d_fin, numElements, MSBMapper(numBuckets));
       break;
       case 34:
         histogramBallot_Mode13_large<NUM_WARPS, 34, 6, LOG_WARPS> <<<
-          numBlocks, numThreads>>>(d_inp, plan->m_d_histo, numElements);
+          numBlocks, numThreads>>>(d_inp, plan->m_d_histo, numElements, MSBMapper(numBuckets));
         cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes, plan->m_d_histo,
           plan->m_d_histo, 34 * numBlocks);
         splitBallot_Mode13_large<NUM_WARPS, 34> <<<numBlocks, numThreads>>>(d_inp, plan->m_d_histo,
-          plan->m_d_fin, numElements);
+          plan->m_d_fin, numElements, MSBMapper(numBuckets));
       break;
       case 35:
         histogramBallot_Mode13_large<NUM_WARPS, 35, 6, LOG_WARPS> <<<
-          numBlocks, numThreads>>>(d_inp, plan->m_d_histo, numElements);
+          numBlocks, numThreads>>>(d_inp, plan->m_d_histo, numElements, MSBMapper(numBuckets));
         cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes, plan->m_d_histo,
           plan->m_d_histo, 35 * numBlocks);
         splitBallot_Mode13_large<NUM_WARPS, 35> <<<numBlocks, numThreads>>>(d_inp, plan->m_d_histo,
-          plan->m_d_fin, numElements);
+          plan->m_d_fin, numElements, MSBMapper(numBuckets));
       break;
       case 36:
         histogramBallot_Mode13_large<NUM_WARPS, 36, 6, LOG_WARPS> <<<
-          numBlocks, numThreads>>>(d_inp, plan->m_d_histo, numElements);
+          numBlocks, numThreads>>>(d_inp, plan->m_d_histo, numElements, MSBMapper(numBuckets));
         cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes, plan->m_d_histo,
           plan->m_d_histo, 36 * numBlocks);
         splitBallot_Mode13_large<NUM_WARPS, 36> <<<numBlocks, numThreads>>>(d_inp, plan->m_d_histo,
-          plan->m_d_fin, numElements);
+          plan->m_d_fin, numElements, MSBMapper(numBuckets));
       break;
       case 37:
         histogramBallot_Mode13_large<NUM_WARPS, 37, 6, LOG_WARPS> <<<
-          numBlocks, numThreads>>>(d_inp, plan->m_d_histo, numElements);
+          numBlocks, numThreads>>>(d_inp, plan->m_d_histo, numElements, MSBMapper(numBuckets));
         cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes, plan->m_d_histo,
           plan->m_d_histo, 37 * numBlocks);
         splitBallot_Mode13_large<NUM_WARPS, 37> <<<numBlocks, numThreads>>>(d_inp, plan->m_d_histo,
-          plan->m_d_fin, numElements);
+          plan->m_d_fin, numElements, MSBMapper(numBuckets));
       break;
       case 38:
         histogramBallot_Mode13_large<NUM_WARPS, 38, 6, LOG_WARPS> <<<
-          numBlocks, numThreads>>>(d_inp, plan->m_d_histo, numElements);
+          numBlocks, numThreads>>>(d_inp, plan->m_d_histo, numElements, MSBMapper(numBuckets));
         cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes, plan->m_d_histo,
           plan->m_d_histo, 38 * numBlocks);
         splitBallot_Mode13_large<NUM_WARPS, 38> <<<numBlocks, numThreads>>>(d_inp, plan->m_d_histo,
-          plan->m_d_fin, numElements);
+          plan->m_d_fin, numElements, MSBMapper(numBuckets));
       break;
       case 39:
         histogramBallot_Mode13_large<NUM_WARPS, 39, 6, LOG_WARPS> <<<
-          numBlocks, numThreads>>>(d_inp, plan->m_d_histo, numElements);
+          numBlocks, numThreads>>>(d_inp, plan->m_d_histo, numElements, MSBMapper(numBuckets));
         cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes, plan->m_d_histo,
           plan->m_d_histo, 39 * numBlocks);
         splitBallot_Mode13_large<NUM_WARPS, 39> <<<numBlocks, numThreads>>>(d_inp, plan->m_d_histo,
-          plan->m_d_fin, numElements);
+          plan->m_d_fin, numElements, MSBMapper(numBuckets));
       break;
       case 40:
         histogramBallot_Mode13_large<NUM_WARPS, 40, 6, LOG_WARPS> <<<
-          numBlocks, numThreads>>>(d_inp, plan->m_d_histo, numElements);
+          numBlocks, numThreads>>>(d_inp, plan->m_d_histo, numElements, MSBMapper(numBuckets));
         cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes, plan->m_d_histo,
           plan->m_d_histo, 40 * numBlocks);
         splitBallot_Mode13_large<NUM_WARPS, 40> <<<numBlocks, numThreads>>>(d_inp, plan->m_d_histo,
-          plan->m_d_fin, numElements);
+          plan->m_d_fin, numElements, MSBMapper(numBuckets));
       break;
       case 41:
         histogramBallot_Mode13_large<NUM_WARPS, 41, 6, LOG_WARPS> <<<
-          numBlocks, numThreads>>>(d_inp, plan->m_d_histo, numElements);
+          numBlocks, numThreads>>>(d_inp, plan->m_d_histo, numElements, MSBMapper(numBuckets));
         cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes, plan->m_d_histo,
           plan->m_d_histo, 41 * numBlocks);
         splitBallot_Mode13_large<NUM_WARPS, 41> <<<numBlocks, numThreads>>>(d_inp, plan->m_d_histo,
-          plan->m_d_fin, numElements);
+          plan->m_d_fin, numElements, MSBMapper(numBuckets));
       break;
       case 42:
         histogramBallot_Mode13_large<NUM_WARPS, 42, 6, LOG_WARPS> <<<
-          numBlocks, numThreads>>>(d_inp, plan->m_d_histo, numElements);
+          numBlocks, numThreads>>>(d_inp, plan->m_d_histo, numElements, MSBMapper(numBuckets));
         cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes, plan->m_d_histo,
           plan->m_d_histo, 42 * numBlocks);
         splitBallot_Mode13_large<NUM_WARPS, 42> <<<numBlocks, numThreads>>>(d_inp, plan->m_d_histo,
-          plan->m_d_fin, numElements);
+          plan->m_d_fin, numElements, MSBMapper(numBuckets));
       break;
       case 43:
         histogramBallot_Mode13_large<NUM_WARPS, 43, 6, LOG_WARPS> <<<
-          numBlocks, numThreads>>>(d_inp, plan->m_d_histo, numElements);
+          numBlocks, numThreads>>>(d_inp, plan->m_d_histo, numElements, MSBMapper(numBuckets));
         cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes, plan->m_d_histo,
           plan->m_d_histo, 43 * numBlocks);
         splitBallot_Mode13_large<NUM_WARPS, 43> <<<numBlocks, numThreads>>>(d_inp, plan->m_d_histo,
-          plan->m_d_fin, numElements);
+          plan->m_d_fin, numElements, MSBMapper(numBuckets));
       break;
       case 44:
         histogramBallot_Mode13_large<NUM_WARPS, 44, 6, LOG_WARPS> <<<
-          numBlocks, numThreads>>>(d_inp, plan->m_d_histo, numElements);
+          numBlocks, numThreads>>>(d_inp, plan->m_d_histo, numElements, MSBMapper(numBuckets));
         cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes, plan->m_d_histo,
           plan->m_d_histo, 44 * numBlocks);
         splitBallot_Mode13_large<NUM_WARPS, 44> <<<numBlocks, numThreads>>>(d_inp, plan->m_d_histo,
-          plan->m_d_fin, numElements);
+          plan->m_d_fin, numElements, MSBMapper(numBuckets));
       break;
       case 45:
         histogramBallot_Mode13_large<NUM_WARPS, 45, 6, LOG_WARPS> <<<
-          numBlocks, numThreads>>>(d_inp, plan->m_d_histo, numElements);
+          numBlocks, numThreads>>>(d_inp, plan->m_d_histo, numElements, MSBMapper(numBuckets));
         cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes, plan->m_d_histo,
           plan->m_d_histo, 45 * numBlocks);
         splitBallot_Mode13_large<NUM_WARPS, 45> <<<numBlocks, numThreads>>>(d_inp, plan->m_d_histo,
-          plan->m_d_fin, numElements);
+          plan->m_d_fin, numElements, MSBMapper(numBuckets));
       break;
       case 46:
         histogramBallot_Mode13_large<NUM_WARPS, 46, 6, LOG_WARPS> <<<
-          numBlocks, numThreads>>>(d_inp, plan->m_d_histo, numElements);
+          numBlocks, numThreads>>>(d_inp, plan->m_d_histo, numElements, MSBMapper(numBuckets));
         cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes, plan->m_d_histo,
           plan->m_d_histo, 46 * numBlocks);
         splitBallot_Mode13_large<NUM_WARPS, 46> <<<numBlocks, numThreads>>>(d_inp, plan->m_d_histo,
-          plan->m_d_fin, numElements);
+          plan->m_d_fin, numElements, MSBMapper(numBuckets));
       break;
       case 47:
         histogramBallot_Mode13_large<NUM_WARPS, 47, 6, LOG_WARPS> <<<
-          numBlocks, numThreads>>>(d_inp, plan->m_d_histo, numElements);
+          numBlocks, numThreads>>>(d_inp, plan->m_d_histo, numElements, MSBMapper(numBuckets));
         cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes, plan->m_d_histo,
           plan->m_d_histo, 47 * numBlocks);
         splitBallot_Mode13_large<NUM_WARPS, 47> <<<numBlocks, numThreads>>>(d_inp, plan->m_d_histo,
-          plan->m_d_fin, numElements);
+          plan->m_d_fin, numElements, MSBMapper(numBuckets));
       break;
       case 48:
         histogramBallot_Mode13_large<NUM_WARPS, 48, 6, LOG_WARPS> <<<
-          numBlocks, numThreads>>>(d_inp, plan->m_d_histo, numElements);
+          numBlocks, numThreads>>>(d_inp, plan->m_d_histo, numElements, MSBMapper(numBuckets));
         cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes, plan->m_d_histo,
           plan->m_d_histo, 48 * numBlocks);
         splitBallot_Mode13_large<NUM_WARPS, 48> <<<numBlocks, numThreads>>>(d_inp, plan->m_d_histo,
-          plan->m_d_fin, numElements);
+          plan->m_d_fin, numElements, MSBMapper(numBuckets));
       break;
       case 49:
         histogramBallot_Mode13_large<NUM_WARPS, 49, 6, LOG_WARPS> <<<
-          numBlocks, numThreads>>>(d_inp, plan->m_d_histo, numElements);
+          numBlocks, numThreads>>>(d_inp, plan->m_d_histo, numElements, MSBMapper(numBuckets));
         cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes, plan->m_d_histo,
           plan->m_d_histo, 49 * numBlocks);
         splitBallot_Mode13_large<NUM_WARPS, 49> <<<numBlocks, numThreads>>>(d_inp, plan->m_d_histo,
-          plan->m_d_fin, numElements);
+          plan->m_d_fin, numElements, MSBMapper(numBuckets));
       break;
       case 50:
         histogramBallot_Mode13_large<NUM_WARPS, 50, 6, LOG_WARPS> <<<
-          numBlocks, numThreads>>>(d_inp, plan->m_d_histo, numElements);
+          numBlocks, numThreads>>>(d_inp, plan->m_d_histo, numElements, MSBMapper(numBuckets));
         cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes, plan->m_d_histo,
           plan->m_d_histo, 50 * numBlocks);
         splitBallot_Mode13_large<NUM_WARPS, 50> <<<numBlocks, numThreads>>>(d_inp, plan->m_d_histo,
-          plan->m_d_fin, numElements);
+          plan->m_d_fin, numElements, MSBMapper(numBuckets));
       break;
       case 51:
         histogramBallot_Mode13_large<NUM_WARPS, 51, 6, LOG_WARPS> <<<
-          numBlocks, numThreads>>>(d_inp, plan->m_d_histo, numElements);
+          numBlocks, numThreads>>>(d_inp, plan->m_d_histo, numElements, MSBMapper(numBuckets));
         cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes, plan->m_d_histo,
           plan->m_d_histo, 51 * numBlocks);
         splitBallot_Mode13_large<NUM_WARPS, 51> <<<numBlocks, numThreads>>>(d_inp, plan->m_d_histo,
-          plan->m_d_fin, numElements);
+          plan->m_d_fin, numElements, MSBMapper(numBuckets));
       break;
       case 52:
         histogramBallot_Mode13_large<NUM_WARPS, 52, 6, LOG_WARPS> <<<
-          numBlocks, numThreads>>>(d_inp, plan->m_d_histo, numElements);
+          numBlocks, numThreads>>>(d_inp, plan->m_d_histo, numElements, MSBMapper(numBuckets));
         cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes, plan->m_d_histo,
           plan->m_d_histo, 52 * numBlocks);
         splitBallot_Mode13_large<NUM_WARPS, 52> <<<numBlocks, numThreads>>>(d_inp, plan->m_d_histo,
-          plan->m_d_fin, numElements);
+          plan->m_d_fin, numElements, MSBMapper(numBuckets));
       break;
       case 53:
         histogramBallot_Mode13_large<NUM_WARPS, 53, 6, LOG_WARPS> <<<
-          numBlocks, numThreads>>>(d_inp, plan->m_d_histo, numElements);
+          numBlocks, numThreads>>>(d_inp, plan->m_d_histo, numElements, MSBMapper(numBuckets));
         cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes, plan->m_d_histo,
           plan->m_d_histo, 53 * numBlocks);
         splitBallot_Mode13_large<NUM_WARPS, 53> <<<numBlocks, numThreads>>>(d_inp, plan->m_d_histo,
-          plan->m_d_fin, numElements);
+          plan->m_d_fin, numElements, MSBMapper(numBuckets));
       break;
       case 54:
         histogramBallot_Mode13_large<NUM_WARPS, 54, 6, LOG_WARPS> <<<
-          numBlocks, numThreads>>>(d_inp, plan->m_d_histo, numElements);
+          numBlocks, numThreads>>>(d_inp, plan->m_d_histo, numElements, MSBMapper(numBuckets));
         cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes, plan->m_d_histo,
           plan->m_d_histo, 54 * numBlocks);
         splitBallot_Mode13_large<NUM_WARPS, 54> <<<numBlocks, numThreads>>>(d_inp, plan->m_d_histo,
-          plan->m_d_fin, numElements);
+          plan->m_d_fin, numElements, MSBMapper(numBuckets));
       break;
       case 55:
         histogramBallot_Mode13_large<NUM_WARPS, 55, 6, LOG_WARPS> <<<
-          numBlocks, numThreads>>>(d_inp, plan->m_d_histo, numElements);
+          numBlocks, numThreads>>>(d_inp, plan->m_d_histo, numElements, MSBMapper(numBuckets));
         cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes, plan->m_d_histo,
           plan->m_d_histo, 55 * numBlocks);
         splitBallot_Mode13_large<NUM_WARPS, 55> <<<numBlocks, numThreads>>>(d_inp, plan->m_d_histo,
-          plan->m_d_fin, numElements);
+          plan->m_d_fin, numElements, MSBMapper(numBuckets));
       break;
       case 56:
         histogramBallot_Mode13_large<NUM_WARPS, 56, 6, LOG_WARPS> <<<
-          numBlocks, numThreads>>>(d_inp, plan->m_d_histo, numElements);
+          numBlocks, numThreads>>>(d_inp, plan->m_d_histo, numElements, MSBMapper(numBuckets));
         cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes, plan->m_d_histo,
           plan->m_d_histo, 56 * numBlocks);
         splitBallot_Mode13_large<NUM_WARPS, 56> <<<numBlocks, numThreads>>>(d_inp, plan->m_d_histo,
-          plan->m_d_fin, numElements);
+          plan->m_d_fin, numElements, MSBMapper(numBuckets));
       break;
       case 57:
         histogramBallot_Mode13_large<NUM_WARPS, 57, 6, LOG_WARPS> <<<
-          numBlocks, numThreads>>>(d_inp, plan->m_d_histo, numElements);
+          numBlocks, numThreads>>>(d_inp, plan->m_d_histo, numElements, MSBMapper(numBuckets));
         cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes, plan->m_d_histo,
           plan->m_d_histo, 57 * numBlocks);
         splitBallot_Mode13_large<NUM_WARPS, 57> <<<numBlocks, numThreads>>>(d_inp, plan->m_d_histo,
-          plan->m_d_fin, numElements);
+          plan->m_d_fin, numElements, MSBMapper(numBuckets));
       break;
       case 58:
         histogramBallot_Mode13_large<NUM_WARPS, 58, 6, LOG_WARPS> <<<
-          numBlocks, numThreads>>>(d_inp, plan->m_d_histo, numElements);
+          numBlocks, numThreads>>>(d_inp, plan->m_d_histo, numElements, MSBMapper(numBuckets));
         cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes, plan->m_d_histo,
           plan->m_d_histo, 58 * numBlocks);
         splitBallot_Mode13_large<NUM_WARPS, 58> <<<numBlocks, numThreads>>>(d_inp, plan->m_d_histo,
-          plan->m_d_fin, numElements);
+          plan->m_d_fin, numElements, MSBMapper(numBuckets));
       break;
       case 59:
         histogramBallot_Mode13_large<NUM_WARPS, 59, 6, LOG_WARPS> <<<
-          numBlocks, numThreads>>>(d_inp, plan->m_d_histo, numElements);
+          numBlocks, numThreads>>>(d_inp, plan->m_d_histo, numElements, MSBMapper(numBuckets));
         cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes, plan->m_d_histo,
           plan->m_d_histo, 59 * numBlocks);
         splitBallot_Mode13_large<NUM_WARPS, 59> <<<numBlocks, numThreads>>>(d_inp, plan->m_d_histo,
-          plan->m_d_fin, numElements);
+          plan->m_d_fin, numElements, MSBMapper(numBuckets));
       break;
       case 60:
         histogramBallot_Mode13_large<NUM_WARPS, 60, 6, LOG_WARPS> <<<
-          numBlocks, numThreads>>>(d_inp, plan->m_d_histo, numElements);
+          numBlocks, numThreads>>>(d_inp, plan->m_d_histo, numElements, MSBMapper(numBuckets));
         cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes, plan->m_d_histo,
           plan->m_d_histo, 60 * numBlocks);
         splitBallot_Mode13_large<NUM_WARPS, 60> <<<numBlocks, numThreads>>>(d_inp, plan->m_d_histo,
-          plan->m_d_fin, numElements);
+          plan->m_d_fin, numElements, MSBMapper(numBuckets));
       break;
       case 61:
         histogramBallot_Mode13_large<NUM_WARPS, 61, 6, LOG_WARPS> <<<
-          numBlocks, numThreads>>>(d_inp, plan->m_d_histo, numElements);
+          numBlocks, numThreads>>>(d_inp, plan->m_d_histo, numElements, MSBMapper(numBuckets));
         cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes, plan->m_d_histo,
           plan->m_d_histo, 61 * numBlocks);
         splitBallot_Mode13_large<NUM_WARPS, 61> <<<numBlocks, numThreads>>>(d_inp, plan->m_d_histo,
-          plan->m_d_fin, numElements);
+          plan->m_d_fin, numElements, MSBMapper(numBuckets));
       break;
       case 62:
         histogramBallot_Mode13_large<NUM_WARPS, 62, 6, LOG_WARPS> <<<
-          numBlocks, numThreads>>>(d_inp, plan->m_d_histo, numElements);
+          numBlocks, numThreads>>>(d_inp, plan->m_d_histo, numElements, MSBMapper(numBuckets));
         cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes, plan->m_d_histo,
           plan->m_d_histo, 62 * numBlocks);
         splitBallot_Mode13_large<NUM_WARPS, 62> <<<numBlocks, numThreads>>>(d_inp, plan->m_d_histo,
-          plan->m_d_fin, numElements);
+          plan->m_d_fin, numElements, MSBMapper(numBuckets));
       break;
       case 63:
         histogramBallot_Mode13_large<NUM_WARPS, 63, 6, LOG_WARPS> <<<
-          numBlocks, numThreads>>>(d_inp, plan->m_d_histo, numElements);
+          numBlocks, numThreads>>>(d_inp, plan->m_d_histo, numElements, MSBMapper(numBuckets));
         cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes, plan->m_d_histo,
           plan->m_d_histo, 63 * numBlocks);
         splitBallot_Mode13_large<NUM_WARPS, 63> <<<numBlocks, numThreads>>>(d_inp, plan->m_d_histo,
-          plan->m_d_fin, numElements);
+          plan->m_d_fin, numElements, MSBMapper(numBuckets));
       break;
       case 64:
         histogramBallot_Mode13_large<NUM_WARPS, 64, 6, LOG_WARPS> <<<
-          numBlocks, numThreads>>>(d_inp, plan->m_d_histo, numElements);
+          numBlocks, numThreads>>>(d_inp, plan->m_d_histo, numElements, MSBMapper(numBuckets));
         cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes, plan->m_d_histo,
           plan->m_d_histo, 64 * numBlocks);
         splitBallot_Mode13_large<NUM_WARPS, 64> <<<numBlocks, numThreads>>>(d_inp, plan->m_d_histo,
-          plan->m_d_fin, numElements);
+          plan->m_d_fin, numElements, MSBMapper(numBuckets));
       break;
       case 65:
         histogramBallot_Mode13_large<NUM_WARPS, 65, 7, LOG_WARPS> <<<numBlocks, numThreads>>>(
-            d_inp, plan->m_d_histo, numElements);
+            d_inp, plan->m_d_histo, numElements, MSBMapper(numBuckets));
         cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
             plan->m_d_histo, plan->m_d_histo, 65 * numBlocks);
         splitBallot_Mode13_large<NUM_WARPS, 65> <<<numBlocks, numThreads>>>(d_inp,
-            plan->m_d_histo, plan->m_d_fin, numElements);
+            plan->m_d_histo, plan->m_d_fin, numElements, MSBMapper(numBuckets));
         break;
       case 66:
         histogramBallot_Mode13_large<NUM_WARPS, 66, 7, LOG_WARPS> <<<numBlocks, numThreads>>>(
-            d_inp, plan->m_d_histo, numElements);
+            d_inp, plan->m_d_histo, numElements, MSBMapper(numBuckets));
         cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
             plan->m_d_histo, plan->m_d_histo, 66 * numBlocks);
         splitBallot_Mode13_large<NUM_WARPS, 66> <<<numBlocks, numThreads>>>(d_inp,
-            plan->m_d_histo, plan->m_d_fin, numElements);
+            plan->m_d_histo, plan->m_d_fin, numElements, MSBMapper(numBuckets));
         break;
       case 67:
         histogramBallot_Mode13_large<NUM_WARPS, 67, 7, LOG_WARPS> <<<numBlocks, numThreads>>>(
-            d_inp, plan->m_d_histo, numElements);
+            d_inp, plan->m_d_histo, numElements, MSBMapper(numBuckets));
         cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
             plan->m_d_histo, plan->m_d_histo, 67 * numBlocks);
         splitBallot_Mode13_large<NUM_WARPS, 67> <<<numBlocks, numThreads>>>(d_inp,
-            plan->m_d_histo, plan->m_d_fin, numElements);
+            plan->m_d_histo, plan->m_d_fin, numElements, MSBMapper(numBuckets));
         break;
       case 68:
         histogramBallot_Mode13_large<NUM_WARPS, 68, 7, LOG_WARPS> <<<numBlocks, numThreads>>>(
-            d_inp, plan->m_d_histo, numElements);
+            d_inp, plan->m_d_histo, numElements, MSBMapper(numBuckets));
         cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
             plan->m_d_histo, plan->m_d_histo, 68 * numBlocks);
         splitBallot_Mode13_large<NUM_WARPS, 68> <<<numBlocks, numThreads>>>(d_inp,
-            plan->m_d_histo, plan->m_d_fin, numElements);
+            plan->m_d_histo, plan->m_d_fin, numElements, MSBMapper(numBuckets));
         break;
       case 69:
         histogramBallot_Mode13_large<NUM_WARPS, 69, 7, LOG_WARPS> <<<numBlocks, numThreads>>>(
-            d_inp, plan->m_d_histo, numElements);
+            d_inp, plan->m_d_histo, numElements, MSBMapper(numBuckets));
         cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
             plan->m_d_histo, plan->m_d_histo, 69 * numBlocks);
         splitBallot_Mode13_large<NUM_WARPS, 69> <<<numBlocks, numThreads>>>(d_inp,
-            plan->m_d_histo, plan->m_d_fin, numElements);
+            plan->m_d_histo, plan->m_d_fin, numElements, MSBMapper(numBuckets));
         break;
       case 70:
         histogramBallot_Mode13_large<NUM_WARPS, 70, 7, LOG_WARPS> <<<numBlocks, numThreads>>>(
-            d_inp, plan->m_d_histo, numElements);
+            d_inp, plan->m_d_histo, numElements, MSBMapper(numBuckets));
         cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
             plan->m_d_histo, plan->m_d_histo, 70 * numBlocks);
         splitBallot_Mode13_large<NUM_WARPS, 70> <<<numBlocks, numThreads>>>(d_inp,
-            plan->m_d_histo, plan->m_d_fin, numElements);
+            plan->m_d_histo, plan->m_d_fin, numElements, MSBMapper(numBuckets));
         break;
       case 71:
         histogramBallot_Mode13_large<NUM_WARPS, 71, 7, LOG_WARPS> <<<numBlocks, numThreads>>>(
-            d_inp, plan->m_d_histo, numElements);
+            d_inp, plan->m_d_histo, numElements, MSBMapper(numBuckets));
         cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
             plan->m_d_histo, plan->m_d_histo, 71 * numBlocks);
         splitBallot_Mode13_large<NUM_WARPS, 71> <<<numBlocks, numThreads>>>(d_inp,
-            plan->m_d_histo, plan->m_d_fin, numElements);
+            plan->m_d_histo, plan->m_d_fin, numElements, MSBMapper(numBuckets));
         break;
       case 72:
         histogramBallot_Mode13_large<NUM_WARPS, 72, 7, LOG_WARPS> <<<numBlocks, numThreads>>>(
-            d_inp, plan->m_d_histo, numElements);
+            d_inp, plan->m_d_histo, numElements, MSBMapper(numBuckets));
         cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
             plan->m_d_histo, plan->m_d_histo, 72 * numBlocks);
         splitBallot_Mode13_large<NUM_WARPS, 72> <<<numBlocks, numThreads>>>(d_inp,
-            plan->m_d_histo, plan->m_d_fin, numElements);
+            plan->m_d_histo, plan->m_d_fin, numElements, MSBMapper(numBuckets));
         break;
       case 73:
         histogramBallot_Mode13_large<NUM_WARPS, 73, 7, LOG_WARPS> <<<numBlocks, numThreads>>>(
-            d_inp, plan->m_d_histo, numElements);
+            d_inp, plan->m_d_histo, numElements, MSBMapper(numBuckets));
         cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
             plan->m_d_histo, plan->m_d_histo, 73 * numBlocks);
         splitBallot_Mode13_large<NUM_WARPS, 73> <<<numBlocks, numThreads>>>(d_inp,
-            plan->m_d_histo, plan->m_d_fin, numElements);
+            plan->m_d_histo, plan->m_d_fin, numElements, MSBMapper(numBuckets));
         break;
       case 74:
         histogramBallot_Mode13_large<NUM_WARPS, 74, 7, LOG_WARPS> <<<numBlocks, numThreads>>>(
-            d_inp, plan->m_d_histo, numElements);
+            d_inp, plan->m_d_histo, numElements, MSBMapper(numBuckets));
         cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
             plan->m_d_histo, plan->m_d_histo, 74 * numBlocks);
         splitBallot_Mode13_large<NUM_WARPS, 74> <<<numBlocks, numThreads>>>(d_inp,
-            plan->m_d_histo, plan->m_d_fin, numElements);
+            plan->m_d_histo, plan->m_d_fin, numElements, MSBMapper(numBuckets));
         break;
       case 75:
         histogramBallot_Mode13_large<NUM_WARPS, 75, 7, LOG_WARPS> <<<numBlocks, numThreads>>>(
-            d_inp, plan->m_d_histo, numElements);
+            d_inp, plan->m_d_histo, numElements, MSBMapper(numBuckets));
         cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
             plan->m_d_histo, plan->m_d_histo, 75 * numBlocks);
         splitBallot_Mode13_large<NUM_WARPS, 75> <<<numBlocks, numThreads>>>(d_inp,
-            plan->m_d_histo, plan->m_d_fin, numElements);
+            plan->m_d_histo, plan->m_d_fin, numElements, MSBMapper(numBuckets));
         break;
       case 76:
         histogramBallot_Mode13_large<NUM_WARPS, 76, 7, LOG_WARPS> <<<numBlocks, numThreads>>>(
-            d_inp, plan->m_d_histo, numElements);
+            d_inp, plan->m_d_histo, numElements, MSBMapper(numBuckets));
         cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
             plan->m_d_histo, plan->m_d_histo, 76 * numBlocks);
         splitBallot_Mode13_large<NUM_WARPS, 76> <<<numBlocks, numThreads>>>(d_inp,
-            plan->m_d_histo, plan->m_d_fin, numElements);
+            plan->m_d_histo, plan->m_d_fin, numElements, MSBMapper(numBuckets));
         break;
       case 77:
         histogramBallot_Mode13_large<NUM_WARPS, 77, 7, LOG_WARPS> <<<numBlocks, numThreads>>>(
-            d_inp, plan->m_d_histo, numElements);
+            d_inp, plan->m_d_histo, numElements, MSBMapper(numBuckets));
         cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
             plan->m_d_histo, plan->m_d_histo, 77 * numBlocks);
         splitBallot_Mode13_large<NUM_WARPS, 77> <<<numBlocks, numThreads>>>(d_inp,
-            plan->m_d_histo, plan->m_d_fin, numElements);
+            plan->m_d_histo, plan->m_d_fin, numElements, MSBMapper(numBuckets));
         break;
       case 78:
         histogramBallot_Mode13_large<NUM_WARPS, 78, 7, LOG_WARPS> <<<numBlocks, numThreads>>>(
-            d_inp, plan->m_d_histo, numElements);
+            d_inp, plan->m_d_histo, numElements, MSBMapper(numBuckets));
         cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
             plan->m_d_histo, plan->m_d_histo, 78 * numBlocks);
         splitBallot_Mode13_large<NUM_WARPS, 78> <<<numBlocks, numThreads>>>(d_inp,
-            plan->m_d_histo, plan->m_d_fin, numElements);
+            plan->m_d_histo, plan->m_d_fin, numElements, MSBMapper(numBuckets));
         break;
       case 79:
         histogramBallot_Mode13_large<NUM_WARPS, 79, 7, LOG_WARPS> <<<numBlocks, numThreads>>>(
-            d_inp, plan->m_d_histo, numElements);
+            d_inp, plan->m_d_histo, numElements, MSBMapper(numBuckets));
         cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
             plan->m_d_histo, plan->m_d_histo, 79 * numBlocks);
         splitBallot_Mode13_large<NUM_WARPS, 79> <<<numBlocks, numThreads>>>(d_inp,
-            plan->m_d_histo, plan->m_d_fin, numElements);
+            plan->m_d_histo, plan->m_d_fin, numElements, MSBMapper(numBuckets));
         break;
       case 80:
         histogramBallot_Mode13_large<NUM_WARPS, 80, 7, LOG_WARPS> <<<numBlocks, numThreads>>>(
-            d_inp, plan->m_d_histo, numElements);
+            d_inp, plan->m_d_histo, numElements, MSBMapper(numBuckets));
         cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
             plan->m_d_histo, plan->m_d_histo, 80 * numBlocks);
         splitBallot_Mode13_large<NUM_WARPS, 80> <<<numBlocks, numThreads>>>(d_inp,
-            plan->m_d_histo, plan->m_d_fin, numElements);
+            plan->m_d_histo, plan->m_d_fin, numElements, MSBMapper(numBuckets));
         break;
       case 81:
         histogramBallot_Mode13_large<NUM_WARPS, 81, 7, LOG_WARPS> <<<numBlocks, numThreads>>>(
-            d_inp, plan->m_d_histo, numElements);
+            d_inp, plan->m_d_histo, numElements, MSBMapper(numBuckets));
         cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
             plan->m_d_histo, plan->m_d_histo, 81 * numBlocks);
         splitBallot_Mode13_large<NUM_WARPS, 81> <<<numBlocks, numThreads>>>(d_inp,
-            plan->m_d_histo, plan->m_d_fin, numElements);
+            plan->m_d_histo, plan->m_d_fin, numElements, MSBMapper(numBuckets));
         break;
       case 82:
         histogramBallot_Mode13_large<NUM_WARPS, 82, 7, LOG_WARPS> <<<numBlocks, numThreads>>>(
-            d_inp, plan->m_d_histo, numElements);
+            d_inp, plan->m_d_histo, numElements, MSBMapper(numBuckets));
         cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
             plan->m_d_histo, plan->m_d_histo, 82 * numBlocks);
         splitBallot_Mode13_large<NUM_WARPS, 82> <<<numBlocks, numThreads>>>(d_inp,
-            plan->m_d_histo, plan->m_d_fin, numElements);
+            plan->m_d_histo, plan->m_d_fin, numElements, MSBMapper(numBuckets));
         break;
       case 83:
         histogramBallot_Mode13_large<NUM_WARPS, 83, 7, LOG_WARPS> <<<numBlocks, numThreads>>>(
-            d_inp, plan->m_d_histo, numElements);
+            d_inp, plan->m_d_histo, numElements, MSBMapper(numBuckets));
         cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
             plan->m_d_histo, plan->m_d_histo, 83 * numBlocks);
         splitBallot_Mode13_large<NUM_WARPS, 83> <<<numBlocks, numThreads>>>(d_inp,
-            plan->m_d_histo, plan->m_d_fin, numElements);
+            plan->m_d_histo, plan->m_d_fin, numElements, MSBMapper(numBuckets));
         break;
       case 84:
         histogramBallot_Mode13_large<NUM_WARPS, 84, 7, LOG_WARPS> <<<numBlocks, numThreads>>>(
-            d_inp, plan->m_d_histo, numElements);
+            d_inp, plan->m_d_histo, numElements, MSBMapper(numBuckets));
         cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
             plan->m_d_histo, plan->m_d_histo, 84 * numBlocks);
         splitBallot_Mode13_large<NUM_WARPS, 84> <<<numBlocks, numThreads>>>(d_inp,
-            plan->m_d_histo, plan->m_d_fin, numElements);
+            plan->m_d_histo, plan->m_d_fin, numElements, MSBMapper(numBuckets));
         break;
       case 85:
         histogramBallot_Mode13_large<NUM_WARPS, 85, 7, LOG_WARPS> <<<numBlocks, numThreads>>>(
-            d_inp, plan->m_d_histo, numElements);
+            d_inp, plan->m_d_histo, numElements, MSBMapper(numBuckets));
         cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
             plan->m_d_histo, plan->m_d_histo, 85 * numBlocks);
         splitBallot_Mode13_large<NUM_WARPS, 85> <<<numBlocks, numThreads>>>(d_inp,
-            plan->m_d_histo, plan->m_d_fin, numElements);
+            plan->m_d_histo, plan->m_d_fin, numElements, MSBMapper(numBuckets));
         break;
       case 86:
         histogramBallot_Mode13_large<NUM_WARPS, 86, 7, LOG_WARPS> <<<numBlocks, numThreads>>>(
-            d_inp, plan->m_d_histo, numElements);
+            d_inp, plan->m_d_histo, numElements, MSBMapper(numBuckets));
         cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
             plan->m_d_histo, plan->m_d_histo, 86 * numBlocks);
         splitBallot_Mode13_large<NUM_WARPS, 86> <<<numBlocks, numThreads>>>(d_inp,
-            plan->m_d_histo, plan->m_d_fin, numElements);
+            plan->m_d_histo, plan->m_d_fin, numElements, MSBMapper(numBuckets));
         break;
       case 87:
         histogramBallot_Mode13_large<NUM_WARPS, 87, 7, LOG_WARPS> <<<numBlocks, numThreads>>>(
-            d_inp, plan->m_d_histo, numElements);
+            d_inp, plan->m_d_histo, numElements, MSBMapper(numBuckets));
         cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
             plan->m_d_histo, plan->m_d_histo, 87 * numBlocks);
         splitBallot_Mode13_large<NUM_WARPS, 87> <<<numBlocks, numThreads>>>(d_inp,
-            plan->m_d_histo, plan->m_d_fin, numElements);
+            plan->m_d_histo, plan->m_d_fin, numElements, MSBMapper(numBuckets));
         break;
       case 88:
         histogramBallot_Mode13_large<NUM_WARPS, 88, 7, LOG_WARPS> <<<numBlocks, numThreads>>>(
-            d_inp, plan->m_d_histo, numElements);
+            d_inp, plan->m_d_histo, numElements, MSBMapper(numBuckets));
         cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
             plan->m_d_histo, plan->m_d_histo, 88 * numBlocks);
         splitBallot_Mode13_large<NUM_WARPS, 88> <<<numBlocks, numThreads>>>(d_inp,
-            plan->m_d_histo, plan->m_d_fin, numElements);
+            plan->m_d_histo, plan->m_d_fin, numElements, MSBMapper(numBuckets));
         break;
       case 89:
         histogramBallot_Mode13_large<NUM_WARPS, 89, 7, LOG_WARPS> <<<numBlocks, numThreads>>>(
-            d_inp, plan->m_d_histo, numElements);
+            d_inp, plan->m_d_histo, numElements, MSBMapper(numBuckets));
         cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
             plan->m_d_histo, plan->m_d_histo, 89 * numBlocks);
         splitBallot_Mode13_large<NUM_WARPS, 89> <<<numBlocks, numThreads>>>(d_inp,
-            plan->m_d_histo, plan->m_d_fin, numElements);
+            plan->m_d_histo, plan->m_d_fin, numElements, MSBMapper(numBuckets));
         break;
       case 90:
         histogramBallot_Mode13_large<NUM_WARPS, 90, 7, LOG_WARPS> <<<numBlocks, numThreads>>>(
-            d_inp, plan->m_d_histo, numElements);
+            d_inp, plan->m_d_histo, numElements, MSBMapper(numBuckets));
         cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
             plan->m_d_histo, plan->m_d_histo, 90 * numBlocks);
         splitBallot_Mode13_large<NUM_WARPS, 90> <<<numBlocks, numThreads>>>(d_inp,
-            plan->m_d_histo, plan->m_d_fin, numElements);
+            plan->m_d_histo, plan->m_d_fin, numElements, MSBMapper(numBuckets));
         break;
       case 91:
         histogramBallot_Mode13_large<NUM_WARPS, 91, 7, LOG_WARPS> <<<numBlocks, numThreads>>>(
-            d_inp, plan->m_d_histo, numElements);
+            d_inp, plan->m_d_histo, numElements, MSBMapper(numBuckets));
         cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
             plan->m_d_histo, plan->m_d_histo, 91 * numBlocks);
         splitBallot_Mode13_large<NUM_WARPS, 91> <<<numBlocks, numThreads>>>(d_inp,
-            plan->m_d_histo, plan->m_d_fin, numElements);
+            plan->m_d_histo, plan->m_d_fin, numElements, MSBMapper(numBuckets));
         break;
       case 92:
         histogramBallot_Mode13_large<NUM_WARPS, 92, 7, LOG_WARPS> <<<numBlocks, numThreads>>>(
-            d_inp, plan->m_d_histo, numElements);
+            d_inp, plan->m_d_histo, numElements, MSBMapper(numBuckets));
         cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
             plan->m_d_histo, plan->m_d_histo, 92 * numBlocks);
         splitBallot_Mode13_large<NUM_WARPS, 92> <<<numBlocks, numThreads>>>(d_inp,
-            plan->m_d_histo, plan->m_d_fin, numElements);
+            plan->m_d_histo, plan->m_d_fin, numElements, MSBMapper(numBuckets));
         break;
       case 93:
         histogramBallot_Mode13_large<NUM_WARPS, 93, 7, LOG_WARPS> <<<numBlocks, numThreads>>>(
-            d_inp, plan->m_d_histo, numElements);
+            d_inp, plan->m_d_histo, numElements, MSBMapper(numBuckets));
         cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
             plan->m_d_histo, plan->m_d_histo, 93 * numBlocks);
         splitBallot_Mode13_large<NUM_WARPS, 93> <<<numBlocks, numThreads>>>(d_inp,
-            plan->m_d_histo, plan->m_d_fin, numElements);
+            plan->m_d_histo, plan->m_d_fin, numElements, MSBMapper(numBuckets));
         break;
       case 94:
         histogramBallot_Mode13_large<NUM_WARPS, 94, 7, LOG_WARPS> <<<numBlocks, numThreads>>>(
-            d_inp, plan->m_d_histo, numElements);
+            d_inp, plan->m_d_histo, numElements, MSBMapper(numBuckets));
         cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
             plan->m_d_histo, plan->m_d_histo, 94 * numBlocks);
         splitBallot_Mode13_large<NUM_WARPS, 94> <<<numBlocks, numThreads>>>(d_inp,
-            plan->m_d_histo, plan->m_d_fin, numElements);
+            plan->m_d_histo, plan->m_d_fin, numElements, MSBMapper(numBuckets));
         break;
       case 95:
         histogramBallot_Mode13_large<NUM_WARPS, 95, 7, LOG_WARPS> <<<numBlocks, numThreads>>>(
-            d_inp, plan->m_d_histo, numElements);
+            d_inp, plan->m_d_histo, numElements, MSBMapper(numBuckets));
         cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
             plan->m_d_histo, plan->m_d_histo, 95 * numBlocks);
         splitBallot_Mode13_large<NUM_WARPS, 95> <<<numBlocks, numThreads>>>(d_inp,
-            plan->m_d_histo, plan->m_d_fin, numElements);
+            plan->m_d_histo, plan->m_d_fin, numElements, MSBMapper(numBuckets));
         break;
       case 96:
         histogramBallot_Mode13_large<NUM_WARPS, 96, 7, LOG_WARPS> <<<numBlocks, numThreads>>>(
-            d_inp, plan->m_d_histo, numElements);
+            d_inp, plan->m_d_histo, numElements, MSBMapper(numBuckets));
         cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
             plan->m_d_histo, plan->m_d_histo, 96 * numBlocks);
         splitBallot_Mode13_large<NUM_WARPS, 96> <<<numBlocks, numThreads>>>(d_inp,
-            plan->m_d_histo, plan->m_d_fin, numElements);
+            plan->m_d_histo, plan->m_d_fin, numElements, MSBMapper(numBuckets));
         break;
       default:
         break;
@@ -682,7 +697,7 @@ void runMultiSplit(unsigned int *d_keys, unsigned int *d_values,
   if (numBuckets == 2) {
     histogram_warp_ver6<NUM_WARPS, 2, 1, PACK_DEPTH> <<<
         (numBlocks + PACK_DEPTH - 1) / PACK_DEPTH, numThreads>>>(d_keys,
-        plan->m_d_histo, numElements);
+        plan->m_d_histo, numElements, MSBMapper(numBuckets));
     cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
         plan->m_d_histo, plan->m_d_histo,
         numBuckets * numBlocks * NUM_WARPS * PACK_DEPTH);
@@ -690,11 +705,12 @@ void runMultiSplit(unsigned int *d_keys, unsigned int *d_values,
         (numBlocks + PACK_DEPTH - 1) / PACK_DEPTH, numThreads,
         (numBuckets * NUM_WARPS * PACK_DEPTH + 64 * NUM_WARPS * PACK_DEPTH)
             * sizeof(unsigned int)>>>(d_keys, d_values, plan->m_d_histo,
-        plan->m_d_temp_keys, plan->m_d_temp_values, numElements);
+        plan->m_d_temp_keys, plan->m_d_temp_values, numElements, MSBMapper(numBuckets));
   } else if (numBuckets <= 32) {
     histogram_block_ver6<<<numBlocksPack, numThreads,
         NUM_WARPS * numBuckets * DEPTH * sizeof(uint)>>>(d_keys,
-        plan->m_d_histo, numElements, numBuckets, NUM_WARPS, PACK_DEPTH);
+        plan->m_d_histo, numElements, numBuckets, NUM_WARPS, PACK_DEPTH,
+        MSBMapper(numBuckets));
     cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
         plan->m_d_histo, plan->m_d_histo,
         numBuckets * numBlocksPack * PACK_DEPTH);
@@ -702,10 +718,10 @@ void runMultiSplit(unsigned int *d_keys, unsigned int *d_values,
         (2 * numBuckets * PACK_DEPTH + 64 * NUM_WARPS * PACK_DEPTH
             + numBuckets * NUM_WARPS * PACK_DEPTH) * sizeof(uint)>>>(d_keys,
         d_values, plan->m_d_histo, plan->m_d_temp_keys, plan->m_d_temp_values,
-        numElements, numBuckets, NUM_WARPS, PACK_DEPTH);
+        numElements, numBuckets, NUM_WARPS, PACK_DEPTH, MSBMapper(numBuckets));
   } else if (numBuckets > 96) {
     markBins_general<<<numBlocks, numThreads>>>(plan->m_d_mask, d_keys,
-        numElements, numBuckets);
+        numElements, numBuckets, MSBMapper(numBuckets));
     packingKeyValuePairs<<<numBlocks, numThreads>>>(plan->m_d_key_value_pairs,
         d_keys, d_values, numElements);
     cub::DeviceRadixSort::SortPairs(d_temp_storage, temp_storage_bytes,
@@ -719,642 +735,642 @@ void runMultiSplit(unsigned int *d_keys, unsigned int *d_values,
     case 33:
       histogramBallot_Mode13_large_pairs<NUM_WARPS, 33, 6, LOG_WARPS> <<<
           numBlocks, numThreads>>>(d_keys, d_values, plan->m_d_histo,
-          numElements);
+          numElements, MSBMapper(numBuckets));
       cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
           plan->m_d_histo, plan->m_d_histo, 33 * numBlocks);
       splitBallot_Mode13_large_pairs<NUM_WARPS, 33> <<<numBlocks, numThreads>>>(
           d_keys, d_values, plan->m_d_histo, plan->m_d_temp_keys,
-          plan->m_d_temp_values, numElements);
+          plan->m_d_temp_values, numElements, MSBMapper(numBuckets));
       break;
     case 34:
       histogramBallot_Mode13_large_pairs<NUM_WARPS, 34, 6, LOG_WARPS> <<<
           numBlocks, numThreads>>>(d_keys, d_values, plan->m_d_histo,
-          numElements);
+          numElements, MSBMapper(numBuckets));
       cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
           plan->m_d_histo, plan->m_d_histo, 34 * numBlocks);
       splitBallot_Mode13_large_pairs<NUM_WARPS, 34> <<<numBlocks, numThreads>>>(
           d_keys, d_values, plan->m_d_histo, plan->m_d_temp_keys,
-          plan->m_d_temp_values, numElements);
+          plan->m_d_temp_values, numElements, MSBMapper(numBuckets));
       break;
     case 35:
       histogramBallot_Mode13_large_pairs<NUM_WARPS, 35, 6, LOG_WARPS> <<<
           numBlocks, numThreads>>>(d_keys, d_values, plan->m_d_histo,
-          numElements);
+          numElements, MSBMapper(numBuckets));
       cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
           plan->m_d_histo, plan->m_d_histo, 35 * numBlocks);
       splitBallot_Mode13_large_pairs<NUM_WARPS, 35> <<<numBlocks, numThreads>>>(
           d_keys, d_values, plan->m_d_histo, plan->m_d_temp_keys,
-          plan->m_d_temp_values, numElements);
+          plan->m_d_temp_values, numElements, MSBMapper(numBuckets));
       break;
     case 36:
       histogramBallot_Mode13_large_pairs<NUM_WARPS, 36, 6, LOG_WARPS> <<<
           numBlocks, numThreads>>>(d_keys, d_values, plan->m_d_histo,
-          numElements);
+          numElements, MSBMapper(numBuckets));
       cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
           plan->m_d_histo, plan->m_d_histo, 36 * numBlocks);
       splitBallot_Mode13_large_pairs<NUM_WARPS, 36> <<<numBlocks, numThreads>>>(
           d_keys, d_values, plan->m_d_histo, plan->m_d_temp_keys,
-          plan->m_d_temp_values, numElements);
+          plan->m_d_temp_values, numElements, MSBMapper(numBuckets));
       break;
     case 37:
       histogramBallot_Mode13_large_pairs<NUM_WARPS, 37, 6, LOG_WARPS> <<<
           numBlocks, numThreads>>>(d_keys, d_values, plan->m_d_histo,
-          numElements);
+          numElements, MSBMapper(numBuckets));
       cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
           plan->m_d_histo, plan->m_d_histo, 37 * numBlocks);
       splitBallot_Mode13_large_pairs<NUM_WARPS, 37> <<<numBlocks, numThreads>>>(
           d_keys, d_values, plan->m_d_histo, plan->m_d_temp_keys,
-          plan->m_d_temp_values, numElements);
+          plan->m_d_temp_values, numElements, MSBMapper(numBuckets));
       break;
     case 38:
       histogramBallot_Mode13_large_pairs<NUM_WARPS, 38, 6, LOG_WARPS> <<<
           numBlocks, numThreads>>>(d_keys, d_values, plan->m_d_histo,
-          numElements);
+          numElements, MSBMapper(numBuckets));
       cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
           plan->m_d_histo, plan->m_d_histo, 38 * numBlocks);
       splitBallot_Mode13_large_pairs<NUM_WARPS, 38> <<<numBlocks, numThreads>>>(
           d_keys, d_values, plan->m_d_histo, plan->m_d_temp_keys,
-          plan->m_d_temp_values, numElements);
+          plan->m_d_temp_values, numElements, MSBMapper(numBuckets));
       break;
     case 39:
       histogramBallot_Mode13_large_pairs<NUM_WARPS, 39, 6, LOG_WARPS> <<<
           numBlocks, numThreads>>>(d_keys, d_values, plan->m_d_histo,
-          numElements);
+          numElements, MSBMapper(numBuckets));
       cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
           plan->m_d_histo, plan->m_d_histo, 39 * numBlocks);
       splitBallot_Mode13_large_pairs<NUM_WARPS, 39> <<<numBlocks, numThreads>>>(
           d_keys, d_values, plan->m_d_histo, plan->m_d_temp_keys,
-          plan->m_d_temp_values, numElements);
+          plan->m_d_temp_values, numElements, MSBMapper(numBuckets));
       break;
     case 40:
       histogramBallot_Mode13_large_pairs<NUM_WARPS, 40, 6, LOG_WARPS> <<<
           numBlocks, numThreads>>>(d_keys, d_values, plan->m_d_histo,
-          numElements);
+          numElements, MSBMapper(numBuckets));
       cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
           plan->m_d_histo, plan->m_d_histo, 40 * numBlocks);
       splitBallot_Mode13_large_pairs<NUM_WARPS, 40> <<<numBlocks, numThreads>>>(
           d_keys, d_values, plan->m_d_histo, plan->m_d_temp_keys,
-          plan->m_d_temp_values, numElements);
+          plan->m_d_temp_values, numElements, MSBMapper(numBuckets));
       break;
     case 41:
       histogramBallot_Mode13_large_pairs<NUM_WARPS, 41, 6, LOG_WARPS> <<<
           numBlocks, numThreads>>>(d_keys, d_values, plan->m_d_histo,
-          numElements);
+          numElements, MSBMapper(numBuckets));
       cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
           plan->m_d_histo, plan->m_d_histo, 41 * numBlocks);
       splitBallot_Mode13_large_pairs<NUM_WARPS, 41> <<<numBlocks, numThreads>>>(
           d_keys, d_values, plan->m_d_histo, plan->m_d_temp_keys,
-          plan->m_d_temp_values, numElements);
+          plan->m_d_temp_values, numElements, MSBMapper(numBuckets));
       break;
     case 42:
       histogramBallot_Mode13_large_pairs<NUM_WARPS, 42, 6, LOG_WARPS> <<<
           numBlocks, numThreads>>>(d_keys, d_values, plan->m_d_histo,
-          numElements);
+          numElements, MSBMapper(numBuckets));
       cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
           plan->m_d_histo, plan->m_d_histo, 42 * numBlocks);
       splitBallot_Mode13_large_pairs<NUM_WARPS, 42> <<<numBlocks, numThreads>>>(
           d_keys, d_values, plan->m_d_histo, plan->m_d_temp_keys,
-          plan->m_d_temp_values, numElements);
+          plan->m_d_temp_values, numElements, MSBMapper(numBuckets));
       break;
     case 43:
       histogramBallot_Mode13_large_pairs<NUM_WARPS, 43, 6, LOG_WARPS> <<<
           numBlocks, numThreads>>>(d_keys, d_values, plan->m_d_histo,
-          numElements);
+          numElements, MSBMapper(numBuckets));
       cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
           plan->m_d_histo, plan->m_d_histo, 43 * numBlocks);
       splitBallot_Mode13_large_pairs<NUM_WARPS, 43> <<<numBlocks, numThreads>>>(
           d_keys, d_values, plan->m_d_histo, plan->m_d_temp_keys,
-          plan->m_d_temp_values, numElements);
+          plan->m_d_temp_values, numElements, MSBMapper(numBuckets));
       break;
     case 44:
       histogramBallot_Mode13_large_pairs<NUM_WARPS, 44, 6, LOG_WARPS> <<<
           numBlocks, numThreads>>>(d_keys, d_values, plan->m_d_histo,
-          numElements);
+          numElements, MSBMapper(numBuckets));
       cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
           plan->m_d_histo, plan->m_d_histo, 44 * numBlocks);
       splitBallot_Mode13_large_pairs<NUM_WARPS, 44> <<<numBlocks, numThreads>>>(
           d_keys, d_values, plan->m_d_histo, plan->m_d_temp_keys,
-          plan->m_d_temp_values, numElements);
+          plan->m_d_temp_values, numElements, MSBMapper(numBuckets));
       break;
     case 45:
       histogramBallot_Mode13_large_pairs<NUM_WARPS, 45, 6, LOG_WARPS> <<<
           numBlocks, numThreads>>>(d_keys, d_values, plan->m_d_histo,
-          numElements);
+          numElements, MSBMapper(numBuckets));
       cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
           plan->m_d_histo, plan->m_d_histo, 45 * numBlocks);
       splitBallot_Mode13_large_pairs<NUM_WARPS, 45> <<<numBlocks, numThreads>>>(
           d_keys, d_values, plan->m_d_histo, plan->m_d_temp_keys,
-          plan->m_d_temp_values, numElements);
+          plan->m_d_temp_values, numElements, MSBMapper(numBuckets));
       break;
     case 46:
       histogramBallot_Mode13_large_pairs<NUM_WARPS, 46, 6, LOG_WARPS> <<<
           numBlocks, numThreads>>>(d_keys, d_values, plan->m_d_histo,
-          numElements);
+          numElements, MSBMapper(numBuckets));
       cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
           plan->m_d_histo, plan->m_d_histo, 46 * numBlocks);
       splitBallot_Mode13_large_pairs<NUM_WARPS, 46> <<<numBlocks, numThreads>>>(
           d_keys, d_values, plan->m_d_histo, plan->m_d_temp_keys,
-          plan->m_d_temp_values, numElements);
+          plan->m_d_temp_values, numElements, MSBMapper(numBuckets));
       break;
     case 47:
       histogramBallot_Mode13_large_pairs<NUM_WARPS, 47, 6, LOG_WARPS> <<<
           numBlocks, numThreads>>>(d_keys, d_values, plan->m_d_histo,
-          numElements);
+          numElements, MSBMapper(numBuckets));
       cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
           plan->m_d_histo, plan->m_d_histo, 47 * numBlocks);
       splitBallot_Mode13_large_pairs<NUM_WARPS, 47> <<<numBlocks, numThreads>>>(
           d_keys, d_values, plan->m_d_histo, plan->m_d_temp_keys,
-          plan->m_d_temp_values, numElements);
+          plan->m_d_temp_values, numElements, MSBMapper(numBuckets));
       break;
     case 48:
       histogramBallot_Mode13_large_pairs<NUM_WARPS, 48, 6, LOG_WARPS> <<<
           numBlocks, numThreads>>>(d_keys, d_values, plan->m_d_histo,
-          numElements);
+          numElements, MSBMapper(numBuckets));
       cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
           plan->m_d_histo, plan->m_d_histo, 48 * numBlocks);
       splitBallot_Mode13_large_pairs<NUM_WARPS, 48> <<<numBlocks, numThreads>>>(
           d_keys, d_values, plan->m_d_histo, plan->m_d_temp_keys,
-          plan->m_d_temp_values, numElements);
+          plan->m_d_temp_values, numElements, MSBMapper(numBuckets));
       break;
     case 49:
       histogramBallot_Mode13_large_pairs<NUM_WARPS, 49, 6, LOG_WARPS> <<<
           numBlocks, numThreads>>>(d_keys, d_values, plan->m_d_histo,
-          numElements);
+          numElements, MSBMapper(numBuckets));
       cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
           plan->m_d_histo, plan->m_d_histo, 49 * numBlocks);
       splitBallot_Mode13_large_pairs<NUM_WARPS, 49> <<<numBlocks, numThreads>>>(
           d_keys, d_values, plan->m_d_histo, plan->m_d_temp_keys,
-          plan->m_d_temp_values, numElements);
+          plan->m_d_temp_values, numElements, MSBMapper(numBuckets));
       break;
     case 50:
       histogramBallot_Mode13_large_pairs<NUM_WARPS, 50, 6, LOG_WARPS> <<<
           numBlocks, numThreads>>>(d_keys, d_values, plan->m_d_histo,
-          numElements);
+          numElements, MSBMapper(numBuckets));
       cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
           plan->m_d_histo, plan->m_d_histo, 50 * numBlocks);
       splitBallot_Mode13_large_pairs<NUM_WARPS, 50> <<<numBlocks, numThreads>>>(
           d_keys, d_values, plan->m_d_histo, plan->m_d_temp_keys,
-          plan->m_d_temp_values, numElements);
+          plan->m_d_temp_values, numElements, MSBMapper(numBuckets));
       break;
     case 51:
       histogramBallot_Mode13_large_pairs<NUM_WARPS, 51, 6, LOG_WARPS> <<<
           numBlocks, numThreads>>>(d_keys, d_values, plan->m_d_histo,
-          numElements);
+          numElements, MSBMapper(numBuckets));
       cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
           plan->m_d_histo, plan->m_d_histo, 51 * numBlocks);
       splitBallot_Mode13_large_pairs<NUM_WARPS, 51> <<<numBlocks, numThreads>>>(
           d_keys, d_values, plan->m_d_histo, plan->m_d_temp_keys,
-          plan->m_d_temp_values, numElements);
+          plan->m_d_temp_values, numElements, MSBMapper(numBuckets));
       break;
     case 52:
       histogramBallot_Mode13_large_pairs<NUM_WARPS, 52, 6, LOG_WARPS> <<<
           numBlocks, numThreads>>>(d_keys, d_values, plan->m_d_histo,
-          numElements);
+          numElements, MSBMapper(numBuckets));
       cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
           plan->m_d_histo, plan->m_d_histo, 52 * numBlocks);
       splitBallot_Mode13_large_pairs<NUM_WARPS, 52> <<<numBlocks, numThreads>>>(
           d_keys, d_values, plan->m_d_histo, plan->m_d_temp_keys,
-          plan->m_d_temp_values, numElements);
+          plan->m_d_temp_values, numElements, MSBMapper(numBuckets));
       break;
     case 53:
       histogramBallot_Mode13_large_pairs<NUM_WARPS, 53, 6, LOG_WARPS> <<<
           numBlocks, numThreads>>>(d_keys, d_values, plan->m_d_histo,
-          numElements);
+          numElements, MSBMapper(numBuckets));
       cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
           plan->m_d_histo, plan->m_d_histo, 53 * numBlocks);
       splitBallot_Mode13_large_pairs<NUM_WARPS, 53> <<<numBlocks, numThreads>>>(
           d_keys, d_values, plan->m_d_histo, plan->m_d_temp_keys,
-          plan->m_d_temp_values, numElements);
+          plan->m_d_temp_values, numElements, MSBMapper(numBuckets));
       break;
     case 54:
       histogramBallot_Mode13_large_pairs<NUM_WARPS, 54, 6, LOG_WARPS> <<<
           numBlocks, numThreads>>>(d_keys, d_values, plan->m_d_histo,
-          numElements);
+          numElements, MSBMapper(numBuckets));
       cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
           plan->m_d_histo, plan->m_d_histo, 54 * numBlocks);
       splitBallot_Mode13_large_pairs<NUM_WARPS, 54> <<<numBlocks, numThreads>>>(
           d_keys, d_values, plan->m_d_histo, plan->m_d_temp_keys,
-          plan->m_d_temp_values, numElements);
+          plan->m_d_temp_values, numElements, MSBMapper(numBuckets));
       break;
     case 55:
       histogramBallot_Mode13_large_pairs<NUM_WARPS, 55, 6, LOG_WARPS> <<<
           numBlocks, numThreads>>>(d_keys, d_values, plan->m_d_histo,
-          numElements);
+          numElements, MSBMapper(numBuckets));
       cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
           plan->m_d_histo, plan->m_d_histo, 55 * numBlocks);
       splitBallot_Mode13_large_pairs<NUM_WARPS, 55> <<<numBlocks, numThreads>>>(
           d_keys, d_values, plan->m_d_histo, plan->m_d_temp_keys,
-          plan->m_d_temp_values, numElements);
+          plan->m_d_temp_values, numElements, MSBMapper(numBuckets));
       break;
     case 56:
       histogramBallot_Mode13_large_pairs<NUM_WARPS, 56, 6, LOG_WARPS> <<<
           numBlocks, numThreads>>>(d_keys, d_values, plan->m_d_histo,
-          numElements);
+          numElements, MSBMapper(numBuckets));
       cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
           plan->m_d_histo, plan->m_d_histo, 56 * numBlocks);
       splitBallot_Mode13_large_pairs<NUM_WARPS, 56> <<<numBlocks, numThreads>>>(
           d_keys, d_values, plan->m_d_histo, plan->m_d_temp_keys,
-          plan->m_d_temp_values, numElements);
+          plan->m_d_temp_values, numElements, MSBMapper(numBuckets));
       break;
     case 57:
       histogramBallot_Mode13_large_pairs<NUM_WARPS, 57, 6, LOG_WARPS> <<<
           numBlocks, numThreads>>>(d_keys, d_values, plan->m_d_histo,
-          numElements);
+          numElements, MSBMapper(numBuckets));
       cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
           plan->m_d_histo, plan->m_d_histo, 57 * numBlocks);
       splitBallot_Mode13_large_pairs<NUM_WARPS, 57> <<<numBlocks, numThreads>>>(
           d_keys, d_values, plan->m_d_histo, plan->m_d_temp_keys,
-          plan->m_d_temp_values, numElements);
+          plan->m_d_temp_values, numElements, MSBMapper(numBuckets));
       break;
     case 58:
       histogramBallot_Mode13_large_pairs<NUM_WARPS, 58, 6, LOG_WARPS> <<<
           numBlocks, numThreads>>>(d_keys, d_values, plan->m_d_histo,
-          numElements);
+          numElements, MSBMapper(numBuckets));
       cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
           plan->m_d_histo, plan->m_d_histo, 58 * numBlocks);
       splitBallot_Mode13_large_pairs<NUM_WARPS, 58> <<<numBlocks, numThreads>>>(
           d_keys, d_values, plan->m_d_histo, plan->m_d_temp_keys,
-          plan->m_d_temp_values, numElements);
+          plan->m_d_temp_values, numElements, MSBMapper(numBuckets));
       break;
     case 59:
       histogramBallot_Mode13_large_pairs<NUM_WARPS, 59, 6, LOG_WARPS> <<<
           numBlocks, numThreads>>>(d_keys, d_values, plan->m_d_histo,
-          numElements);
+          numElements, MSBMapper(numBuckets));
       cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
           plan->m_d_histo, plan->m_d_histo, 59 * numBlocks);
       splitBallot_Mode13_large_pairs<NUM_WARPS, 59> <<<numBlocks, numThreads>>>(
           d_keys, d_values, plan->m_d_histo, plan->m_d_temp_keys,
-          plan->m_d_temp_values, numElements);
+          plan->m_d_temp_values, numElements, MSBMapper(numBuckets));
       break;
     case 60:
       histogramBallot_Mode13_large_pairs<NUM_WARPS, 60, 6, LOG_WARPS> <<<
           numBlocks, numThreads>>>(d_keys, d_values, plan->m_d_histo,
-          numElements);
+          numElements, MSBMapper(numBuckets));
       cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
           plan->m_d_histo, plan->m_d_histo, 60 * numBlocks);
       splitBallot_Mode13_large_pairs<NUM_WARPS, 60> <<<numBlocks, numThreads>>>(
           d_keys, d_values, plan->m_d_histo, plan->m_d_temp_keys,
-          plan->m_d_temp_values, numElements);
+          plan->m_d_temp_values, numElements, MSBMapper(numBuckets));
       break;
     case 61:
       histogramBallot_Mode13_large_pairs<NUM_WARPS, 61, 6, LOG_WARPS> <<<
           numBlocks, numThreads>>>(d_keys, d_values, plan->m_d_histo,
-          numElements);
+          numElements, MSBMapper(numBuckets));
       cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
           plan->m_d_histo, plan->m_d_histo, 61 * numBlocks);
       splitBallot_Mode13_large_pairs<NUM_WARPS, 61> <<<numBlocks, numThreads>>>(
           d_keys, d_values, plan->m_d_histo, plan->m_d_temp_keys,
-          plan->m_d_temp_values, numElements);
+          plan->m_d_temp_values, numElements, MSBMapper(numBuckets));
       break;
     case 62:
       histogramBallot_Mode13_large_pairs<NUM_WARPS, 62, 6, LOG_WARPS> <<<
           numBlocks, numThreads>>>(d_keys, d_values, plan->m_d_histo,
-          numElements);
+          numElements, MSBMapper(numBuckets));
       cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
           plan->m_d_histo, plan->m_d_histo, 62 * numBlocks);
       splitBallot_Mode13_large_pairs<NUM_WARPS, 62> <<<numBlocks, numThreads>>>(
           d_keys, d_values, plan->m_d_histo, plan->m_d_temp_keys,
-          plan->m_d_temp_values, numElements);
+          plan->m_d_temp_values, numElements, MSBMapper(numBuckets));
       break;
     case 63:
       histogramBallot_Mode13_large_pairs<NUM_WARPS, 63, 6, LOG_WARPS> <<<
           numBlocks, numThreads>>>(d_keys, d_values, plan->m_d_histo,
-          numElements);
+          numElements, MSBMapper(numBuckets));
       cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
           plan->m_d_histo, plan->m_d_histo, 63 * numBlocks);
       splitBallot_Mode13_large_pairs<NUM_WARPS, 63> <<<numBlocks, numThreads>>>(
           d_keys, d_values, plan->m_d_histo, plan->m_d_temp_keys,
-          plan->m_d_temp_values, numElements);
+          plan->m_d_temp_values, numElements, MSBMapper(numBuckets));
       break;
     case 64:
       histogramBallot_Mode13_large_pairs<NUM_WARPS, 64, 6, LOG_WARPS> <<<
           numBlocks, numThreads>>>(d_keys, d_values, plan->m_d_histo,
-          numElements);
+          numElements, MSBMapper(numBuckets));
       cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
           plan->m_d_histo, plan->m_d_histo, 64 * numBlocks);
       splitBallot_Mode13_large_pairs<NUM_WARPS, 64> <<<numBlocks, numThreads>>>(
           d_keys, d_values, plan->m_d_histo, plan->m_d_temp_keys,
-          plan->m_d_temp_values, numElements);
+          plan->m_d_temp_values, numElements, MSBMapper(numBuckets));
       break;
     case 65:
       histogramBallot_Mode13_large_pairs<NUM_WARPS, 65, 7, LOG_WARPS> <<<
           numBlocks, numThreads>>>(d_keys, d_values, plan->m_d_histo,
-          numElements);
+          numElements, MSBMapper(numBuckets));
       cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
           plan->m_d_histo, plan->m_d_histo, 65 * numBlocks);
       splitBallot_Mode13_large_pairs<NUM_WARPS, 65> <<<numBlocks, numThreads>>>(
           d_keys, d_values, plan->m_d_histo, plan->m_d_temp_keys,
-          plan->m_d_temp_values, numElements);
+          plan->m_d_temp_values, numElements, MSBMapper(numBuckets));
       break;
     case 66:
       histogramBallot_Mode13_large_pairs<NUM_WARPS, 66, 7, LOG_WARPS> <<<
           numBlocks, numThreads>>>(d_keys, d_values, plan->m_d_histo,
-          numElements);
+          numElements, MSBMapper(numBuckets));
       cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
           plan->m_d_histo, plan->m_d_histo, 66 * numBlocks);
       splitBallot_Mode13_large_pairs<NUM_WARPS, 66> <<<numBlocks, numThreads>>>(
           d_keys, d_values, plan->m_d_histo, plan->m_d_temp_keys,
-          plan->m_d_temp_values, numElements);
+          plan->m_d_temp_values, numElements, MSBMapper(numBuckets));
       break;
     case 67:
       histogramBallot_Mode13_large_pairs<NUM_WARPS, 67, 7, LOG_WARPS> <<<
           numBlocks, numThreads>>>(d_keys, d_values, plan->m_d_histo,
-          numElements);
+          numElements, MSBMapper(numBuckets));
       cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
           plan->m_d_histo, plan->m_d_histo, 67 * numBlocks);
       splitBallot_Mode13_large_pairs<NUM_WARPS, 67> <<<numBlocks, numThreads>>>(
           d_keys, d_values, plan->m_d_histo, plan->m_d_temp_keys,
-          plan->m_d_temp_values, numElements);
+          plan->m_d_temp_values, numElements, MSBMapper(numBuckets));
       break;
     case 68:
       histogramBallot_Mode13_large_pairs<NUM_WARPS, 68, 7, LOG_WARPS> <<<
           numBlocks, numThreads>>>(d_keys, d_values, plan->m_d_histo,
-          numElements);
+          numElements, MSBMapper(numBuckets));
       cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
           plan->m_d_histo, plan->m_d_histo, 68 * numBlocks);
       splitBallot_Mode13_large_pairs<NUM_WARPS, 68> <<<numBlocks, numThreads>>>(
           d_keys, d_values, plan->m_d_histo, plan->m_d_temp_keys,
-          plan->m_d_temp_values, numElements);
+          plan->m_d_temp_values, numElements, MSBMapper(numBuckets));
       break;
     case 69:
       histogramBallot_Mode13_large_pairs<NUM_WARPS, 69, 7, LOG_WARPS> <<<
           numBlocks, numThreads>>>(d_keys, d_values, plan->m_d_histo,
-          numElements);
+          numElements, MSBMapper(numBuckets));
       cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
           plan->m_d_histo, plan->m_d_histo, 69 * numBlocks);
       splitBallot_Mode13_large_pairs<NUM_WARPS, 69> <<<numBlocks, numThreads>>>(
           d_keys, d_values, plan->m_d_histo, plan->m_d_temp_keys,
-          plan->m_d_temp_values, numElements);
+          plan->m_d_temp_values, numElements, MSBMapper(numBuckets));
       break;
     case 70:
       histogramBallot_Mode13_large_pairs<NUM_WARPS, 70, 7, LOG_WARPS> <<<
           numBlocks, numThreads>>>(d_keys, d_values, plan->m_d_histo,
-          numElements);
+          numElements, MSBMapper(numBuckets));
       cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
           plan->m_d_histo, plan->m_d_histo, 70 * numBlocks);
       splitBallot_Mode13_large_pairs<NUM_WARPS, 70> <<<numBlocks, numThreads>>>(
           d_keys, d_values, plan->m_d_histo, plan->m_d_temp_keys,
-          plan->m_d_temp_values, numElements);
+          plan->m_d_temp_values, numElements, MSBMapper(numBuckets));
       break;
     case 71:
       histogramBallot_Mode13_large_pairs<NUM_WARPS, 71, 7, LOG_WARPS> <<<
           numBlocks, numThreads>>>(d_keys, d_values, plan->m_d_histo,
-          numElements);
+          numElements, MSBMapper(numBuckets));
       cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
           plan->m_d_histo, plan->m_d_histo, 71 * numBlocks);
       splitBallot_Mode13_large_pairs<NUM_WARPS, 71> <<<numBlocks, numThreads>>>(
           d_keys, d_values, plan->m_d_histo, plan->m_d_temp_keys,
-          plan->m_d_temp_values, numElements);
+          plan->m_d_temp_values, numElements, MSBMapper(numBuckets));
       break;
     case 72:
       histogramBallot_Mode13_large_pairs<NUM_WARPS, 72, 7, LOG_WARPS> <<<
           numBlocks, numThreads>>>(d_keys, d_values, plan->m_d_histo,
-          numElements);
+          numElements, MSBMapper(numBuckets));
       cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
           plan->m_d_histo, plan->m_d_histo, 72 * numBlocks);
       splitBallot_Mode13_large_pairs<NUM_WARPS, 72> <<<numBlocks, numThreads>>>(
           d_keys, d_values, plan->m_d_histo, plan->m_d_temp_keys,
-          plan->m_d_temp_values, numElements);
+          plan->m_d_temp_values, numElements, MSBMapper(numBuckets));
       break;
     case 73:
       histogramBallot_Mode13_large_pairs<NUM_WARPS, 73, 7, LOG_WARPS> <<<
           numBlocks, numThreads>>>(d_keys, d_values, plan->m_d_histo,
-          numElements);
+          numElements, MSBMapper(numBuckets));
       cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
           plan->m_d_histo, plan->m_d_histo, 73 * numBlocks);
       splitBallot_Mode13_large_pairs<NUM_WARPS, 73> <<<numBlocks, numThreads>>>(
           d_keys, d_values, plan->m_d_histo, plan->m_d_temp_keys,
-          plan->m_d_temp_values, numElements);
+          plan->m_d_temp_values, numElements, MSBMapper(numBuckets));
       break;
     case 74:
       histogramBallot_Mode13_large_pairs<NUM_WARPS, 74, 7, LOG_WARPS> <<<
           numBlocks, numThreads>>>(d_keys, d_values, plan->m_d_histo,
-          numElements);
+          numElements, MSBMapper(numBuckets));
       cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
           plan->m_d_histo, plan->m_d_histo, 74 * numBlocks);
       splitBallot_Mode13_large_pairs<NUM_WARPS, 74> <<<numBlocks, numThreads>>>(
           d_keys, d_values, plan->m_d_histo, plan->m_d_temp_keys,
-          plan->m_d_temp_values, numElements);
+          plan->m_d_temp_values, numElements, MSBMapper(numBuckets));
       break;
     case 75:
       histogramBallot_Mode13_large_pairs<NUM_WARPS, 75, 7, LOG_WARPS> <<<
           numBlocks, numThreads>>>(d_keys, d_values, plan->m_d_histo,
-          numElements);
+          numElements, MSBMapper(numBuckets));
       cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
           plan->m_d_histo, plan->m_d_histo, 75 * numBlocks);
       splitBallot_Mode13_large_pairs<NUM_WARPS, 75> <<<numBlocks, numThreads>>>(
           d_keys, d_values, plan->m_d_histo, plan->m_d_temp_keys,
-          plan->m_d_temp_values, numElements);
+          plan->m_d_temp_values, numElements, MSBMapper(numBuckets));
       break;
     case 76:
       histogramBallot_Mode13_large_pairs<NUM_WARPS, 76, 7, LOG_WARPS> <<<
           numBlocks, numThreads>>>(d_keys, d_values, plan->m_d_histo,
-          numElements);
+          numElements, MSBMapper(numBuckets));
       cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
           plan->m_d_histo, plan->m_d_histo, 76 * numBlocks);
       splitBallot_Mode13_large_pairs<NUM_WARPS, 76> <<<numBlocks, numThreads>>>(
           d_keys, d_values, plan->m_d_histo, plan->m_d_temp_keys,
-          plan->m_d_temp_values, numElements);
+          plan->m_d_temp_values, numElements, MSBMapper(numBuckets));
       break;
     case 77:
       histogramBallot_Mode13_large_pairs<NUM_WARPS, 77, 7, LOG_WARPS> <<<
           numBlocks, numThreads>>>(d_keys, d_values, plan->m_d_histo,
-          numElements);
+          numElements, MSBMapper(numBuckets));
       cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
           plan->m_d_histo, plan->m_d_histo, 77 * numBlocks);
       splitBallot_Mode13_large_pairs<NUM_WARPS, 77> <<<numBlocks, numThreads>>>(
           d_keys, d_values, plan->m_d_histo, plan->m_d_temp_keys,
-          plan->m_d_temp_values, numElements);
+          plan->m_d_temp_values, numElements, MSBMapper(numBuckets));
       break;
     case 78:
       histogramBallot_Mode13_large_pairs<NUM_WARPS, 78, 7, LOG_WARPS> <<<
           numBlocks, numThreads>>>(d_keys, d_values, plan->m_d_histo,
-          numElements);
+          numElements, MSBMapper(numBuckets));
       cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
           plan->m_d_histo, plan->m_d_histo, 78 * numBlocks);
       splitBallot_Mode13_large_pairs<NUM_WARPS, 78> <<<numBlocks, numThreads>>>(
           d_keys, d_values, plan->m_d_histo, plan->m_d_temp_keys,
-          plan->m_d_temp_values, numElements);
+          plan->m_d_temp_values, numElements, MSBMapper(numBuckets));
       break;
     case 79:
       histogramBallot_Mode13_large_pairs<NUM_WARPS, 79, 7, LOG_WARPS> <<<
           numBlocks, numThreads>>>(d_keys, d_values, plan->m_d_histo,
-          numElements);
+          numElements, MSBMapper(numBuckets));
       cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
           plan->m_d_histo, plan->m_d_histo, 79 * numBlocks);
       splitBallot_Mode13_large_pairs<NUM_WARPS, 79> <<<numBlocks, numThreads>>>(
           d_keys, d_values, plan->m_d_histo, plan->m_d_temp_keys,
-          plan->m_d_temp_values, numElements);
+          plan->m_d_temp_values, numElements, MSBMapper(numBuckets));
       break;
     case 80:
       histogramBallot_Mode13_large_pairs<NUM_WARPS, 80, 7, LOG_WARPS> <<<
           numBlocks, numThreads>>>(d_keys, d_values, plan->m_d_histo,
-          numElements);
+          numElements, MSBMapper(numBuckets));
       cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
           plan->m_d_histo, plan->m_d_histo, 80 * numBlocks);
       splitBallot_Mode13_large_pairs<NUM_WARPS, 80> <<<numBlocks, numThreads>>>(
           d_keys, d_values, plan->m_d_histo, plan->m_d_temp_keys,
-          plan->m_d_temp_values, numElements);
+          plan->m_d_temp_values, numElements, MSBMapper(numBuckets));
       break;
     case 81:
       histogramBallot_Mode13_large_pairs<NUM_WARPS, 81, 7, LOG_WARPS> <<<
           numBlocks, numThreads>>>(d_keys, d_values, plan->m_d_histo,
-          numElements);
+          numElements, MSBMapper(numBuckets));
       cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
           plan->m_d_histo, plan->m_d_histo, 81 * numBlocks);
       splitBallot_Mode13_large_pairs<NUM_WARPS, 81> <<<numBlocks, numThreads>>>(
           d_keys, d_values, plan->m_d_histo, plan->m_d_temp_keys,
-          plan->m_d_temp_values, numElements);
+          plan->m_d_temp_values, numElements, MSBMapper(numBuckets));
       break;
     case 82:
       histogramBallot_Mode13_large_pairs<NUM_WARPS, 82, 7, LOG_WARPS> <<<
           numBlocks, numThreads>>>(d_keys, d_values, plan->m_d_histo,
-          numElements);
+          numElements, MSBMapper(numBuckets));
       cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
           plan->m_d_histo, plan->m_d_histo, 82 * numBlocks);
       splitBallot_Mode13_large_pairs<NUM_WARPS, 82> <<<numBlocks, numThreads>>>(
           d_keys, d_values, plan->m_d_histo, plan->m_d_temp_keys,
-          plan->m_d_temp_values, numElements);
+          plan->m_d_temp_values, numElements, MSBMapper(numBuckets));
       break;
     case 83:
       histogramBallot_Mode13_large_pairs<NUM_WARPS, 83, 7, LOG_WARPS> <<<
           numBlocks, numThreads>>>(d_keys, d_values, plan->m_d_histo,
-          numElements);
+          numElements, MSBMapper(numBuckets));
       cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
           plan->m_d_histo, plan->m_d_histo, 83 * numBlocks);
       splitBallot_Mode13_large_pairs<NUM_WARPS, 83> <<<numBlocks, numThreads>>>(
           d_keys, d_values, plan->m_d_histo, plan->m_d_temp_keys,
-          plan->m_d_temp_values, numElements);
+          plan->m_d_temp_values, numElements, MSBMapper(numBuckets));
       break;
     case 84:
       histogramBallot_Mode13_large_pairs<NUM_WARPS, 84, 7, LOG_WARPS> <<<
           numBlocks, numThreads>>>(d_keys, d_values, plan->m_d_histo,
-          numElements);
+          numElements, MSBMapper(numBuckets));
       cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
           plan->m_d_histo, plan->m_d_histo, 84 * numBlocks);
       splitBallot_Mode13_large_pairs<NUM_WARPS, 84> <<<numBlocks, numThreads>>>(
           d_keys, d_values, plan->m_d_histo, plan->m_d_temp_keys,
-          plan->m_d_temp_values, numElements);
+          plan->m_d_temp_values, numElements, MSBMapper(numBuckets));
       break;
     case 85:
       histogramBallot_Mode13_large_pairs<NUM_WARPS, 85, 7, LOG_WARPS> <<<
           numBlocks, numThreads>>>(d_keys, d_values, plan->m_d_histo,
-          numElements);
+          numElements, MSBMapper(numBuckets));
       cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
           plan->m_d_histo, plan->m_d_histo, 85 * numBlocks);
       splitBallot_Mode13_large_pairs<NUM_WARPS, 85> <<<numBlocks, numThreads>>>(
           d_keys, d_values, plan->m_d_histo, plan->m_d_temp_keys,
-          plan->m_d_temp_values, numElements);
+          plan->m_d_temp_values, numElements, MSBMapper(numBuckets));
       break;
     case 86:
       histogramBallot_Mode13_large_pairs<NUM_WARPS, 86, 7, LOG_WARPS> <<<
           numBlocks, numThreads>>>(d_keys, d_values, plan->m_d_histo,
-          numElements);
+          numElements, MSBMapper(numBuckets));
       cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
           plan->m_d_histo, plan->m_d_histo, 86 * numBlocks);
       splitBallot_Mode13_large_pairs<NUM_WARPS, 86> <<<numBlocks, numThreads>>>(
           d_keys, d_values, plan->m_d_histo, plan->m_d_temp_keys,
-          plan->m_d_temp_values, numElements);
+          plan->m_d_temp_values, numElements, MSBMapper(numBuckets));
       break;
     case 87:
       histogramBallot_Mode13_large_pairs<NUM_WARPS, 87, 7, LOG_WARPS> <<<
           numBlocks, numThreads>>>(d_keys, d_values, plan->m_d_histo,
-          numElements);
+          numElements, MSBMapper(numBuckets));
       cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
           plan->m_d_histo, plan->m_d_histo, 87 * numBlocks);
       splitBallot_Mode13_large_pairs<NUM_WARPS, 87> <<<numBlocks, numThreads>>>(
           d_keys, d_values, plan->m_d_histo, plan->m_d_temp_keys,
-          plan->m_d_temp_values, numElements);
+          plan->m_d_temp_values, numElements, MSBMapper(numBuckets));
       break;
     case 88:
       histogramBallot_Mode13_large_pairs<NUM_WARPS, 88, 7, LOG_WARPS> <<<
           numBlocks, numThreads>>>(d_keys, d_values, plan->m_d_histo,
-          numElements);
+          numElements, MSBMapper(numBuckets));
       cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
           plan->m_d_histo, plan->m_d_histo, 88 * numBlocks);
       splitBallot_Mode13_large_pairs<NUM_WARPS, 88> <<<numBlocks, numThreads>>>(
           d_keys, d_values, plan->m_d_histo, plan->m_d_temp_keys,
-          plan->m_d_temp_values, numElements);
+          plan->m_d_temp_values, numElements, MSBMapper(numBuckets));
       break;
     case 89:
       histogramBallot_Mode13_large_pairs<NUM_WARPS, 89, 7, LOG_WARPS> <<<
           numBlocks, numThreads>>>(d_keys, d_values, plan->m_d_histo,
-          numElements);
+          numElements, MSBMapper(numBuckets));
       cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
           plan->m_d_histo, plan->m_d_histo, 89 * numBlocks);
       splitBallot_Mode13_large_pairs<NUM_WARPS, 89> <<<numBlocks, numThreads>>>(
           d_keys, d_values, plan->m_d_histo, plan->m_d_temp_keys,
-          plan->m_d_temp_values, numElements);
+          plan->m_d_temp_values, numElements, MSBMapper(numBuckets));
       break;
     case 90:
       histogramBallot_Mode13_large_pairs<NUM_WARPS, 90, 7, LOG_WARPS> <<<
           numBlocks, numThreads>>>(d_keys, d_values, plan->m_d_histo,
-          numElements);
+          numElements, MSBMapper(numBuckets));
       cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
           plan->m_d_histo, plan->m_d_histo, 90 * numBlocks);
       splitBallot_Mode13_large_pairs<NUM_WARPS, 90> <<<numBlocks, numThreads>>>(
           d_keys, d_values, plan->m_d_histo, plan->m_d_temp_keys,
-          plan->m_d_temp_values, numElements);
+          plan->m_d_temp_values, numElements, MSBMapper(numBuckets));
       break;
     case 91:
       histogramBallot_Mode13_large_pairs<NUM_WARPS, 91, 7, LOG_WARPS> <<<
           numBlocks, numThreads>>>(d_keys, d_values, plan->m_d_histo,
-          numElements);
+          numElements, MSBMapper(numBuckets));
       cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
           plan->m_d_histo, plan->m_d_histo, 91 * numBlocks);
       splitBallot_Mode13_large_pairs<NUM_WARPS, 91> <<<numBlocks, numThreads>>>(
           d_keys, d_values, plan->m_d_histo, plan->m_d_temp_keys,
-          plan->m_d_temp_values, numElements);
+          plan->m_d_temp_values, numElements, MSBMapper(numBuckets));
       break;
     case 92:
       histogramBallot_Mode13_large_pairs<NUM_WARPS, 92, 7, LOG_WARPS> <<<
           numBlocks, numThreads>>>(d_keys, d_values, plan->m_d_histo,
-          numElements);
+          numElements, MSBMapper(numBuckets));
       cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
           plan->m_d_histo, plan->m_d_histo, 92 * numBlocks);
       splitBallot_Mode13_large_pairs<NUM_WARPS, 92> <<<numBlocks, numThreads>>>(
           d_keys, d_values, plan->m_d_histo, plan->m_d_temp_keys,
-          plan->m_d_temp_values, numElements);
+          plan->m_d_temp_values, numElements, MSBMapper(numBuckets));
       break;
     case 93:
       histogramBallot_Mode13_large_pairs<NUM_WARPS, 93, 7, LOG_WARPS> <<<
           numBlocks, numThreads>>>(d_keys, d_values, plan->m_d_histo,
-          numElements);
+          numElements, MSBMapper(numBuckets));
       cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
           plan->m_d_histo, plan->m_d_histo, 93 * numBlocks);
       splitBallot_Mode13_large_pairs<NUM_WARPS, 93> <<<numBlocks, numThreads>>>(
           d_keys, d_values, plan->m_d_histo, plan->m_d_temp_keys,
-          plan->m_d_temp_values, numElements);
+          plan->m_d_temp_values, numElements, MSBMapper(numBuckets));
       break;
     case 94:
       histogramBallot_Mode13_large_pairs<NUM_WARPS, 94, 7, LOG_WARPS> <<<
           numBlocks, numThreads>>>(d_keys, d_values, plan->m_d_histo,
-          numElements);
+          numElements, MSBMapper(numBuckets));
       cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
           plan->m_d_histo, plan->m_d_histo, 94 * numBlocks);
       splitBallot_Mode13_large_pairs<NUM_WARPS, 94> <<<numBlocks, numThreads>>>(
           d_keys, d_values, plan->m_d_histo, plan->m_d_temp_keys,
-          plan->m_d_temp_values, numElements);
+          plan->m_d_temp_values, numElements, MSBMapper(numBuckets));
       break;
     case 95:
       histogramBallot_Mode13_large_pairs<NUM_WARPS, 95, 7, LOG_WARPS> <<<
           numBlocks, numThreads>>>(d_keys, d_values, plan->m_d_histo,
-          numElements);
+          numElements, MSBMapper(numBuckets));
       cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
           plan->m_d_histo, plan->m_d_histo, 95 * numBlocks);
       splitBallot_Mode13_large_pairs<NUM_WARPS, 95> <<<numBlocks, numThreads>>>(
           d_keys, d_values, plan->m_d_histo, plan->m_d_temp_keys,
-          plan->m_d_temp_values, numElements);
+          plan->m_d_temp_values, numElements, MSBMapper(numBuckets));
       break;
     case 96:
       histogramBallot_Mode13_large_pairs<NUM_WARPS, 96, 7, LOG_WARPS> <<<
           numBlocks, numThreads>>>(d_keys, d_values, plan->m_d_histo,
-          numElements);
+          numElements, MSBMapper(numBuckets));
       cub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes,
           plan->m_d_histo, plan->m_d_histo, 96 * numBlocks);
       splitBallot_Mode13_large_pairs<NUM_WARPS, 96> <<<numBlocks, numThreads>>>(
           d_keys, d_values, plan->m_d_histo, plan->m_d_temp_keys,
-          plan->m_d_temp_values, numElements);
+          plan->m_d_temp_values, numElements, MSBMapper(numBuckets));
       break;
     default:
       break;
