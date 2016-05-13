@@ -36,7 +36,6 @@ typedef unsigned long long int uint64;
 // Global
 //===============================================
 cub::CachingDeviceAllocator  g_allocator(true);  // Caching allocator for device memory
-#define gpuErrCheck(ans) { gpuAssert((ans), __FILE__, __LINE__); }
 //===============================================
 // Definitions:
 //===============================================
@@ -44,8 +43,6 @@ cub::CachingDeviceAllocator  g_allocator(true);  // Caching allocator for device
 #define LOG_WARPS 3 // = ceil(log2(NUM_WARPS))
 #define SMEM_BUCK_SIZE (1536/(NUM_BUCKETS*NUM_WARPS))
 #define PACK_DEPTH 2
-#define PACK_PRE 8
-#define PACK_POST 2
 
 #define BLOCKSORT_SIZE 1024
 #define DEPTH 8
@@ -60,14 +57,14 @@ cub::CachingDeviceAllocator  g_allocator(true);  // Caching allocator for device
  * @param[in] plan Configuration information for mergesort.
  **/
 template<class T>
-void runMultiSplit(unsigned int *d_inp, uint numElements, uint numBuckets, T bucketMapper,
-    const CUDPPMultiSplitPlan *plan) {
+void runMultiSplitKeysOnly(unsigned int *d_inp, uint numElements,
+    uint numBuckets, T bucketMapper, const CUDPPMultiSplitPlan *plan) {
   unsigned int numThreads = NUM_WARPS * 32;
   unsigned int numBlocks = (numElements + numThreads - 1) / numThreads;
   unsigned int numBlocksPack = (numBlocks + PACK_DEPTH - 1) / PACK_DEPTH;
-  unsigned int logBuckets = ceil(log2((float)numBuckets));
-  void     *d_temp_storage = NULL;
-  size_t   temp_storage_bytes = 0;
+  unsigned int logBuckets = ceil(log2((float) numBuckets));
+  void *d_temp_storage = NULL;
+  size_t temp_storage_bytes = 0;
 
   if (numBuckets == 1)
     return;
@@ -648,7 +645,7 @@ void runMultiSplit(unsigned int *d_inp, uint numElements, uint numBuckets, T buc
  * @param[in] plan Configuration information for mergesort.
  **/
 template<class T>
-void runMultiSplit(unsigned int *d_keys, unsigned int *d_values,
+void runMultiSplitKeyValue(unsigned int *d_keys, unsigned int *d_values,
     unsigned int numElements, unsigned int numBuckets, T bucketMapper,
     const CUDPPMultiSplitPlan *plan) {
   unsigned int numThreads = NUM_WARPS * 32;
@@ -1465,30 +1462,30 @@ void cudppMultiSplitDispatch(unsigned int *d_keys,
     switch(plan->m_config.bucket_mapper)
     {//
     case CUDPP_DEFAULT_BUCKET_MAPPER:
-      runMultiSplit(d_keys, d_values, numElements, numBuckets,
+      runMultiSplitKeyValue(d_keys, d_values, numElements, numBuckets,
           OrderedCyclicBucketMapper(numElements, numBuckets), plan);
       break;
     case CUDPP_MSB_BUCKET_MAPPER:
-      runMultiSplit(d_keys, d_values, numElements, numBuckets,
+      runMultiSplitKeyValue(d_keys, d_values, numElements, numBuckets,
           MSBBucketMapper(numBuckets), plan);
       break;
     default:
-      runMultiSplit(d_keys, d_values, numElements, numBuckets,
+      runMultiSplitKeyValue(d_keys, d_values, numElements, numBuckets,
           OrderedCyclicBucketMapper(numElements, numBuckets), plan);
       break;
     }
   } else {
     switch (plan->m_config.bucket_mapper) {
     case CUDPP_DEFAULT_BUCKET_MAPPER:
-      runMultiSplit(d_keys, numElements, numBuckets,
+      runMultiSplitKeysOnly(d_keys, numElements, numBuckets,
           OrderedCyclicBucketMapper(numElements, numBuckets), plan);
       break;
     case CUDPP_MSB_BUCKET_MAPPER:
-      runMultiSplit(d_keys, numElements, numBuckets,
+      runMultiSplitKeysOnly(d_keys, numElements, numBuckets,
           MSBBucketMapper(numBuckets), plan);
       break;
     default:
-      runMultiSplit(d_keys, numElements, numBuckets,
+      runMultiSplitKeysOnly(d_keys, numElements, numBuckets,
           OrderedCyclicBucketMapper(numElements, numBuckets), plan);
       break;
     }
