@@ -47,10 +47,10 @@ void randomPermute(unsigned int *elements, unsigned int numElements)
   }
 }
 
-class MSBMapper {
+class MSBBucketMapperHost {
 public:
-  MSBMapper(unsigned int numBuckets) {
-    msbShift = 32 - ceil(log2(numBuckets));
+  MSBBucketMapperHost(unsigned int numBuckets) {
+    msbShift = 32 - ceil(log2((float)numBuckets));
   }
 
   unsigned int operator()(unsigned int element) {
@@ -59,6 +59,24 @@ public:
 
 private:
   unsigned int msbShift;
+};
+
+class OrderedCyclicBucketMapperHost {
+public:
+  OrderedCyclicBucketMapperHost(unsigned int elements, unsigned int buckets) {
+    numElements = elements;
+    numBuckets = buckets;
+    elementsPerBucket = (elements + buckets - 1) / buckets;
+  }
+
+  unsigned int operator()(unsigned int element) {
+    return (element % numElements) / elementsPerBucket;
+  }
+
+private:
+  unsigned int numBuckets;
+  unsigned int numElements;
+  unsigned int elementsPerBucket;
 };
 
 template<class T>
@@ -284,8 +302,21 @@ int multiSplitKeysOnlyTest(CUDPPHandle theCudpp, CUDPPConfiguration config,
       // === Sanity check:
       uint count = 0;
       uint *cpu_result_keys = new uint[elementTests[k]];
-      cpuMultisplit(keys, cpu_result_keys, elementTests[k], bucketTests[b],
-          MSBMapper(bucketTests[b]));
+      switch(config.bucket_mapper)
+      {
+      case CUDPP_DEFAULT_BUCKET_MAPPER:
+        cpuMultisplit(keys, cpu_result_keys, elementTests[k], bucketTests[b],
+            OrderedCyclicBucketMapperHost(elementTests[k], bucketTests[b]));
+        break;
+      case CUDPP_MSB_BUCKET_MAPPER:
+        cpuMultisplit(keys, cpu_result_keys, elementTests[k], bucketTests[b],
+            MSBBucketMapperHost(bucketTests[b]));
+        break;
+      default:
+        cpuMultisplit(keys, cpu_result_keys, elementTests[k], bucketTests[b],
+            OrderedCyclicBucketMapperHost(elementTests[k], bucketTests[b]));
+        break;
+      }
       testFailed = verifyMultiSplit(cpu_result_keys, gpu_result_keys, NULL,
           NULL, elementTests[k], false);
       retVal += testFailed;
@@ -413,8 +444,24 @@ int multiSplitKeyValueTest(CUDPPHandle theCudpp, CUDPPConfiguration config,
       uint count = 0;
       uint *cpu_result_keys = new uint[elementTests[k]];
       uint *cpu_result_values = new uint[elementTests[k]];
-      cpuMultiSplitPairs(keys, cpu_result_keys, values, cpu_result_values,
-          elementTests[k], bucketTests[b], MSBMapper(bucketTests[b]));
+
+      switch(config.bucket_mapper)
+      {
+      case CUDPP_DEFAULT_BUCKET_MAPPER:
+        cpuMultiSplitPairs(keys, cpu_result_keys, values, cpu_result_values,
+            elementTests[k], bucketTests[b],
+            OrderedCyclicBucketMapperHost(elementTests[k], bucketTests[b]));
+        break;
+      case CUDPP_MSB_BUCKET_MAPPER:
+        cpuMultiSplitPairs(keys, cpu_result_keys, values, cpu_result_values,
+            elementTests[k], bucketTests[b], MSBBucketMapperHost(bucketTests[b]));
+        break;
+      default:
+        cpuMultiSplitPairs(keys, cpu_result_keys, values, cpu_result_values,
+            elementTests[k], bucketTests[b],
+            OrderedCyclicBucketMapperHost(elementTests[k], bucketTests[b]));
+        break;
+      }
       testFailed = verifyMultiSplit(cpu_result_keys, gpu_result_keys,
           cpu_result_values, gpu_result_values, elementTests[k], true);
       retVal += testFailed;
@@ -481,6 +528,7 @@ int testMultiSplit(int argc, const char **argv,
   config.algorithm = CUDPP_MULTISPLIT;
   config.datatype = CUDPP_UINT;
   config.options = CUDPP_OPTION_KEYS_ONLY;
+  config.bucket_mapper = CUDPP_DEFAULT_BUCKET_MAPPER;
   if (configPtr != NULL) {
     config = *configPtr;
   }

@@ -26,10 +26,6 @@
 
 #include <stdlib.h> // for size_t
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /**
  * @brief CUDPP Result codes returned by CUDPP API functions.
  */
@@ -51,6 +47,11 @@ enum CUDPPResult
                                             for the specified problem size. */
     CUDPP_ERROR_UNKNOWN = 9999         /**< Unknown or untraceable error. */
 };
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 /** 
  * @brief Options for configuring CUDPP algorithms.
@@ -146,6 +147,20 @@ enum CUDPPAlgorithm
 };
 
 /**
+ * @brief Operators supported by CUDPP algorithms (currently scan and
+ * segmented scan).
+ *
+ * BLAH
+ *
+ * @see CUDPPConfiguration, cudppPlan
+ */
+enum CUDPPBucketMapper
+{
+    CUDPP_MSB_BUCKET_MAPPER,      //!< Blah
+    CUDPP_DEFAULT_BUCKET_MAPPER,  //!< Blah
+};
+
+/**
 * @brief Configuration struct used to specify algorithm, datatype,
 * operator, and options when creating a plan for CUDPP algorithms.
 *
@@ -153,10 +168,11 @@ enum CUDPPAlgorithm
 */
 struct CUDPPConfiguration
 {
-    CUDPPAlgorithm algorithm; //!< The algorithm to be used
-    CUDPPOperator  op;        //!< The numerical operator to be applied
-    CUDPPDatatype  datatype;  //!< The datatype of the input arrays
-    unsigned int   options;   //!< Options to configure the algorithm
+    CUDPPAlgorithm    algorithm;     //!< The algorithm to be used
+    CUDPPOperator     op;            //!< The numerical operator to be applied
+    CUDPPDatatype     datatype;      //!< The datatype of the input arrays
+    unsigned int      options;       //!< Options to configure the algorithm
+    CUDPPBucketMapper bucket_mapper; //!< The bucket mapping function for multisplit
 };
 
 #define CUDPP_INVALID_HANDLE 0xC0DABAD1
@@ -243,13 +259,6 @@ CUDPPResult cudppMergeSort(const CUDPPHandle planHandle,
                       void              *d_keys,                                          
                       void              *d_values,                                                                       
                       size_t            numElements);
-
-CUDPP_DLL
-CUDPPResult cudppMultiSplit(const CUDPPHandle planHandle,
-                      unsigned int      *d_keys,
-                      unsigned int      *d_values,
-                      size_t            numElements,
-                      size_t            numBuckets);
 
 CUDPP_DLL
 CUDPPResult cudppStringSort(const CUDPPHandle planHandle,						   
@@ -352,9 +361,18 @@ CUDPPResult cudppSuffixArray(CUDPPHandle planHandle,
                              unsigned int *d_keys_sa,
                              size_t numElements);
 
+
+CUDPP_DLL
+CUDPPResult cudppMultiSplit(const CUDPPHandle planHandle,
+                      unsigned int      *d_keys,
+                      unsigned int      *d_values,
+                      size_t            numElements,
+                      size_t            numBuckets);
+
 #ifdef __cplusplus
 }
 #endif
+
 
 #endif
 

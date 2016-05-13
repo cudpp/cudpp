@@ -391,6 +391,38 @@ __device__ inline long long OperatorMin<long long>::identity() const { return LL
 template <>
 __device__ inline unsigned long long OperatorMin<unsigned long long>::identity() const { return ULLONG_MAX; }
 
+class MSBBucketMapper {
+public:
+  MSBBucketMapper(unsigned int numBuckets) {
+    msbShift = 32 - ceil(log2((float)numBuckets));
+  }
+
+  __device__ __inline__ unsigned int operator()(unsigned int element) {
+    return element >> msbShift;
+  }
+
+private:
+  unsigned int msbShift;
+};
+
+class OrderedCyclicBucketMapper {
+public:
+  OrderedCyclicBucketMapper(unsigned int elements, unsigned int buckets) {
+    numElements = elements;
+    numBuckets = buckets;
+    elementsPerBucket = (elements + buckets - 1) / buckets;
+  }
+
+  __device__ __inline__ unsigned int operator()(unsigned int element) {
+    return (element % numElements) / elementsPerBucket;
+  }
+
+private:
+  unsigned int numBuckets;
+  unsigned int numElements;
+  unsigned int elementsPerBucket;
+};
+
 #endif // __CUDPP_UTIL_H__
 
 // Leave this at the end of the file

@@ -445,32 +445,7 @@ CUDPPResult cudppMergeSort(const CUDPPHandle planHandle,
         return CUDPP_ERROR_INVALID_HANDLE;
     }
 }
-/**
- * @brief BLAHBLAHBLAH
- *
- * BLAHBLAHBLAH
- * @see cudppPlan, CUDPPConfiguration, CUDPPAlgorithm
- */
-CUDPP_DLL
-CUDPPResult cudppMultiSplit(const CUDPPHandle planHandle,
-                      unsigned int      *d_keys,
-                      unsigned int      *d_values,
-                      size_t            numElements,
-                      size_t            numBuckets)
-{
-    CUDPPMultiSplitPlan *plan =
-        (CUDPPMultiSplitPlan*)getPlanPtrFromHandle<CUDPPMultiSplitPlan>(planHandle);
 
-    if (plan != NULL)
-    {
-        cudppMultiSplitDispatch(d_keys, d_values, numElements, numBuckets, plan);
-        return CUDPP_SUCCESS;
-    }
-    else
-    {
-        return CUDPP_ERROR_INVALID_HANDLE;
-    }
-}
 /**
  * @brief Sorts strings. Keys are the first four characters of the string,
  * and values are the addresses where the strings reside in memory (stringVals)
@@ -1057,6 +1032,34 @@ CUDPPResult cudppSuffixArray(CUDPPHandle planHandle,
         return CUDPP_ERROR_INVALID_HANDLE;
 
 }
+
+/**
+ * @brief BLAHBLAHBLAH
+ *
+ * BLAHBLAHBLAH
+ * @see cudppPlan, CUDPPConfiguration, CUDPPAlgorithm
+ */
+CUDPP_DLL
+CUDPPResult cudppMultiSplit(const CUDPPHandle planHandle,
+                      unsigned int      *d_keys,
+                      unsigned int      *d_values,
+                      size_t            numElements,
+                      size_t            numBuckets)
+{
+    CUDPPMultiSplitPlan *plan =
+        (CUDPPMultiSplitPlan*)getPlanPtrFromHandle<CUDPPMultiSplitPlan>(planHandle);
+
+    if (plan != NULL)
+    {
+      cudppMultiSplitDispatch(d_keys, d_values, numElements, numBuckets, plan);
+          return CUDPP_SUCCESS;
+    }
+    else
+    {
+        return CUDPP_ERROR_INVALID_HANDLE;
+    }
+}
+
 /** @} */ // end Algorithm Interface
 /** @} */ // end of publicInterface group
 
