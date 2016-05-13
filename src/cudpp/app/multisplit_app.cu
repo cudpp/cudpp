@@ -40,21 +40,23 @@ cub::CachingDeviceAllocator  g_allocator(true);  // Caching allocator for device
 // Definitions:
 //===============================================
 #define NUM_WARPS 8
-#define LOG_WARPS 3 // = ceil(log2(NUM_WARPS))
-#define SMEM_BUCK_SIZE (1536/(NUM_BUCKETS*NUM_WARPS))
+#define LOG_WARPS 3
 #define PACK_DEPTH 2
-
-#define BLOCKSORT_SIZE 1024
 #define DEPTH 8
 
-/** @brief Performs merge sort utilizing 3 stages:
- * (1) Blocksort, (2) simple merge and (3) multi merge
+/** @brief Performs multisplit on keys only.
  *
  *
- * @param[in,out] pkeys Keys to be sorted.
- * @param[in,out] pvals Associated values to be sorted
- * @param[in] numElements Number of elements in the sort.
- * @param[in] plan Configuration information for mergesort.
+ * For a binary split (2 buckets), this function uses a warp-level
+ * multisplit, for numBuckets <= 32, a block-level multisplit,
+ * for 32 < numBuckets <= 96, a different block-level multisplit,
+ * and for numBuckets > 96, this function uses a reduced-bit sort.
+ *
+ * @param[in,out] d_inp Keys to be multisplit.
+ * @param[in] numElements Number of elements.
+ * @param[in] numBuckets Number of buckets.
+ * @param[in] bucketMapper Functor that maps an element to a bucket number.
+ * @param[in] plan Configuration information for multisplit.
  **/
 template<class T>
 void runMultiSplitKeysOnly(unsigned int *d_inp, uint numElements,
@@ -635,14 +637,20 @@ void runMultiSplitKeysOnly(unsigned int *d_inp, uint numElements,
     CubDebugExit(g_allocator.DeviceFree(d_temp_storage));
 }
 
-/** @brief Performs merge sort utilizing 3 stages:
- * (1) Blocksort, (2) simple merge and (3) multi merge
+/** @brief Performs multisplit of keys and values associated with
+ * the keys.
  *
+ * For a binary split (2 buckets), this function uses a warp-level multisplit,
+ * for numBuckets <= 32, a block-level multisplit,
+ * for 32 < numBuckets <= 96, a different block-level multisplit,
+ * and for numBuckets > 96, this function uses a reduced-bit sort.
  *
- * @param[in,out] pkeys Keys to be sorted.
- * @param[in,out] pvals Associated values to be sorted
- * @param[in] numElements Number of elements in the sort.
- * @param[in] plan Configuration information for mergesort.
+ * @param[in,out] d_keys Keys to be multisplit.
+ * @param[in,out] d_values Associated values to be multisplit
+ * @param[in] numElements Number of key-value pairs.
+ * @param[in] numBuckets Number of buckets.
+ * @param[in] bucketMapper Functor that maps an element to a bucket number.
+ * @param[in] plan Configuration information for multisplit.
  **/
 template<class T>
 void runMultiSplitKeyValue(unsigned int *d_keys, unsigned int *d_values,
@@ -1377,27 +1385,21 @@ void runMultiSplitKeyValue(unsigned int *d_keys, unsigned int *d_values,
 
 
 /**
- * @brief From the programmer-specified sort configuration,
- *        creates internal memory for performing the sort.
+ * @brief From the programmer-specified multisplit configuration,
+ *        creates internal memory for performing the multisplit.
+ *        Different storage amounts are required depending on the
+ *        number of buckets.
  *
- * @param[in] plan Pointer to CUDPPMergeSortPlan object
+ * @param[in] plan Pointer to CUDPPMultiSplitPlan object
  **/
 void allocMultiSplitStorage(CUDPPMultiSplitPlan *plan)
 {
   unsigned int nB = ceil(plan->m_numElements / (NUM_WARPS * 32));
 
-/*
-  printf("NUM ALLOCATED BYTES: %u\n",
-      (plan->m_numElements + 1)
-          * sizeof(unsigned int) + plan->m_numElements * sizeof(unsigned int)+
-          sizeof(unsigned int) * plan->m_numBuckets * nB * NUM_WARPS * 2 * PACK_DEPTH + plan->m_numElements*sizeof(unsigned int));
-*/
   if (plan->m_config.options & CUDPP_OPTION_KEY_VALUE_PAIRS) {
     CUDA_SAFE_CALL(
         cudaMalloc((void** ) &plan->m_d_key_value_pairs,
             plan->m_numElements * sizeof(uint64))); // key value pair intermediate vector.
-    //CUDA_SAFE_CALL(cudaMalloc((void**) &plan->m_d_temp_keys, plan->m_numElements*sizeof(unsigned int))); // gpu output
-    //CUDA_SAFE_CALL(cudaMalloc((void**) &plan->m_d_temp_values, plan->m_numElements*sizeof(unsigned int))); // gpu output
   }
 
   if (plan->m_numBuckets > 96) {
@@ -1417,18 +1419,15 @@ void allocMultiSplitStorage(CUDPPMultiSplitPlan *plan)
   CUDA_SAFE_CALL(cudaMemset(plan->m_d_fin, 0, sizeof(unsigned int)*plan->m_numElements));
 }
 
-/** @brief Deallocates intermediate memory from allocRadixSortStorage.
+/** @brief Deallocates intermediate memory from allocMultiSplitStorage.
  *
  *
- * @param[in] plan Pointer to CUDPPMergeSortPlan object
+ * @param[in] plan Pointer to CUDPPMultiSplitPlan object
  **/
-
 void freeMultiSplitStorage(CUDPPMultiSplitPlan* plan)
 {
   if (plan->m_config.options & CUDPP_OPTION_KEY_VALUE_PAIRS) {
     cudaFree (plan->m_d_key_value_pairs);
-    //cudaFree (plan->m_d_temp_keys);
-    //cudaFree (plan->m_d_temp_values);
   }
   if (plan->m_numBuckets > 96) {
     cudaFree (plan->m_d_mask);
@@ -1438,17 +1437,18 @@ void freeMultiSplitStorage(CUDPPMultiSplitPlan* plan)
   cudaFree(plan->m_d_fin);
 }
 
-/** @brief Dispatch function to perform a sort on an array with
- * a specified configuration.
+/** @brief Dispatch function to perform multisplit on an array of
+ * elements into a number of buckets.
  *
- * This is the dispatch routine which calls mergeSort...() with
- * appropriate template parameters and arguments as specified by
- * the plan.
- * Currently only sorts keys of type int, unsigned int, and float.
- * @param[in,out] keys Keys to be sorted.
- * @param[in,out] values Associated values to be sorted (through keys).
- * @param[in] numElements Number of elements in the sort.
- * @param[in] plan Configuration information for mergeSort.
+ * This is the dispatch routine which calls multiSplit...() with
+ * appropriate parameters, including the bucket mapping function
+ * specified by plan's configuration.
+ *
+ * Currently only splits unsigned integers.
+ * @param[in,out] keys Keys to be split.
+ * @param[in,out] values Optional associated values to be split (through keys), can be NULL.
+ * @param[in] numElements Number of elements to be split.
+ * @param[in] plan Configuration information for multiSplit.
  **/
 void cudppMultiSplitDispatch(unsigned int *d_keys,
                              unsigned int *d_values,
@@ -1492,5 +1492,5 @@ void cudppMultiSplitDispatch(unsigned int *d_keys,
   }
 }
 
-/** @} */ // end mergesort functions
+/** @} */ // end multisplit functions
 /** @} */ // end cudpp_app

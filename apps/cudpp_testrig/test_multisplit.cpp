@@ -136,10 +136,6 @@ void cpuMultisplit(uint *input, uint *output, uint numElements, uint numBuckets,
 template<class T>
 void cpuMultiSplitPairs(uint* keys_input, uint* keys_output, uint* values_input,
     uint* values_output, uint numElements, uint numBuckets, T bucketMapper) {
-  // Performs the mutlisplit with arbitrary bucket distribution on cpu:
-  // bucket_mode == 0: equal number of elements per bucket
-  // bucket_mode == 1: most significant bits of input represent bucket ID
-  // n: number of elements
 
   if (numBuckets == 1) {
     for (unsigned int k = 0; k < numElements; k++) {
@@ -503,16 +499,15 @@ int multiSplitKeyValueTest(CUDPPHandle theCudpp, CUDPPConfiguration config,
 }
 
 /**
- * testStringSort tests cudpp's merge sort
- * Possible command line arguments:
- * - -n=#, number of elements in sort
+ * testMultiSplit tests cudpp's multisplit
+ *
  * @param argc Number of arguments on the command line, passed
  * directly from main
  * @param argv Array of arguments on the command line, passed directly
  * from main
- * @param configPtr Configuration for scan, set by caller
+ * @param configPtr Configuration for multisplit, set by caller
  * @return Number of tests that failed regression (0 for all pass)
- * @see cudppSort
+ * @see cudppMultiSplit
  */
 int testMultiSplit(int argc, const char **argv,
     const CUDPPConfiguration *configPtr) {
@@ -535,7 +530,6 @@ int testMultiSplit(int argc, const char **argv,
 
   // The last test size should be the largest
   size_t elementTests[] = {262144, 2097152, 4194304, 8388608, 16777216 };
-  //size_t element_tests[] = {2097152};
   size_t bucketTests[] =
       { 1, 2, 3, 13, 32, 33, 63, 83, 97, 100, 112, 129, 145 };
 

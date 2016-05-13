@@ -1034,9 +1034,10 @@ CUDPPResult cudppSuffixArray(CUDPPHandle planHandle,
 }
 
 /**
- * @brief BLAHBLAHBLAH
+ * @brief Splits elements into a set of buckets.
  *
- * BLAHBLAHBLAH
+ * Described in the paper “GPU Multisplit” (See the \ref references bibliography).
+ *
  * @see cudppPlan, CUDPPConfiguration, CUDPPAlgorithm
  */
 CUDPP_DLL

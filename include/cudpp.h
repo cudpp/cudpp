@@ -156,8 +156,8 @@ enum CUDPPAlgorithm
  */
 enum CUDPPBucketMapper
 {
-    CUDPP_MSB_BUCKET_MAPPER,      //!< Blah
-    CUDPP_DEFAULT_BUCKET_MAPPER,  //!< Blah
+    CUDPP_MSB_BUCKET_MAPPER,      //!< The bucket is determined by the element's MSB.
+    CUDPP_DEFAULT_BUCKET_MAPPER,  //!< The bucket is determined by the element's value.
 };
 
 /**

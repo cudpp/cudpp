@@ -801,9 +801,12 @@ CUDPPSaPlan::~CUDPPSaPlan()
   *
   * @param[in] mgr pointer to the CUDPPManager
   * @param[in] config The configuration struct specifying options
-  * @param[in] The maximum number of elements to be split
+  * @param[in] The number of elements to be split
+  * @param[in] The number of buckets
+  *
   */
-CUDPPMultiSplitPlan::CUDPPMultiSplitPlan(CUDPPManager *mgr, CUDPPConfiguration config, size_t numElements, size_t numBuckets)
+CUDPPMultiSplitPlan::CUDPPMultiSplitPlan(CUDPPManager *mgr,
+    CUDPPConfiguration config, size_t numElements, size_t numBuckets)
  : CUDPPPlan(mgr, config, numElements, 1, 0)
 {
     m_numElements = numElements;
@@ -811,11 +814,12 @@ CUDPPMultiSplitPlan::CUDPPMultiSplitPlan(CUDPPManager *mgr, CUDPPConfiguration c
 
     allocMultiSplitStorage(this);
 
+    // use the allocated array for temporary storage of keys and values
     m_d_temp_keys = (unsigned int *) m_d_key_value_pairs;
     m_d_temp_values = (unsigned int *) m_d_key_value_pairs + numElements;
 }
 
-/** brief SA plan destructor*/
+/** brief MultiSplit Plan Destructor*/
 CUDPPMultiSplitPlan::~CUDPPMultiSplitPlan()
 {
     freeMultiSplitStorage(this);
