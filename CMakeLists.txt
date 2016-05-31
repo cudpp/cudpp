@@ -75,9 +75,9 @@ configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/include/cudpp_config.h
   )
 
-#set (CUDPP_APP_DATA_DIR
-#  "${CMAKE_SOURCE_DIR}/apps/data/"
-#  )
+set (CUDPP_APP_DATA_DIR
+  "${CMAKE_SOURCE_DIR}/apps/data/"
+  )
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/apps/common/include/common_config.h.in
   ${CMAKE_CURRENT_SOURCE_DIR}/apps/common/include/common_config.h
