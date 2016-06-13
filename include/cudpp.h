@@ -25,6 +25,7 @@
 #define __CUDPP_H__
 
 #include <stdlib.h> // for size_t
+#include <stdarg.h> // for multisplit function pointer argument
 
 /**
  * @brief CUDPP Result codes returned by CUDPP API functions.
@@ -158,6 +159,7 @@ enum CUDPPBucketMapper
 {
     CUDPP_MSB_BUCKET_MAPPER,      //!< The bucket is determined by the element's MSB.
     CUDPP_DEFAULT_BUCKET_MAPPER,  //!< The bucket is determined by the element's value.
+    CUDPP_CUSTOM_BUCKET_MAPPER,   //!< The bucket mapping is a user-specified function.
 };
 
 /**
@@ -361,13 +363,22 @@ CUDPPResult cudppSuffixArray(CUDPPHandle planHandle,
                              unsigned int *d_keys_sa,
                              size_t numElements);
 
-
+// MultiSplit
 CUDPP_DLL
 CUDPPResult cudppMultiSplit(const CUDPPHandle planHandle,
-                      unsigned int      *d_keys,
-                      unsigned int      *d_values,
-                      size_t            numElements,
-                      size_t            numBuckets);
+                            unsigned int      *d_keys,
+                            unsigned int      *d_values,
+                            size_t            numElements,
+                            size_t            numBuckets);
+
+// MultiSplit with user-specified bucket mapping function
+CUDPP_DLL
+CUDPPResult cudppMultiSplitCustomBucketMapper(const CUDPPHandle planHandle,
+                                              unsigned int      *d_keys,
+                                              unsigned int      *d_values,
+                                              size_t            numElements,
+                                              size_t            numBuckets,
+                                              unsigned int      (*bucketMappingFunc)(unsigned int));
 
 #ifdef __cplusplus
 }

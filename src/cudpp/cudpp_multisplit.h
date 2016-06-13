@@ -16,15 +16,18 @@
 #include "cudpp_plan.h"
 
 
-//Some helper functions needed to transform data
+extern "C"
 void allocMultiSplitStorage(CUDPPMultiSplitPlan* plan);
 
+extern "C"
 void freeMultiSplitStorage(CUDPPMultiSplitPlan* plan);
 
+extern "C"
 void cudppMultiSplitDispatch(unsigned int *d_keys,
                              unsigned int *d_values,
-                            size_t numElements,
-                            size_t numBuckets,
-                            const CUDPPMultiSplitPlan *plan);
+                             size_t numElements,
+                             size_t numBuckets,
+                             unsigned int (*bucketMappingFunc)(unsigned int),
+                             const CUDPPMultiSplitPlan *plan);
 
 #endif // __MULTISPLIT_H__

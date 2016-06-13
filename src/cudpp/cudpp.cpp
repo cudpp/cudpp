@@ -1042,17 +1042,47 @@ CUDPPResult cudppSuffixArray(CUDPPHandle planHandle,
  */
 CUDPP_DLL
 CUDPPResult cudppMultiSplit(const CUDPPHandle planHandle,
-                      unsigned int      *d_keys,
-                      unsigned int      *d_values,
-                      size_t            numElements,
-                      size_t            numBuckets)
+                            unsigned int      *d_keys,
+                            unsigned int      *d_values,
+                            size_t            numElements,
+                            size_t            numBuckets)
 {
     CUDPPMultiSplitPlan *plan =
         (CUDPPMultiSplitPlan*)getPlanPtrFromHandle<CUDPPMultiSplitPlan>(planHandle);
 
     if (plan != NULL)
     {
-      cudppMultiSplitDispatch(d_keys, d_values, numElements, numBuckets, plan);
+      cudppMultiSplitDispatch(d_keys, d_values, numElements, numBuckets, NULL, plan);
+          return CUDPP_SUCCESS;
+    }
+    else
+    {
+        return CUDPP_ERROR_INVALID_HANDLE;
+    }
+}
+
+/**
+ * @brief Splits elements into a set of buckets.
+ *
+ * Described in the paper “GPU Multisplit” (See the \ref references bibliography).
+ *
+ * @see cudppPlan, CUDPPConfiguration, CUDPPAlgorithm
+ */
+CUDPP_DLL
+CUDPPResult cudppMultiSplitCustomBucketMapper(const CUDPPHandle planHandle,
+                                              unsigned int      *d_keys,
+                                              unsigned int      *d_values,
+                                              size_t            numElements,
+                                              size_t            numBuckets,
+                                              unsigned int      (*bucketMappingFunc)(unsigned int))
+{
+    CUDPPMultiSplitPlan *plan =
+        (CUDPPMultiSplitPlan*)getPlanPtrFromHandle<CUDPPMultiSplitPlan>(planHandle);
+
+    if (plan != NULL)
+    {
+      cudppMultiSplitDispatch(d_keys, d_values, numElements, numBuckets,
+        bucketMappingFunc, plan);
           return CUDPP_SUCCESS;
     }
     else

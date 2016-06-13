@@ -423,6 +423,20 @@ private:
   unsigned int elementsPerBucket;
 };
 
+class CustomBucketMapper {
+public:
+  CustomBucketMapper(unsigned int (*bucketMappingFunc)(unsigned int)) {
+    bucketMapper = bucketMappingFunc;
+  }
+
+  __device__ unsigned int operator()(unsigned int element) {
+    return (*bucketMapper)(element);
+  }
+
+private:
+  unsigned int (*bucketMapper)(unsigned int);
+};
+
 #endif // __CUDPP_UTIL_H__
 
 // Leave this at the end of the file

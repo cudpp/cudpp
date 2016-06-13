@@ -261,8 +261,8 @@ int multiSplitKeysOnlyTest(CUDPPHandle theCudpp, CUDPPConfiguration config,
   printf("Performing keys-only multisplit tests.\n");
   for (unsigned int k = 0; k < numElementTests; ++k) {
     // an arbitrary initialization
-    for (unsigned int i = 0; i < maxNumElements; i++)
-      keys[i] = rand();
+    for (unsigned int j = 0; j < maxNumElements; ++j)
+      keys[j] = rand();
 
     for (unsigned int b = 0; b < numBucketTests; ++b) {
       int testFailed = 0;
@@ -275,19 +275,21 @@ int multiSplitKeysOnlyTest(CUDPPHandle theCudpp, CUDPPConfiguration config,
       }
 
       float totalTime = 0;
+      for (unsigned int i = 0; i < testOptions.numIterations; ++i) {
+        CUDA_SAFE_CALL(
+            cudaMemcpy(d_keys, keys, elementTests[k] * sizeof(unsigned int),
+                cudaMemcpyHostToDevice));
+        CUDA_SAFE_CALL(cudaEventRecord(startEvent, 0));
 
-      CUDA_SAFE_CALL(
-          cudaMemcpy(d_keys, keys,
-              elementTests[k] * sizeof(unsigned int), cudaMemcpyHostToDevice));
-      CUDA_SAFE_CALL(cudaEventRecord(startEvent, 0));
+        cudppMultiSplit(plan, d_keys, NULL, elementTests[k], bucketTests[b]);
 
-      cudppMultiSplit(plan, d_keys, NULL, elementTests[k], bucketTests[b]);
+        CUDA_SAFE_CALL(cudaEventRecord(stopEvent, 0));
+        CUDA_SAFE_CALL(cudaEventSynchronize(stopEvent));
 
-      CUDA_SAFE_CALL(cudaEventRecord(stopEvent, 0));
-      CUDA_SAFE_CALL(cudaEventSynchronize(stopEvent));
-
-      float time = 0;
-      CUDA_SAFE_CALL(cudaEventElapsedTime(&time, startEvent, stopEvent));
+        float time = 0;
+        CUDA_SAFE_CALL(cudaEventElapsedTime(&time, startEvent, stopEvent));
+        totalTime += time;
+      }
 
       CUDA_CHECK_ERROR("testMultiSplit - cudppMultiSplit");
 
@@ -321,7 +323,7 @@ int multiSplitKeysOnlyTest(CUDPPHandle theCudpp, CUDPPConfiguration config,
       if (!quiet) {
         printf("test %s\n", (testFailed == 0) ? "PASSED" : "FAILED");
         printf("Average execution time: %f ms\n",
-            totalTime / 1);
+            totalTime / testOptions.numIterations);
       } else {
         printf("\t%10ld\t%0.4f\n", elementTests[k],
             totalTime / testOptions.numIterations);
@@ -395,9 +397,9 @@ int multiSplitKeyValueTest(CUDPPHandle theCudpp, CUDPPConfiguration config,
   printf("Performing key-value multisplit tests.\n");
   for (unsigned int k = 0; k < numElementTests; ++k) {
     // an arbitrary initialization
-    for (unsigned int i = 0; i < maxNumElements; i++) {
-      keys[i] = rand();
-      values[i] = rand();
+    for (unsigned int j = 0; j < maxNumElements; j++) {
+      keys[j] = rand();
+      values[j] = rand();
     }
 
     for (unsigned int b = 0; b < numBucketTests; ++b) {
@@ -411,21 +413,25 @@ int multiSplitKeyValueTest(CUDPPHandle theCudpp, CUDPPConfiguration config,
 
       float totalTime = 0;
 
-      CUDA_SAFE_CALL(
-          cudaMemcpy(d_keys, keys,
-              elementTests[k] * sizeof(unsigned int), cudaMemcpyHostToDevice));
-      CUDA_SAFE_CALL(
-          cudaMemcpy(d_values, values,
-              elementTests[k] * sizeof(unsigned int), cudaMemcpyHostToDevice));
-      CUDA_SAFE_CALL(cudaEventRecord(startEvent, 0));
+      for (unsigned int i = 0; i < testOptions.numIterations; ++i) {
+        CUDA_SAFE_CALL(
+            cudaMemcpy(d_keys, keys, elementTests[k] * sizeof(unsigned int),
+                cudaMemcpyHostToDevice));
+        CUDA_SAFE_CALL(
+            cudaMemcpy(d_values, values, elementTests[k] * sizeof(unsigned int),
+                cudaMemcpyHostToDevice));
+        CUDA_SAFE_CALL(cudaEventRecord(startEvent, 0));
 
-      cudppMultiSplit(plan, d_keys, d_values, elementTests[k], bucketTests[b]);
+        cudppMultiSplit(plan, d_keys, d_values, elementTests[k],
+            bucketTests[b]);
 
-      CUDA_SAFE_CALL(cudaEventRecord(stopEvent, 0));
-      CUDA_SAFE_CALL(cudaEventSynchronize(stopEvent));
+        CUDA_SAFE_CALL(cudaEventRecord(stopEvent, 0));
+        CUDA_SAFE_CALL(cudaEventSynchronize(stopEvent));
 
-      float time = 0;
-      CUDA_SAFE_CALL(cudaEventElapsedTime(&time, startEvent, stopEvent));
+        float time = 0;
+        CUDA_SAFE_CALL(cudaEventElapsedTime(&time, startEvent, stopEvent));
+        totalTime += time;
+      }
 
       CUDA_CHECK_ERROR("testMultiSplit - cudppMultiSplit");
 
@@ -467,7 +473,7 @@ int multiSplitKeyValueTest(CUDPPHandle theCudpp, CUDPPConfiguration config,
       if (!quiet) {
         printf("test %s\n", (testFailed == 0) ? "PASSED" : "FAILED");
         printf("Average execution time: %f ms\n",
-            totalTime / 1);
+            totalTime / testOptions.numIterations);
       } else {
         printf("\t%10ld\t%0.4f\n", elementTests[k],
             totalTime / testOptions.numIterations);

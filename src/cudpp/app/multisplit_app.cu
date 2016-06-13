@@ -30,7 +30,7 @@
 typedef unsigned long long int uint64;
 
 #include "kernel/multisplit_kernel.cuh"
-
+#include "cudpp_mergesort.h"
 
 //===============================================
 // Global
@@ -1383,6 +1383,10 @@ void runMultiSplitKeyValue(unsigned int *d_keys, unsigned int *d_values,
     CubDebugExit(g_allocator.DeviceFree(d_temp_storage));
 }
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 
 /**
  * @brief From the programmer-specified multisplit configuration,
@@ -1452,15 +1456,20 @@ void freeMultiSplitStorage(CUDPPMultiSplitPlan* plan)
  **/
 void cudppMultiSplitDispatch(unsigned int *d_keys,
                              unsigned int *d_values,
-                            size_t numElements,
-                            size_t numBuckets,
-                            const CUDPPMultiSplitPlan *plan)
+                             size_t numElements,
+                             size_t numBuckets,
+                             unsigned int (*bucketMappingFunc)(unsigned int),
+                             const CUDPPMultiSplitPlan *plan)
 {
   cudaDeviceSetCacheConfig(cudaFuncCachePreferShared);
 
   if (plan->m_config.options & CUDPP_OPTION_KEY_VALUE_PAIRS) {
     switch(plan->m_config.bucket_mapper)
-    {//
+    {
+    case CUDPP_CUSTOM_BUCKET_MAPPER:
+      runMultiSplitKeyValue(d_keys, d_values, numElements, numBuckets,
+          CustomBucketMapper(bucketMappingFunc), plan);
+      break;
     case CUDPP_DEFAULT_BUCKET_MAPPER:
       runMultiSplitKeyValue(d_keys, d_values, numElements, numBuckets,
           OrderedCyclicBucketMapper(numElements, numBuckets), plan);
@@ -1476,6 +1485,10 @@ void cudppMultiSplitDispatch(unsigned int *d_keys,
     }
   } else {
     switch (plan->m_config.bucket_mapper) {
+    case CUDPP_CUSTOM_BUCKET_MAPPER:
+      runMultiSplitKeysOnly(d_keys, numElements, numBuckets,
+          CustomBucketMapper(bucketMappingFunc), plan);
+      break;
     case CUDPP_DEFAULT_BUCKET_MAPPER:
       runMultiSplitKeysOnly(d_keys, numElements, numBuckets,
           OrderedCyclicBucketMapper(numElements, numBuckets), plan);
@@ -1491,6 +1504,11 @@ void cudppMultiSplitDispatch(unsigned int *d_keys,
     }
   }
 }
+
+#ifdef __cplusplus
+}
+
+#endif
 
 /** @} */ // end multisplit functions
 /** @} */ // end cudpp_app
