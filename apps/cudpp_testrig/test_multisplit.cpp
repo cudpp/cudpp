@@ -258,6 +258,11 @@ int multiSplitKeysOnlyTest(CUDPPHandle theCudpp, CUDPPConfiguration config,
   CUDA_SAFE_CALL(cudaEventCreate(&startEvent));
   CUDA_SAFE_CALL(cudaEventCreate(&stopEvent));
 
+  if (numElementTests == 1)
+    elementTests[0] = maxNumElements;
+  if (numBucketTests == 1)
+    bucketTests[0] = maxNumBuckets;
+
   printf("Performing keys-only multisplit tests.\n");
   for (unsigned int k = 0; k < numElementTests; ++k) {
     // an arbitrary initialization
@@ -393,6 +398,11 @@ int multiSplitKeyValueTest(CUDPPHandle theCudpp, CUDPPConfiguration config,
   cudaEvent_t startEvent, stopEvent;
   CUDA_SAFE_CALL(cudaEventCreate(&startEvent));
   CUDA_SAFE_CALL(cudaEventCreate(&stopEvent));
+
+  if (numElementTests == 1)
+    elementTests[0] = maxNumElements;
+  if (numBucketTests == 1)
+    bucketTests[0] = maxNumBuckets;
 
   printf("Performing key-value multisplit tests.\n");
   for (unsigned int k = 0; k < numElementTests; ++k) {
@@ -558,12 +568,17 @@ int testMultiSplit(int argc, const char **argv,
     }
   }
 
-  size_t numElements = elementTests[numElementTests - 1];
-  size_t numBuckets = bucketTests[numBucketTests - 1];
+  size_t maxNumElements = elementTests[numElementTests - 1];
+  size_t maxNumBuckets = bucketTests[numBucketTests - 1];
 
   if (commandLineArg(cmdVal, argc, (const char**) argv, "n")) {
-    numElements = cmdVal;
+    maxNumElements = cmdVal;
     numElementTests = 1;
+  }
+
+  if (commandLineArg(cmdVal, argc, (const char**) argv, "b")) {
+    maxNumBuckets = cmdVal;
+    numBucketTests = 1;
   }
 
   CUDPPResult result = CUDPP_SUCCESS;
@@ -577,12 +592,12 @@ int testMultiSplit(int argc, const char **argv,
   }
 
   retVal += multiSplitKeysOnlyTest(theCudpp, config, elementTests, bucketTests,
-      numElementTests, numBucketTests, numElements, numBuckets, testOptions,
+      numElementTests, numBucketTests, maxNumElements, maxNumBuckets, testOptions,
       quiet);
 
   config.options = CUDPP_OPTION_KEY_VALUE_PAIRS;
   retVal += multiSplitKeyValueTest(theCudpp, config, elementTests, bucketTests,
-      numElementTests, numBucketTests, numElements, numBuckets, testOptions,
+      numElementTests, numBucketTests, maxNumElements, maxNumBuckets, testOptions,
       quiet);
   result = cudppDestroy(theCudpp);
 

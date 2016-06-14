@@ -23,6 +23,7 @@
  * @{
  */
 #include <cub/cub.cuh>
+#include <stdint.h>
 #include "cuda_util.h"
 #include "cudpp.h"
 #include "cudpp_util.h"
@@ -30,7 +31,6 @@
 typedef unsigned long long int uint64;
 
 #include "kernel/multisplit_kernel.cuh"
-#include "cudpp_mergesort.h"
 
 //===============================================
 // Global
