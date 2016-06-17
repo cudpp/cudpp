@@ -398,7 +398,6 @@ public:
     unsigned int m_numBuckets;
     unsigned int *m_d_mask;
     unsigned int *m_d_out;
-    unsigned int *m_d_histo;
     unsigned int *m_d_fin;
     unsigned int *m_d_temp_keys;
     unsigned int *m_d_temp_values;
