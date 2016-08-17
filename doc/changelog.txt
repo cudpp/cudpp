@@ -1,5 +1,11 @@
 CUDPP Change Log
 
+Release 2.3
+31 Aug 2016
+- Release czar: Jason Mak. Thanks!
+- Added cudppMultiSplit to split an array of elements into buckets
+- SM architectures below 3.0 are no longer supported
+
 Release 2.2
 31 Aug 2014
 - Release czar: Leyuan Wang. Thanks!

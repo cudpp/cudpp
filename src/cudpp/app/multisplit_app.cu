@@ -1746,9 +1746,31 @@ struct sample_bucket: public std::unary_function<key_type, uint32_t> {
     return (a & 0x01);
   }
 };
-//----------------------
-// API calls
-//----------------------
+
+//===============================================
+// Definitions:
+//===============================================
+
+/** @brief Performs multisplit on keys only.
+ *
+ *
+ * This function performs multisplit on a list of keys for a number of buckets
+ * less than or equal to 32. If the number of buckets is less than a threshold,
+ * a warp-level multisplit is used. If the number of buckets is greater than
+ * the threshold, a block-level multisplit is used. This function also supports
+ * copying the results of multisplit back into the input array. In addition,
+ * the offset indices marking the locations of the buckets in the result array
+ * can optionally be saved.
+ *
+ * @param[in,out] d_key_in Input keys to be multisplit.
+ * @param[out] d_key_out Output keys after multisplit.
+ * @param[in] num_elements Number of elements.
+ * @param[in] num_buckets Number of buckets.
+ * @param[in] context Intermediate data storage for multisplit.
+ * @param[in] bucket_identifier Functor to map an element to a bucket number.
+ * @param[in] in_place Flag to indicate if results are copied back to the input.
+ * @param[out] bucket_offsets Optional output list of bucket indices.
+ **/
 template<typename key_type, typename bucket_t>
 void multisplit_key_only(key_type* d_key_in, key_type* d_key_out,
     size_t num_elements, uint32_t num_buckets, multisplit_context& context,
@@ -1806,6 +1828,30 @@ void multisplit_key_only(key_type* d_key_in, key_type* d_key_out,
   }
 }
 
+/** @brief Performs multisplit on key-value pairs.
+ *
+ *
+ * This function performs multisplit on a list of keys and a
+ * list of values for a number of buckets less than or equal to 32.
+ * If the number of buckets is less than a threshold,
+ * a warp-level multisplit is used. If the number of buckets is
+ * greater than the threshold, a block-level multisplit is used.
+ * This function also supports copying the results of multisplit back
+ * into the key and value input arrays. In addition, the offset indices
+ * marking the locations of the buckets in the result arrays
+ * can optionally be saved.
+ *
+ * @param[in,out] d_key_in Input keys to be multisplit.
+ * @param[in,out] d_value_in Input values to be multisplit along with keys.
+ * @param[out] d_key_out Output keys after multisplit.
+ * @param[out] d_value_out Output keys after multisplit.
+ * @param[in] num_elements Number of elements.
+ * @param[in] num_buckets Number of buckets.
+ * @param[in] context Intermediate data storage for multisplit.
+ * @param[in] bucket_identifier Functor to map an element to a bucket number.
+ * @param[in] in_place Flag to indicate if results are copied back to inputs.
+ * @param[out] bucket_offsets Optional output list of bucket indices.
+ **/
 template<typename key_type, typename value_type, typename bucket_t>
 void multisplit_key_value(key_type* d_key_in, value_type *d_value_in,
     key_type* d_key_out, value_type* d_value_out, size_t num_elements,
@@ -1878,19 +1924,17 @@ cub::CachingDeviceAllocator g_allocator(true); // Caching allocator for device m
 // Definitions:
 //===============================================
 
-/** @brief Performs multisplit on keys only.
+/** @brief Performs multisplit on keys only using the reduced-bit sort method.
  *
  *
- * For a binary split (2 buckets), this function uses a warp-level
- * multisplit, for numBuckets <= 32, a block-level multisplit,
- * for 32 < numBuckets <= 96, a different block-level multisplit,
- * and for numBuckets > 96, this function uses a reduced-bit sort.
+ * This function uses radix sort to perform a multisplit. It is suitable 
+ * when the number of buckets is large.
  *
  * @param[in,out] d_inp Keys to be multisplit.
  * @param[in] numElements Number of elements.
  * @param[in] numBuckets Number of buckets.
  * @param[in] bucketMapper Functor that maps an element to a bucket number.
- * @param[in] plan Configuration information for multisplit.
+ * @param[in] plan Configuration plan for multisplit.
  **/
 template<class T>
 void reducedBitSortKeysOnly(unsigned int *d_inp, uint numElements,
@@ -1923,13 +1967,11 @@ void reducedBitSortKeysOnly(unsigned int *d_inp, uint numElements,
     CubDebugExit(g_allocator.DeviceFree(d_temp_storage));
 }
 
-/** @brief Performs multisplit of keys and values associated with
- * the keys.
+/** @brief Performs multisplit on key-value pairs using a reduced-bit sort.
  *
- * For a binary split (2 buckets), this function uses a warp-level multisplit,
- * for numBuckets <= 32, a block-level multisplit,
- * for 32 < numBuckets <= 96, a different block-level multisplit,
- * and for numBuckets > 96, this function uses a reduced-bit sort.
+ *
+ * This function uses radix sort to perform a multisplit on a list of keys 
+ * and a list of values. It is suitable when the number of buckets is large.
  *
  * @param[in,out] d_keys Keys to be multisplit.
  * @param[in,out] d_values Associated values to be multisplit

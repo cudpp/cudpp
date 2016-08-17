@@ -987,7 +987,7 @@ CUDPPResult cudppListRank(CUDPPHandle planHandle,
  * - The output data is an unsigned int array storing the positions of the
  * lexicographically sorted suffixes not including the last {0,0,0} triplet.
  *
- * @param[in] planHandle Handle to plan for BWT
+ * @param[in] planHandle Handle to plan for CUDPPSuffixArrayPlan
  * @param[out] d_in  Input data
  * @param[out] d_out Output data
  * @param[in] numElements Number of elements
@@ -1034,9 +1034,34 @@ CUDPPResult cudppSuffixArray(CUDPPHandle planHandle,
 }
 
 /**
- * @brief Splits elements into a set of buckets.
+ * @brief Splits an array of keys and an optional 
+ * array of values into a set of buckets.
  *
- * Described in the paper “GPU Multisplit” (See the \ref references bibliography).
+ * Takes as input an array of keys in GPU memory
+ * (d_keys) and an optional array of corresponding values,
+ * and outputs an arrays of keys and (optionally) values in place,
+ * where the keys and values have been split into ordered buckets.
+ * Key-value or key-only multisplit is selected through the configuration of
+ * the plan, using the options CUDPP_OPTION_KEYS_ONLY or
+ * CUDPP_OPTION_KEY_VALUE_PAIRS. The function used to map a key to a bucket
+ * is selected through the configuration option 'bucket_mapper'. 
+ * The current options are:
+ *
+ * ORDERED_CYCLIC_BUCKET_MAPPER (default):
+ * bucket = (key % numElements) / ((numElements + numBuckets - 1) / numBuckets);
+ *
+ * MSB_BUCKET_MAPPER:
+ * bucket = key >> (32 - ceil(log2(numBuckets)));
+ *
+ * Currently, the only supported key and value type is CUDPP_UINT.
+ *
+ *
+ * @param[in] planHandle Handle to plan for CUDPPMultiSplitPlan
+ * @param[in,out] d_keys keys by which key-value pairs will be split
+ * @param[in,out] d_values values to be split
+ * @param[in] numElements number of elements in d_keys and d_values
+ * @param[in] numBuckets Number of buckets
+ * @returns CUDPPResult indicating success or error condition
  *
  * @see cudppPlan, CUDPPConfiguration, CUDPPAlgorithm
  */
@@ -1062,9 +1087,32 @@ CUDPPResult cudppMultiSplit(const CUDPPHandle planHandle,
 }
 
 /**
- * @brief Splits elements into a set of buckets.
+ * @brief Splits an array of keys and an optional array of values into 
+ * a set of buckets using a custom function to map elements to buckets.
  *
- * Described in the paper “GPU Multisplit” (See the \ref references bibliography).
+ * Takes as input an array of keys in GPU memory
+ * (d_keys) and an optional array of corresponding values,
+ * and outputs an arrays of keys and (optionally) values in place,
+ * where the keys and values have been split into ordered buckets.
+ * Key-value or key-only multisplit is selected through the configuration of
+ * the plan, using the options CUDPP_OPTION_KEYS_ONLY or
+ * CUDPP_OPTION_KEY_VALUE_PAIRS. To use this function, the 
+ * configuration option 'bucket_mapper' must be set to CUSTOM_BUCKET_MAPPER.
+ * This option lets the library know to use the custom function pointer,
+ * specified in the last argument, when assignging an element to a bucket. 
+ * The user specified bucket mapper must be a function pointer that takes one 
+ * unsigned int argument (the element) and return an unsigned int (the bucket). 
+ *
+ *
+ * Currently, the only supported key and value type is CUDPP_UINT.
+ *
+ * @param[in] planHandle Handle to plan for BWT
+ * @param[in,out] d_keys  Input data
+ * @param[in,out] d_values Output data
+ * @param[in] numElements Number of elements
+ * @param[in] numBuckets Number of buckets
+ * @param[in] bucketMappingFunc function that maps an element to a bucket
+ * @returns CUDPPResult indicating success or error condition
  *
  * @see cudppPlan, CUDPPConfiguration, CUDPPAlgorithm
  */

@@ -100,7 +100,7 @@ CUDPP_BWT            | 1,048,576 elements
 CUDPP_SA             | 0.14 GPU memory
 CUDPP_STRINGSORT     | 2,147,450,880 elements
 CUDPP_MERGESORT      | 2,147,450,880 elements
-CUDPP_MULTISPLIT      | Bounded by GPU memory
+CUDPP_MULTISPLIT     | Bounded by GPU memory
 CUDPP_REDUCE         | NO LIMIT
 CUDPP_RAND           | 33,554,432 elements
 CUDPP_SPMVMULT       | 67,107,840 non-zero elements
