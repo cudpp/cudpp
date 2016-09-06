@@ -4,7 +4,10 @@ Release 2.3
 31 Aug 2016
 - Release czar: Jason Mak. Thanks!
 - Added cudppMultiSplit to split an array of elements into buckets
-- SM architectures below 3.0 are no longer supported
+- The CMake option CUDA_SEPARABLE_COMPILATION generates device-relocatable code 
+  and must be turned on to use the function cudppMultiSplitCustomBucketMapper.
+  In addition, the user's code must be compiled with separable compilation to use that function.
+- Due to certain intrinsic functions used in MultiSplit, SM architectures below 3.0 are no longer supported
 
 Release 2.2
 31 Aug 2014

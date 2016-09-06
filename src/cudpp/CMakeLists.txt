@@ -102,25 +102,25 @@ set(GENCODE_SM50 -gencode=arch=compute_50,code=sm_50 -gencode=arch=compute_50,co
 
 #set(GENCODE -gencode=arch=compute_20,code=compute_20) # at least generate PTX
 
-option(CUDPP_GENCODE_SM12
-       "ON to generate code for Compute Capability 1.2 devices (e.g. GeForce GT 330M)"
-       OFF)
+#option(CUDPP_GENCODE_SM12
+#       "ON to generate code for Compute Capability 1.2 devices (e.g. GeForce GT 330M)"
+#       OFF)
 
-option(CUDPP_GENCODE_SM13
-       "ON to generate code for Compute Capability 1.3 devices (e.g. Tesla C1060)"
-       OFF)
+#option(CUDPP_GENCODE_SM13
+#       "ON to generate code for Compute Capability 1.3 devices (e.g. Tesla C1060)"
+#       OFF)
 
-option(CUDPP_GENCODE_SM20
-       "ON to generate code for Compute Capability 2.0 devices (e.g. Tesla C2050)"
-       ON)
+#option(CUDPP_GENCODE_SM20
+#       "ON to generate code for Compute Capability 2.0 devices (e.g. Tesla C2050)"
+#       OFF)
 
-option(CUDPP_GENCODE_SM21
-       "ON to generate code for Compute Capability 2.1 devices (e.g. NVS 4200M)"
-       OFF)
+#option(CUDPP_GENCODE_SM21
+#       "ON to generate code for Compute Capability 2.1 devices (e.g. NVS 4200M)"
+#       OFF)
 
 option(CUDPP_GENCODE_SM30
        "ON to generate code for Compute Capability 3.0 devices (e.g. Tesla K10)"
-       OFF)
+       ON)
 
 option(CUDPP_GENCODE_SM35
        "ON to generate code for Compute Capability 3.5 devices (e.g. Tesla K20)"
