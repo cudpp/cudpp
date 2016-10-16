@@ -568,7 +568,7 @@ int testMultiSplit(int argc, const char **argv,
   // restrict the tests to only those where we have enough
   size_t freeMem, totalMem;
   CUDA_SAFE_CALL(cudaMemGetInfo(&freeMem, &totalMem));
-  printf("freeMem: %d, totalMem: %d\n", int(freeMem), int(totalMem));
+  printf("freeMem: %lu, totalMem: %lu\n", freeMem, totalMem);
 
   while (freeMem < 175 * elementTests[numElementTests - 1]) // 175B/item appears to be enough
   {
