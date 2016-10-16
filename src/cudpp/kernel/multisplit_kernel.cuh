@@ -13,6 +13,22 @@
 #include <cudpp_util.h>
 #include "sharedmem.h"
 
+#ifdef WIN32
+
+typedef unsigned int uint;
+typedef _int32 int32_t;
+typedef unsigned _int32 uint32_t;
+typedef _int64 int64_t;
+typedef unsigned _int64 uint64_t;
+typedef unsigned _int64 uint64;
+
+#else
+
+#include <stdint.h>
+typedef unsigned long long int uint64;
+
+#endif
+
 /**
  * @file
  * multisplit_kernel.cu
