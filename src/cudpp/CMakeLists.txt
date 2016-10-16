@@ -56,6 +56,7 @@ set (CUHFILES
   kernel/listrank_kernel.cuh
   kernel/sa_kernel.cuh
   kernel/mergesort_kernel.cuh
+  kernel/multisplit_kernel.cuh
   kernel/radixsort_kernel.cuh
   kernel/rand_kernel.cuh
   kernel/reduce_kernel.cuh
