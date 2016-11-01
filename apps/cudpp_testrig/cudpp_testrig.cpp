@@ -441,6 +441,15 @@ int main(int argc, const char** argv)
         CUDPPConfiguration config;
         config.options = 0;
 
+        if (runSA) {
+            config.algorithm = CUDPP_SA;
+            retval += testAllDatatypes(argc, argv, config, supportsDouble, false);
+        }
+
+        if (runMultiSplit) {
+          retval += testMultiSplit(argc, argv, NULL);
+        }
+
         if (runScan) {
             config.algorithm = CUDPP_SCAN;
             retval += testAllOptionsAndDatatypes(argc, argv, config, supportsDouble);
@@ -506,14 +515,6 @@ int main(int argc, const char** argv)
             retval += testAllDatatypes(argc, argv, config, supportsDouble, false);
         }
 
-        if (runSA) {
-            config.algorithm = CUDPP_SA;
-            retval += testAllDatatypes(argc, argv, config, supportsDouble, false);
-        }
-
-        if (runMultiSplit) {
-          retval += testMultiSplit(argc, argv, NULL);
-        }
     }
 
     if (runSpmv)
