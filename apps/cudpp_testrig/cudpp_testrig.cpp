@@ -116,6 +116,12 @@ int testAllDatatypes(int argc,
         return retval;
     }
 
+    if(config.algorithm == CUDPP_MULTISPLIT)
+    {
+        retval += testMultiSplit(argc, argv, NULL);
+        return retval;
+    }
+
     for (CUDPPDatatype dt = CUDPP_INT; dt != CUDPP_DATATYPE_INVALID; dt = CUDPPDatatype((int)dt+1))
     {
         config.datatype = dt;
@@ -144,9 +150,6 @@ int testAllDatatypes(int argc,
                            "merge sort ... skipping\n");
                 else
                     retval += testMergeSort(argc, argv, &config);
-                break;
-            case CUDPP_MULTISPLIT:
-                retval += testMultiSplit(argc, argv, &config);
                 break;
             default:            // ignore datatype
                 break;
