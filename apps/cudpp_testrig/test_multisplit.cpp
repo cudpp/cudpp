@@ -18,11 +18,12 @@
 #include "cuda_util.h"
 #include "commandline.h"
 
+typedef unsigned int uint;
+
 #ifdef WIN32
 #undef min
 #undef max
 
-typedef unsigned int uint;
 typedef _int32 int32_t;
 typedef unsigned _int32 uint32_t;
 typedef _int64 int64_t;
