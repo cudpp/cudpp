@@ -336,7 +336,7 @@ int multiSplitKeysOnlyTest(CUDPPHandle theCudpp, CUDPPConfiguration config,
       testFailed = verifyMultiSplit(cpu_result_keys, gpu_result_keys, NULL,
           NULL, elementTests[k], false);
       retVal += testFailed;
-      delete cpu_result_keys;
+      delete[] cpu_result_keys;
 
       if (!quiet) {
         printf("test %s\n", (testFailed == 0) ? "PASSED" : "FAILED");
@@ -490,8 +490,8 @@ int multiSplitKeyValueTest(CUDPPHandle theCudpp, CUDPPConfiguration config,
       testFailed = verifyMultiSplit(cpu_result_keys, gpu_result_keys,
           cpu_result_values, gpu_result_values, elementTests[k], true);
       retVal += testFailed;
-      delete cpu_result_keys;
-      delete cpu_result_values;
+      delete[] cpu_result_keys;
+      delete[] cpu_result_values;
 
       if (!quiet) {
         printf("test %s\n", (testFailed == 0) ? "PASSED" : "FAILED");
