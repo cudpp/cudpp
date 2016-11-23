@@ -396,28 +396,32 @@ class LSBBucketMapper {
 public:
   LSBBucketMapper(unsigned int numBuckets) {
     lsbBitMask = 0xFFFFFFFF >>
-        (32 - (unsigned int) floor(log2((float)numBuckets)));
+        (32 - (unsigned int) ceil(log2((float)numBuckets)));
+    this->numBuckets = numBuckets;
   }
 
   __device__ __inline__ unsigned int operator()(unsigned int element) {
-    return element & lsbBitMask;
+    return (element & lsbBitMask) % numBuckets;
   }
 
 private:
+  unsigned int numBuckets;
   unsigned int lsbBitMask;
 };
 
 class MSBBucketMapper {
 public:
   MSBBucketMapper(unsigned int numBuckets) {
-    msbShift = 32 - floor(log2((float)numBuckets));
+    msbShift = 32 - ceil(log2((float)numBuckets));
+    this->numBuckets = numBuckets;
   }
 
   __device__ __inline__ unsigned int operator()(unsigned int element) {
-    return element >> msbShift;
+    return (element >> msbShift) % numBuckets;
   }
 
 private:
+  unsigned int numBuckets;
   unsigned int msbShift;
 };
 
