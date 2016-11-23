@@ -25,7 +25,6 @@
 #define __CUDPP_H__
 
 #include <stdlib.h> // for size_t
-#include <stdarg.h> // for multisplit function pointer argument
 
 /**
  * @brief CUDPP Result codes returned by CUDPP API functions.
@@ -176,6 +175,8 @@ struct CUDPPConfiguration
     unsigned int      options;       //!< Options to configure the algorithm
     CUDPPBucketMapper bucket_mapper; //!< The bucket mapping function for multisplit
 };
+
+typedef unsigned int (*BucketMappingFunc)(unsigned int);
 
 #define CUDPP_INVALID_HANDLE 0xC0DABAD1
 typedef size_t CUDPPHandle;
@@ -378,7 +379,7 @@ CUDPPResult cudppMultiSplitCustomBucketMapper(const CUDPPHandle planHandle,
                                               unsigned int      *d_values,
                                               size_t            numElements,
                                               size_t            numBuckets,
-                                              unsigned int      (*bucketMappingFunc)(unsigned int));
+                                              BucketMappingFunc bucketMappingFunc);
 
 #ifdef __cplusplus
 }

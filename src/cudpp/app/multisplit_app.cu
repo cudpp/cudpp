@@ -2085,7 +2085,7 @@ void freeMultiSplitStorage(CUDPPMultiSplitPlan* plan) {
  **/
 void cudppMultiSplitDispatch(unsigned int *d_keys, unsigned int *d_values,
     size_t numElements, size_t numBuckets,
-    unsigned int (*bucketMappingFunc)(unsigned int),
+    BucketMappingFunc bucketMappingFunc,
     const CUDPPMultiSplitPlan *plan) {
   cudaDeviceSetCacheConfig(cudaFuncCachePreferShared);
   multisplit_context ms_context;

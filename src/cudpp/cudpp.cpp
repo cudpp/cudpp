@@ -1123,7 +1123,7 @@ CUDPPResult cudppMultiSplitCustomBucketMapper(const CUDPPHandle planHandle,
                                               unsigned int      *d_values,
                                               size_t            numElements,
                                               size_t            numBuckets,
-                                              unsigned int      (*bucketMappingFunc)(unsigned int))
+                                              BucketMappingFunc bucketMappingFunc)
 {
     CUDPPMultiSplitPlan *plan =
         (CUDPPMultiSplitPlan*)getPlanPtrFromHandle<CUDPPMultiSplitPlan>(planHandle);

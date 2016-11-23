@@ -391,6 +391,7 @@ __device__ inline long long OperatorMin<long long>::identity() const { return LL
 template <>
 __device__ inline unsigned long long OperatorMin<unsigned long long>::identity() const { return ULLONG_MAX; }
 
+
 class MSBBucketMapper {
 public:
   MSBBucketMapper(unsigned int numBuckets) {
@@ -425,7 +426,7 @@ private:
 
 class CustomBucketMapper {
 public:
-  CustomBucketMapper(unsigned int (*bucketMappingFunc)(unsigned int)) {
+  CustomBucketMapper(BucketMappingFunc bucketMappingFunc) {
     bucketMapper = bucketMappingFunc;
   }
 
@@ -434,7 +435,7 @@ public:
   }
 
 private:
-  unsigned int (*bucketMapper)(unsigned int);
+  BucketMappingFunc bucketMapper;
 };
 
 #endif // __CUDPP_UTIL_H__
