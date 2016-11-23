@@ -392,10 +392,25 @@ template <>
 __device__ inline unsigned long long OperatorMin<unsigned long long>::identity() const { return ULLONG_MAX; }
 
 
+class LSBBucketMapper {
+public:
+  LSBBucketMapper(unsigned int numBuckets) {
+    lsbBitMask = 0xFFFFFFFF >>
+        (32 - (unsigned int) floor(log2((float)numBuckets)));
+  }
+
+  __device__ __inline__ unsigned int operator()(unsigned int element) {
+    return element & lsbBitMask;
+  }
+
+private:
+  unsigned int lsbBitMask;
+};
+
 class MSBBucketMapper {
 public:
   MSBBucketMapper(unsigned int numBuckets) {
-    msbShift = 32 - ceil(log2((float)numBuckets));
+    msbShift = 32 - floor(log2((float)numBuckets));
   }
 
   __device__ __inline__ unsigned int operator()(unsigned int element) {

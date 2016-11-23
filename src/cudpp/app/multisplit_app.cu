@@ -2121,6 +2121,15 @@ void cudppMultiSplitDispatch(unsigned int *d_keys, unsigned int *d_values,
         reducedBitSortKeyValue(d_keys, d_values, numElements, numBuckets,
             MSBBucketMapper(numBuckets), plan);
       break;
+    case CUDPP_LSB_BUCKET_MAPPER:
+      if (numBuckets <= 32)
+        multisplit_key_value(d_keys, d_values, plan->m_d_temp_keys,
+            plan->m_d_temp_values, numElements, numBuckets, ms_context,
+            LSBBucketMapper(numBuckets), true);
+      else
+        reducedBitSortKeyValue(d_keys, d_values, numElements, numBuckets,
+            LSBBucketMapper(numBuckets), plan);
+      break;
     default:
       if (numBuckets <= 32)
         multisplit_key_value(d_keys, d_values, plan->m_d_temp_keys,
@@ -2157,6 +2166,14 @@ void cudppMultiSplitDispatch(unsigned int *d_keys, unsigned int *d_values,
       else
         reducedBitSortKeysOnly(d_keys, numElements, numBuckets,
             MSBBucketMapper(numBuckets), plan);
+      break;
+    case CUDPP_LSB_BUCKET_MAPPER:
+      if (numBuckets <= 32)
+        multisplit_key_only(d_keys, plan->m_d_fin, numElements, numBuckets,
+            ms_context, LSBBucketMapper(numBuckets), true);
+      else
+        reducedBitSortKeysOnly(d_keys, numElements, numBuckets,
+            LSBBucketMapper(numBuckets), plan);
       break;
     default:
       if (numBuckets <= 32)

@@ -60,10 +60,25 @@ void randomPermute(unsigned int *elements, unsigned int numElements)
   }
 }
 
+class LSBBucketMapperHost {
+public:
+  LSBBucketMapperHost(unsigned int numBuckets) {
+    lsbBitMask = 0xFFFFFFFF >>
+        (32 - (unsigned int) floor(log2((float)numBuckets)));
+  }
+
+  unsigned int operator()(unsigned int element) {
+    return element & lsbBitMask;
+  }
+
+private:
+  unsigned int lsbBitMask;
+};
+
 class MSBBucketMapperHost {
 public:
   MSBBucketMapperHost(unsigned int numBuckets) {
-    msbShift = 32 - ceil(log2((float)numBuckets));
+    msbShift = 32 - floor(log2((float)numBuckets));
   }
 
   unsigned int operator()(unsigned int element) {
@@ -328,6 +343,10 @@ int multiSplitKeysOnlyTest(CUDPPHandle theCudpp, CUDPPConfiguration config,
         cpuMultisplit(keys, cpu_result_keys, elementTests[k], bucketTests[b],
             MSBBucketMapperHost(bucketTests[b]));
         break;
+      case CUDPP_LSB_BUCKET_MAPPER:
+        cpuMultisplit(keys, cpu_result_keys, elementTests[k], bucketTests[b],
+            LSBBucketMapperHost(bucketTests[b]));
+        break;
       default:
         cpuMultisplit(keys, cpu_result_keys, elementTests[k], bucketTests[b],
             OrderedCyclicBucketMapperHost(elementTests[k], bucketTests[b]));
@@ -481,6 +500,10 @@ int multiSplitKeyValueTest(CUDPPHandle theCudpp, CUDPPConfiguration config,
         cpuMultiSplitPairs(keys, cpu_result_keys, values, cpu_result_values,
             elementTests[k], bucketTests[b], MSBBucketMapperHost(bucketTests[b]));
         break;
+      case CUDPP_LSB_BUCKET_MAPPER:
+        cpuMultiSplitPairs(keys, cpu_result_keys, values, cpu_result_values,
+            elementTests[k], bucketTests[b], LSBBucketMapperHost(bucketTests[b]));
+        break;
       default:
         cpuMultiSplitPairs(keys, cpu_result_keys, values, cpu_result_values,
             elementTests[k], bucketTests[b],
@@ -552,7 +575,7 @@ int testMultiSplit(int argc, const char **argv,
   config.algorithm = CUDPP_MULTISPLIT;
   config.datatype = CUDPP_UINT;
   config.options = CUDPP_OPTION_KEYS_ONLY;
-  config.bucket_mapper = CUDPP_DEFAULT_BUCKET_MAPPER;
+  config.bucket_mapper = CUDPP_LSB_BUCKET_MAPPER;
   if (configPtr != NULL) {
     config = *configPtr;
   }
