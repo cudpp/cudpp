@@ -1051,7 +1051,7 @@ CUDPPResult cudppSuffixArray(CUDPPHandle planHandle,
  * bucket = (key % numElements) / ((numElements + numBuckets - 1) / numBuckets);
  *
  * MSB_BUCKET_MAPPER:
- * bucket = key >> (32 - ceil(log2(numBuckets)));
+ * bucket = (key >> (32 - ceil(log2(numBuckets)))) % numBuckets;
  *
  * Currently, the only supported key and value type is CUDPP_UINT.
  *
