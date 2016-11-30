@@ -143,22 +143,22 @@ int suffixArrayTest(int argc, const char **argv,
         result = cudppSuffixArray(plan, d_idata, d_odata, test[k]);
       
         if (result != CUDPP_SUCCESS)
-	{
-	     if(!quiet)
-	        printf("Error in cudppSuffixArray call in testSa (make sure your device is at"
-		" least compute version 2.0)\n");
-	     retval = numTests;
-	} else {
-        timer.reset();
-        timer.start();
-        for(int i=0; i<testOptions.numIterations; i++)
-            cudppSuffixArray(plan, d_idata, d_odata, test[k]);
+        {
+          if(!quiet)
+            printf("Error in cudppSuffixArray call in testSa (make sure your device is at"
+                " least compute version 2.0)\n");
+          retval = numTests;
+        } else {
+          timer.reset();
+          timer.start();
+          for(int i=0; i<testOptions.numIterations; i++)
+              cudppSuffixArray(plan, d_idata, d_odata, test[k]);
 
-        CUDA_SAFE_CALL(cudaThreadSynchronize());
-        timer.stop();
+          CUDA_SAFE_CALL(cudaThreadSynchronize());
+          timer.stop();
         }
-        d_odata = d_odata+1;
-        CUDA_SAFE_CALL(cudaMemcpy(o_data, d_odata,
+
+        CUDA_SAFE_CALL(cudaMemcpy(o_data, d_odata + 1,
                                   sizeof(unsigned int) * test[k],
                                   cudaMemcpyDeviceToHost));
         bool result = compareArrays<unsigned int> (reference, o_data, test[k]);
@@ -171,8 +171,7 @@ int suffixArrayTest(int argc, const char **argv,
             printf("test %s\n", result ? "PASSED" : "FAILED");
             printf("Average execution time: %f ms\n",
                    timer.getTime() / testOptions.numIterations);
-        }
-        else
+        } else
             printf("\t%10d\t%0.4f\n", test[k],
                    timer.getTime() / testOptions.numIterations);
     }

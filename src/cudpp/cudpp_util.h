@@ -391,6 +391,72 @@ __device__ inline long long OperatorMin<long long>::identity() const { return LL
 template <>
 __device__ inline unsigned long long OperatorMin<unsigned long long>::identity() const { return ULLONG_MAX; }
 
+
+class LSBBucketMapper {
+public:
+  LSBBucketMapper(unsigned int numBuckets) {
+    lsbBitMask = 0xFFFFFFFF >>
+        (32 - (unsigned int) ceil(log2((float)numBuckets)));
+    this->numBuckets = numBuckets;
+  }
+
+  __device__ __inline__ unsigned int operator()(unsigned int element) {
+    return (element & lsbBitMask) % numBuckets;
+  }
+
+private:
+  unsigned int numBuckets;
+  unsigned int lsbBitMask;
+};
+
+class MSBBucketMapper {
+public:
+  MSBBucketMapper(unsigned int numBuckets) {
+    msbShift = 32 - ceil(log2((float)numBuckets));
+    this->numBuckets = numBuckets;
+  }
+
+  __device__ __inline__ unsigned int operator()(unsigned int element) {
+    return (element >> msbShift) % numBuckets;
+  }
+
+private:
+  unsigned int numBuckets;
+  unsigned int msbShift;
+};
+
+class OrderedCyclicBucketMapper {
+public:
+  OrderedCyclicBucketMapper(unsigned int elements, unsigned int buckets) {
+    numElements = elements;
+    numBuckets = buckets;
+    elementsPerBucket = (elements + buckets - 1) / buckets;
+  }
+
+  __device__ __inline__ unsigned int operator()(unsigned int element) {
+    return (element % numElements) / elementsPerBucket;
+  }
+
+private:
+  unsigned int numBuckets;
+  unsigned int numElements;
+  unsigned int elementsPerBucket;
+};
+
+class CustomBucketMapper {
+public:
+  CustomBucketMapper(BucketMappingFunc bucketMappingFunc) {
+    bucketMapper = bucketMappingFunc;
+  }
+
+  __device__ unsigned int operator()(unsigned int element) {
+    return (*bucketMapper)(element);
+  }
+
+private:
+  BucketMappingFunc bucketMapper;
+};
+
 #endif // __CUDPP_UTIL_H__
 
 // Leave this at the end of the file

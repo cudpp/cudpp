@@ -93,6 +93,8 @@ void KeyValueSort(unsigned int num_elements,
         cudaMemcpy(d_values, d_cub_values.d_buffers[d_cub_values.selector],
                    sizeof(uint) * num_elements, cudaMemcpyDeviceToDevice));
 
+    cudaFree(d_temp_storage);
+
     // Cleanup "ping-pong" storage
     if (d_cub_values.d_buffers[1]) cudaFree(d_cub_values.d_buffers[1]);
     if (d_cub_keys.d_buffers[1]) cudaFree(d_cub_keys.d_buffers[1]);

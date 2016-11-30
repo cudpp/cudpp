@@ -1,7 +1,7 @@
 project(cudpp)
 
 set(cudpp_VERSION_MAJOR 2)
-set(cudpp_VERSION_MINOR 2)
+set(cudpp_VERSION_MINOR 3)
 set(cudpp_VERSION_PATCH 0)
 
 cmake_minimum_required(VERSION 2.8)

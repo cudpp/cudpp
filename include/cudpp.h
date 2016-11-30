@@ -26,10 +26,6 @@
 
 #include <stdlib.h> // for size_t
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /**
  * @brief CUDPP Result codes returned by CUDPP API functions.
  */
@@ -51,6 +47,11 @@ enum CUDPPResult
                                             for the specified problem size. */
     CUDPP_ERROR_UNKNOWN = 9999         /**< Unknown or untraceable error. */
 };
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 /** 
  * @brief Options for configuring CUDPP algorithms.
@@ -141,7 +142,24 @@ enum CUDPPAlgorithm
     CUDPP_BWT,               //!< Burrows-Wheeler transform
     CUDPP_MTF,               //!< Move-to-Front transform
     CUDPP_SA,                //!< Suffix Array algorithm
+    CUDPP_MULTISPLIT,        //!< Multi-Split algorithm
     CUDPP_ALGORITHM_INVALID, //!< Placeholder at end of enum
+};
+
+/**
+ * @brief Operators supported by CUDPP algorithms (currently scan and
+ * segmented scan).
+ *
+ * BLAH
+ *
+ * @see CUDPPConfiguration, cudppPlan
+ */
+enum CUDPPBucketMapper
+{
+    CUDPP_LSB_BUCKET_MAPPER,      //!< The bucket is determined by the element's LSBs.
+    CUDPP_MSB_BUCKET_MAPPER,      //!< The bucket is determined by the element's MSBs.
+    CUDPP_DEFAULT_BUCKET_MAPPER,  //!< The bucket is determined by the element's value.
+    CUDPP_CUSTOM_BUCKET_MAPPER,   //!< The bucket mapping is a user-specified function.
 };
 
 /**
@@ -152,11 +170,14 @@ enum CUDPPAlgorithm
 */
 struct CUDPPConfiguration
 {
-    CUDPPAlgorithm algorithm; //!< The algorithm to be used
-    CUDPPOperator  op;        //!< The numerical operator to be applied
-    CUDPPDatatype  datatype;  //!< The datatype of the input arrays
-    unsigned int   options;   //!< Options to configure the algorithm
+    CUDPPAlgorithm    algorithm;     //!< The algorithm to be used
+    CUDPPOperator     op;            //!< The numerical operator to be applied
+    CUDPPDatatype     datatype;      //!< The datatype of the input arrays
+    unsigned int      options;       //!< Options to configure the algorithm
+    CUDPPBucketMapper bucket_mapper; //!< The bucket mapping function for multisplit
 };
+
+typedef unsigned int (*BucketMappingFunc)(unsigned int);
 
 #define CUDPP_INVALID_HANDLE 0xC0DABAD1
 typedef size_t CUDPPHandle;
@@ -344,9 +365,27 @@ CUDPPResult cudppSuffixArray(CUDPPHandle planHandle,
                              unsigned int *d_keys_sa,
                              size_t numElements);
 
+// MultiSplit
+CUDPP_DLL
+CUDPPResult cudppMultiSplit(const CUDPPHandle planHandle,
+                            unsigned int      *d_keys,
+                            unsigned int      *d_values,
+                            size_t            numElements,
+                            size_t            numBuckets);
+
+// MultiSplit with user-specified bucket mapping function
+CUDPP_DLL
+CUDPPResult cudppMultiSplitCustomBucketMapper(const CUDPPHandle planHandle,
+                                              unsigned int      *d_keys,
+                                              unsigned int      *d_values,
+                                              size_t            numElements,
+                                              size_t            numBuckets,
+                                              BucketMappingFunc bucketMappingFunc);
+
 #ifdef __cplusplus
 }
 #endif
+
 
 #endif
 

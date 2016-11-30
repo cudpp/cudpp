@@ -21,9 +21,9 @@
 #include "cudpp_compress.h"
 #include "cudpp_listrank.h"
 #include "cudpp_sa.h"
+#include "cudpp_multisplit.h"
 #include "cuda_util.h"
 #include <cuda_runtime_api.h>
-
 #include <assert.h>
 
 CUDPPResult validateOptions(CUDPPConfiguration config, size_t numElements, size_t numRows, size_t /*rowPitch*/)
@@ -169,6 +169,12 @@ CUDPPResult cudppPlan(const CUDPPHandle  cudppHandle,
             plan = new CUDPPSaPlan(mgr, config, numElements);
             break;
         }
+    case CUDPP_MULTISPLIT:
+        {
+            plan = new CUDPPMultiSplitPlan(mgr, config, numElements, numRows);
+            break;
+        }
+
     default:
         return CUDPP_ERROR_ILLEGAL_CONFIGURATION; 
         break;
@@ -269,6 +275,11 @@ CUDPPResult cudppDestroyPlan(CUDPPHandle planHandle)
     case CUDPP_SA:
         {
             delete static_cast<CUDPPSaPlan*>(plan);
+            break;
+        }
+    case CUDPP_MULTISPLIT:
+        {
+            delete static_cast<CUDPPMultiSplitPlan*>(plan);
             break;
         }
     default:
@@ -784,4 +795,32 @@ CUDPPSaPlan::CUDPPSaPlan(CUDPPManager *mgr, CUDPPConfiguration config, size_t st
 CUDPPSaPlan::~CUDPPSaPlan()
 {
     freeSaStorage(this);
+}
+
+/** @brief CUDPP MultiSplit Plan Constructor
+  *
+  * @param[in] mgr pointer to the CUDPPManager
+  * @param[in] config The configuration struct specifying options
+  * @param[in] The number of elements to be split
+  * @param[in] The number of buckets
+  *
+  */
+CUDPPMultiSplitPlan::CUDPPMultiSplitPlan(CUDPPManager *mgr,
+    CUDPPConfiguration config, size_t numElements, size_t numBuckets)
+ : CUDPPPlan(mgr, config, numElements, 1, 0)
+{
+    m_numElements = numElements;
+    m_numBuckets = numBuckets;
+
+    allocMultiSplitStorage(this);
+
+    // use the allocated array for temporary storage of keys and values
+    m_d_temp_keys = (unsigned int *) m_d_key_value_pairs;
+    m_d_temp_values = (unsigned int *) m_d_key_value_pairs + numElements;
+}
+
+/** brief MultiSplit Plan Destructor*/
+CUDPPMultiSplitPlan::~CUDPPMultiSplitPlan()
+{
+    freeMultiSplitStorage(this);
 }

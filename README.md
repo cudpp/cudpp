@@ -100,6 +100,7 @@ CUDPP_BWT            | 1,048,576 elements
 CUDPP_SA             | 0.14 GPU memory
 CUDPP_STRINGSORT     | 2,147,450,880 elements
 CUDPP_MERGESORT      | 2,147,450,880 elements
+CUDPP_MULTISPLIT     | Bounded by GPU memory
 CUDPP_REDUCE         | NO LIMIT
 CUDPP_RAND           | 33,554,432 elements
 CUDPP_SPMVMULT       | 67,107,840 non-zero elements
@@ -109,18 +110,18 @@ CUDPP_TRIDIAGONAL    | 65535 systems, 1024 equations per system (Compute capabil
 Operating System Support and Requirements
 =========================================
 
-This release (2.2) has been thoroughly tested on the following OSes.  For more information, visit our [test results page](https://github.com/cudpp/cudpp/wiki/RegressionStatus2.2).
+This release (2.3) has been tested on the following OSes.  For more information, visit our [test results page](https://github.com/cudpp/cudpp/wiki/RegressionStatus2.3).
 
-- Windows 7 (64-bit) (CUDA 6.0, CUDA 6.5)
-- Ubuntu Linux (64-bit) (CUDA 5.0, CUDA 5.5, CUDA 6.0, CUDA 6.5)
-- Mac OS X 10.9.4 (64-bit) (CUDA 6.0, CUDA 6.5)
+- Windows 7 (64-bit) (CUDA 6.5)
+- Ubuntu Linux (64-bit) (CUDA 6.5)
+- Mac OS X 10.12.1 (64-bit) (CUDA 8.0)
 
-We expect CUDPP to build and run correctly on other flavors of Linux and Windows, but only the above are actively tested at this time.  Version 2.2 does not currently support 32-bit operating systems.
+We expect CUDPP to build and run correctly on other flavors of Linux and Windows, but only the above are actively tested at this time.  Version 2.3 does not currently support 32-bit operating systems.
 
 Requirements
 ------------
 
-CUDPP 2.2 has not been tested with any CUDA version < 5.0.
+CUDPP, from this release 2.3 and onwards, now requires a minimum of SM 3.0. CUDPP 2.3 has not been tested with any CUDA version < 6.5.
 
 CUDA
 ====
@@ -192,7 +193,9 @@ The following publications describe work incorporated in CUDPP.
 - Dan A. Alcantara, Vasily Volkov, Shubhabrata Sengupta, Michael Mitzenmacher, John D. Owens, and Nina Amenta. Building an Efficient Hash Table on the GPU. In Wen-mei W. Hwu, editor, GPU Computing Gems, volume 2, chapter 1. Morgan Kaufmann, August 2011.
 - Ritesh A. Patel, Yao Zhang, Jason Mak, Andrew Davidson, John D. Owens. "Parallel Lossless Data Compression on the GPU". In <i>Proceedings of Innovative Parallel Computing (InPar '12)</i>, May 2012. http://idav.ucdavis.edu/publications/print_pub?pub_id=1087
 - Andrew Davidson, David Tarjan, Michael Garland, and John D. Owens. Efficient Parallel Merge Sort for Fixed and Variable Length Keys. <i>In Proceedings of Innovative Parallel Computing (InPar '12)</i>, May 2012. http://www.idav.ucdavis.edu/publications/print_pub?pub_id=1085
+- Saman Ashkiani, Andrew Davidson, Ulrich Meyer, and John D. Owens. GPU Multisplit. <i>In Proceedings of the 21st ACM SIGPLAN Symposium on Principles and Practice of Parallel Programming (PPoPP '16)</i>, March 2016, http://escholarship.org/uc/item/346486j8 
 
+</pre>
 Many researchers are using CUDPP in their work, and there are many publications that
 have used it ([references](@ref cudpp_refs)). If your work uses CUDPP, please let us know
 by sending us a reference (preferably in BibTeX format) to your work.
@@ -227,10 +230,12 @@ CUDPP Developers
 - [Andrew Davidson](http://www.ece.ucdavis.edu/~aaldavid/), University of California, Davis
 - [Ritesh Patel](http://www.ece.ucdavis.edu/~ritesh88/), University of California, Davis
 - [Leyuan Wang](http://www.ece.ucdavis.edu/~laurawly/), University of California, Davis
+- [Saman Ashkiani](http://www.ece.ucdavis.edu/~ashkiani/), University of California, Davis
 
 Other CUDPP Contributors
 ------------------------
 
+- [Jason Mak](http://idav.ucdavis.edu/~jwmak/), University of California, Davis [Release Manager]
 - [Anjul Patney](http://idav.ucdavis.edu/~anjul/), University of California, Davis [general help]
 - [Edmund Yan](http://csiflabs.cs.ucdavis.edu/~eyan/), University of California, Davis [Release Manager]
 - [Dan Alcantara](http://idav.ucdavis.edu/~dfalcant/research.php), University of California, Davis [hash tables]

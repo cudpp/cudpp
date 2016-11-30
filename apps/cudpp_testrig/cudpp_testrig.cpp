@@ -58,6 +58,7 @@ int testBwt(int argc, const char** argv, const CUDPPConfiguration *config);
 int testCompress(int argc, const char** argv, const CUDPPConfiguration *config);
 int testListRank(int argc, const char** argv, const CUDPPConfiguration *config);
 int testSuffixArray(int argc, const char** argv, const CUDPPConfiguration *config);
+int testMultiSplit(int argc, const char ** argv, const CUDPPConfiguration *config);
 
 int testAllDatatypes(int argc,
                      const char** argv,
@@ -112,6 +113,12 @@ int testAllDatatypes(int argc,
     {
         config.datatype = CUDPP_UCHAR;
         retval += testSuffixArray(argc, argv, &config);
+        return retval;
+    }
+
+    if(config.algorithm == CUDPP_MULTISPLIT)
+    {
+        retval += testMultiSplit(argc, argv, NULL);
         return retval;
     }
 
@@ -324,21 +331,23 @@ int main(int argc, const char** argv)
         printf("mergesort: Run merge sort test(s)\n");
         printf("radixsort: Run radix sort test(s)\n");
         printf("stringsort: Run string sort test(s)\n");
-        printf("compact: Run compact test(s)\n\n");
-        printf("reduce: Run reduce test(s)\n\n");
-        printf("rand: Run random number generator test(s)\n\n");
-        printf("tridiagonal: Run tridiagonal solver test(s)\n\n");
+        printf("compact: Run compact test(s)\n");
+        printf("reduce: Run reduce test(s)\n");
+        printf("rand: Run random number generator test(s)\n");
+        printf("tridiagonal: Run tridiagonal solver test(s)\n");
         printf("mtf: Run move-to-front transform test(s) "
-               "(compute 2.0+ only)\n\n");
+               "(compute 2.0+ only)\n");
         printf("bwt: Run Burrows-Wheeler transform test(s) "
-               "(compute 2.0+ only)\n\n");
-        printf("compress: Run compression test(s) (compute 2.0+ only)\n\n");
-        printf("listrank: Run list ranking test(s)\n\n");
-        printf("sa: Run suffix array test(s) (compute 2.0+ only)\n\n");
+               "(compute 2.0+ only)\n");
+        printf("compress: Run compression test(s) (compute 2.0+ only)\n");
+        printf("listrank: Run list ranking test(s)\n");
+        printf("sa: Run suffix array test(s) (compute 2.0+ only)\n");
+        printf("multisplit: Run multisplit test(s)\n");
+        printf("\n");
         printf("--- Global Options ---\n");
         printf("iterations=<N>: Number of times to run each test\n");
         printf("n=<N>: Number of values to use in a single test\n");
-        printf("r=<N>: Number of rows to scan (--multiscan only)\n\n");
+        printf("r=<N>: Number of rows to scan (--multiscan only)\n");
         printf("--- Scan (Segmented and Unsegmented) Options ---\n");
         printf("backward: Run backward scans\n");
         printf("forward: Run forward scans (default)\n");
@@ -377,6 +386,7 @@ int main(int argc, const char** argv)
     bool runTridiagonal = runAll ||  checkCommandLineFlag(argc, argv, "tridiagonal");
     bool runMtf = runAll || checkCommandLineFlag(argc, argv, "mtf");
     bool runListRank = runAll || checkCommandLineFlag(argc, argv, "listrank");
+    bool runMultiSplit = runAll || checkCommandLineFlag(argc, argv, "multisplit");
     if (!supports48KBInShared && runMtf)
     {
         fprintf(stderr, "MTF is only supported on devices with "
@@ -424,11 +434,21 @@ int main(int argc, const char** argv)
         if (runCompress)  retval += testCompress(argc, argv, NULL);
         if (runListRank)  retval += testListRank(argc, argv, NULL);
         if (runSA)        retval += testSuffixArray(argc, argv, NULL);
+        if (runMultiSplit)retval += testMultiSplit(argc, argv, NULL);
     }
     else
     {
         CUDPPConfiguration config;
         config.options = 0;
+
+        if (runSA) {
+            config.algorithm = CUDPP_SA;
+            retval += testAllDatatypes(argc, argv, config, supportsDouble, false);
+        }
+
+        if (runMultiSplit) {
+          retval += testMultiSplit(argc, argv, NULL);
+        }
 
         if (runScan) {
             config.algorithm = CUDPP_SCAN;
@@ -495,10 +515,6 @@ int main(int argc, const char** argv)
             retval += testAllDatatypes(argc, argv, config, supportsDouble, false);
         }
 
-        if (runSA) {
-            config.algorithm = CUDPP_SA;
-            retval += testAllDatatypes(argc, argv, config, supportsDouble, false);
-        }
     }
 
     if (runSpmv)
