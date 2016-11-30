@@ -1099,7 +1099,7 @@ CUDPPResult cudppMultiSplit(const CUDPPHandle planHandle,
  * CUDPP_OPTION_KEY_VALUE_PAIRS. To use this function, the 
  * configuration option 'bucket_mapper' must be set to CUSTOM_BUCKET_MAPPER.
  * This option lets the library know to use the custom function pointer,
- * specified in the last argument, when assignging an element to a bucket. 
+ * specified in the last argument, when assigning an element to a bucket.
  * The user specified bucket mapper must be a function pointer to a device
  * function that takes one unsigned int argument (the element) and returns 
  * an unsigned int (the bucket). 
