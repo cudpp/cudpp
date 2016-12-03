@@ -100,6 +100,7 @@ set(GENCODE_SM21 -gencode=arch=compute_20,code=sm_21 -gencode=arch=compute_20,co
 set(GENCODE_SM30 -gencode=arch=compute_30,code=sm_30 -gencode=arch=compute_30,code=compute_30)
 set(GENCODE_SM35 -gencode=arch=compute_35,code=sm_35 -gencode=arch=compute_35,code=compute_35)
 set(GENCODE_SM50 -gencode=arch=compute_50,code=sm_50 -gencode=arch=compute_50,code=compute_50)
+set(GENCODE_SM52 -gencode=arch=compute_52,code=sm_52 -gencode=arch=compute_52,code=compute_52)
 
 #set(GENCODE -gencode=arch=compute_20,code=compute_20) # at least generate PTX
 
@@ -131,6 +132,10 @@ option(CUDPP_GENCODE_SM50
        "ON to generate code for Compute Capability 5.0 devices (e.g. GeForce GTX 750)"
        OFF)
 
+option(CUDPP_GENCODE_SM52
+       "ON to generate code for Compute Capability 5.2 devices (e.g. GeForce GTX 950)"
+       OFF)
+
 if (CUDPP_GENCODE_SM12)
   set(GENCODE ${GENCODE} ${GENCODE_SM12})
 endif(CUDPP_GENCODE_SM12)
@@ -158,6 +163,10 @@ endif(CUDPP_GENCODE_SM35)
 if (CUDPP_GENCODE_SM50)
   set(GENCODE ${GENCODE} ${GENCODE_SM50})
 endif(CUDPP_GENCODE_SM50)
+
+if (CUDPP_GENCODE_SM52)
+  set(GENCODE ${GENCODE} ${GENCODE_SM52})
+endif(CUDPP_GENCODE_SM52)
 
 if (CUDA_VERBOSE_PTXAS)
   set(VERBOSE_PTXAS --ptxas-options=-v)
