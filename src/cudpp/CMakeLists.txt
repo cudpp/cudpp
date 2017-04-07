@@ -18,7 +18,7 @@ set(CCFILES
   cudpp.cpp
   cudpp_plan.cpp
   cudpp_manager.cpp
-  ${CMAKE_SOURCE_DIR}/ext/moderngpu/src/mgpuutil.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/../../ext/moderngpu/src/mgpuutil.cpp
   )
 
 set (HFILES
@@ -82,12 +82,12 @@ set(CUFILES
   app/radixsort_app.cu
   app/rand_app.cu
   app/tridiagonal_app.cu
-  ${CMAKE_SOURCE_DIR}/ext/moderngpu/src/mgpucontext.cu
+  ${CMAKE_CURRENT_SOURCE_DIR}/../../ext/moderngpu/src/mgpucontext.cu
   )
 
 set(HFILES_PUBLIC
-  ${CMAKE_SOURCE_DIR}/include/cudpp.h
-  ${CMAKE_SOURCE_DIR}/include/cudpp_config.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/../../include/cudpp.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/../../include/cudpp_config.h
   )
 
 source_group("CUDA Source Files" FILES ${CUFILES})
