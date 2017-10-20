@@ -23,6 +23,7 @@
  * @{
  */
 #include <cub/cub.cuh>
+#include <cub/util_allocator.cuh>
 #include "cuda_util.h"
 #include "cudpp.h"
 #include "cudpp_util.h"
