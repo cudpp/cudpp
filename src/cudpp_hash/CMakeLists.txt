@@ -53,6 +53,7 @@ set(GENCODE_SM13 -gencode=arch=compute_13,code=sm_13 -gencode=arch=compute_13,co
 set(GENCODE_SM20 -gencode=arch=compute_20,code=sm_20 -gencode=arch=compute_20,code=compute_20)
 set(GENCODE_SM30 -gencode=arch=compute_30,code=sm_30 -gencode=arch=compute_30,code=compute_30)
 set(GENCODE_SM35 -gencode=arch=compute_35,code=sm_35 -gencode=arch=compute_35,code=compute_35)
+set(GENCODE_SM50 -gencode=arch=compute_50,code=sm_50 -gencode=arch=compute_50,code=compute_50)
 
 #set(GENCODE -gencode=arch=compute_10,code=compute_10) # at least generate PTX
 
@@ -139,7 +140,7 @@ cuda_add_library(cudpp_hash ${LIB_TYPE}
   ${CUHFILES}
   ${HFILES_PUBLIC}
   ${CUFILES}
-  OPTIONS ${GENCODE_SM20} ${VERBOSE_PTXAS}
+  OPTIONS ${GENCODE} ${VERBOSE_PTXAS}
   )
 
 target_link_libraries(cudpp_hash cudpp)
